@@ -1,0 +1,82 @@
+from datetime import datetime, timezone
+
+from modules import ModuleError
+from renderer import RenderContext, single_pass_render
+
+from web.events import EventBase
+from web.controllers import articles
+from web.models.forum import ForumThread, ForumPost, ForumPostVersion
+from web.models.users import User
+
+from ._csrf_protection import csrf_safe_method
+
+
+class OnForumNewPost(EventBase):
+    user: User
+    post: ForumPost
+    title: str
+    source: str
+
+
+def has_content():
+    return False
+
+
+def allow_api():
+    return True
+
+
+@csrf_safe_method
+def api_preview(context, params):
+    if 'source' not in params:
+        raise ModuleError('未提供源代码')
+
+    return {'result': single_pass_render(params['source'], RenderContext(None, None, {}, context.user), 'message')}
+
+
+def api_submit(context, params):
+    title = (params.get('name') or '').strip()
+    source = (params.get('source') or '').strip()
+    reply_to_id = (params.get('replyto') or -1)
+
+    if not source:
+        raise ModuleError('未提供帖子内容')
+
+    t = params.get('threadid')
+    try:
+        t = int(t)
+        thread = ForumThread.objects.filter(id=t)
+        thread = thread[0] if thread else None
+    except:
+        thread = None
+
+    if thread is None:
+        context.status = 404
+        raise ModuleError('主题未找到或未指定')
+
+    try:
+        reply_to_id = int(reply_to_id)
+        reply_to = ForumPost.objects.filter(id=reply_to_id)
+        reply_to = reply_to[0] if reply_to else None
+        if reply_to.thread != thread:
+            raise ModuleError('无法回复其他主题中的帖子')
+    except:
+        reply_to = None
+
+    if not context.user.has_perm('roles.create_forum_posts', thread) and thread and thread.article and not context.user.has_perm('roles.comment_articles', thread):
+        raise ModuleError('权限不足，无法创建帖子')
+
+    post = ForumPost(thread=thread, author=context.user, name=title, reply_to=reply_to)
+    post.save()
+    post.updated_at = post.created_at
+    post.save()
+
+    first_post_content = ForumPostVersion(post=post, source=source, author=context.user)
+    first_post_content.save()
+
+    thread.updated_at = datetime.now(timezone.utc)
+    thread.save()
+
+    OnForumNewPost(context.user, post, title, source).emit()
+
+    return {'url': '/forum/t-%d/%s#post-%d' % (thread.id, articles.normalize_article_name(thread.name), post.id)}

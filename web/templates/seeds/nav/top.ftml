@@ -1,0 +1,10 @@
+[[div class="top-bar"]]
+[[include nav:top-impl]]
+[[/div]]
+
+[[div class="mobile-top-bar"]]
+[[div class="open-menu"]]
+[#side-bar ≡]
+[[/div]]
+[[include nav:top-impl]]
+[[/div]]

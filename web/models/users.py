@@ -1,0 +1,143 @@
+__all__ = [
+    'User',
+    'UsedToken'
+]
+
+import auto_prefetch
+import re
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.db.models.functions import Lower
+from django.db import models
+from django.conf import settings
+
+import web.fields
+from web.models.roles import RolesMixin
+
+
+class StrictUsernameValidator(RegexValidator):
+    regex = r'^[\w.-]+\Z'
+    message = '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。'
+    flags = re.ASCII
+
+class CSSValueValidator(RegexValidator):
+    regex = r'^[^;\n\r]+\Z'
+    message = 'CSS 值不能包含 ";" 或换行符。'
+    flags = re.ASCII
+
+
+class ExtendedAnonymousUser(AnonymousUser):
+    def get_avatar(self, default=None):
+        return default or settings.DEFAULT_AVATAR
+
+class User(AbstractUser, RolesMixin):
+    class Meta(RolesMixin.Meta):
+        verbose_name = '用户'
+        verbose_name_plural = '用户列表'
+
+        constraints = [
+            models.UniqueConstraint(Lower('email'), name='user_email_ci_uniqueness',
+            condition=models.Q(email__isnull=False) & ~models.Q(email=''))
+        ]
+
+        abstract = False
+
+    class UserType(models.TextChoices):
+        Normal = ('normal', '普通用户')
+        Wikidot = ('wikidot', 'Wikidot 用户')
+        System = ('system', '系统用户')
+        Bot = ('bot', '机器人')
+
+    username = web.fields.CITextField(
+        max_length=150, validators=[StrictUsernameValidator()], unique=True,
+        verbose_name='用户名',
+        error_messages={
+            'unique': '用户名已存在',
+        },
+    )
+
+    wikidot_username = web.fields.CITextField('Wikidot用户名', unique=True, max_length=150, validators=[StrictUsernameValidator()], null=True, blank=False)
+
+    type = models.TextField('用户类型', choices=UserType.choices, default=UserType.Normal)
+
+    avatar = models.ImageField('头像', null=True, blank=True, upload_to='-/users')
+    bio = models.TextField('个人简介', blank=True)
+
+    api_key = models.CharField('API密钥', unique=True, blank=True, null=True, max_length=67)
+
+    is_forum_active = models.BooleanField('论坛权限已启用', default=True)
+    forum_inactive_until = models.DateTimeField('论坛权限禁用至', null=True)
+
+    is_active = models.BooleanField('已启用', default=True)
+    inactive_until = models.DateTimeField('禁用至', null=True)
+
+    is_staff = RolesMixin.is_staff # type: ignore
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.inactive_until:
+            self.is_active = False
+        if self.inactive_until and not self.is_active and datetime.now(ZoneInfo('UTC')) > self.inactive_until:
+            self.inactive_until = None
+            self.is_active = True
+        if self.forum_inactive_until:
+            self.is_forum_active = False
+        if self.forum_inactive_until and not self.is_forum_active and datetime.now(ZoneInfo('UTC')) > self.forum_inactive_until:
+            self.forum_inactive_until = None
+            self.is_forum_active = True
+
+    def get_avatar(self, default=None):
+        if self.avatar:
+            return '/local--files/%s' % self.avatar
+        return default
+
+    def __str__(self):
+        if self.type == User.UserType.Wikidot:
+            return 'wd:%s' % (self.wikidot_username or self.username)
+        return self.username
+
+    def _generate_apikey(self, commit=True):
+        self.password = ''
+        self.api_key = make_password(self.username)[21:]
+        if commit:
+            self.save()
+
+    def clean(self):
+        super().clean()
+        if self.username is None and self.wikidot_username is None:
+            raise ValidationError('用户名或Wikidot用户名必须填写。')
+
+    def save(self, *args, **kwargs):
+        if not self.wikidot_username:
+            self.wikidot_username = None
+        if self.type == 'bot':
+            if not self.api_key:
+                self._generate_apikey(commit=False)
+        else:
+            self.api_key = None
+        return super().save(*args, **kwargs)
+
+
+class UsedToken(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
+        verbose_name = '已使用的令牌'
+        verbose_name_plural = '已使用的令牌列表'
+
+    token = models.TextField('令牌', null=False)
+    is_case_sensitive = models.BooleanField('区分大小写', null=False, default=True)
+
+    @classmethod
+    def is_used(cls, token):
+        if cls.objects.filter(token=token, is_case_sensitive=True).exists():
+            return True
+        return cls.objects.filter(token__iexact=token, is_case_sensitive=False).exists()
+
+    @classmethod
+    def mark_used(cls, token, is_case_sensitive):
+        cls(token=token, is_case_sensitive=is_case_sensitive).save()

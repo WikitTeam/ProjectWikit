@@ -1,0 +1,1770 @@
+以下指南是关于网站整体运行机制以及维基标记语言（wiki markup）相关内容的技术文档。
+
+本指南面向具备最低限度 HTML 和 CSS 基础知识的读者；其目标是全面、详尽地描述所有可用功能，并解释为什么某些内容会以目前这种方式运行。
+
+[[toc]]
+
+[[module CSS]]
+
+#page-content h1, #page-content h2, #page-content h3 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #aaa;
+  margin-top: 32px;
+  clear: both;
+}
+
+#page-content h1 + h2, #page-content h2 + h3 {
+  margin-top: 16px;
+}
+
+code, .code, .code pre {
+  background: #f7f7f7;
+  color: #050;
+  font-weight: 500;
+  font-family: 'Cascadia Mono', 'Courier New', Courier, FreeMono, monospace;
+}
+
+code {
+  padding: 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.code {
+  padding: 8px;
+}
+
+.code p, .code pre {
+  margin: 0;
+}
+
+#page-content dl {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  float: right;
+  overflow: hidden;
+  margin-left: 32px;
+  margin-bottom: 32px;
+  background: white;
+}
+
+#page-content dl dd, #page-content dl dt {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  margin: 0;
+}
+
+#page-content dl dd {
+  text-align: right;
+}
+
+.actual-page-content a[href^="#"] {
+  border-bottom: 1px dotted #050;
+  color: #050;
+  text-decoration: none;
+}
+
+.actual-page-content a[href^="#"]:hover {
+  border-bottom-style: solid;
+}
+  @media (max-width: 700px) {
+code {
+  white-space: wrap;
+  word-break: break-all;
+}
+  }
+[[/module]]
+
+[[div class="actual-page-content"]]
+
++ 引言
+
+标记语言分为四种类型：
+
+* **自动替换** 在文章开始处理之前执行。因此，自动替换允许在文章中添加新的代码，这些代码随后会作为语法被处理。详见 {{[[include]]}} 章节。
+
+* **段落划分** 按既定规则自动进行。
+
+* **自由语法** 没有严格的格式；每个标记元素可能以完全不可预测的方式被解析。这些元素不总是彼此兼容，也不一定与块级元素兼容。
+
+* **块级元素** 具有严格规则；其格式在外观上类似于 HTML 标记或 BBCode。块级元素具有名称、属性、修饰符。那些原则上可以包含其他元素的块级元素，对其所包含元素的类型不作限制（包括其他块级元素）。
+
++ [[# autoreplace]] 自动替换
+
+++ {{[[include]]}}：从其他文章插入代码
+
+语法：
+
+[[div class="code"]]
+@@[[include 文章名称 参数1 = 值1 | 参数2 = 值2]]@@
+[[/div]]
+
+为了使该元素正常工作，在起始的 {{[[}} 前面从行首开始不得有任何文本（包括空格）。同样，在结束的 {{]]}} 之后也不能有任何文本。
+
+元素 {{[[include]]}}，以及其中的各个参数，都可以占用多行。
+
+使用该元素时，系统会访问指定的站点文章，获取其源代码，并将该源代码插入到 {{[[include]]}} 所在的位置。
+
+在插入之前，会对指定文章中的所有变量进行自动替换。例如，形如 {{@@{$参数1}@@}} 的变量将被替换为在该元素中指定的对应参数值。
+
+由于插入源代码是在“行级”而非“元素级”进行的，因此被嵌入的文章中可以包含完整或部分源代码。同样，{{[[include]]}} 的参数中也可以包含完整或部分源代码。
+
+示例：
+
+* 文章 {{page1}} 中的代码： _
+[[div class="code"]]
+@@{$param}@@
+[[/div]]
+
+* 使用 {{[[include]]}} 的文章中的代码： _
+[[div class="code"]]
+@@[[include page1 param=[[div class="code"]] ]]@@
+@@text@@
+@@[[include page1 param=[[/div]] ]]@@
+[[/div]]
+
+* 结果： _
+[[div class="code"]]
+@@[[div class="code"]]@@
+@@text@@
+@@[[/div]]@@
+[[/div]]
+
+++ {{[[noinclude]]}}：在被插入到其他页面时忽略部分代码
+
+语法：
+
+[[div class="code"]]
+@@[[noinclude]]@@
+...任意文本...
+@@[[/noinclude]]@@
+[[/div]]
+
+某些站点组件同时包含可调用代码（组件本身）、使用说明文档以及预览内容。
+
+为了防止这些可视化元素被包含到作者文章中，可以使用 {{[[noinclude]]}} 标签。
+
+无论是起始还是结束的 {{[[noinclude]]}} 标签，都必须单独占据一整行，否则标签不会生效。这样设计是为了降低误触发或错误触发的概率，例如在记录该功能自身文档时。
+
+++ 分类模板
+
+分类模板是形如 [[[component:_template|component:_template]]] 的隐藏页面。对于主分类，页面名称为 [[[_default:_template|_template]]].
+
+如果为某个分类（例如此处的 {{component}}）指定了模板，那么该模板将会为该分类下的所有文章渲染显示，**而不是文章的实际代码**。同时，模板中支持 [#module-listpages ListPages 模块] 中使用的所有变量。例如，可以通过 {{%%content%%}} 获取原始文章代码。
+
+++ [[# path-params]] {{%%path%%}}, {{%%path_expr%%}}, {{%%path_url%%}}：页面参数
+
+站点引擎支持通过形如 {{/参数/值}} 的语法在页面地址中传递参数。
+
+例如，为了在文章 {{page1}} 中访问参数 {{%%param%%}} 和 {{%%param2%%}}，可以通过如下地址访问：
+
+{{@@https://projwikit.unitreaty.org/page1/param/example1/param2/example2@@}}
+
+由于这些变量替换属于自动替换，目标文章可以通过三种方式访问参数：
+
+* {{%%path|param%%}} 直接将变量值插入文章代码；如果未指定该变量，则插入文本 {{%%path|param%%}}。
+
+* {{%%path_expr|param%%}} 以 JSON 字符串格式插入变量值；若未指定，则插入文本 {{"%%path_expr|param%%"}}。这允许在块级元素属性中传递包含特殊字符的复杂值（例如 {{@@[[input type="text" value=%%path_expr|param%%]]@@}} 可确保即便用户使用特殊字符，值也能正确写入）。
+
+* {{%%path_url|param%%}} 插入 URL 编码格式的变量值；若未指定，则插入 {{%25%25path_url%7Cparam%25%25}}。这允许在链接或传递给其他页面的参数中使用这些值（例如 {{@@[[module Redirect to="/other_page/param/%%path_url|param%%"]]@@}}）。
+
+++ 排版符号的自动替换
+
+* {{@<&#96;>@文本@<&#39;>@}} —— 替换为 ‘文本’。
+
+* {{@<&#96;>@@<&#96;>@文本@<&#39;>@@<&#39;>@}} —— 替换为 “文本”。
+
+* {{@<&#44;>@@<&#44;>@文本@<&#39;>@@<&#39;>@}} —— 替换为 „文本”。
+
+[!-- * {{@<&#46;>@@<&#46;>@@<&#46;>@}}, {{@<&#46;>@ @<&#46;>@ @<&#46;>@}} —— 替换为符号 "…". --] [!-- 暂时移除 // jewalky --]
+
+需要注意的是，由于这些符号替换发生在自动替换阶段，因此可能跨多行发生，甚至包括在 [#literals 字面量]、{{@@[[code]]@@}}、{{@@[[module]]@@}} 等内容中；请务必注意。
+
++ 段落划分
+
+系统中所有可以包含其他元素的元素，分为两大类：
+
+* 行内元素。包括普通文本、所有文本格式元素，以及 {{@@[[span]]@@}} 和其他诸如 {{@@[[image]]@@}}、{{@@[[user]]@@}} 等元素。一般来说，如果该元素默认显示为 {{display: inline}} 或 {{display: inline-block}}，则可视为行内元素。
+
+* 全宽元素。包括标题、分隔线、列表、{{@@[[toc]]@@}}、{{@@[[div]]@@}}、{{@@[[blockquote]]@@}}、{{@@[[footnoteblock]]@@}}、{{@@[[collapsible]]@@}} 等。大致对应 {{display: block}}。
+
+尽管上文提及 CSS 属性，但该属性的实际值不会影响段落生成，因为元素的分类是在其从标记转换为 HTML 的初始阶段完成的。
+
+段落会被创建：
+
+* 在全宽块级元素中，如果未为其指定修饰符 {{_}}（例如 {{@@[[div_]]@@}}）。_
+该修饰符并非对所有块级元素都可用，详见各元素说明。
+
+* 在简单引用块（{{>}}）中。
+
+段落不会被创建：
+
+* 在任何行内元素中。
+
+* 在块级表格（{{@@[[table]]@@}}）中。
+
+* 在大多数自由语法元素中（{{>}} 除外）。_
+可以通过将所需文本包裹在 {{@@[[div]]@@}} 或 {{@@[[p]]@@}} 中来绕过该限制，例如：_
+[[code]]|| [[div]]第一行
+
+第二行[[/div]] || 下一个表格单元格 ||[[/code]]在此示例中，{{@@[[div]]@@}} 内的内容会被包裹为段落，而下一个表格单元格则会被直接作为文本添加。_
+该技巧同样适用于块级表格。
+
+要在支持段落的元素中创建或分隔新段落，需要满足以下多个条件：
+
+* 该行必须是元素中的第一行，或者其上方至少有一整行空行，或者其上方存在一个全宽元素。
+
+* 该行必须仅包含行内元素。全宽元素周围不会创建段落。在段落内部插入全宽元素会在该处终止当前段落，并在该全宽元素之后创建新段落。
+
+如果在不创建段落的元素中存在文本（根据上述任一条件），文本中的空行将被视为普通换行（{{<br>}}，而不是 {{<p>}}）。
+
+++ 控制换行
+
+如果你希望空行仅作为空行，而不是创建段落，可以使用两种方法：
+
+* 在该行放置任何视觉上为空的元素（但在段落判定上不视为空）。例如 {{@@[[span]][[/span]]@@}}、{{@<@>@@<@>@@<@>@@<@>@}}、{{@<&#64;&#60;>@@<&#62;&#64;>@}}。
+
+* 在该行末尾添加符号 {{_}}。该符号会被明确解释为换行，并且绝不会转换为段落。
+
+你也可以在代码分成多行时阻止换行（以及段落创建）。这在编写复杂代码时非常有用，可以保持可读性，同时不在视觉上拆分文本。为此，请在行末添加 {{\}}，则下一行会“粘连”到当前行。例如，下列代码在插入文章后将显示为一行 “abc”：
+
+[[div class="code"]]
+@@a\@@
+@@[[span class="some-class"]]\@@
+@@b\@@
+@@[[/span]]\@@
+@@c@@
+[[/div]]
+
++ 自由语法
+
+++ 文本格式
+
+* {{@@**文本**@@}} —— **粗体** 文本。
+
+* {{@@//文本//@@}} —— //斜体// 文本。
+
+* {{@@{{文本}}@@}} —— 等宽文本。
+
+* {{@@--文本--@@}} —— --删除线-- 文本。
+
+* {{@@^^文本^^@@}} —— ^^上标^^ 文本。
+
+* {{@@,,文本,,@@}} —— ,,下标,, 文本。
+
+* {{@@__文本__@@}} —— __下划线__ 文本。
+
+所有上述文本格式化方式都遵循相同的规则：
+
+* 元素与其内部文本之间不得有空格（例如，{{@@__ 文本 __@@}} 不是正确语法）。
+
+* 元素可以跨多行，但不能跨多个段落。
+  正确：
+[[code]]//a
+b
+c//[[/code]]
+  错误：
+[[code]]//a
+
+b
+
+c//[[/code]]
+
+* 元素内部可以包含任何其他元素，包括块级元素。在使用块级元素的情况下，段落限制将被解除。例如：
+[[code]]//[[div]]a
+
+b
+
+c[[/div]]//[[/code]]
+
+同时也支持文本着色：
+
+* {{@@##颜色|文本##@@}} — ##red|有颜色的## 文本。
+  颜色可以使用任何 CSS 支持的颜色，例如表达式 {{@@##rgba(255, 127, 0, 0.5)|文本##@@}} 是合法的。
+  当使用十六进制值表示颜色（RRGGBB、RRGGBBAA、RGB、RGBA）时，不必额外使用 {{#}} 符号（例如：{{@@##ffe|文本##@@}} 与 {{@@###ffe|文本##@@}} 等效）。
+
+++ [[# links]] 链接
+
+[[ul]]
+[[li]]{{@@[地址 文本]@@}} 或 {{[*地址 文本]}} — 普通链接。
+通常用于外部链接，或在站内文章之间使用参数进行链接，或用于锚点链接（例如：{{@@[#toc-0 指向第一个标题的链接]@@}}）。
+地址不能包含空格，而链接文本可以包含空格。链接文本不得跨多行。
+如果链接以星号 {{*}} 开头，则会在新窗口（标签页）中打开。
+[[/li]]
+
+[[li]]{{@@[[[文章]]]@@}} 或 {{@@[[[文章|]]]@@}} 或 {{@@[[[文章|链接文本]]]@@}} — 使用完整标识符（地址）创建站内文章链接。
+此类链接会显示在文章的反向链接中；如果目标文章不存在，则会以不同颜色显示。
+
+语法变体：
+
+[[ul]]
+  [[li]]{{@@[[[category:page1]]]@@}} — 创建指向 {{category:page1}} 的链接，链接文本大致对应文章标识符（符号 {{-}} 会被替换为空格，分类前缀会被移除等）。
+  [[/li]]
+
+  [[li]]{{@@[[[category:page1|]]]@@}} — 创建指向 {{category:page1}} 的链接。
+  如果该文章存在，则自动使用其标题作为链接文本；否则使用其标识符。
+  [[/li]]
+
+  [[li]]{{@@[[[category:page1|文本]]]@@}} — 创建指向 {{category:page1}} 的链接，并使用指定文本作为链接名称。
+  链接文本同样不得跨多行。
+  [[/li]]
+[[/ul]]
+[[/li]]
+
+[[li]]自动链接：形如 {{@@http://...@@}}、{{@@ftp://...@@}} 的文本会自动转换为对应链接。
+这种自动替换可能会引发问题并破坏其他语法。如需避免，可以使用 [#literals 字面量]。
+[[/li]]
+[[/ul]]
+
+++ 元素位置控制
+
+* {{@@= 文本@@}} — 段落居中。必须放在段落开头使用，此后整个段落（包括后续行）都会居中对齐。
+
+* {{@@_@@}} — 显式换行。只能用于行尾。
+例如，可用于防止两个连续空行被合并为一个段落，如下所示：
+[[code]]a
+_
+_
+b[[/code]]
+
+此外，{{@@_@@}} 允许在原本不支持换行的元素中插入换行（例如表格或列表）。
+为了正确生效，显式换行符必须与前面的文本或元素之间用空格分隔。
+
+* {{@@~~~@@}}、{{@@~~~<@@}}、{{@@~~~>@@}} — 清除浮动元素。
+仅在行首使用时有效。
+分别等同于：
+{{@@[[div style="clear: both"]][/div]]@@}}
+{{@@[[div style="clear: left"]][[/div]]@@}}
+{{@@[[div style="clear: right"]][[/div]]@@}}
+
+++ [[# headers]] 标题
+
+{{@@+ 文本@@}}、
+{{@@++ 文本@@}}、
+{{@@+++ 文本@@}}、
+{{@@++++ 文本@@}}、
+{{@@+++++ 文本@@}}、
+{{@@++++++ 文本@@}} — 分别对应一级至六级标题。
+
+不支持六级以上标题。
+
+该元素只能在新行使用。
+内部不支持换行，但可以嵌入块级元素或显式换行，例如：
+
+[[code]]++ 第一行 _
+第二行[[/code]]
+
+在标题文本前可以添加符号 {{*}}，例如 {{@@++* 文本@@}}。
+此时该标题不会被加入目录。
+
+++ 水平线
+
+{{@@---@@}} — 添加水平分隔线。
+
+该元素只能在新行使用。
+前三个 {{-}} 之后的数量没有限制。
+
+++ 引用
+
+以下语法会创建两个嵌套的引用块：
+
+[[code]]
+> 第一级
+>> 第二级
+>> 第二级的第二行
+> 回到第一级
+[[/code]]
+
+由于 {{@@[[blockquote]]@@}} 具有更好的可读性（和可编辑性），因此不推荐使用此语法。
+
+++ 列表
+
+网站支持三种列表类型：有序列表、无序列表和字典列表。
+前两种可以相互嵌套。
+
+示例：无序列表中嵌套有序列表：
+
+[[code]]
+* 元素1
+* 元素2
+ # 元素2.1
+ # 元素2.2
+* 元素3
+[[/code]]
+
+列表的嵌套级别由 {{*}} 或 {{#}} 前的空格或制表符数量决定。
+
+列表项中可以通过 {{_}} 或使用 {{@@[[span]]@@}} 包裹内容来实现多行，例如：
+
+[[code]]
+* 元素1 _
+下一行
+* [[span]]元素2
+下一行[[/span]]
+[[/code]]
+
+字典列表定义如下：
+
+[[code]]
+: 术语1 : 定义
+: 术语2 : 定义
+: 术语3 : 定义
+[[/code]]
+
+在术语或定义中同样可以使用 {{_}} 或 {{@@[[span]]@@}}。
+
+++ 表格
+
+简化（自由）语法的表格如下所示：
+
+[[code]]
+||~ 标题 ||~ 标题2 ||
+||> 右对齐文本 ||= 居中文本 ||
+|||| 横向跨越两列的单元格 ||
+[[/code]]
+
+要在单元格中添加多行文本，可以使用 {{_}} 或 {{@@[[span]]@@}}。
+
+该元素无法创建跨越多行（纵向合并）的单元格。在这种情况下，可以使用块级元素 {{@@[[table]]@@}}，它不受此限制。
+
+++ 其他
+
+* {{@@[[# anchor]]@@}} — 创建一个具有指定标识符的元素，从而可以通过链接跳转到该位置（例如：{{@@[#anchor 跳转到锚点]@@}}）。
+  该元素在视觉上类似于块级元素，但实际上并不是。
+  在元素定义中，{{#}} 后必须保留一个空格。
+
+* {{@@[!-- 注释 --]@@}} — 定义一段在最终页面显示时不会呈现的源代码区域。
+  可用于在代码中添加技术性备注。
+  [!-- 我就知道你会看到这里。 --]
+
+* [[# literals]]{{@<&#64;&#64;>@文本@<&#64;&#64;>@}} — 阻止 {{@<&#64;&#64;>@}} 包裹的内容被当作标记语法解析。
+  始终生成一行文本（字面量）。
+  可用于在出于视觉效果使用标记符号时避免歧义（例如，并非链接用途的单个方括号）。
+  也可用于破坏自动替换语法（当不希望发生自动替换时），例如：
+  {{%%pat@<&#64;&#64;>@h|param%%}} 始终会显示为文本 %%pat@@@@h|param%%，即便指定了参数 {{param}}。
+  也可用于像 {{_}} 那样创建空行（但不推荐这样使用）。
+
+* {{@<&#64;&#60;>@&mdash;&copy;@<&#62;&#64;>@}} — 插入指定的 HTML 实体符号（或多个符号）。
+
+* 符号 «、» 和 — 的替换
+_
+_
+由于这些替换不属于自动替换，因此在仅支持纯文本的场景下不会生效（例如块属性或链接名称中）。
+
+ * {{@@ <<@@}} — 左引号：«
+
+ * {{@@ >>@@}} — 右引号：»
+
+ * {{@@ --@@}} — 长破折号：—
+   需要注意的是，为了使该元素被解析为破折号而不是删除线语法，其两侧必须有空格。
+
++ 块级元素
+
+所有块级元素都遵循类似规则构建。
+
+每个块级元素都有名称（例如 {{div}}、{{iftags}}、{{blockquote}} 等）、可选的标识符，以及一个起始标签（例如 {{@@[[div]]@@}}）。
+可以包含文本或其他块级元素的块级元素，还必须有与起始标签对应名称的结束标签（例如 {{@@[[/div]]@@}}）。
+
+某些块可以使用修饰符 {{_}}。
+该修饰符写在块名称之后，用于阻止在块内自动创建段落（文本会直接放入块中，换行通过 {{<br>}} 实现）。
+修饰符只写在起始标签中，因此以下语法是正确的：
+[[code]][[div_]]text[[/div]][[/code]]
+
+块的标识符是可选文本，写在块名称之后（但在修饰符 {{_}} 之前），通过 {{:}} 指定。例如：
+
+[[code]]
+[[module:lu ListUsers]]
+  [[module CSS]]
+    body {
+      background: url(%%avatar%%);
+    }
+  [[/module]]
+[[/module:lu]]
+[[/code]]
+
+块标识符允许在接受文本内容的块（如 {{@@[[code]]@@}}、{{@@[[module]]@@}}、{{@@[[html]]@@}}）内部使用该块的标准结束标签，而不会真正关闭它。
+这样可以将多个模块相互嵌套，或在该块内部写出 {{@@[[code]]@@}} 的示例：
+
+[[code:outer]]
+[[code:2]]
+  [[code:b]]
+    示例：使用块 [[cоde]]
+  [[/code:b]]
+[[/code:2]]
+[[/code:outer]]
+
+大多数块可以以某种形式接受属性（要么是 HTML 属性，要么是特定块自定义属性）。
+属性写法为 {{参数=值}} 或 {{参数="值"}}。
+不同于 HTML，在属性值中使用特殊字符时，不使用 HTML 实体（如 {{&quot;}}），而是通过 {{\}} 转义：
+例如 {{@@[[collapsible show="协议 \"忧郁\""]]@@}}。
+
+++ [[# html-attributes]] 标准 HTML 属性
+
+某些元素（例如 {{@@[[a]]@@}}、{{@@[[span]]@@}} 等）是 HTML 的直接接口，
+其标记中的属性会直接插入生成的 HTML 页面中。
+
+并非所有 HTML 属性都允许在标记中使用。
+允许使用的属性列表如下；更多详情请参阅
+https://www.w3schools.com/tags/ref_attributes.asp 的 HTML 文档。
+在本网站语境中最常用的属性已用 ##red|红色## 标出。
+
+* {{##red|alt##}}
+* {{##red|class##}}
+* {{##red|colspan##}}
+* {{##red|href##}}
+* {{##red|id##}}：该属性会被特殊处理。标识符必须以 {{u-}} 作为前缀。如果未指定此前缀，系统会自动添加。例如，{{id="myid"}} 将会被转换为 {{id="u-myid"}}。
+* {{##red|rowspan##}}
+* {{##red|style##}}
+* {{##red|target##}}
+* {{accept}}
+* {{align}}
+* {{autocapitalize}}
+* {{autoplay}}
+* {{background}}
+* {{bgcolor}}
+* {{border}}
+* {{buffered}}
+* {{checked}}
+* {{cite}}
+* {{cols}}
+* {{contenteditable}}
+* {{controls}}
+* {{coords}}
+* {{datetime}}
+* {{decoding}}
+* {{default}}
+* {{dir}}
+* {{dirname}}
+* {{disabled}}
+* {{download}}
+* {{draggable}}
+* {{for}}
+* {{form}}
+* {{headers}}
+* {{height}}
+* {{hidden}}
+* {{high}}
+* {{hreflang}}
+* {{inputmode}}
+* {{ismap}}
+* {{itemprop}}
+* {{kind}}
+* {{label}}
+* {{lang}}
+* {{list}}
+* {{loop}}
+* {{low}}
+* {{max}}
+* {{maxlength}}
+* {{min}}
+* {{minlength}}
+* {{multiple}}
+* {{muted}}
+* {{name}}
+* {{optimum}}
+* {{pattern}}
+* {{placeholder}}
+* {{poster}}
+* {{preload}}
+* {{readonly}}
+* {{required}}
+* {{reversed}}
+* {{role}}
+* {{rows}}
+* {{scope}}
+* {{selected}}
+* {{shape}}
+* {{size}}
+* {{sizes}}
+* {{span}}
+* {{spellcheck}}
+* {{src}}
+* {{srclang}}
+* {{srcset}}
+* {{start}}
+* {{step}}
+* {{tabindex}}
+* {{title}}
+* {{translate}}
+* {{type}}
+* {{usemap}}
+* {{value}}
+* {{width}}
+* {{wrap}}
+* {{scrolling}}
+* {{frameborder}}
+
+++ [[# booleans]] 布尔属性
+
+文档中标记为可接受布尔值的属性，在实际使用中可以用以下字符串表示：
+
+True：
+
+* {{true}}
+* {{t}}
+* {{1}}
+* {{yes}}
+
+False：
+
+* {{false}}
+* {{f}}
+* {{0}}
+* {{no}}
+
+同样适用于以下内置 HTML 属性：
+
+* {{allowfullscreen}}
+* {{allowpaymentrequest}}
+* {{async}}
+* {{autofocus}}
+* {{autoplay}}
+* {{checked}}
+* {{controls}}
+* {{default}}
+* {{disabled}}
+* {{formnovalidate}}
+* {{hidden}}
+* {{ismap}}
+* {{itemscope}}
+* {{loop}}
+* {{multiple}}
+* {{muted}}
+* {{nomodule}}
+* {{novalidate}}
+* {{open}}
+* {{playsinline}}
+* {{readonly}}
+* {{required}}
+* {{reversed}}
+* {{selected}}
+* {{truespeed}}
+
+++ {{@@[[<]]@@}}、{{@@[[>]]@@}}、{{@@[[=]]@@}}、{{@@[[==]]@@}}：对齐
+
+: 类型 : 全宽
+: 段落 : ✅
+: 支持属性 : ❌
+
+* {{@@[[<]]@@}} — 将内部文本左对齐。
+
+* {{@@[[>]]@@}} — 将内部文本右对齐。
+
+* {{@@[[=]]@@}} — 将内部文本居中对齐。
+
+* {{@@[[==]]@@}} — 将内部文本两端对齐。
+
+++ {{@@[[a]]@@}}：链接
+
+: 类型 : 行内
+: 别名 : {{@@[[anchor]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+: 支持 {{*}} : ✅
+: 支持 {{_}} : ✅
+
+使用修饰符 {{*}}（例如 {{@@[[*a href="https://google.com"]]Google[[/a]]@@}}）等同于使用 {{target="_blank"}}；该链接会在新窗口（标签页）中打开。
+若同时使用该修饰符和 {{target}}，其值将会叠加。
+
+通过该元素创建的链接会经过 [#link-handling 标准过滤]。
+
+++ {{@@[[blockquote]]@@}}：引用块
+
+: 类型 : 全宽
+: 段落 : ✅
+: 别名 : {{@@[[quote]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+在功能上等同于使用 {{>}}，但在标记层面更加“干净”和易读。
+
+++ {{@@[[b]]@@}}：加粗文本
+
+: 类型 : 行内
+: 别名 : {{@@[[bold]]@@}}、{{@@[[strong]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ {{@@[[char]]@@}}：HTML 字符
+
+: 类型 : 行内
+: 别名 : {{@@[[character]]@@}}
+: 支持属性 : ❌
+
+在文本中插入一个 HTML 实体字符。
+其工作方式与 {{@<&#64;&#60;>@@<&#62;&#64;>@}} 语法几乎相同。
+
+使用示例：{{@@[[char &mdash;]]@@}}
+
+++ {{@@[[code]]@@}}：代码块
+
+: 类型 : 全宽
+: 段落 : ❌
+: 支持属性 : ✅
+
+允许忽略 {{@@[[code]]@@}} 与 {{@@[[/code]]@@}} 之间的标记规则。
+主要用于展示标记示例而不被立即解析。
+
+该元素也可用于代码高亮。
+
+通过该元素添加到页面的代码，可以通过如下格式的单独文件访问：
+
+{{@@https@@://files.projwikit.unitreaty.org/local@@--@@code/<页面名称>/<页面中的代码块编号，从 1 开始>}}
+
+对于 HTML、JavaScript、XML、CSS 语言，将设置对应的 MIME 类型，
+从而可以在 {{<script src>}}、{{<link rel>}} 等需要类型匹配的场景中使用。
+
+仅支持一个属性：
+
+* {{type}} — 需要高亮的编程语言名称。
+
+[[collapsible show="[+] 支持语言完整列表" hide="[-] 支持语言完整列表"]]
+
+||~ 语言名称                ||~ 缩写                ||
+|| 1C                      || 1c                     ||
+|| ABNF                    || abnf                   ||
+|| Access logs             || accesslog              ||
+|| Ada                     || ada                    ||
+|| Arduino (C++ w/Arduino libs) || arduino, ino           ||
+|| ARM assembler           || armasm, arm            ||
+|| AVR assembler           || avrasm                 ||
+|| ActionScript            || actionscript, as       ||
+|| AngelScript             || angelscript, asc       ||
+|| Apache                  || apache, apacheconf     ||
+|| AppleScript             || applescript, osascript ||
+|| Arcade                  || arcade                 ||
+|| AsciiDoc                || asciidoc, adoc         ||
+|| AspectJ                 || aspectj                ||
+|| AutoHotkey              || autohotkey             ||
+|| AutoIt                  || autoit                 ||
+|| Awk                     || awk, mawk, nawk, gawk  ||
+|| Bash                    || bash, sh, zsh          ||
+|| Basic                   || basic                  ||
+|| BNF                     || bnf                    ||
+|| Brainfuck               || brainfuck, bf          ||
+|| C#                      || csharp, cs             ||
+|| C                       || c, h                   ||
+|| C++                     || cpp, hpp, cc, hh, c++, h++, cxx, hxx ||
+|| C/AL                    || cal                    ||
+|| Cache Object Script    || cos, cls               ||
+|| CMake                   || cmake, cmake.in        ||
+|| Coq                     || coq                    ||
+|| CSP                     || csp                    ||
+|| CSS                     || css                    ||
+|| Cap’n Proto             || capnproto, capnp       ||
+|| Clojure                 || clojure, clj           ||
+|| CoffeeScript            || coffeescript, coffee, cson, iced ||
+|| Crmsh                   || crmsh, crm, pcmk       ||
+|| Crystal                 || crystal, cr            ||
+|| D                       || d                      ||
+|| Dart                    || dart                   ||
+|| Delphi                  || dpr, dfm, pas, pascal  ||
+|| Diff                    || diff, patch            ||
+|| Django                  || django, jinja          ||
+|| DNS Zone file           || dns, zone, bind        ||
+|| Dockerfile              || dockerfile, docker     ||
+|| DOS                     || dos, bat, cmd          ||
+|| dsconfig                || dsconfig               ||
+|| DTS (Device Tree)       || dts                    ||
+|| Dust                    || dust, dst              ||
+|| EBNF                    || ebnf                   ||
+|| Elixir                  || elixir                 ||
+|| Elm                     || elm                    ||
+|| Erlang                  || erlang, erl            ||
+|| Excel                   || excel, xls, xlsx       ||
+|| F#                      || fsharp, fs             ||
+|| FIX                     || fix                    ||
+|| Fortran                 || fortran, f90, f95      ||
+|| G-Code                  || gcode, nc              ||
+|| Gams                    || gams, gms              ||
+|| GAUSS                   || gauss, gss             ||
+|| Gherkin                 || gherkin                ||
+|| Go                      || go, golang             ||
+|| Golo                    || golo, gololang         ||
+|| Gradle                  || gradle                 ||
+|| GraphQL                 || graphql                ||
+|| Groovy                  || groovy                 ||
+|| HTML, XML               || xml, html, xhtml, rss, atom, xjb, xsd, xsl, plist, svg ||
+|| HTTP                    || http, https            ||
+|| Haml                    || haml                   ||
+|| Handlebars              || handlebars, hbs, html.hbs, html.handlebars        ||
+|| Haskell                 || haskell, hs            ||
+|| Haxe                    || haxe, hx               ||
+|| Hy                      || hy, hylang             ||
+|| Ini, TOML               || ini, toml              ||
+|| Inform7                 || inform7, i7            ||
+|| IRPF90                  || irpf90                 ||
+|| JSON                    || json                   ||
+|| Java                    || java, jsp              ||
+|| JavaScript              || javascript, js, jsx    ||
+|| Julia                   || julia, julia-repl      ||
+|| Kotlin                  || kotlin, kt             ||
+|| LaTeX                   || tex                    ||
+|| Leaf                    || leaf                   ||
+|| Lasso                   || lasso, ls, lassoscript ||
+|| Less                    || less                   ||
+|| LDIF                    || ldif                   ||
+|| Lisp                    || lisp                   ||
+|| LiveCode Server         || livecodeserver         ||
+|| LiveScript              || livescript, ls         ||
+|| Lua                     || lua                    ||
+|| Makefile                || makefile, mk, mak, make ||
+|| Markdown                || markdown, md, mkdown, mkd ||
+|| Mathematica             || mathematica, mma, wl   ||
+|| Matlab                  || matlab                 ||
+|| Maxima                  || maxima                 ||
+|| Maya Embedded Language  || mel                    ||
+|| Mercury                 || mercury                ||
+|| Mizar                   || mizar                  ||
+|| Mojolicious             || mojolicious            ||
+|| Monkey                  || monkey                 ||
+|| Moonscript              || moonscript, moon       ||
+|| N1QL                    || n1ql                   ||
+|| NSIS                    || nsis                   ||
+|| Nginx                   || nginx, nginxconf       ||
+|| Nim                     || nim, nimrod            ||
+|| Nix                     || nix                    ||
+|| OCaml                   || ocaml, ml              ||
+|| Objective C             || objectivec, mm, objc, obj-c, obj-c++, objective-c++ ||
+|| OpenGL Shading Language || glsl                   ||
+|| OpenSCAD                || openscad, scad         ||
+|| Oracle Rules Language   || ruleslanguage          ||
+|| Oxygene                 || oxygene                ||
+|| PF                      || pf, pf.conf            ||
+|| PHP                     || php                    ||
+|| Parser3                 || parser3                ||
+|| Perl                    || perl, pl, pm           ||
+|| Plaintext               || plaintext, txt, text   ||
+|| Pony                    || pony                   ||
+|| PostgreSQL & PL/pgSQL   || pgsql, postgres, postgresql ||
+|| PowerShell              || powershell, ps, ps1    ||
+|| Processing              || processing             ||
+|| Prolog                  || prolog                 ||
+|| Properties              || properties             ||
+|| Protocol Buffers        || protobuf               ||
+|| Puppet                  || puppet, pp             ||
+|| Python                  || python, py, gyp        ||
+|| Python profiler results || profile                ||
+|| Python REPL             || python-repl, pycon     ||
+|| Q                       || k, kdb                 ||
+|| QML                     || qml                    ||
+|| R                       || r                      ||
+|| ReasonML                || reasonml, re           ||
+|| RenderMan RIB           || rib                    ||
+|| RenderMan RSL           || rsl                    ||
+|| Roboconf                || graph, instances       ||
+|| Ruby                    || ruby, rb, gemspec, podspec, thor, irb ||
+|| Rust                    || rust, rs               ||
+|| SAS                     || SAS, sas               ||
+|| SCSS                    || scss                   ||
+|| SQL                     || sql                    ||
+|| STEP Part 21            || p21, step, stp         ||
+|| Scala                   || scala                  ||
+|| Scheme                  || scheme                 ||
+|| Scilab                  || scilab, sci            ||
+|| Shell                   || shell, console         ||
+|| Smali                   || smali                  ||
+|| Smalltalk               || smalltalk, st          ||
+|| SML                     || sml, ml                ||
+|| Stan                    || stan, stanfuncs        ||
+|| Stata                   || stata                  ||
+|| Stylus                  || stylus, styl           ||
+|| SubUnit                 || subunit                ||
+|| Swift                   || swift                  ||
+|| Tcl                     || tcl, tk                ||
+|| Test Anything Protocol  || tap                    ||
+|| Thrift                  || thrift                 ||
+|| TP                      || tp                     ||
+|| Twig                    || twig, craftcms         ||
+|| TypeScript              || typescript, ts         ||
+|| VB.Net                  || vbnet, vb              ||
+|| VBScript                || vbscript, vbs          ||
+|| VHDL                    || vhdl                   ||
+|| Vala                    || vala                   ||
+|| Verilog                 || verilog, v             ||
+|| Vim Script              || vim                    ||
+|| X++                     || axapta, x++            ||
+|| x86 Assembly            || x86asm                 ||
+|| XL                      || xl, tao                ||
+|| XQuery                  || xquery, xpath, xq      ||
+|| YAML                    || yml, yaml              ||
+|| Zephir                  || zephir, zep            ||
+
+[[/collapsible]]
+
+++ {{@@[[collapsible]]@@}}：可折叠区块
+
+: 类型 : 全宽
+: 段落 : ✅
+: 支持 HTML 属性 : ❌
+
+创建一个可通过按钮展开或折叠的区块。
+
+除 HTML 属性外，还支持以下属性：
+
+* {{show}} — 区块关闭时按钮显示的文本。
+
+* {{hide}} — 区块打开时按钮显示的文本。
+
+* {{align}} — 按钮文本对齐方式。可选值：
+  {{left}}、{{right}}、{{center}}、{{justify}}。
+
+* {{folded}} — 指示区块是否默认展开。[#booleans 布尔值]。
+
+* {{hideLocation}} — 指示展开后关闭按钮的显示位置。
+  可选值：{{top}}、{{bottom}}、{{both}}、{{neither}}、{{none}}。
+  后两个选项等价。
+
+++ [[# date]] {{@@[[date]]@@}}：日期
+
+: 类型 : 行内
+: 支持 HTML 属性 : ❌
+
+插入日期，并根据查看者计算机的时区自动调整显示。
+
+使用特殊属性语法；日期直接写在块名后，而非单独属性：
+
+[[code]]
+[[date 2024-02-18T00:00:00Z format="%H:%M:%S %d.%m.%Y"]]
+[[/code]]
+
+例如，该日期以 UTC 指定，
+但在 UTC+0200 时区的计算机上将显示为：
+
+"02:00:00 18.02.2024"
+
+++ {{@@[[div]]@@}}：全宽通用容器
+
+: 类型 : 全宽
+: 段落 : ✅
+: 支持 [#html-attributes HTML 属性] : ✅
+: 支持 {{_}} : ✅
+
+++ [[# footnotes]] {{@@[[footnote]]@@}}：脚注
+
+: 类型 : 行内
+: 支持属性 : ❌
+
+在文本中添加编号脚注。
+其内容默认显示在页面底部，或显示在 {{@@[[footnoteblock]]@@}} 所在位置（若手动指定）。
+
+++ {{@@[[footnoteblock]]@@}}：脚注块
+
+: 类型 : 全宽
+: 支持 HTML 属性 : ❌
+
+显示文章中所有脚注的列表。
+
+支持以下属性：
+
+* {{title}} — 显示在脚注列表上方的标题文本。
+
+* {{hide}} — [#booleans 布尔值]。
+  若指定，该脚注块将不显示。
+  可用于移除页面自动添加的默认脚注块，使脚注仅以悬浮提示形式显示。
+
+++ {{@@[[form]]@@}}：表单
+
+: 类型 : 全宽
+: 段落 : ✅
+: 支持 [#html-attributes HTML 属性] : ✅
+: 支持 {{_}} : ✅
+
+允许填写表单并通过 [#path-params URL 参数] 提交到站内指定页面。
+
+支持所有常规 HTML 表单属性，
+但 {{target}} 属性具有特殊含义：它应填写完整的文章标识符，而不是 URL。
+
+使用示例：
+
+[[code]]
+[[form target="search"]]
+  [[input type="text" name="s"]]
+  [[input type="submit"]]
+[[/form]]
+[[/code]]
+
+点击“提交”后，将跳转到文章 {{search}}，
+例如：
+
+{{@@https://projwikit.unitreaty.org/search/s/你的_字符串@@}}
+
+随后可在目标文章中使用 {{@@%%path%%@@}} 功能读取该参数。
+
+++ {{@@[[html]]@@}}: HTML 代码
+
+: 类型 : 全宽
+: 段落 : ❌
+: 支持属性 : ✅
+
+允许插入任意 HTML 代码，系统会自动将其包裹在 {{@@[[iframe]]@@}} 中。以这种方式创建的框架会自动根据其内容大小进行自适应。
+
+在当前版本的网站中，该元素通过 {{<iframe srcdoc="...">}} 实现。通过这种方式创建的框架没有域名，因此在框架内部的 JS 代码中无法使用 {{window.localStorage}} 和 {{document.cookie}}。
+
+支持以下属性：
+
+* {{external}} — [#booleans 布尔值]（默认 — {{false}}）；启用该参数后，区块将通过媒体域名（https://files.projwikit.unitreaty.org）进行渲染，其方式与 Wikidot 平台相同。此类区块通常加载时间会稍慢几秒，但支持使用 {{window.localStorage}} 和 {{document.cookie}}。  
+**注意：** 当前页面版本系统在启用 {{external}} 的 HTML 区块中无法正常工作，因此始终会显示你代码的最新版本（包括在预览和查看旧版本页面时）。此外，此类区块不会读取 [#path-params 页面参数]。
+
+++ {{@@[[iframe]]@@}}: 通过链接嵌入外部页面
+
+: 类型 : 全宽
+: 段落 : ❌
+: 支持 [#html-attributes HTML 属性] : ✅
+
+语法：
+
+[[code]]
+[[iframe 链接 属性1="值" 属性2="值"]]
+[[/code]]
+
+支持所有允许的 HTML 属性。
+
+通过该元素插入的链接会经过 [#link-handling 标准过滤]。
+
+
+++ [[# if]] {{@@[[#if]]@@}}, {{@@[[if]]@@}}: 根据值是否存在显示内容
+
+: 类型 : 取决于内容
+: 支持属性 : ❌
+
+行内示例：
+
+[[code]]
+[[#if {$param} | param exists | param does not exist]]
+[[/code]]
+
+全宽示例：
+
+[[code]]
+[[if {$param}]]
+  param exists
+[[else]]
+  param does not exist
+[[/if]]
+[[/code]]
+
+只要是非空字符串都被视为“存在”，//除了// {{@@{$变量}@@}} 或 {{@@%%变量%%@@}} 这种格式的字符串。由于未在 {{@@[[include]]@@}} 或模块中传递的参数会保留为文本值，因此可以借此判断参数是否被传入。
+
+++ [[# ifexpr]] {{@@[[#ifexpr]]@@}}, {{@@[[ifexpr]]@@}}: 根据条件表达式显示内容
+
+: 类型 : 取决于内容
+: 支持属性 : ❌
+
+块级示例：
+
+[[code]]
+[[module CountPages fullname="main"]]
+  [[#ifexpr %%count%% > 0 | yes | no]]
+[[/module]]
+[[/code]]
+
+全宽示例：
+
+[[code]]
+[[module CountPages fullname="main"]]
+  [[ifexpr %%count%% > 0]]
+    main page exists
+  [[else]]
+    main page does not exist
+  [[/ifexpr]]
+[[/module]]
+[[/code]]
+
+若表达式语法错误（例如变量不存在或参数传递错误），表达式视为 false。
+
+否则，除 {{False}}、{{0}}、{{0.0}} 或 {{""}} 以外的任何值都视为 true。
+
+支持的运算符：{{*}}, {{/}}, {{+}}, {{-}}, {{@@ <<@@}}, {{@@>>@@}}, 以及比较运算 {{==}}, {{!=}}, {{<}}, {{>}}, {{<=}}, {{>=}}。
+
+除直接比较外，大多数运算仅支持数字。字符串必须以 JSON 格式表示（例如 {{"值"}}）。
+
+还支持以下函数：
+
+* {{min(x, y, ...)}} — 返回最小值。  
+* {{max(x, y, ...)}} — 返回最大值。  
+* {{abs(x)}} — 返回绝对值。  
+* {{round(x)}} — 四舍五入为整数。  
+* {{lower(str)}} — 转为小写。  
+* {{upper(str)}} — 转为大写。
+
+++ [[# ifcategory]] {{@@[[ifcategory]]@@}}: 根据文章分类显示内容
+
+: 类型 : 取决于内容
+: 支持属性 : ❌
+
+示例：
+
+[[code]]
+[[ifcategory +theme]]
+该文本仅在 theme 分类页面中显示。
+[[/ifcategory]]
+[[ifcategory -theme]]
+该文本在除 theme 外的所有页面显示。
+[[/ifcategory]]
+[[/code]]
+
+该元素主要用于与 {{[[include]]}} 配合使用，使插入的代码根据所在页面的分类产生不同效果。
+
+若存在多个分类，应以空格分隔。
+
+++ [[# iftags]] {{@@[[iftags]]@@}}: 根据文章标签显示内容
+
+: 类型 : 取决于内容
+: 支持属性 : ❌
+
+标签条件写在区块名称后，以空格分隔，格式如下：
+
+* {{+标签}} — 页面必须包含该标签。  
+* {{-标签}} — 页面不得包含该标签。  
+* {{标签}} — 页面至少包含列出的其中一个标签。
+
+示例：
+
+[[code]]
+[[iftags 对象 故事 +ru]]
+该文章属于俄罗斯分部的对象或故事。
+[[/iftags]]
+[[/code]]
+
+++ {{@@[[image]]@@}}: 图片
+
+: 类型 : 行内 / 全宽
+: 支持 [#html-attributes HTML 属性] : ✅
+
+插入当前页面附件图片：
+
+[[code]]
+[[image img.png alt="my img"]]
+[[/code]]
+
+插入其他页面附件图片：
+
+[[code]]
+[[image main/ico_arthub.svg alt="image from another page"]]
+[[/code]]
+
+也可以插入互联网图片（不推荐，因为可能发生链接失效——上传至站点的文件会随文章长期保留，而网络图片可能随时失效）。
+
+支持对齐修饰符 {{f<}}, {{f>}}, {{<}}, {{>}}, {{=}}。后三种会使图片成为全宽元素。
+
+* {{@@[[f<image]]@@}} — 左浮动图片，文字会环绕。  
+* {{@@[[f>image]]@@}} — 右浮动图片。  
+* {{@@[[<image]]@@}} — 左对齐全宽图片。  
+* {{@@[[>image]]@@}} — 右对齐全宽图片。  
+* {{@@[[=image]]@@}} — 居中全宽图片。
+
+支持 {{link}} 属性，可将图片自动包裹为链接。该链接会经过 [#link-handling 标准过滤]，效果等同于 {{@@[[a href="..."]][[image ...]][[/a]]@@}}。
+
+++ {{@@[[input]]@@}}: 输入框
+
+: 类型 : 行内
+: 支持 [#html-attributes HTML 属性] : ✅
+
+可单独使用，也可与表单搭配使用。
+
+++ {{@@[[i]]@@}}: 斜体文本
+
+: 类型 : 行内
+: 别名 : {{@@[[italics]]@@}}, {{@@[[em]]@@}}, {{@@[[emphasis]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ {{@@[[lines]]@@}}: 插入空行
+
+: 类型 : 行内
+: 支持属性 : ❌
+
+用于插入多行空白。
+
+示例：
+
+[[code]]
+[[lines 8]]
+[[/code]]
+
+++ {{@@[[ul]]@@}}, {{@@[[ol]]@@}}, {{@@[[li]]@@}}: 列表
+
+: 类型 : 行内 / 全宽
+: 支持 [#html-attributes HTML 属性] : ✅
+: 支持 {{_}} : ✅
+
+* {{@@[[ul]]@@}} — 无序列表（全宽）。  
+* {{@@[[ol]]@@}} — 有序列表（全宽）。  
+* {{@@[[li]]@@}} — 列表项（行内）。
+
+示例：
+
+[[code]]
+[[ul]]
+  [[li]]第一项[[/li]]
+  [[li]]第二项[[/li]]
+  [[li]]
+    [[ol]]
+      [[li]]第一条编号[[/li]]
+      [[li]]第二条编号[[/li]]
+    [[/ol]]
+  [[/li]]
+  [[li]]第三项[[/li]]
+[[/ul]]
+[[/code]]
+
+所有列表元素均支持标准 HTML 属性。
+
+++ {{@@[[mark]]@@}}: 高亮文本
+
+: 类型 : 行内
+: 别名 : {{@@[[highlight]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ [[# module-block]] {{@@[[module]]@@}}: 插入站点模块
+
+: 类型 : 全宽
+: 别名 : {{@@[[module654]]@@}}
+: 支持 HTML 属性 : ❌
+
+通用语法：
+
+[[code]]
+[[module 模块名称 属性1="值" 属性2="值"]]
+模块内容（仅适用于支持内容的模块）
+[[/module]]
+[[/code]]
+
+模块列表及其属性见“模块”章节。
+
+对于不支持内容的模块（如 {{@@[[module Rate]]@@}}），无需写关闭标签。
+
+++ {{@@[[table]]@@}}, {{@@[[row]]@@}}, {{@@[[hcell]]@@}}, {{@@[[cell]]@@}}: 表格
+
+: 类型 : 全宽
+: 段落 : ❌
+: 支持 [#html-attributes HTML 属性] : ✅
+
+类似于标准 HTML 表格。
+
+* {{@@[[table]]@@}} — {{<table>}}  
+* {{@@[[row]]@@}} — {{<tr>}}  
+* {{@@[[hcell]]@@}} — {{<th>}}  
+* {{@@[[cell]]@@}} — {{<td>}}
+
+不支持 {{<thead>}}、{{<tbody>}}、{{<tfoot>}}。
+
+示例：
+
+[[code]]
+[[table class="wiki-content-table"]]
+  [[row]]
+    [[hcell]]标题 1[[/hcell]]
+    [[hcell]]标题 2[[/hcell]]
+    [[cell rowspan="2"]]跨行单元格[[/cell]]
+  [[/row]]
+  [[row]]
+    [[cell colspan="2"]]跨列单元格[[/cell]]
+  [[/row]]
+[[/table]]
+[[/code]]
+
+++ {{@@[[tabview]]@@}}, {{@@[[tab]]@@}}: 标签页
+
+: 类型 : 全宽
+: 段落 : ✅
+: 别名 : {{@@[[tabs]]@@}}（对应 {{@@[[tabview]]@@}}）
+: 支持 HTML 属性 : ❌
+
+用于在页面中创建可切换的标签页。
+
+示例：
+
+[[code]]
+[[tabview]]
+  [[tab 标签 1]]
+    标签 1 内容
+  [[/tab]]
+  [[tab 标签 2]]
+    标签 2 内容
+  [[/tab]]
+[[/tabview]]
+[[/code]]
+
+标签名称也可使用 {{@@[[tab title="标签名称"]]@@}} 格式。
+
+++ {{@@[[tt]]@@}}: 等宽文本
+
+: 类型 : 行内
+: 别名 : {{@@[[mono]]@@}}, {{@@[[monospace]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ {{@@[[p]]@@}}：显式段落
+
+: 类型 : 全宽
+: 替代名称 : {{@@[[paragraph]]@@}}
+: 段落 : ❌
+: 支持 [#html-attributes HTML 属性] : ✅
+
+允许为当前段落指定 HTML 属性，就像为 {{<p>}} 指定属性一样。
+
+示例：
+
+[[code]]
+[[p style="color: red"]]
+红色段落。
+[[/p]]
+[[/code]]
+
+++ {{@@[[ruby]]@@}}, {{@@[[rt]]@@}}：汉字注音标注
+
+: 类型 : 行内
+: 替代名称 : {{@@[[rubytext]]@@}}（用于 {{@@[[rt]]@@}}）
+: 支持 [#html-attributes HTML 属性] : ✅
+
+使用示例：
+
+[[code]]
+[[ruby]]マレニア[[rt]]Malenia[[/rt]][[/ruby]]
+[[/code]]
+
+++ {{@@[[rb]]@@}}：简化汉字注音标注
+
+: 类型 : 行内
+: 替代名称 : {{@@[[ruby2]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+使用示例：
+
+[[code]]
+[[rb マレニア | Malenia]]
+[[/code]]
+
+++ {{@@[[size]]@@}}：字体大小
+
+: 类型 : 行内
+: 支持属性 : ❌
+
+允许修改字体大小。尺寸可以使用任何 CSS 允许的数值。
+
+~~~
+
+使用示例：
+
+[[code]]
+这段文字非常[[size 200%]]大[[/size]]，同时又[[size 6px]]小[[/size]]。
+[[/code]]
+
+++ {{@@[[span]]@@}}：行内通用容器
+
+: 类型 : 行内
+: 支持 [#html-attributes HTML 属性] : ✅
+: 支持 {{_}} : ✅
+
+可以包含任何其他元素，也可用于为文章中的文本添加样式。
+
+++ {{@@[[s]]@@}}：删除线文本
+
+: 类型 : 行内
+: 替代名称 : {{@@[[strikethrough]]@@}}, {{@@[[del]]@@}}, {{@@[[deletion]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ {{@@[[sup]]@@}}：上标文本
+
+: 类型 : 行内
+: 替代名称 : {{@@[[super]]@@}}, {{@@[[superscript]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ {{@@[[sub]]@@}}：下标文本
+
+: 类型 : 行内
+: 替代名称 : {{@@[[subscript]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ {{@@[[toc]]@@}}：自动目录
+
+: 类型 : 全宽
+: 支持属性 : ❌
+
+在页面中添加一个可展开的标题列表块。
+
+可使用以下前缀改变元素位置：
+
+* {{@@[[f<toc]]@@}} — 左侧浮动块。该块会被周围文本和块级元素环绕。
+
+* {{@@[[f>toc]]@@}} — 右侧浮动块。
+
+++ {{@@[[u]]@@}}：下划线文本
+
+: 类型 : 行内
+: 替代名称 : {{@@[[underline]]@@}}, {{@@[[ins]]@@}}, {{@@[[insertion]]@@}}
+: 支持 [#html-attributes HTML 属性] : ✅
+
+++ [[# user-block]] {{@@[[user]]@@}}：用户链接
+
+: 类型 : 行内
+: 支持属性 : ❌
+: 支持 {{*}} : ✅
+
+可以以两种形式使用：
+
+* {{@@[[user 用户名]]@@}} — 输出普通用户链接。
+
+* {{@@[[*user 用户名]]@@}} — 输出用户链接及其头像。
+
++ [[# link-handling]] 补充：链接处理
+
+出于安全原因，某些链接会被网站屏蔽。
+
+除非某个元素或模块的文档中另有说明，否则所有链接（例如 {{@@[]@@}}、{{@@[[[|]]]@@}}、{{@@[[a href="..."]]@@}}、{{@@[[image ... link="..."]]@@}} 等）都会按照以下规则进行检查。
+
+明确 **禁止** 的绝对链接协议：
+
+* {{data:}}
+* {{javascript:}}（除 {{"javascript:;"}} 之外，该形式表示“空链接”）
+
+明确允许的绝对链接协议：
+
+* {{blob:}}
+* {{@@chrome-extension://@@}}
+* {{@@chrome://@@}}
+* {{@@content://@@}}
+* {{data:}}
+* {{dns:}}
+* {{feed:}}
+* {{@@file://@@}}
+* {{@@ftp://@@}}
+* {{@@git://@@}}
+* {{@@gopher://@@}}
+* {{@@http://@@}}
+* {{@@https://@@}}
+* {{@@irc6://@@}}
+* {{@@irc://@@}}
+* {{@@ircs://@@}}
+* {{mailto:}}
+* {{@@resource://@@}}
+* {{@@rtmp://@@}}
+* {{@@sftp://@@}}
+
+对于块级元素，下列以指定字符开头的链接同样被视为合法链接：
+
+* {{A-Z}}, {{a-z}}, {{0-9}}, {{.}}（普通相对链接）。
+* {{/}}, {{@@//@@}}（基于当前域名和协议的绝对链接）。
+* {{#}}（锚点跳转）。
+* {{?}}（跳转到当前页面并附带 GET 参数）。
+* {{$}}, {{&}}, {{+}}, {{,}}, {{:}}, {{;}}, {{=}}, {{@}}, {{%}}, {{-}}, {{~}}（其他允许用于相对链接的特殊字符）。
+
+对于自由语法元素，会采用更严格的校验规则，并允许更少的特殊字符，以便将链接与语法本身区分开来：
+
+* {{#}} + ({{A-Z}}, {{a-z}}, {{0-9}}, {{_}}, {{-}}, {{%}})（锚点跳转）。
+* {{@@//地址@@}}（使用当前协议的绝对链接）。
+* {{/地址}}（使用当前域名的绝对链接）。
+* 任何不以 {{/}} 开头，但包含它的文本。
+
++ 补充：模块
+
+模块提供了网站中不属于普通文章的全部功能。这包括交互元素（评分、论坛、标签云）以及扩展功能（向文章添加 CSS 样式、获取其他文章或当前用户的信息等）。
+
+如果模块的运行导致网站功能异常，可以通过添加参数 {{/nomodule/true}} 访问页面（例如：{{@@https://projwikit.unitreaty.org/main/nomodule/true@@}}）。  
+该参数会完全禁用此页面上的 **所有** 模块。
+
+关于如何在文章中插入模块的详细说明，请参见 [#module-block 章节] {{@@[[module]]@@}}。
+
+此外，需要注意的是，对于支持内部标记的模块（例如 {{ListUsers}}、{{ListPages}} 和 {{CountPages}}），模块内容在技术上并不属于文章内容的一部分。例如，在模块内部定义的任何 [#headers 标题] 或 [#footnotes 脚注]，都只会在该模块范围内显示。
+
+++ 模块 Rate
+
+: 支持参数 : ❌
+: 支持内容 : ❌
+
+为文章添加评分组件，效果类似于页面底部“评分”按钮下方的评分模块。
+
+从发布规则角度来看，该模块是必需的，但从技术角度来看并非强制。如果文章中未包含该模块，仍然可以通过“评分”按钮进行投票。
+
+该模块不接受任何参数。
+
+++ 模块 CSS
+
+: 支持参数 : ❌
+: 支持内容 : ✅
+
+该模块的内容会原样作为 CSS 样式应用到当前页面。例如：
+
+[[code]]
+[[module CSS]]
+body {
+  background: red;
+}
+[[/module]]
+[[/code]]
+
+可以通过如下地址获取页面上所有 CSS 模块合并后的结果文件：  
+{{@@https@@://files.projwikit.unitreaty.org/local@@--@@theme/<页面名称>/style.css}}
+
+该方法会处理 {{@@[[if]]@@}}、{{@@[[ifexpr]]@@}} 和 {{@@[[noinclude]]@@}}。  
+可以通过参数 {{?includeParams=<JSON 格式参数>}} 传递参数。
+
+++ [[# module-listpages]] 模块 ListPages
+
+: 支持参数 : ✅
+: 支持内容 : ✅
+
+用于根据指定参数获取文章列表。
+
+对于每一篇找到的文章，模块内容都会被复制并作为标记进行处理，并进行 [#autoreplace 自动替换]，替换以下变量：
+
+* {{%%name%%}} — 文章的自身标识符（例如 {{main}}）。
+* {{%%category%%}} — 文章类别（例如 {{sandbox}}）。
+* {{%%fullname%%}} — 包含类别的完整标识符（例如 {{sandbox:main}}）。
+* {{%%title%%}} — 文章标题。
+* {{%%title_linked%%}} — 包含标题的 [#links 内部链接]。
+* {{%%link%%}} — 从当前域名开始的绝对链接（以 {{/}} 开头）。
+* {{%%content%%}} — 文章内容（标记格式）。
+* {{%%rating%%}} — 文章评分。
+* {{%%rating_votes%%}} — 文章投票数。
+* {{%%current_user_voted%%}} — {{True}}/{{False}}，表示当前用户是否投票。
+* {{%%popularity%%}} — 文章人气值：正向投票比例（在点赞系统下）或高于 3.0 的评分比例（在星级系统下）。
+* {{%%revisions%%}} — 文章修订次数。
+* {{%%index%%}} — 在搜索结果中的序号。
+* {{%%total%%}} — 符合条件的文章总数。
+* {{%%created_by%%}} — 创建文章的用户名。
+* {{%%created_by_linked%%}} — [#user-block 创建者的用户名、头像及个人主页链接]。
+* {{%%updated_by%%}} — 最后编辑者用户名。
+* {{%%updated_by_linked%%}} — [#user-block 最后编辑者的用户名、头像及个人主页链接]。
+* {{%%tags%%}} — 以逗号分隔的标签列表。
+* {{%%tags_linked%%}} — 以逗号分隔的标签链接列表，格式为 {{/system:page-tags/tag/标签名}}。
+* {{%%created_at%%}} — [#date 创建日期]。
+* {{%%updated_at%%}} — [#date 最后修改日期]。
+
+ListPages 模块参数列表：
+
+* {{range}} — 只能使用 {{range="."}} 格式。  
+用于优化当前页面变量获取。  
+使用该参数时，其它参数将被忽略。
+
+* {{fullname}} — 限制为指定完整标识符的单一文章。  
+可使用 {{.}} 表示当前文章。  
+使用该参数时，其它参数将被忽略。
+
+* {{pagetype}} — 按文章类型筛选。  
+类型可为 {{hidden}}（标识符以 {{_}} 开头）或 {{normal}}（其它文章）。  
+默认值为 {{normal}}。
+
+* {{name}} — 按文章自身标识符筛选（不含类别）。  
+例如 {{name="main"}} 可能匹配 {{wl:main}} 或 {{sandbox:main}}。  
+可接受值：
+
+ * {{*}}（默认）— 不限制。
+ * {{.}} — 当前文章（使用后忽略其它参数）。
+ * {{=}} — 与当前文章相同标识符。
+ * {{文本%}} 或 {{文本*}} — 指定前缀。
+ * 具体标识符 — 精确匹配。
+
+* {{tags}} — 按标签筛选。  
+可接受值：
+
+ * {{*}}（默认）— 不限制。
+ * {{-}} — 无标签文章。
+ * {{=}} — 至少包含当前文章标签（允许额外标签）。
+ * {{==}} — 标签完全一致。
+ * [#iftags iftags 表达式]。
+
+* {{category}} — 按类别筛选。  
+可接受值：
+
+ * {{*}} — 不限制。
+ * {{.}}（默认）— 当前类别。
+ * [#ifcategory ifcategory 表达式]。
+
+* {{parent}} — 按父页面筛选。  
+可接受值：
+
+ * {{-}} — 无父页面。
+ * {{=}} — 与当前页面相同父页面。
+ * {{-=}} — 与当前页面不同父页面。
+ * {{.}} — 父页面为当前页面。
+ * 完整标识符 — 指定父页面。
+
+* {{created_by}} — 按作者筛选。  
+可接受值：
+
+ * {{.}} — 当前用户。
+ * 用户名 — 指定作者。
+
+* {{created_at}} — 按创建日期筛选。  
+格式 {{年-月-日}}（月日可省略）。  
+支持比较运算：{{=}}, {{<>}}, {{>=}}, {{>}}, {{<=}}, {{<}}。
+
+* {{rating}} — 按评分筛选。  
+##red|注意：添加该参数会显著降低查询速度。##  
+支持 {{=}}, {{<>}}, {{>=}}, {{>}}, {{<=}}, {{<}}。
+
+* {{votes}} — 按投票数筛选。  
+##red|注意：添加该参数会显著降低查询速度。##  
+支持 {{=}}, {{<>}}, {{>=}}, {{>}}, {{<=}}, {{<}}。
+
+* {{popularity}} — 按人气值筛选。  
+##red|注意：添加该参数会显著降低查询速度。##  
+支持 {{=}}, {{<>}}, {{>=}}, {{>}}, {{<=}}, {{<}}。
+
+* {{order}} — 排序。  
+默认升序。降序需添加 {{desc}}，例如 {{order="created_at desc"}}。  
+支持排序字段：
+
+ * {{created_at}}
+ * {{created_by}}
+ * {{updated_at}}
+ * {{name}}
+ * {{fullname}}
+ * {{title}}
+ * {{rating}} ##red|(注意：会显著降低查询速度)##
+ * {{votes}} ##red|(注意：会显著降低查询速度)##
+ * {{popularity}} ##red|(注意：会显著降低查询速度)##
+ * {{random}} — 随机排序。
+
+* {{offset}} — 相对于第一篇找到的文章的偏移量，从该位置开始渲染模块；例如 {{offset="1"}} 表示第一篇找到的文章将不会被显示。
+
+* {{limit}} — 模块中最多渲染的文章数量。
+
+* {{perpage}} — 模块单页最多显示的文章数量。  
+若超过该值，模块中将出现分页列表，可在页面之间切换。  
+注意：当参数 {{wrapper}} 被设置为负值时，文章数量仍会受到限制，但分页列表 **不会** 出现。
+
+* {{p}} — 当文章数量超过一页时，模块的初始页码。
+
+此外，还可以使用以下参数控制文章信息的输出方式：
+
+* {{prependLine}} — 此参数中的标记将在文章列表渲染之前输出；通常用于表格标题行。  
+该参数中不支持变量。
+
+* {{appendLine}} — 此参数中的标记将在文章列表渲染完成后输出。  
+该参数中不支持变量。
+
+* {{separate}} — [#booleans 布尔值]（默认值为 {{true}}）；启用后，每篇文章的标记（以及 {{appendLine}} 和 {{prependLine}}）都会作为完全独立的元素处理。  
+这主要影响 {{@@[[iftags]]@@}} 与 {{@@[[ifcategory]]@@}} 的行为、通过 {{@@[[image]]@@}} 使用这些文章中的图片，以及是否可以将标记拼接为完整代码（例如用于表格）。  
+因此，若使用 ListPages 渲染表格，必须设置 {{separate="false"}}。
+
+* {{wrapper}} — [#booleans 布尔值]（默认值为 {{true}}）；启用后，模块内容会被包裹在带有 {{list-pages-box}} 类名的 {{<div>}} 元素中。  
+同时启用 ListPages 的动态（AJAX）功能，例如分页切换。  
+不建议关闭此参数。
+
+* {{reverse}} — [#booleans 布尔值]（默认值为 {{false}}）；启用后，文章列表顺序将被反转。  
+该操作将在通过 {{order}} 参数完成普通排序之后执行。
+
+对于上述任意属性，都可以通过 {{@URL@@|@@默认值}} 从页面地址中的变量获取值。  
+该结构会将模块属性设置为与属性同名的 URL 变量值，若未指定则使用 {{默认值}}。例如，若目标文章包含 {{@@[[module ListPages category="@URL@@|@@sandbox"]]@@}}，并通过 {{/category/fragment}} 访问页面，则模块将输出 {{fragment}} 分类下的页面；若未传递变量，则输出 {{sandbox}} 分类下的页面。
+
+++ 模块 CountPages
+
+: 支持参数 : ✅
+: 支持内容 : ✅
+
+支持与 [#module-listpages 模块 ListPages] 相同的参数，但不会输出任何文章信息。
+
+可包含标记内容，并通过 [#autoreplace 自动替换] 使用以下变量：
+
+* {{%%total%%}}, {{%%count%%}} — 符合条件的文章数量。
+
+++ 模块 ListUsers
+
+: 支持参数 : ✅
+: 支持内容 : ✅
+
+该模块可用于获取当前用户的信息。
+
+可包含标记内容，并通过 [#autoreplace 自动替换] 使用以下变量：
+
+* {{%%number%%}} — 用户 ID。
+* {{%%title%%}}, {{%%name%%}} — 用户名。
+* {{%%avatar%%}} — 用户头像链接。
+
+默认情况下，若当前用户未登录，模块将不会显示。
+
+可使用布尔参数 {{always}} 防止该行为。  
+当其为正值时，模块内容仍会显示，但除 {{%%avatar%%}}（默认头像链接）外，其它变量将不可用。
+
+因此，可以使用以下方式检测用户是否已登录：
+
+[[code]]
+[[module ListUsers always="yes"]]
+  [[if %%number%%]]
+    用户已登录
+  [[else]]
+    用户未登录
+  [[/if]]
+[[/module]]
+[[/code]]
+
+++ 模块 Redirect
+
+: 支持参数 : ✅
+: 支持内容 : ❌
+
+将当前页面重定向至另一页面。支持参数：
+
+* {{destination}} — 目标地址。  
+不会进行标准过滤，仅禁止以 {{data:}} 或 {{javascript:}} 开头的链接。
+
+* {{noredirect}} — 当为正的 [#booleans 布尔值] 时，阻止模块在当前页面生效。  
+通常在编辑包含该模块的页面时使用（{{/noredirect/true}}）。
+
+示例：
+
+[[code]]
+[[module Redirect destination="/scp-1730"]]
+[[/code]]
+
+++ 模块 InterWiki
+
+: 支持参数 : ✅
+: 支持内容 : ✅
+
+系统模块。用于在侧边栏显示当前页面的多语言翻译。
+
+通过 API [https://crom.avn.sh/ Crom] 实现，由英文 SCP 社区创建并维护。
+
+对于每个找到的翻译，模块内容会被复制并作为标记处理，并进行 [#autoreplace 自动替换]，可使用以下变量：
+
+* {{%%url%%}} — 翻译页面地址。
+* {{%%language%%}} — 翻译语言名称或对应维基名称（若同一语言有多个维基），语言由 {{language}} 参数指定。
+* {{%%language_native%%}} — 翻译语言在其自身语言中的名称。
+* {{%%language_code%%}} — 翻译语言代码（例如 {{en}}, {{ru}}）。
+
+InterWiki 模块参数：
+
+* {{article}} — 要获取翻译列表的文章名称。
+
+* {{prependLine}} — 若翻译数量超过一个，该参数中的标记将在翻译列表渲染前输出。  
+不支持变量。
+
+* {{appendLine}} — 若翻译数量超过一个，该参数中的标记将在翻译列表渲染后输出。  
+不支持变量。
+
+* {{language}} — {{%%language%%}} 所使用的显示语言。
+
+* {{order}} — 排序方向与变量。可使用 {{url}}, {{language}}, {{language_native}}, {{language_code}}。  
+可添加 {{desc}} 表示降序（例如 {{order="language_native desc"}}）。
+
+* {{omitlanguage}} — 在获取翻译列表时忽略的语言（通常为当前维基语言）。
+
+* {{empty}} — 若未找到任何翻译时显示的标记。
+
+* {{loading}} — 页面加载完成后立即显示，在获取翻译数据之前显示的标记。
+
+++ 模块 TagCloud 与 PagesByTag
+
+系统模块，用于支持页面 <<[[[system:page-tags|标签云]]]>> 的功能。
+
+++ 模块 SiteChanges
+
+系统模块，用于支持页面 <<[[[system:recent-changes|最近更改]]]>> 的功能。
+
+++ 模块 ForumStart、ForumCategory、ForumThread、ForumNewThread、ForumNewPost
+
+系统模块，用于支持论坛功能。
+
+* ForumStart 模块必须位于系统页面 {{forum:start}}，用于显示分区列表。
+* ForumCategory 模块必须位于系统页面 {{forum:category}}，用于显示指定分区的主题列表。
+* ForumThread 模块必须位于系统页面 {{forum:thread}}，用于显示指定主题中的帖子。
+* ForumNewThread 模块必须位于系统页面 {{forum:new-thread}}，用于在指定分区创建新主题。
+* ForumNewPost 不直接用于页面，而通过主题页面的模块 API 使用。
+
+++ 模块 RecentPosts
+
+系统模块，用于支持页面 <<[[[forum:recent-posts|论坛最新帖子]]]>> 的功能。
+
+[[/div]]

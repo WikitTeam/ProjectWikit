@@ -1,0 +1,191 @@
+from modules import ModuleError
+from modules.listpages import render_pagination, render_date
+from renderer import RenderContext, render_template_from_string, render_user_to_html
+import math
+
+from web.controllers import articles
+from web.models.forum import ForumCategory, ForumThread, ForumPost
+
+
+def has_content():
+    return False
+
+
+def render(context: RenderContext, params):
+    context.title = '论坛'
+
+    c = context.path_params.get('c')
+    try:
+        c = int(c)
+        category = ForumCategory.objects.filter(id=c)
+        category = category[0] if category else None
+    except:
+        category = None
+
+    if category is None:
+        context.status = 404
+        raise ModuleError('未找到版块 "%s"' % c)
+
+    if not context.user.has_perm('roles.view_forum_categories', category):
+        raise ModuleError('权限不足，无法查看该版块')
+
+    sort_by = context.path_params.get('sort')
+
+    num_threads = ForumThread.objects.filter(category=category).count()
+    num_posts = ForumPost.objects.filter(thread__category=category).count()
+
+    context.title += ' — ' + category.name
+
+    canonical_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name))
+    short_url = '/forum/c-%d' % category.id
+
+    # 获取主题列表
+    page = 1
+    try:
+        page = int(context.path_params.get('p'))
+    except:
+        pass
+    if page < 1:
+        page = 1
+
+    per_page = 20
+
+    q = ForumThread.objects
+
+    if category.is_for_comments:
+        q = q.filter(article_id__isnull=False)
+    else:
+        q = q.filter(category=category)
+
+    if sort_by != 'start':
+        q = q.order_by('-is_pinned', '-updated_at')
+    else:
+        q = q.order_by('-is_pinned', '-created_at')
+    total = q.count()
+
+    max_page = max(1, int(math.ceil(total / per_page)))
+    if page > max_page:
+        page = max_page
+
+    threads = q[(page-1)*per_page:page*per_page]
+    render_threads = []
+    for thread in threads:
+        posts = ForumPost.objects.filter(thread=thread).order_by('created_at')
+        post_count = posts.count()
+        last_post_url = None
+        last_post_user = None
+        last_post_date = None
+        url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name if thread.category_id else thread.article.display_name))
+        if post_count:
+            last_post = posts[post_count-1]  # 不要使用-1以避免重复检查计数
+            last_post_url = '%s#post-%d' % (url, last_post.id)
+            last_post_date = render_date(last_post.created_at)
+            last_post_user = render_user_to_html(last_post.author)
+        render_threads.append({
+            'name': thread.name if thread.category_id else thread.article.display_name,
+            'description': thread.description,
+            'created_by': render_user_to_html(thread.author),
+            'created_at': render_date(thread.created_at),
+            'post_count': post_count,
+            'url': url,
+            'last_post_url': last_post_url,
+            'last_post_date': last_post_date,
+            'last_post_user': last_post_user,
+            'is_pinned': thread.is_pinned,
+            'is_locked': thread.is_locked,
+        })
+
+    return render_template_from_string(
+        """
+        <div class="forum-category-box">
+            <div class="forum-breadcrumbs">
+                <a href="/forum/start">论坛</a>
+                &raquo;
+                <a href="{{section_url}}">{{ category.section.name }}</a>
+                &raquo;
+                {{ category.name }}
+            </div>
+            <div class="description-block well">
+                <div class="statistics">
+                    主题数：{{ num_threads }}
+                    <br>
+                    帖子数：{{ num_posts }}
+                </div>
+                {{ category.description }}
+            </div>
+            <div class="options">
+                排序方式：
+                <div>
+                    {% if sort_by == 'start' %}
+                        <a href="{{ canonical_url }}" class="btn btn-primary btn-small btn-sm">按最后回复时间</a>
+                    {% else %}
+                        <span class="btn btn-primary disabled btn-small btn-sm"><strong>按最后回复时间</strong></span>
+                    {% endif %}
+                    <br>
+                    {% if sort_by != 'start' %}
+                        <a href="{{ short_url }}/sort/start" class="btn btn-primary btn-small btn-sm">按主题创建时间</a>
+                    {% else %}
+                        <span class="btn btn-primary disabled btn-small btn-sm"><strong>按主题创建时间</strong></span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if not category.is_for_comments and can_create_thread %}
+                <div class="new-post">
+                    <a href="/forum:new-thread/c/{{ category.id }}">创建主题</a>
+                </div>
+            {% endif %}
+            {{ pagination }}
+            <table class="table" style="width: 98%">
+            <tbody>
+            <tr class="head">
+                <td>主题标题</td>
+                <td>创建信息</td>
+                <td>回复数</td>
+                <td>最后回复</td>
+            </tr>
+            {% for thread in threads %}
+                <tr>
+                    <td class="name">
+                        <div class="title">
+                            {% if thread.is_pinned %}
+                            置顶： 
+                            {% endif %}
+                            <a href="{{ thread.url }}">{{ thread.name }}</a>
+                        </div>
+                        <div class="description">{{ thread.description }}</div>
+                    </td>
+                    <td class="started">
+                        作者：{{ thread.created_by }}
+                        <br>
+                        {{ thread.created_at }}
+                    </td>
+                    <td class="posts">
+                        {{ thread.post_count }}
+                    </td>
+                    <td class="last">
+                        {% if thread.last_post_url %}
+                        作者：{{ thread.last_post_user }}
+                        <br>
+                        {{ thread.last_post_date }}
+                        <br>
+                        <a href="{{ thread.last_post_url }}">查看</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+            {{ pagination }}
+        </div>
+        """,
+        category=category,
+        section_url='/forum/s-%d/%s' % (category.section.id, articles.normalize_article_name(category.section.name)),
+        num_threads=num_threads,
+        num_posts=num_posts,
+        sort_by=sort_by,
+        canonical_url=canonical_url,
+        short_url=short_url,
+        threads=render_threads,
+        can_create_thread=context.user.has_perm('roles.create_forum_threads', category),
+        pagination=render_pagination(short_url, page, max_page) if max_page != 1 else ''
+    )

@@ -1,0 +1,35 @@
+name: wikitgo
+services:
+  web:
+    restart: unless-stopped
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+    volumes:
+      - ./files:/app/files
+      - ./archive:/app/archive:ro
+    env_file:
+      - prod-web.env
+    environment:
+      DB_ENGINE: pg
+      DB_PG_HOST: postgres
+      DB_PG_USERNAME: admin
+      DB_PG_PASSWORD: wikitpassword
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    volumes:
+      - ./postgresql:/var/lib/postgresql
+      - ./postgresql/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: wikitpassword
+      POSTGRES_DB: projwikit
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+        interval: 5s
+        timeout: 3s
+        retries: 3

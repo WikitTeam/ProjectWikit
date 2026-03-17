@@ -1,0 +1,13 @@
+{% extends "system_base.html" %}
+
+{% block h1 %}{% block title %}修改个人资料{% endblock %}{% endblock %}
+
+{% block back_link %}<a class="back-link" href="/-/profile"><span class="fa fa-arrow-left"></span> 返回公开资料页</a>{% endblock %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">保存</button>
+    </form>
+{% endblock %}

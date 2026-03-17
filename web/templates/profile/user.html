@@ -1,0 +1,48 @@
+{% extends "system_base.html" %}
+
+{% block title %}
+    {{ displayname }}
+{% endblock %}
+
+{% block h1 %}
+    <style>
+        a.manage-user {
+            color: unset;
+            text-decoration: unset;
+        }
+        a.manage-user:hover {
+            color: #ff5f5f;
+            text-decoration: underline;
+            background-color: transparent;
+        }
+    </style>
+
+    <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
+    {% if can_manage_users %}
+        <a class="manage-user" href="{{ manage_url }}" target="_blank">{{ displayname }}</a>
+    {% else %}
+        {{ displayname }}
+    {% endif %}
+    {% if subtitle %}
+        <div class="user-heading-subtitle">
+            {{ subtitle }}
+        </div>
+    {% endif %}
+    {% if request.user == object %}
+        <div class="edit-button">
+            <a href="{% url "profile_edit" %}" title="编辑中" class="icon"><span>编辑</span> <i class="fas fa-pen"></i></a>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="profile-form">
+        {% if object.type == 'wikidot' %}<p><b>注意:</b> 该用户是从Wikidot平台迁移而来的非活跃用户。<br><br></p>{% endif %}
+        {% if object.type == 'bot' %}<p><b>注意:</b> 该用户为机器人。<br><br></p>{% endif %}
+        {% if object.first_name or object.last_name %}<p><b>姓名:</b>   
+        {% if object.first_name %}{{ object.first_name }}{% endif %}  
+        {% if object.last_name %} {{ object.last_name }}{% endif %}</p >{% endif %}
+        {% if object.bio %}<p><b>个人简介:</b> {{ bio_rendered }}</p>{% endif %}
+        <p><b>站点成员:</b> 自 {{ object.date_joined|date:"Y年m月d日 H:i" }}</p>
+    </div>
+{% endblock %}

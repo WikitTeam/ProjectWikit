@@ -1,0 +1,21 @@
+import React from 'react'
+import Navigation from './Navigation'
+import Page from './Page'
+import * as Styled from './Page.styles'
+
+interface Props {
+  children?: React.ReactNode
+}
+
+export const ProfilePage: React.FC<Props> = ({ children }) => {
+  return (
+    <Page title="个人资料" hasBorder={true}>
+      <Styled.NavContainer>
+        <Navigation />
+      </Styled.NavContainer>
+      <Styled.ContentContainer>{children}</Styled.ContentContainer>
+    </Page>
+  )
+}
+
+export default ProfilePage

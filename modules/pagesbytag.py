@@ -1,0 +1,42 @@
+from renderer.utils import render_template_from_string
+
+from web.controllers.articles import get_tag
+from web.models.articles import Tag
+from web.controllers import articles as web_articles
+
+
+def render(context, params):
+    for k in context.path_params:
+        params[k] = context.path_params[k]
+
+    if 'tag' not in params:
+        return ''
+
+    tag = get_tag(params["tag"])
+    hidden_categories = web_articles.get_hidden_categories_for(context.user)
+
+    # 按标签查找文章
+    try:
+        articles = tag.articles.exclude(category__in=hidden_categories).order_by('title')
+    except (AttributeError, Tag.DoesNotExist):
+        return ''
+
+    articles = [{'full_name': x.full_name, 'title': x.title or x.full_name} for x in articles]
+
+    return render_template_from_string(
+        """
+        <a name="pages"></a>
+        <h2>标记为 <em>{{ tag.name }}</em> 的页面列表{% if not tag.category.is_default %} 来自分类 <em>{{ tag.category.name }}</em>{% endif %}：</h2>
+        <div id="tagged-pages-list" class="pages-list">
+            {% for article in articles %}
+                <div class="pages-list-item">
+                    <div class="title">
+                        <a href="/{{ article.full_name }}">{{ article.title }}</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        """,
+        tag=tag,
+        articles=articles
+    )

@@ -1,0 +1,405 @@
+import json
+import math
+import re
+
+from django.db.models.functions import Lower
+from django.utils.safestring import SafeString
+
+import renderer
+
+from modules import ModuleError
+from modules.listpages import render_date, render_pagination
+from renderer.utils import render_user_to_json, render_user_to_html, render_template_from_string, render_vote_to_html
+from renderer import RenderContext
+
+from web.controllers import articles
+from web.models.users import User
+from web.models.articles import Vote
+from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost, ForumPostVersion
+
+from ._csrf_protection import csrf_safe_method
+
+def has_content():
+    return False
+
+
+def allow_api():
+    return True
+
+def get_post_contents(posts):
+    post_ids = [x.id for x in posts]
+    post_contents = ForumPostVersion.objects.order_by('post_id', '-created_at').distinct('post_id').filter(post_id__in=post_ids)
+    ret = {}
+    for content in post_contents:
+        ret[content.post_id] = (content.source, content.author)
+    return ret
+
+
+def highlight_mentions(text: str, usernames: set[str]) -> str:
+    regex = re.compile(r'@[\w.-]+')
+
+    def repl(match: re.Match) -> str:
+        full = match.group(0)
+        username = full[1:]
+
+        if username.lower() in usernames:
+            return f'<span class="w-user-mention">{full}</span>'
+        return full
+
+    return SafeString(regex.sub(repl, text))
+
+
+def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]=set()):
+    post_contents = get_post_contents(posts)
+    post_info = []
+
+    for post in posts:
+        replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
+        author_vote = ''
+        is_op = thread.author == post.author
+
+        if thread.article:
+            rating_mode = thread.article.settings.rating_mode
+            author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
+            author_vote = render_vote_to_html(author_vote, rating_mode)
+            if post.author in thread.article.authors.all():
+                is_op = True
+
+        content = highlight_mentions(
+            renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
+            usernames
+        )
+        render_post = {
+            'id': post.id,
+            'name': post.name,
+            'is_op': is_op, #e4f0c8
+            'author': render_user_to_html(post.author),
+            'author_rate': author_vote,
+            'created_at': render_date(post.created_at),
+            'updated_at': render_date(post.updated_at),
+            'content': content,
+            'replies': get_post_info(context, thread, replies, show_replies, usernames),
+            'rendered_replies': None,
+            'options_config': json.dumps({
+                'threadId': thread.id,
+                'threadName': thread.name if thread.category_id else thread.article.display_name,
+                'postId': post.id,
+                'postName': post.name,
+                'hasRevisions': post.created_at != post.updated_at,
+                'lastRevisionDate': post.updated_at.isoformat(),
+                'lastRevisionAuthor': render_user_to_json(post_contents.get(post.id, ('', None))[1]),
+                'user': render_user_to_json(context.user),
+                'canReply': context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
+                'canEdit': context.user.has_perm('roles.edit_forum_posts', post),
+                'canDelete': context.user.has_perm('roles.delete_forum_posts', post)
+            })
+        }
+        post_info.append(render_post)
+
+    return post_info
+
+
+def render_posts(post_info):
+    for i in post_info:
+        i['rendered_replies'] = render_posts(i['replies']) if i['replies'] else ''
+    return render_template_from_string(
+        """
+        {% for post in posts %}
+        <div class="post-container">
+            <div class="post" id="post-{{ post.id }}">
+                <div class="long">
+                    <div class="head {% if post.is_op %}op-post{% endif %}">
+                        <div class="title">
+                            {{ post.name }}
+                        </div>
+                        <div class="info">
+                            {{ post.author }} {{ post.created_at }} {{ post.author_rate }}
+                        </div>
+                    </div>
+                    <div class="content">
+                        {{ post.content }}
+                    </div>
+                    <div class="options w-forum-post-options" data-config="{{ post.options_config }}"></div>
+                </div>
+            </div>
+            {% if post.replies %}
+                {{ post.rendered_replies }}
+            {% endif %}
+        </div>
+        {% endfor %}
+        """,
+        posts=post_info
+    )
+
+
+def render(context: RenderContext, params):
+    context.title = '论坛'
+
+    content_only = params.get('contentonly', 'no') == 'yes'
+
+    t = context.path_params.get('t')
+    try:
+        t = int(t)
+        thread = ForumThread.objects.filter(id=t) \
+            .select_related(
+                'article'
+            ) \
+            .prefetch_related(
+                'article__authors'
+            )
+        thread = thread[0] if thread else None
+    except:
+        thread = None
+
+    if thread is None:
+        context.status = 404
+        raise ModuleError('未找到主题 "%s"' % t)
+    
+    category = thread.category
+    if category:
+        if not context.user.has_perm('roles.view_forum_threads', thread):
+            raise ModuleError('权限不足，无法查看主题')
+    else:
+        if not context.user.has_perm('roles.view_article_comments', thread):
+            raise ModuleError('权限不足，无法查看讨论')
+        
+        # 查找匹配的第一个版块
+        for c in ForumCategory.objects.filter(is_for_comments=True):
+            if context.user.has_perm('roles.view_forum_categories', c):
+                category = c
+                break
+
+    name = thread.name if thread.category_id else thread.article.display_name
+
+    context.title += ' — ' + name
+
+    section_url = '/forum/s-%d/%s' % (category.section.id, articles.normalize_article_name(category.section.name)) if category else ''
+    category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name)) if category else ''
+    short_url = '/forum/t-%d' % thread.id
+
+    per_page = 10
+
+    q = ForumPost.objects.filter(thread=thread, reply_to__isnull=True).order_by('created_at')
+
+    total = q.count()
+
+    # 获取分页
+    page = 1
+    try:
+        page = int(context.path_params.get('p'))
+    except:
+        # 如果未指定页面，但指定了帖子，则尝试根据帖子ID估算页码
+        try:
+            post_id = int(context.path_params.get('post'))
+            # 如果这是回复，需要一直回溯到根帖子才能知道它在哪一页
+            post = ForumPost.objects.filter(id=post_id)
+            post = post[0] if post else None
+            while post:
+                if post.thread_id != thread.id:
+                    post_id = None
+                    break
+                if not post.reply_to:
+                    break
+                post = post.reply_to
+                post_id = post.id
+            # 现在有了根帖子ID。
+            # 只需获取ID列表并据此计算页码。
+            # 未优化，但目前可用
+            all_posts = list(q.values('id'))
+            for i in range(len(all_posts)):
+                if all_posts[i]['id'] == post_id:
+                    page = int((i / per_page) + 1)
+                    break
+        except:
+            if context.path_params.get('post') is not None:
+                raise
+            pass
+    if page < 1:
+        page = 1
+
+    max_page = max(1, int(math.ceil(total / per_page)))
+    if page > max_page:
+        page = max_page
+
+    usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
+    posts = q[(page-1)*per_page:page*per_page]
+    post_info = get_post_info(context, thread, posts, usernames=usernames)
+
+
+    context.path_params['p'] = str(page)
+
+    new_post_config = {
+        'threadId': thread.id,
+        'threadName': name,
+        'user': render_user_to_json(context.user),
+    }
+
+    categories = []
+    raw_categories = ForumCategory.objects.all().order_by('order', 'id')
+    raw_sections = ForumSection.objects.all().order_by('order', 'id')
+    for s in raw_sections:
+        if not context.user.has_perm('roles.view_forum_sections', thread):
+            continue
+        cs = []
+        for c in raw_categories:
+            if c.section_id != s.id:
+                continue
+            if not context.user.has_perm('roles.view_forum_categories', c):
+                continue
+            cs.append({'name': '\u00a0\u00a0'+c.name, 'canMove': not c.is_for_comments, 'id': c.id})
+        if cs:
+            categories.append({'name': s.name, 'canMove': False, 'id': None})
+            categories += cs
+
+    thread_options_config = {
+        'threadId': thread.id,
+        'threadName': name,
+        'threadDescription': thread.description,
+        'canEdit': thread.article_id is None and context.user.has_perm('roles.edit_forum_threads', thread),
+        'canPin': thread.article_id is None and context.user.has_perm('roles.pin_forum_threads', thread),
+        'canLock': context.user.has_perm('roles.lock_forum_threads', thread),
+        'canMove': thread.article_id is None and context.user.has_perm('roles.move_forum_threads', thread),
+        'isLocked': thread.is_locked,
+        'isPinned': thread.is_pinned,
+        'moveTo': categories,
+        'categoryId': thread.category_id,
+    }
+
+    return render_template_from_string(
+        """
+        {% if not content_only %}
+        <div class="forum-thread-box">
+            <div class="forum-breadcrumbs">
+                <a href="/forum/start">论坛</a>
+                {% if category %}
+                &raquo;
+                <a href="{{ section_url }}">{{ category.section.name }}</a>
+                &raquo;
+                <a href="{{ category_url }}">{{ category.name }}</a>
+                {% endif %}
+                &raquo;
+                {{ name }}
+            </div>
+            <div class="description-block well">
+                <div class="statistics">
+                    创建者：{{ created_by }}
+                    <br>
+                    日期：{{ created_at }}
+                    <br>
+                    帖子数：{{ total_posts }}
+                </div>
+                {% if thread.article %}
+                    这是页面 <a href="/{{ thread.article.full_name }}">{{ thread.article.display_name }}</a> 的讨论 
+                {% elif thread.description %}
+                    <div class="head">
+                        简短描述：
+                    </div>
+                    {{ thread.description }}
+                {% endif %}
+            </div>
+            <div class="options w-forum-thread-options page-options-bottom" data-config="{{ thread_options_config }}"></div>
+            {% endif %}
+            <div class="thread-container w-forum-thread"
+                 id="thread-container"
+                 data-forum-thread-path-params="{{ data_path_params }}"
+                 data-forum-thread-params="{{ data_params }}">
+                <div id="thread-container-posts">
+                    {{ pagination }}
+                    {{ posts }}
+                    {{ pagination }}
+                </div>
+            </div>
+            {% if can_reply and not content_only %}
+                <div class="w-forum-new-post" data-config="{{ new_post_config }}"></div>
+            {% endif %}
+        </div>
+        """,
+        section_url=section_url,
+        category_url=category_url,
+        category=category,
+        name=name,
+        thread=thread,
+        created_by=render_user_to_html(thread.author),
+        created_at=render_date(thread.created_at),
+        total_posts=total,
+        pagination=render_pagination(short_url, page, max_page) if max_page != 1 else '',
+        new_post_config=json.dumps(new_post_config),
+        posts=render_posts(post_info),
+        can_reply=context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
+        content_only=content_only,
+        data_path_params=json.dumps(context.path_params),
+        data_params=json.dumps(params),
+        thread_options_config=json.dumps(thread_options_config)
+    )
+
+
+@csrf_safe_method
+def api_for_article(context, _params):
+    if not context.article:
+        raise ModuleError('未指定页面')
+    return {"threadId": articles.get_comment_info(context.article)[0]}
+
+
+def api_update(context, params):
+    if 'name' in params:
+        if not (params['name'] or '').strip():
+            raise ModuleError('未指定主题标题')
+
+    if 'description' in params:
+        params['description'] = params['description'] or ''
+
+    t = params.get('threadid')
+    try:
+        t = int(t)
+        thread = ForumThread.objects.filter(id=t)
+        thread = thread[0] if thread else None
+    except:
+        thread = None
+
+    if thread is None:
+        context.status = 404
+        raise ModuleError('主题未找到或未指定')
+
+    if 'name' in params or 'description' in params:
+        if not context.user.has_perm('roles.edit_forum_threads', thread):
+            raise ModuleError('权限不足，无法编辑主题')
+        if 'name' in params:
+            thread.name = params['name']
+        if 'description' in params:
+            thread.description = params['description']
+
+    if 'islocked' in params:
+        if not context.user.has_perm('roles.lock_forum_threads', thread):
+            raise ModuleError('权限不足，无法锁定主题')
+        thread.is_locked = bool(params['islocked'])
+
+    if 'ispinned' in params:
+        if not context.user.has_perm('roles.pin_forum_threads', thread):
+            raise ModuleError('权限不足，无法置顶主题')
+        thread.is_pinned = bool(params['ispinned'])
+
+    if 'categoryid' in params:
+        if not context.user.has_perm('roles.move_forum_threads', thread):
+            raise ModuleError('权限不足，无法移动主题')
+        try:
+            c = int(params['categoryid'])
+            category = ForumCategory.objects.filter(id=c)
+            category = category[0] if category else None
+            if not context.user.has_perm('roles.view_forum_categories', category):
+                raise ModuleError('权限不足，无法查看目标版块')
+        except:
+            category = None
+        if category is None:
+            raise ModuleError('目标版块不存在')
+        thread.category = category
+
+    thread.save()
+
+    return {
+        'threadId': thread.id,
+        'name': thread.name,
+        'description': thread.description,
+        'isLocked': thread.is_locked,
+        'isPinned': thread.is_pinned,
+        'categoryId': thread.category_id
+    }

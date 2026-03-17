@@ -1,0 +1,13 @@
+{% autoescape off %}
+您好，
+
+您已被邀请以成员身份加入 {{ protocol }}://{{ domain }}。您可以通过点击下面的链接接受邀请：
+
+{{ protocol }}://{{ domain }}{% url 'accept' uidb64=uid token=token %}
+
+如果您不希望接受此邀请，请忽略此邮件。
+
+此致，
+{{ site_name }}
+
+{% endautoescape %}

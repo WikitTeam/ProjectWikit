@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "lib": ["ES2020.String", "DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "target": "ESNext",
+    "jsx": "react",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "paths": {
+      "~reactive/*": ["reactive/*"],
+      "~forum/*": ["forum/*"],
+      "~entrypoints/*": ["entrypoints/*"],
+      "~components/*": ["components/*"],
+      "~articles/*": ["articles/*"],
+      "~api/*": ["api/*"],
+      "~util/*": ["util/*"]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{% if allow_create %}
+    <div id="create-new-page" data-config="{{ options }}"></div>
+{% else %}
+    <p id="404-message">您请求的页面 <em>{{ page_id }}</em> 不存在
+{% endif %}
