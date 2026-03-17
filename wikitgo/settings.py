@@ -287,7 +287,7 @@ JAZZMIN_SETTINGS = {
     "user_avatar": "get_avatar",
 
     'site_title': 'Wikit',
-    'site_brand': 'AdminPanel',
+    'site_brand': 'Wikit管理面板',
 }
 
 
