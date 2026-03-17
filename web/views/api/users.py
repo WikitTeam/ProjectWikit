@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 
 from shared_data import shared_users
-from . import APIView, APIError
+from . import APIView, APIError, takes_json
 
 from web.models import ActionLogEntry
 from django.utils.http import urlsafe_base64_encode  
