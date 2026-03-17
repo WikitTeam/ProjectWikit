@@ -13,9 +13,9 @@
 
 ## PostgreSQL 配置
 默认配置为：
-- 用户名：`projwikit` (`POSTGRES_USER`)
+- 用户名：`admin` (`POSTGRES_USER`)
 - 密码：`wikitpassword` (`POSTGRES_PASSWORD`)
-- 数据库名：`wikitwiki` (`POSTGRES_DB`)
+- 数据库名：`projwikit` (`POSTGRES_DB`)
 - 数据库主机：`localhost` (`DB_PG_HOST`)
 - 数据库端口：`5432` (`DB_PG_PORT`)
 
