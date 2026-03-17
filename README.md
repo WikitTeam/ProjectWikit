@@ -2,9 +2,10 @@
   <h1>ProjectWikit</h1>
   <h3>ProjectWikit维基启动器，基于SCP俄分使用的引擎更改而来，维基语法转换的部分基于SCP基金会社区WikiJump团队开发的FTML。</h3>
 </div>
-### Note 
 
-This project, ProjectWikit, originated as a fork of the Ru Foundation Engine. (Link to this: https://github.com/SCPRu/RuFoundation)However, It has since undergone numerous modifications and has become an independent project, no longer tracking or following updates from the original RuFoundation codebase.
+### Note From WikitTeam
+
+This project, ProjectWikit, originated as a fork of the RuFoundation Engine. (Link to this: https://github.com/SCPRu/RuFoundation) However, It has since undergone numerous modifications and has become an independent project, no longer tracking or following updates from the original RuFoundation codebase.
 
 As a result, ProjectWikit is fully maintained by its own development team. If you encounter any issues or have suggestions, please report them directly to the WikitTeam rather than the original RuFoundation Team.
 
