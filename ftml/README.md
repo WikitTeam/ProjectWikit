@@ -1,6 +1,6 @@
 ## ftml
 
-### Note from SCPRU/RuFoundation Team
+### Note 
 
 This is a fork / alternate version of WikiJump's FTML.
 
