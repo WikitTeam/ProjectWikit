@@ -69,7 +69,7 @@ class User(AbstractUser, RolesMixin):
     avatar = models.ImageField('头像', null=True, blank=True, upload_to='-/users')
     bio = models.TextField('个人简介', blank=True)
 
-    api_key = models.CharField('API密钥', unique=True, blank=True, null=True, max_length=67)
+    api_key = models.CharField('API密钥', unique=True, blank=True, null=True, max_length=255)
 
     is_forum_active = models.BooleanField('论坛权限已启用', default=True)
     forum_inactive_until = models.DateTimeField('论坛权限禁用至', null=True)
