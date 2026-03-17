@@ -1,6 +1,6 @@
 <div align="center">
   <h1>ProjectWikit</h1>
-  <h3>ProjectWikit维基启动器，基于SCP-RU使用的引擎更改而来，维基语法转换的部分基于SCP基金会社区WikiJump团队开发的FTML。</h3>
+  <h3>ProjectWikit维基启动器，基于SCP-RU使用的引擎修改而来，维基语法转换的部分基于SCP基金会社区WikiJump团队开发的FTML。</h3>
 </div>
 
 ### Note From WikitTeam
