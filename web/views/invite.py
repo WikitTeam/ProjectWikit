@@ -96,3 +96,47 @@ class InviteView(FormView):
             messages.error(self.request, "此邮箱已被站点成员使用")
 
         return redirect(self.get_success_url())
+@method_decorator(staff_member_required, name='dispatch')  
+class GenerateInviteLinkView(FormView):  
+    form_class = InviteForm  
+    template_name = "admin/web/user/user_action.html"  
+      
+    def get_context_data(self, **kwargs):  
+        context = super().get_context_data(**kwargs)  
+        context["title"] = "生成邀请链接"  
+        context["submit_btn"] = "生成链接"  
+        context.update(site.each_context(self.request))  
+        return context  
+      
+    def get_success_url(self):  
+        return resolve_url("admin:index")  
+      
+    def form_valid(self, form):  
+        email = form.cleaned_data['email']  
+        roles = form.cleaned_data['roles']  
+          
+        try:  
+            user, created = User.objects.get_or_create(email=email)  
+            if not created:  
+                messages.error(self.request, "该邮箱已被站点成员使用")  
+                return redirect(self.get_success_url())  
+              
+            # 设置用户  
+            user.roles.set(roles)  
+            user.is_active = False  
+            user.username = f'user-{user.id}'  
+            user.email = email  
+            user.save()  
+              
+            # 生成令牌和链接  
+            token = account_activation_token.make_token(user)  
+            uid = urlsafe_base64_encode(force_bytes(user.pk))  
+            site = get_current_site()  
+            invitation_url = f"{self.request.scheme}://{site.domain}/-/accept/{uid}/{token}"  
+              
+            messages.success(self.request, f"邀请链接已生成: {invitation_url}")  
+              
+        except IntegrityError:  
+            messages.error(self.request, "创建用户失败")  
+          
+        return redirect(self.get_success_url())
