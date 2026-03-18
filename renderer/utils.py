@@ -66,9 +66,9 @@ def render_role_to_json(role: Role):
 
 def render_user_to_text(user: _UserType):
     if user is None:
-        return 'system'
+        return '系统'
     if isinstance(user, AnonymousUser):
-        return 'Anonymous User'
+        return '匿名用户'
     if user.type == User.UserType.Wikidot:
         return 'wd:'+user.wikidot_username
     return user.username
@@ -77,7 +77,7 @@ def render_user_to_text(user: _UserType):
 def render_user_to_html(user: _UserType, avatar=True, hover=True):
     if user is None:
         return render_template_from_string(
-            '<span class="printuser{{class_add}}"><strong>system</strong></span>',
+            '<span class="printuser{{class_add}}"><strong>系统</strong></span>',
             class_add=(' avatarhover' if hover else '')
         )
     if isinstance(user, AnonymousUser):
@@ -85,9 +85,9 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True):
             """
             <span class="printuser{{class_add}}">
                 {% if show_avatar %}
-                    <a onclick="return false;"><img class="small" src="{{avatar}}" alt="Anonymous User"></a>
+                    <a onclick="return false;"><img class="small" src="{{avatar}}" alt="匿名用户"></a>
                 {% endif %}
-                <a onclick="return false;">Anonymous User</a></span>
+                <a onclick="return false;">匿名用户</a></span>
             """,
             class_add=(' avatarhover' if hover else ''),
             show_avatar=avatar,
@@ -175,7 +175,7 @@ def render_user_to_json(user: _UserType, show_avatar=True, skip_perms=False):
     if isinstance(user, AnonymousUser):
         return UserJSON(
             type='anonymous',
-            name='Anonymous User',
+            name='匿名用户',
             username=None,
             showAvatar=show_avatar
         )
@@ -200,12 +200,12 @@ def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize
     rate = vote.rate if vote else None
 
     if vote is None:
-        msg = 'не оценено'
+        msg = '未评分'
         if capitalize:
             msg = msg.capitalize()
         return render_template_from_string(
             """
-            <span class="vote" title="Оценка обсуждаемой статьи">{{msg}}</span>
+            <span class="vote" title="讨论文章的评分">{{msg}}</span>
             """,
             msg=msg
         )
@@ -222,7 +222,7 @@ def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize
 
     return render_template_from_string(
         """
-        <span class="vote" title="Оценка обсуждаемой статьи"><span class="rate">{{visual_rate}}</span>
+        <span class="vote" title="讨论文章的评分"><span class="rate">{{visual_rate}}</span>
         """,
         visual_rate=visual_rate
     )
