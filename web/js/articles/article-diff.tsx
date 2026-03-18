@@ -112,7 +112,7 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
-        Закрыть
+        关闭
       </a>
       <h1>比较页面版本</h1>
       <div className="diff-box">
