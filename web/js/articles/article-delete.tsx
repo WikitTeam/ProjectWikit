@@ -159,7 +159,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        Закрыть
+        关闭
       </a>
       <h1>删除页面</h1>
       {canDelete ? (
