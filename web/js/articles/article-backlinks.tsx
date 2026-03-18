@@ -80,7 +80,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        Закрыть
+        关闭
       </a>
       <h1>依赖此页面的其他页面</h1>
       {loading && <Loader className="loader" />}
