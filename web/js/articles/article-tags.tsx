@@ -160,7 +160,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        Закрыть
+        关闭
       </a>
       <h1>页面标签</h1>
       <p>
