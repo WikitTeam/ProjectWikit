@@ -431,7 +431,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
-        Закрыть
+        关闭
       </a>
       <h1>页面更改历史</h1>
       <div id="revision-list" className={`${loading ? 'loading' : ''}`}>
