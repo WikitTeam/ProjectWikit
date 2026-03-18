@@ -128,14 +128,14 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: 'Закрыть', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
           <p>
             <strong>错误:</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        Закрыть
+        关闭
       </a>
       <h1>父页面与面包屑</h1>
       <p>
