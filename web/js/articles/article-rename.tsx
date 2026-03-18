@@ -131,7 +131,7 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        Закрыть
+        关闭
       </a>
       <h1>重命名/移动页面</h1>
       <p>
