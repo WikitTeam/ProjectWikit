@@ -88,7 +88,7 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        Закрыть
+        关闭
       </a>
       <h1>创建子页面</h1>
       <p>此操作将创建一个以此页面为父页面的新页面</p>
