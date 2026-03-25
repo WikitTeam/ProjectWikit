@@ -49,7 +49,7 @@ COPY --from=rust_build /build/target/release/libftml.so ./ftml/ftml.so
 
 RUN useradd -u 8877 wikitwiki
 # This wierd thing extremly speeds up chown
-RUN find /app -print0 | xargs -0 -n 100 -P 32 chown wikiwiki:wikiwiki
+RUN find /app -print0 | xargs -0 -n 100 -P 32 chown wikitwiki:wikitwiki
 
 USER wikitwiki
 
