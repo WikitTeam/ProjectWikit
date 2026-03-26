@@ -20,7 +20,9 @@ from django.conf import settings
 from web.views.media import MediaView
 from web.views.local_items import LocalCodeView, LocalHTMLView, LocalThemeView
 
-
+def partial_quote(url):  
+    return url.replace(':', '%3A').replace('/', '%2F').replace('?', '%3F')  
+    
 urlpatterns = [
     path(f"local--files/<path:dir_path>", MediaView.as_view()),
     path(f"local--code/<page_id>/<int:index>", LocalCodeView.as_view()),
