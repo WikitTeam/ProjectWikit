@@ -269,7 +269,7 @@ const ForumPostOptions: React.FC<Props> = ({
     <>
       {hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen && (
         <div className="changes" style={{ display: 'block' }}>
-          Последнее редактирование{' '}
+          最后编辑于{' '}
           <span className="odate" style={{ display: 'inline' }}>
             {formatDate(new Date(lastRevisionDate))}
           </span>{' '}
