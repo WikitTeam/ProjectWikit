@@ -204,7 +204,7 @@ const ForumPostOptions: React.FC<Props> = ({
         }
       })
       .catch(e => {
-        setDeleteError(e.error || 'Ошибка связи с сервером')
+        setDeleteError(e.error || '连接服务器失败')
       })
   })
 
@@ -273,7 +273,7 @@ const ForumPostOptions: React.FC<Props> = ({
           <span className="odate" style={{ display: 'inline' }}>
             {formatDate(new Date(lastRevisionDate))}
           </span>{' '}
-          от <UserView data={lastRevisionAuthor} hideAvatar />{' '}
+          来自 <UserView data={lastRevisionAuthor} hideAvatar />{' '}
           <a href="#" onClick={onOpenRevisions}>
             <i className="icon-plus" /> 显示更多
           </a>
