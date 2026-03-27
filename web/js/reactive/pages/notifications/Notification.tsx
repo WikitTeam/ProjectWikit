@@ -22,7 +22,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
         <>
           <Styled.TypeName>{title[notification.type as keyof typeof title]}</Styled.TypeName>
           <Styled.PostFrom>
-            От <UserView data={notification.author} /> 在话题中 <a href={notification.section.url}>{notification.section.name}</a> &raquo;{' '}
+            来自 <UserView data={notification.author} /> 在话题中 <a href={notification.section.url}>{notification.section.name}</a> &raquo;{' '}
             <a href={notification.category.url}>{notification.category.name}</a> &raquo;{' '}
             <a href={notification.thread.url}>{notification.thread.name}</a>
           </Styled.PostFrom>
@@ -58,7 +58,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
               <a href={`/${notification.article.pageId}`}>{pageName}</a>
             </Styled.RevisionArticle>
             <Styled.RevisionFlags>{renderArticleHistoryFlags(logEntry)}</Styled.RevisionFlags>
-            <Styled.RevisionNumber>(рев. {notification.rev_number})</Styled.RevisionNumber>
+            <Styled.RevisionNumber>(rev. {notification.rev_number})</Styled.RevisionNumber>
             <Styled.RevisionUser>
               <UserView data={notification.user} />
             </Styled.RevisionUser>
