@@ -34,8 +34,11 @@
 | 数据库端口 | `5432`          | `DB_PG_PORT`        |
 
 ## 💡 快速部署
+> [!TIP]
+> 在开始部署前，请修改 `prod-web.env.example` 内容，并将文件重命名为 `prod-web.env`。
+
 <details>
-<summary><code><strong>使用 Docker 快速部署（推荐）</strong></code></summary>
+<summary>  <code><strong>使用 Docker 快速部署（推荐）</strong></code></summary>
 
 ### 1️⃣ Docker环境
 - Docker 28.4.0
@@ -65,7 +68,7 @@
 </details>
 
 <details>
-<summary><code><strong>使用 Python 快速部署</strong></code></summary>
+<summary>  <code><strong>使用 Python 快速部署</strong></code></summary>
 
 ### 1️⃣ Python环境
 - Python 3.13.2
