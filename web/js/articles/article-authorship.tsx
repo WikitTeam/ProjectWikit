@@ -190,7 +190,7 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
         关闭
       </a>
-      <h1>页面的作者权</h1>
+      <h1>页面作者信息</h1>
 
       <form method="POST" onSubmit={onSubmit}>
         <table className="form">
