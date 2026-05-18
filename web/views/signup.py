@@ -120,6 +120,17 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
     def post(self, request, *args, **kwargs):  
         data = request.POST  
         username = data.get('username', '').strip()  
+
+        # 检查是否为Wikidot账号
+        is_wikidot = User.objects.filter(wikidot_username=username, type=User.UserType.Wikidot).exists()  
+
+        if not re.match(r'^[\w.-]+\Z', username, re.ASCII):  # 用户名正则过滤
+            error_msg = '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。'  
+        if is_wikidot:  
+            error_msg += ' 认领Wikidot账号时，请将原名中的空格替换为“-”。'  
+        context.update({'error': error_msg})  
+        return self.render_to_response(context) 
+
         # 查找是否存在待认领的Wikidot账号  
         user = User.objects.filter(wikidot_username=username, type=User.UserType.Wikidot).first()  
           
