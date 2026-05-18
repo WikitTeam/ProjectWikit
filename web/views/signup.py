@@ -52,7 +52,7 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         if user.type == User.UserType.Wikidot:
             context.update({'is_wikidot': True, 'username': user.wikidot_username})
         return self.render_to_response(context)
-
+        
     def post(self, request, *args, **kwargs):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)
@@ -108,6 +108,14 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
         # except: return False  
         # return True
         return False # 开发后期去掉这条
+        
+    def get(self, request, *args, **kwargs):  
+        # 如果用户已登录 重定向到首页  
+        if not isinstance(request.user, AnonymousUser):  
+            return HttpResponseRedirect(redirect_to=settings.LOGIN_REDIRECT_URL)  
+          
+        context = self.get_context_data()  
+        return self.render_to_response(context)
   
     def post(self, request, *args, **kwargs):  
         data = request.POST  
