@@ -94,6 +94,8 @@ sys_patterns = [
 
     path('accept/<uidb64>/<token>', signup.AcceptInvitationView.as_view(), name="accept"),
 
+    path("signup", signup.SignupView.as_view(), name='signup'),
+
     re_path(r'^preferences/', include('dynamic_preferences.urls')),
 
     *make_path("admin", admin.site.urls),
