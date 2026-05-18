@@ -43,7 +43,7 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
   if (user.type === 'anonymous') {
     return (
       <>
-        <a className="login-status-create-account btn" href="/system:join">
+        <a className="login-status-create-account btn" href="/-/signup">
           创建账户
         </a>{' '}
         <span>或</span>{' '}
