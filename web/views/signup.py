@@ -118,19 +118,19 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
             # TODO Wikidot校验验证码  
             if not self.verify_with_external_api(username, data.get('verification_code')):  
                 return self.render_to_response({'error': '验证码校验失败'})  
-            user.type = User.UserType.Normal [3](#5-2)   
+            user.type = User.UserType.Normal    
         else:  
             # 普通注册：创建新用户 分配reader角色  
             if User.objects.filter(username=username).exists():  
                 return self.render_to_response({'error': '用户已存在'})  
             user = User.objects.create_user(username=username)  
-            reader_role = Role.objects.get(slug='reader') [4](#5-3)   
-            user.roles.add(reader_role) [5](#5-4)   
+            reader_role = Role.objects.get(slug='reader')    
+            user.roles.add(reader_role)    
   
-        user.set_password(data.get('password')) [6](#5-5)   
-        user.is_active = True [7](#5-6)   
+        user.set_password(data.get('password'))    
+        user.is_active = True    
         user.save()  
           
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend') [8](#5-7)   
-        OnUserSignUp(request, user).emit() [9](#5-8)   
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')    
+        OnUserSignUp(request, user).emit()    
         return redirect('/')
