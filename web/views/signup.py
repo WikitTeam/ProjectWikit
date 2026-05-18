@@ -100,57 +100,83 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
 class SignupView(TemplateResponseMixin, ContextMixin, View):  
     template_name = "signup/register.html"  
   
-    def verify_with_external_api(self, username, code):    
-        # TODO Wikit账户验证
+    def get(self, request, *args, **kwargs):  
+        if not isinstance(request.user, AnonymousUser):  
+            return HttpResponseRedirect(redirect_to=settings.LOGIN_REDIRECT_URL)  
+        context = self.get_context_data()  
+        return self.render_to_response(context)  
+  
+    def verify_with_external_api(self, username, code):  
+        # TODO Wikit账户验证  
         # try:  
         #     r = requests.post("https://wikit.unitreaty.org/projwikit/verify", data={'user': username, 'code': code}, timeout=5)  
         #     return r.json().get('status') == 'success'  
         # except: return False  
-        # return True
-        return False # 开发后期去掉这条
-        
-    def get(self, request, *args, **kwargs):  
-        # 如果用户已登录 重定向到首页  
-        if not isinstance(request.user, AnonymousUser):  
-            return HttpResponseRedirect(redirect_to=settings.LOGIN_REDIRECT_URL)  
-          
-        context = self.get_context_data()  
-        return self.render_to_response(context)
+        return False # 开发后期去掉这条  
   
-    def post(self, request, *args, **kwargs):  
-        data = request.POST  
-        username = data.get('username', '').strip()  
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        data = request.POST
+
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+        password_confirm = data.get('password_confirm', '')
 
         # 检查是否为Wikidot账号
-        is_wikidot = User.objects.filter(wikidot_username=username, type=User.UserType.Wikidot).exists()  
+        is_wikidot = User.objects.filter(
+            wikidot_username=username,
+            type=User.UserType.Wikidot
+        ).exists()
 
-        if not re.match(r'^[\w.-]+\Z', username, re.ASCII):  # 用户名正则过滤
-            error_msg = '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。'  
-        if is_wikidot:  
-            error_msg += ' 认领Wikidot账号时，请将原名中的空格替换为“-”。'  
-        context.update({'error': error_msg})  
-        return self.render_to_response(context) 
+        # 用户名合法性检查
+        if not re.match(r'^[\w.-]+\Z', username, re.ASCII):
+            error_msg = '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。'
 
-        # 查找是否存在待认领的Wikidot账号  
-        user = User.objects.filter(wikidot_username=username, type=User.UserType.Wikidot).first()  
-          
-        if user:  
-            # TODO Wikidot校验验证码  
-            if not self.verify_with_external_api(username, data.get('verification_code')):  
-                return self.render_to_response({'error': '验证码校验失败'})  
-            user.type = User.UserType.Normal    
-        else:  
-            # 普通注册：创建新用户 分配reader角色  
-            if User.objects.filter(username=username).exists():  
-                return self.render_to_response({'error': '用户已存在'})  
-            user = User.objects.create_user(username=username)  
-            reader_role = Role.objects.get(slug='reader')    
-            user.roles.add(reader_role)    
-  
-        user.set_password(data.get('password'))    
-        user.is_active = True    
-        user.save()  
-          
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')    
-        OnUserSignUp(request, user).emit()    
+            if is_wikidot:
+                error_msg += ' 认领Wikidot账号时，请将原名中的空格替换为“-”。'
+
+            context.update({'error': error_msg})
+            return self.render_to_response(context)
+
+        # 密码一致性校验
+        if password != password_confirm:
+            context.update({'error': '两次输入的密码不一致'})
+            return self.render_to_response(context)
+
+        # 查找是否存在待认领的Wikidot账号
+        user = User.objects.filter(
+            wikidot_username=username,
+            type=User.UserType.Wikidot
+        ).first()
+
+        if user:
+            # Wikidot验证码验证
+            if not self.verify_with_external_api(
+                username,
+                data.get('verification_code')
+            ):
+                context.update({'error': '验证码校验失败'})
+                return self.render_to_response(context)
+
+            user.type = User.UserType.Normal
+
+        else:
+            # 普通注册
+            if User.objects.filter(username=username).exists():
+                context.update({'error': '用户已存在'})
+                return self.render_to_response(context)
+
+            user = User.objects.create_user(username=username)
+
+            reader_role = Role.objects.get(slug='reader')
+            user.roles.add(reader_role)
+
+        user.set_password(password)
+        user.is_active = True
+        user.save()
+
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        OnUserSignUp(request, user).emit()
+
         return redirect('/')
