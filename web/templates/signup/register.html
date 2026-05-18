@@ -1,0 +1,47 @@
+{% extends "system_base.html" %}  
+  
+{% block h1 %}{% block title %}用户注册{% endblock %}{% endblock %}  
+  
+{% block content %}  
+    <div class="login-form">  
+        {% if error %}  
+            <div class="error">  
+                <p>{{ error }}</p>  
+            </div>  
+            <br>  
+        {% endif %}  
+          
+        <form method="POST">  
+            {% csrf_token %}  
+            <!-- 用户名输入 -->  
+            <div class="text-input">  
+                <span class="icon begin"><i class="fas fa-user"></i></span>  
+                <input type="text" placeholder="用户名 (认领Wikidot账户请填写原名)" name="username" autofocus="" required id="id_username">  
+            </div>  
+              
+            <!-- 验证码输入 (用于 Wikidot 认领) -->  
+            <div class="text-input">  
+                <span class="icon begin"><i class="fas fa-key"></i></span>  
+                <input type="text" placeholder="外部验证码 (仅认领 Wikidot 账号需要)" name="verification_code" id="id_verification_code">  
+            </div>  
+  
+            <!-- 密码输入 -->  
+            <div class="text-input">  
+                <span class="icon begin"><i class="fas fa-lock"></i></span>  
+                <input type="password" placeholder="设置密码" name="password" required id="id_password">  
+            </div>  
+              
+            <div class="text-input">  
+                <span class="icon begin"><i class="fas fa-lock"></i></span>  
+                <input type="password" placeholder="确认密码" name="password_confirm" required id="id_password_confirm">  
+            </div>  
+  
+            <button type="submit" class="btn btn-primary">立即注册/认领</button>  
+        </form>  
+          
+        <div class="under-text">  
+            <p>普通注册将默认分配“读者”权限。</p>  
+            <a href="{% url 'login' %}">已有账号？去登录</a>  
+        </div>  
+    </div>  
+{% endblock %}
