@@ -14,7 +14,7 @@
 > -----
 > ProjectWikit最初是 [RuFoundation引擎](https://github.com/SCPRu/RuFoundation) 的分支。然而，自此之后，它已历经了大量的修改，并已成为独立的项目，不再追踪或跟随原始的RuFoundation代码库的更新。
 > 
-> 因此，ProjectWikit完全由其自身的开发团队维护。如果您遇到任何问题或有任何建议，请直接向WikitTeam报告，而不是向原始的RuFoundation团队反馈。
+> 因此，ProjectWikit完全由其自身的开发团队维护。如果您遇到任何问题或有任何建议，请直接向负责人Kakushi或WikitTeam报告，而不是向原始的RuFoundation团队反馈。
 
 ## 🖥️ 环境要求
 以下是测试时的环境，你可能会与之有出入
