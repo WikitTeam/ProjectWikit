@@ -106,7 +106,8 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
         #     r = requests.post("https://wikit.unitreaty.org/projwikit/verify", data={'user': username, 'code': code}, timeout=5)  
         #     return r.json().get('status') == 'success'  
         # except: return False  
-        return True   
+        # return True
+        return False # 开发后期去掉这条
   
     def post(self, request, *args, **kwargs):  
         data = request.POST  
