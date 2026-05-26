@@ -96,6 +96,9 @@ sys_patterns = [
 
     path("signup", signup.SignupView.as_view(), name='signup'),
 
+    path("signup/check-wikidot", signup.CheckWikidotUsernameView.as_view(), name='signup_check_wikidot'),
+    path("signup/send-wikidot-code", signup.SendWikidotCodeView.as_view(), name='signup_send_wikidot_code'),
+
     re_path(r'^preferences/', include('dynamic_preferences.urls')),
 
     *make_path("admin", admin.site.urls),
