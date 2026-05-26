@@ -1,46 +1,172 @@
-{% extends "system_base.html" %}  
-  
-{% block h1 %}{% block title %}用户注册{% endblock %}{% endblock %}  
-  
-{% block content %}  
-    <div class="login-form">  
-        {% if error %}  
-            <div class="error">  
-                <p>{{ error }}</p>  
-            </div>  
-            <br>  
-        {% endif %}  
-          
-        <form method="POST">  
-            {% csrf_token %}  
-            <!-- 用户名输入 -->  
-            <div class="text-input">  
-                <span class="icon begin"><i class="fas fa-user"></i></span>  
-                <input type="text" placeholder="用户名(填写原名以认领Wikidot账户)" name="username" autofocus="" required id="id_username">  
-            </div>  
-            <!-- 验证码输入 (用于 Wikidot 认领) TODO：分离普通注册与认领账号注册 添加验证码发送-->  
-            <div class="text-input">  
-                <span class="icon begin"><i class="fas fa-key"></i></span>  
-                <input type="text" placeholder="Wikit验证码 (仅认领Wikidot账号需要)" name="verification_code" id="id_verification_code">  
-            </div>  
-  
-            <!-- 密码输入 -->  
-            <div class="text-input">  
-                <span class="icon begin"><i class="fas fa-lock"></i></span>  
-                <input type="password" placeholder="设置密码" name="password" required id="id_password">  
-            </div>  
-              
-            <div class="text-input">  
-                <span class="icon begin"><i class="fas fa-lock"></i></span>  
-                <input type="password" placeholder="确认密码" name="password_confirm" required id="id_password_confirm">  
-            </div>  
-  
-            <button type="submit" class="btn btn-primary">立即注册/认领</button>  
-        </form>  
-          
-        <div class="under-text">  
-            <p>普通注册将默认分配“读者”权限。</p>  
-            <a href="{% url 'login' %}">已有账号？去登录</a>  
-        </div>  
-    </div>  
+{% extends "system_base.html" %}
+
+{% block h1 %}{% block title %}用户注册{% endblock %}{% endblock %}
+
+{% block content %}
+<div class="login-form">
+
+    {% if error %}
+    <div class="error">
+        <p>{{ error }}</p>
+    </div>
+    <br>
+    {% endif %}
+
+    <form method="POST" id="signup-form">
+        {% csrf_token %}
+
+        <!-- 用户名输入 -->
+        <div class="text-input">
+            <span class="icon begin"><i class="fas fa-user"></i></span>
+            <input
+                type="text"
+                placeholder="用户名（认领 Wikidot 账号请填写原名）"
+                name="username"
+                id="id_username"
+                autofocus
+                required
+                value="{{ prefill_username|default:'' }}"
+            >
+        </div>
+
+        <div id="wikidot-section" style="display:{% if is_wikidot %}block{% else %}none{% endif %};">
+            <div class="text-input" style="margin-top: 8px;">
+                <span class="icon begin"><i class="fas fa-info-circle"></i></span>
+                <span id="wikidot-hint" style="padding: 8px; color: #4a9eda; font-size: 0.95em;">
+                    检测到此用户名对应一个待认领的Wikidot账号。请点击"发送验证码"完成认领。
+                </span>
+            </div>
+            <div class="text-input">
+                <span class="icon begin"><i class="fas fa-key"></i></span>
+                <input
+                    type="text"
+                    placeholder="Wikit 验证码"
+                    name="verification_code"
+                    id="id_verification_code"
+                >
+                <button type="button" id="send-code-btn" class="btn btn-secondary" style="margin-left: 8px; white-space: nowrap;">
+                    发送验证码
+                </button>
+            </div>
+            <div id="send-code-msg" style="font-size: 0.9em; padding: 4px 0 4px 40px;"></div>
+        </div>
+
+        <!-- 密码输入 -->
+        <div class="text-input">
+            <span class="icon begin"><i class="fas fa-lock"></i></span>
+            <input type="password" placeholder="设置密码" name="password" required id="id_password">
+        </div>
+        <div class="text-input">
+            <span class="icon begin"><i class="fas fa-lock"></i></span>
+            <input type="password" placeholder="确认密码" name="password_confirm" required id="id_password_confirm">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submit-btn">立即注册</button>
+    </form>
+
+    <div class="under-text">
+        <p>普通注册将默认分配"读者"权限。</p>
+        <a href="{% url 'login' %}">已有账号？去登录</a>
+    </div>
+</div>
+
+<script>
+(function () {
+    const usernameInput = document.getElementById('id_username');
+    const wikidotSection = document.getElementById('wikidot-section');
+    const sendCodeBtn = document.getElementById('send-code-btn');
+    const sendCodeMsg = document.getElementById('send-code-msg');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let checkTimer = null;
+    let isWikidot = {% if is_wikidot %}true{% else %}false{% endif %};
+
+    function updateSubmitBtn() {
+        submitBtn.textContent = isWikidot ? '认领账号' : '立即注册';
+    }
+    updateSubmitBtn();
+
+    // 防抖
+    usernameInput.addEventListener('input', function () {
+        clearTimeout(checkTimer);
+        const username = usernameInput.value.trim();
+        if (!username) {
+            setWikidot(false);
+            return;
+        }
+        checkTimer = setTimeout(function () {
+            checkWikidotUsername(username);
+        }, 600);
+    });
+
+    function checkWikidotUsername(username) {
+        fetch('/-//signup/check-wikidot?username=' + encodeURIComponent(username))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                setWikidot(data.is_wikidot);
+            })
+            .catch(function () {
+                setWikidot(false);
+            });
+    }
+
+    function setWikidot(val) {
+        isWikidot = val;
+        wikidotSection.style.display = val ? 'block' : 'none';
+        updateSubmitBtn();
+        if (!val) {
+            sendCodeMsg.textContent = '';
+            sendCodeMsg.style.color = '';
+        }
+    }
+
+    // 发送验证码按钮
+    sendCodeBtn.addEventListener('click', function () {
+        const username = usernameInput.value.trim();
+        if (!username) return;
+
+        sendCodeBtn.disabled = true;
+        sendCodeMsg.style.color = '#888';
+        sendCodeMsg.textContent = '发送中…';
+
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        fetch('/-/signup/send-wikidot-code', {
+            method: 'POST',
+            body: formData
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    sendCodeMsg.style.color = '#4a9eda';
+                    sendCodeMsg.textContent = '验证码已发送，请前往Wikidot站内信查收。';
+                    // 60 秒冷却
+                    let countdown = 60;
+                    sendCodeBtn.textContent = `重新发送 (${countdown}s)`;
+                    const timer = setInterval(function () {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            sendCodeBtn.disabled = false;
+                            sendCodeBtn.textContent = '发送验证码';
+                        } else {
+                            sendCodeBtn.textContent = `重新发送 (${countdown}s)`;
+                        }
+                    }, 1000);
+                } else {
+                    sendCodeMsg.style.color = '#e74c3c';
+                    sendCodeMsg.textContent = data.error || '发送失败，请稍后重试';
+                    sendCodeBtn.disabled = false;
+                }
+            })
+            .catch(function () {
+                sendCodeMsg.style.color = '#e74c3c';
+                sendCodeMsg.textContent = '网络错误，请稍后重试';
+                sendCodeBtn.disabled = false;
+            });
+    });
+})();
+</script>
 {% endblock %}
