@@ -410,8 +410,8 @@ def element_to_source(el):
         elif 'wiki-note' in el['class']:
             return '[[note]]\n%s[[/note]]\n' % elements_to_source(el)
         else:
-            print('thread = %d' % threadvars.get('threadid'))
-            raise ValueError(repr(el))
+            logging.warning('Warn: unknown div class %s in thread %s, falling back to [[div]]', el.get('class'), threadvars.get('threadid'))
+            return '[[div%s]]\n%s[[/div]]\n' % (attrs_to_source(el), elements_to_source(el))
     elif el.name == 'a':
         # just generate [[a]]
         return '[[a%s]]%s[[/a]]' % (attrs_to_source(el), elements_to_source(el))
