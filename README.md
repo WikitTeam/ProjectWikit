@@ -63,6 +63,11 @@
      - `docker exec -it wikitgo-web-1 python manage.py seed`
 
 ### *️⃣ 其他操作
+   - 从[备份](https://github.com/kakushi-w/wikidot-backup/tree/main/wikidot_backups)完整迁移Wikidot网站：
+     - 将备份文件夹`_users`、`files`、`forum`、`meta`、`pages` 放入`./archive`中
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive`
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a /archive -f`
+
    - 完全删除所有数据：
      - `docker compose down`
      - `rm -rf ./files ./archive ./postgresql`
