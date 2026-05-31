@@ -52,8 +52,11 @@
      - `docker exec -it wikitgo-web-1 python manage.py createsuperuser`
      - `docker exec -it wikitgo-web-1 seed`
     
-   - **【OTHER】** 对于无法使用上述指令的场合：
-     - `docker compose up`
+   - **【OTHER】** 对于无法使用上述指令的场合（因权限不足等造成的问题）：
+     - `docker compose down` 若已运行容器，则先关闭容器
+     - `sudo chmod -R 777 ./files`
+     - `sudo chmod -R 777 /home/wikitwiki`
+     - `docker compose up -d`
      - `docker exec -it wikitgo-web-1 python manage.py migrate`
      - `docker exec -it wikitgo-web-1 python manage.py createsite -s wikit-wiki -d 网站域名 -t "网站标题" -H "网站副标题"`
      - `docker exec -it wikitgo-web-1 python manage.py createsuperuser`
