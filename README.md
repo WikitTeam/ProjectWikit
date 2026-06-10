@@ -55,6 +55,7 @@
    - **【OTHER】** 对于无法使用上述指令的场合（因权限不足等造成的问题）：
      - `docker compose down` 若已运行容器，则先关闭容器
      - `sudo chmod -R 777 ./files`
+     - `mkdir -p /home/wikitwiki`
      - `sudo chmod -R 777 /home/wikitwiki`
      - `docker compose up -d`
      - `docker exec -it wikitgo-web-1 python manage.py migrate`
