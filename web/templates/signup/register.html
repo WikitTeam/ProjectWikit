@@ -15,7 +15,6 @@
     <form method="POST" id="signup-form">
         {% csrf_token %}
 
-        <!-- 用户名输入 -->
         <div class="text-input">
             <span class="icon begin"><i class="fas fa-user"></i></span>
             <input
@@ -51,7 +50,6 @@
             <div id="send-code-msg" style="font-size: 0.9em; padding: 4px 0 4px 40px;"></div>
         </div>
 
-        <!-- 密码输入 -->
         <div class="text-input">
             <span class="icon begin"><i class="fas fa-lock"></i></span>
             <input type="password" placeholder="设置密码" name="password" required id="id_password">
@@ -86,7 +84,6 @@
     }
     updateSubmitBtn();
 
-    // 防抖
     usernameInput.addEventListener('input', function () {
         clearTimeout(checkTimer);
         const username = usernameInput.value.trim();
@@ -120,7 +117,6 @@
         }
     }
 
-    // 发送验证码按钮
     sendCodeBtn.addEventListener('click', function () {
         const username = usernameInput.value.trim();
         if (!username) return;
