@@ -8,6 +8,7 @@ import { makeInterwiki } from './articles/interwiki'
 import { makeListPages } from './articles/list-pages'
 import { makeStarsRateModule } from './articles/rate-stars'
 import { makeUpDownRateModule } from './articles/rate-updown'
+import { makeNewPageModule } from './articles/newpage'
 import { makeRefForm } from './articles/ref-form'
 import { makeSiteChanges } from './articles/site-changes'
 import { makeTabView } from './articles/tabview'
@@ -80,6 +81,8 @@ window.addEventListener('DOMContentLoaded', () => {
         makeCodeBlock(node)
       } else if (node.classList.contains('w-ref-form')) {
         makeRefForm(node)
+      } else if (node.classList.contains('w-newpage-module')) {
+        makeNewPageModule(node)
       } else if (node.classList.contains('w-interwiki')) {
         makeInterwiki(node)
       } else if (node.classList.contains('w-admin-sus-users')) {
