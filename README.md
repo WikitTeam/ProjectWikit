@@ -48,7 +48,7 @@
    - **【STEP1】** 启动项目，运行 `docker compose up`
   
    - **【STEP2】** 在数据库中创建用户、网站并填充初始数据，请先启动项目，然后使用如下命令：
-     - `docker exec -it wikitgo-web-1 python manage.py createsite -s wikit-wiki -d localhost -t "网站标题" -H "网站副标题"`
+     - `docker exec -it wikitgo-web-1 python manage.py createsite -s wikit-wiki -d 网站域名(本地填写localhost) -t "网站标题" -H "网站副标题"`
      - `docker exec -it wikitgo-web-1 python manage.py createsuperuser`
      - `docker exec -it wikitgo-web-1 seed`
     
