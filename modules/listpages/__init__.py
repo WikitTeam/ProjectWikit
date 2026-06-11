@@ -241,7 +241,11 @@ def query_pages(article: Article, params: dict[str, str], viewer=None, path_para
         obj_settings = Article(name='_tmp', category=requested_category or '_default').settings
         popularity_filter = V(True)
         if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-            rating_func = Coalesce(Sum('votes__rate'), 0)
+            rating_func = Coalesce(
+                Sum('votes__rate'),
+                V(0.0),
+                output_field=FloatField()
+            )
             popularity_filter = Q(votes__rate__gt=0)
         elif obj_settings.rating_mode == Settings.RatingMode.Stars:
             rating_func = Coalesce(Avg('votes__rate'), 0.0)
@@ -385,7 +389,7 @@ def query_pages(article: Article, params: dict[str, str], viewer=None, path_para
 
     if allow_pagination:
         q = q[(requested_page - 1) * requested_per_page:requested_page * requested_per_page]
-        page_index += (requested_page - 1) * requested_page
+        page_index += (requested_page - 1) * requested_per_page
         pagination_page = requested_page
         pagination_total_pages = int(math.ceil(total_pages / requested_per_page))
 
