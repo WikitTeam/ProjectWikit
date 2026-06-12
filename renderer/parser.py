@@ -28,7 +28,6 @@ class RenderContext(object):
         new_rc.status = self.status
         new_rc.redirect_to = self.redirect_to
         new_rc.title = self.title
-        new_rc.computed_style = self.computed_style
         return new_rc
 
     def merge(self, other_rc: 'RenderContext'):
