@@ -21,7 +21,7 @@ def reactive_view(request, *args, **kwargs):
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <link rel="stylesheet" type="text/css" href="/-/static/fontawesome/css/all.css">
                 <link rel="stylesheet" type="text/css" href="/-/static/wikidot-base.css">
-                <link rel="stylesheet" type="text/css" href="/-/static/scp-base.css">
+                <link rel="stylesheet" type="text/css" href="/-/static/theme.css">
                 <link rel="stylesheet" type="text/css" href="/-/static/app.css">
                 <script src="/-/static/app.js" type="text/javascript"></script>
             </head>
