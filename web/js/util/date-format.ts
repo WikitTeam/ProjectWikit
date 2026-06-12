@@ -2,21 +2,20 @@ function padString(paddingValue: string, str: string) {
   return String(paddingValue + str).slice(-paddingValue.length)
 }
 
-function formatDaysAgo(days: number) {
-  const localizedDaysAgo = ['天', '天', '天']
-
-  days = Math.ceil(days)
-
-  if (days % 10 === 1) {
-    return `${days} ${localizedDaysAgo[0]}`
-  } else if (days % 10 >= 2 && days % 10 <= 4) {
-    return `${days} ${localizedDaysAgo[1]}`
-  } else {
-    return `${days} ${localizedDaysAgo[2]}`
+function formatTimeAgo(diffMs: number) {
+  const minutes = Math.floor(diffMs / 1000 / 60)
+  if (minutes < 60) {
+    return `${minutes}分钟前`
   }
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) {
+    return `${hours}小时前`
+  }
+  const days = Math.floor(hours / 24)
+  return `${days}天前`
 }
 
-export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y') {
+export default function formatDate(date: Date, format: string = '%m.%d.%Y %H:%M') {
   const localizedMonthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
   const localizedDayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周天']
 
@@ -96,6 +95,6 @@ export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y'
     .replace(/%P/g, isPM ? 'pm' : 'am')
     .replace(/%S/g, padString('00', date.getSeconds().toString()))
     .replace(/%s/g, String(Math.floor(date.getTime() / 1000)))
-    .replace(/%O/g, formatDaysAgo((new Date().getTime() - date.getTime()) / 1000 / 86400))
+    .replace(/%O/g, formatTimeAgo(new Date().getTime() - date.getTime()))
   return s
 }

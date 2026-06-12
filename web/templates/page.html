@@ -118,7 +118,7 @@
                             </div>
                             <div id="page-info-break"></div>
                             {% if updated_at %}
-                                <div id="page-info">页面版本: {{ rev_number }}, 最后编辑: <span class="odate" style="display: inline">{{ updated_at|date:"d" }}日,{{ updated_at|date:"m" }}月,{{ updated_at|date:"Y" }}年, {{ updated_at|date:"H:i" }} ({{ updated_at|days_since }})</span></div>
+                                <div id="page-info">页面版本: {{ rev_number }}, 最后编辑: <span class="odate w-date" data-timestamp="{{ updated_at|date:"U" }}000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">{{ updated_at|date:"n月j日, Y年 H:i" }}</span></div>
                             {% endif %}
                             <div id="page-options-container" data-config="{{ options_config }}"></div>
                             <div id="action-area"></div>

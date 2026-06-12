@@ -43,6 +43,6 @@
         {% if object.first_name %}{{ object.first_name }}{% endif %}  
         {% if object.last_name %} {{ object.last_name }}{% endif %}</p >{% endif %}
         {% if object.bio %}<p><b>个人简介:</b> {{ bio_rendered }}</p>{% endif %}
-        <p><b>站点成员:</b> 自 {{ object.date_joined|date:"Y年m月d日 H:i" }}</p>
+        <p><b>站点成员:</b> 自 <span class="odate w-date" data-timestamp="{{ object.date_joined|date:"U" }}000" data-format="%b%e日, %Y年 %H:%M" style="display: inline">{{ object.date_joined|date:"n月j日, Y年 H:i" }}</span></p>
     </div>
 {% endblock %}

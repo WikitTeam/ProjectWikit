@@ -36,7 +36,7 @@ def api_get(context, _params):
     return {"pages": [page.full_name for page in query_pages(context.article, _params, context.user, context.path_params, False)[0]]}
 
 
-def render_date(date, format='%H:%M %d.%m.%Y'):
+def render_date(date, format='%m.%d.%Y %H:%M'):
     if not date:
         return 'n/a'
     return render_template_from_string('<span class="odate w-date" style="display: inline" data-timestamp="{{ timestamp }}" data-format="{{ format }}">{{ serverside }}</span>', timestamp=int(date.timestamp()*1000), format=format, serverside=date.strftime(format))
