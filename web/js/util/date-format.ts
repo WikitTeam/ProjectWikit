@@ -4,6 +4,9 @@ function padString(paddingValue: string, str: string) {
 
 function formatTimeAgo(diffMs: number) {
   const minutes = Math.floor(diffMs / 1000 / 60)
+  if (minutes < 1) {
+    return '刚刚'
+  }
   if (minutes < 60) {
     return `${minutes}分钟前`
   }
