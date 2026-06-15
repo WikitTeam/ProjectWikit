@@ -29,21 +29,19 @@
         </div>
 
         <div id="wikidot-section" style="display:{% if is_wikidot %}block{% else %}none{% endif %};">
-            <div class="text-input" style="margin-top: 8px;">
-                <span class="icon begin"><i class="fas fa-info-circle"></i></span>
-                <span id="wikidot-hint" style="padding: 8px; color: #4a9eda; font-size: 0.95em;">
-                    检测到此用户名对应一个待认领的Wikidot账号。请点击"发送验证码"完成认领。
-                </span>
+            <div style="margin-top: 8px; padding: 6px 10px; background: #f5f5f5; border-left: 3px solid #888; font-size: 12px; color: #555; line-height: 1.4;">
+                <i class="fas fa-info-circle" style="margin-right: 4px;"></i>检测到此用户名对应一个待认领的Wikidot账号。请点击"发送验证码"完成认领。
             </div>
-            <div class="text-input">
+            <div class="text-input" style="display: flex; align-items: center;">
                 <span class="icon begin"><i class="fas fa-key"></i></span>
                 <input
                     type="text"
                     placeholder="Wikit 验证码"
                     name="verification_code"
                     id="id_verification_code"
+                    style="flex: 1; min-width: 0;"
                 >
-                <button type="button" id="send-code-btn" class="btn btn-secondary" style="margin-left: 8px; white-space: nowrap;">
+                <button type="button" id="send-code-btn" class="btn btn-secondary" style="margin-left: 8px; white-space: nowrap; margin-top: 0; padding: 4px 10px; font-size: 13px;">
                     发送验证码
                 </button>
             </div>
@@ -138,7 +136,6 @@
                 if (data.ok) {
                     sendCodeMsg.style.color = '#4a9eda';
                     sendCodeMsg.textContent = '验证码已发送，请前往Wikidot站内信查收。';
-                    // 60 秒冷却
                     let countdown = 60;
                     sendCodeBtn.textContent = `重新发送 (${countdown}s)`;
                     const timer = setInterval(function () {
