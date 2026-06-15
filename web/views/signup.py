@@ -170,7 +170,7 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
 
         # 用户名合法性检查
         if not re.match(r'^[\w.-]+\Z', username, re.ASCII):
-            context.update({'error': '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。认领时，空格使用-代替'})
+            context.update({'error': '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。认领时，空格使用-代替。'})
             return self.render_to_response(context)
 
         # 密码一致性校验
