@@ -45,7 +45,7 @@
                     发送验证码
                 </button>
             </div>
-            <div id="send-code-msg" style="font-size: 0.9em; padding: 4px 0 4px 40px;"></div>
+            <div id="send-code-msg" class="error" style="display:none; margin-top: 8px;"></div>
         </div>
 
         <div class="text-input">
@@ -111,7 +111,7 @@
         updateSubmitBtn();
         if (!val) {
             sendCodeMsg.textContent = '';
-            sendCodeMsg.style.color = '';
+            sendCodeMsg.style.display = 'none';
         }
     }
 
@@ -120,7 +120,9 @@
         if (!username) return;
 
         sendCodeBtn.disabled = true;
+        sendCodeMsg.classList.remove('error');
         sendCodeMsg.style.color = '#888';
+        sendCodeMsg.style.display = 'block';
         sendCodeMsg.textContent = '发送中…';
 
         const formData = new FormData();
@@ -134,7 +136,9 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.ok) {
+                    sendCodeMsg.classList.remove('error');
                     sendCodeMsg.style.color = '#4a9eda';
+                    sendCodeMsg.style.display = 'block';
                     sendCodeMsg.textContent = '验证码已发送，请前往Wikidot站内信查收。';
                     let countdown = 60;
                     sendCodeBtn.textContent = `重新发送 (${countdown}s)`;
@@ -149,13 +153,17 @@
                         }
                     }, 1000);
                 } else {
-                    sendCodeMsg.style.color = '#e74c3c';
+                    sendCodeMsg.classList.add('error');
+                    sendCodeMsg.style.color = '';
+                    sendCodeMsg.style.display = 'block';
                     sendCodeMsg.textContent = data.error || '发送失败，请稍后重试';
                     sendCodeBtn.disabled = false;
                 }
             })
             .catch(function () {
-                sendCodeMsg.style.color = '#e74c3c';
+                sendCodeMsg.classList.add('error');
+                sendCodeMsg.style.color = '';
+                sendCodeMsg.style.display = 'block';
                 sendCodeMsg.textContent = '网络错误，请稍后重试';
                 sendCodeBtn.disabled = false;
             });
