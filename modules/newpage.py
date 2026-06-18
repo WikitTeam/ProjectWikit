@@ -53,7 +53,6 @@ def render(context: RenderContext, params):
           <input value="{{ submit_text }}" type="submit">
         </p>
       </form>
-      <div class="new-page-error" style="display:none;color:red;margin-top:4px;"></div>
     </div>
     """,
     placeholder=placeholder,
