@@ -62,7 +62,7 @@
      - `docker exec -it wikitgo-web-1 python manage.py seed`
 
 ### 3.其他操作
-   - 从[备份](https://github.com/kakushi-w/wikidot-backup/tree/main/wikidot_backups)完整迁移Wikidot网站：
+   - 从[备份](https://github.com/kakushi-w/wikit)完整迁移Wikidot网站：
      - 将备份文件夹`_users`、`files`、`forum`、`meta`、`pages` 放入`./archive`中
      - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive`
      - `docker exec -it wikitgo-web-1 python manage.py seed -a /archive -f`
