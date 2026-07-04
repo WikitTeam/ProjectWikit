@@ -12,6 +12,50 @@ export const Layout = styled.div`
   }
 `
 
+export const SidebarSearch = styled.form`
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
+  background: ${({ theme }) => theme.windowPadding};
+  position: sticky;
+  top: 0;
+  z-index: 1;
+`
+
+export const SearchInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid ${({ theme }) => theme.windowStrong};
+  border-radius: 4px;
+  font: inherit;
+`
+
+export const SearchButton = styled.button`
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: ${({ theme }) => theme.uiSelection};
+  color: ${({ theme }) => theme.uiSelectionForeground};
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+export const SearchError = styled.div`
+  padding: 6px 10px;
+  color: #cc3333;
+  font-size: 12px;
+  border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
+  background: #ffeeee;
+`
+
 export const Sidebar = styled.div<{ hasSelection: boolean }>`
   width: 280px;
   min-width: 240px;
