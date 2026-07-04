@@ -9,7 +9,7 @@ interface Props {
 
 export const ProfilePage: React.FC<Props> = ({ children }) => {
   return (
-    <Page title="个人资料" hasBorder={true}>
+    <Page title="用户界面" hasBorder={true}>
       <Styled.NavContainer>
         <Navigation />
       </Styled.NavContainer>

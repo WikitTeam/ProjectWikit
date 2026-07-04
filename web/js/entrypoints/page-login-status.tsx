@@ -91,6 +91,9 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
                 <a href={`/-/notifications`}>通知</a>
               </li>
               <li>
+                <a href={`/-/messages`}>站内信</a>
+              </li>
+              <li>
                 <a href={`/-/profile/edit`}>设置</a>
               </li>
               <li>

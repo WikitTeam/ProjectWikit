@@ -25,6 +25,7 @@ function showConfirmModal(text: string, onConfirm: () => void) {
 
   uuid = addUnmanagedModal(
     <WikidotModal
+      isError
       buttons={[
         { title: '取消', onClick: onClose },
         { title: '确定', onClick: onOk, type: 'danger' },

@@ -17,6 +17,10 @@ export function fetchAllUsers(): Promise<UserData[]> {
   return wFetch<UserData[]>('/api/users')
 }
 
+export function lookupUser(username: string): Promise<UserData> {
+  return wFetch<UserData>(`/api/users/lookup?username=${encodeURIComponent(username)}`)
+}
+
 export interface AdminSusUser {
   user: {
     id: number

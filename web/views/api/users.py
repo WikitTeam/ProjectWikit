@@ -1,7 +1,9 @@
+from django.db.models import Q
 from django.http import HttpRequest
 
+from renderer.utils import render_user_to_json
 from shared_data import shared_users
-from . import APIView, APIError, takes_json
+from . import APIView, APIError, takes_json, takes_url_params
 
 from web.models import ActionLogEntry
 from django.utils.http import urlsafe_base64_encode  
@@ -52,6 +54,23 @@ class GenerateInviteLinkView(APIView):
 class AllUsersView(APIView):
     def get(self, request: HttpRequest):
         return self.render_json(200, shared_users.get_all_users())
+
+
+class LookupUserView(APIView):
+    @takes_url_params
+    def get(self, request: HttpRequest, *, username: str = ''):
+        name = (username or '').strip()
+        if not name:
+            raise APIError('请输入用户名', 400)
+
+        user = User.objects.filter(
+            Q(username__iexact=name) | Q(wikidot_username__iexact=name)
+        ).first()
+
+        if not user:
+            raise APIError('未找到该用户', 404)
+
+        return self.render_json(200, render_user_to_json(user))
 
 
 class AdminSusActivityApiView(APIView):
