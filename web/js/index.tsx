@@ -22,6 +22,7 @@ import { attachApiMessageListener } from './entrypoints/messages-api-interface'
 import Page404 from './entrypoints/page-404'
 import PageLoginStatus from './entrypoints/page-login-status'
 import PageOptions from './entrypoints/page-options'
+import { attachUserActions } from './entrypoints/user-actions'
 import { makeRecentPosts } from './forum/recent-posts-pagination'
 import { makeForumThread } from './forum/thread-pagination'
 import ReactivePage from './reactive/router'
@@ -46,6 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
     .forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config!)} />))
 
   makePasswordToggle()
+  attachUserActions()
 
   // add new things here!
   const processNode = (node: HTMLElement) => {

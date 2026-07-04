@@ -33,6 +33,12 @@
             <a href="{% url "profile_edit" %}" title="编辑中" class="icon"><span>编辑</span> <i class="fas fa-pen"></i></a>
         </div>
     {% endif %}
+    {% if can_direct_message %}
+        <div class="user-actions" id="user-actions-container" data-config='{"userId": {{ object.id }}, "isBlocked": {% if is_blocked %}true{% else %}false{% endif %}}'>
+            <a class="pm-button icon" href="/-/messages/{{ object.id }}"><span>发私信</span> <i class="fas fa-envelope"></i></a>
+            <a class="block-button icon" href="javascript:;" data-action="toggle-block"><span class="block-label">{% if is_blocked %}取消拉黑{% else %}拉黑{% endif %}</span> <i class="fas fa-ban"></i></a>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}

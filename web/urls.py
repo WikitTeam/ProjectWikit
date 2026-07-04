@@ -24,7 +24,7 @@ from django.contrib import admin
 
 from .views import profile, signup, login
 
-from web.views.api import articles, preview, module, files, notifications, users, search
+from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages
 from web.views.article import ArticleView
 from web.views.reactive import reactive_view
 
@@ -65,6 +65,12 @@ api_patterns = [
     path('notifications', notifications.NotificationsView.as_view()),
     path('notifications/subscribe', notifications.NotificationsSubscribeView.as_view()),
 
+    path('messages/send', api_messages.SendMessageView.as_view()),
+    path('messages/conversations', api_messages.ConversationsListView.as_view()),
+    path('messages/with/<int:user_id>', api_messages.ConversationView.as_view()),
+    path('messages/can-send/<int:user_id>', api_messages.MessagePermissionProbeView.as_view()),
+    path('users/<int:user_id>/block', api_messages.BlockUserView.as_view()),
+
     path('search', search.SearchView.as_view())
 ]
 
@@ -74,7 +80,9 @@ reactive_pages = [
     'profile',
     'notifications/all',
     'notifications/unread',
-    'search'
+    'search',
+    'messages',
+    'messages/<int:user_id>',
 ]
 
 

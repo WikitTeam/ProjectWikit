@@ -63,12 +63,21 @@ interface NotificationForumMention extends BaseNotification {
   message: string
 }
 
+interface NotificationDirectMessage extends BaseNotification {
+  type: 'direct_message'
+  sender_id: number
+  sender_name: string
+  message_id: number
+  preview: string
+}
+
 export type Notification =
   | NotificationNewPostReply
   | NotificationNewThreadPost
   | NotificationWelcome
   | NotificationNewArticleRevision
   | NotificationForumMention
+  | NotificationDirectMessage
 
 export interface NotificationsResponse {
   cursor: number

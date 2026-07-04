@@ -76,6 +76,23 @@ html {
 .system-content .heading .edit-button a:hover {
   color: var(--hover-color);
 }
+.system-content .heading .user-actions {
+  float: right;
+  padding: 7px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.system-content .heading .user-actions a {
+  color: var(--btn-color);
+  text-decoration: none;
+  font-size: small;
+  cursor: pointer;
+}
+.system-content .heading .user-actions a:hover {
+  color: var(--hover-color);
+  text-decoration: underline;
+}
 .system-content .error {
   background: #ffeeee;
   border: 1px #ffcccc dashed;

@@ -74,6 +74,8 @@ class User(AbstractUser, RolesMixin):
     is_forum_active = models.BooleanField('论坛权限已启用', default=True)
     forum_inactive_until = models.DateTimeField('论坛权限禁用至', null=True)
 
+    can_send_direct_messages = models.BooleanField('允许发送私信', default=True)
+
     is_active = models.BooleanField('已启用', default=True)
     inactive_until = models.DateTimeField('禁用至', null=True)
 

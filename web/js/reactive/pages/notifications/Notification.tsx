@@ -74,6 +74,19 @@ const Notification: React.FC<Props> = ({ notification }) => {
       )
     } else if (notification.type === 'welcome') {
       return <Styled.TypeName>欢迎来到本站！</Styled.TypeName>
+    } else if (notification.type === 'direct_message') {
+      return (
+        <>
+          <Styled.TypeName>收到新私信</Styled.TypeName>
+          <Styled.PostFrom>
+            来自 <a href={`/-/users/${notification.sender_id}-${notification.sender_name}`}>{notification.sender_name}</a>
+          </Styled.PostFrom>
+          <Styled.PostContent>{notification.preview}</Styled.PostContent>
+          <Styled.PostName>
+            <a href={`/-/messages/${notification.sender_id}`}>查看会话</a>
+          </Styled.PostName>
+        </>
+      )
     } else {
       return '通知渲染失败'
     }

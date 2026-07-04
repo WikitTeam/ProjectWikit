@@ -7,6 +7,7 @@ from django.urls import reverse
 from renderer import single_pass_render
 from renderer.parser import RenderContext
 from web.forms import UserProfileForm
+from web.models.messages import DirectMessageBlock
 from web.models.users import User
 
 
@@ -27,6 +28,14 @@ class ProfileView(DetailView):
         
         ctx['subtitle'] = ', '.join(user.showcase['titles'])
         ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user), 'inline')
+
+        viewer = self.request.user
+        if viewer.is_authenticated and viewer.id != user.id:
+            ctx['can_direct_message'] = True
+            ctx['is_blocked'] = DirectMessageBlock.objects.filter(blocker=viewer, blocked=user).exists()
+        else:
+            ctx['can_direct_message'] = False
+            ctx['is_blocked'] = False
         return ctx
 
     def get(self, request, *args, **kwargs):

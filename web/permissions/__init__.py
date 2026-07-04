@@ -77,6 +77,7 @@ def register_role_permissions():
     import web.permissions.admin
     import web.permissions.forum
     import web.permissions.articles
+    import web.permissions.messages
     # Temporary disabled because paws
     # _preload_role_permissions()
 

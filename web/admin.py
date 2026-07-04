@@ -245,7 +245,7 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
     fieldsets = UserAdmin.fieldsets
     fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key', '_op_index')
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
-    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'roles', 'is_superuser')
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'can_send_direct_messages', 'roles', 'is_superuser')
 
     @admin.display(ordering='username_or_wd')
     def username_or_wd(self, obj):
