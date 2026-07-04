@@ -30,6 +30,7 @@ class UserNotification(auto_prefetch.Model):
         NewThreadPost = ('new_thread_post', '新帖子')
         NewArticleRevision = ('new_article_revision', '文章编辑')
         ForumMention = ('forum_mention', '论坛提及')
+        DirectMessage = ('direct_message', '私信')
 
     type = models.TextField('通知类型', choices=NotificationType.choices, blank=False, null=False)
     meta = models.JSONField('元数据', default=dict, blank=True, null=False)

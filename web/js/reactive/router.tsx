@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 import ConfigContextProvider from '~reactive/config'
 import { IConfigContext } from '~reactive/config/ConfigContext.types'
+import Messages from '~reactive/pages/messages'
 import Notifications from '~reactive/pages/notifications'
 import Profile from '~reactive/pages/profile'
 import Search from '~reactive/pages/search'
@@ -27,6 +28,8 @@ export default function ReactivePage() {
             <Routes>
               <Route path={Paths.profile} element={<Profile />} />
               <Route path={`${Paths.notifications}/*`} element={<Notifications />} />
+              <Route path={Paths.messages} element={<Messages />} />
+              <Route path={`${Paths.messages}/:user_id`} element={<Messages />} />
               <Route path={Paths.search} element={<Search />} />
             </Routes>
           </BrowserRouter>
