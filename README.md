@@ -16,7 +16,7 @@
 > 
 > 因此，ProjectWikit完全由其自身的开发团队维护。如果您遇到任何问题或有任何建议，请直接向负责人Kakushi或WikitTeam报告，而不是向原始的RuFoundation团队反馈。
 
-## 🖥️ 环境要求
+## 环境要求
 以下是测试时的环境，你可能会与之有出入
 - Windows 10
 - PostgreSQL 17.2
@@ -33,18 +33,18 @@
 | 数据库主机 | `localhost`     | `DB_PG_HOST`        |
 | 数据库端口 | `5432`          | `DB_PG_PORT`        |
 
-## 💡 快速部署
+## 快速部署
 > [!TIP]
 > 在开始部署前，请修改 `prod-web.env.example` 内容，并将文件重命名为 `prod-web.env`。
 
 <details>
 <summary>  <code><strong>使用 Docker 快速部署（推荐）</strong></code></summary>
 
-### 1️⃣ Docker环境
+### 1.Docker环境
 - Docker 28.4.0
 - Docker Compose 2.39.4
 
-### 2️⃣ Docker 部署
+### 2.Docker 部署
    - **【STEP1】** 启动项目，运行 `docker compose up`
   
    - **【STEP2】** 在数据库中创建用户、网站并填充初始数据，请先启动项目，然后使用如下命令：
@@ -61,8 +61,8 @@
      - `docker exec -it wikitgo-web-1 python manage.py createsuperuser`
      - `docker exec -it wikitgo-web-1 python manage.py seed`
 
-### *️⃣ 其他操作
-   - 从[备份](https://github.com/kakushi-w/wikidot-backup/tree/main/wikidot_backups)完整迁移Wikidot网站：
+### 3.其他操作
+   - 从[备份](https://github.com/kakushi-w/wikit)完整迁移Wikidot网站：
      - 将备份文件夹`_users`、`files`、`forum`、`meta`、`pages` 放入`./archive`中
      - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive`
      - `docker exec -it wikitgo-web-1 python manage.py seed -a /archive -f`
@@ -78,10 +78,10 @@
 <details>
 <summary>  <code><strong>使用 Python 快速部署</strong></code></summary>
 
-### 1️⃣ Python环境
+### 1.Python环境
 - Python 3.13.2
 
-### 2️⃣ Python 部署
+### 2.Python 部署
    - **【STEP1】** 安装配置环境
      - 定位到 `web/js` 目录，执行 `yarn install`
      - 在项目根目录下，运行 `pip install -r requirements.txt`
