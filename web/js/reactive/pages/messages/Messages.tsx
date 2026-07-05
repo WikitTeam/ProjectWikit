@@ -63,7 +63,7 @@ const Messages: React.FC = () => {
           {partnerId !== null && !Number.isNaN(partnerId) ? (
             <ConversationView partnerId={partnerId} onMessageSent={bumpList} />
           ) : (
-            <Styled.EmptyState>请选择左侧一个会话查看，或前往任意用户资料页发起私信。</Styled.EmptyState>
+            <Styled.EmptyState>请选择一个会话查看，或前往任意用户资料页发起私信。</Styled.EmptyState>
           )}
         </Styled.Main>
       </Styled.Layout>
