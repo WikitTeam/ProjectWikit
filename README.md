@@ -1,6 +1,6 @@
 <div align="center">
   <h1>ProjectWikit</h1>
-  <h3>旨在将Wikidot站点完整地迁移到兼容Wikidot结构的ProjectWikit，并支持基于FTML的Wikidot语法。该平台基于RuFoundation Engine的一个分支版本开发。维基语法转换的部分基于SCP基金会社区WikiJump团队开发的FTML。</h3>
+  <h3>旨在将Wikidot站点完整地迁移到兼容Wikidot结构的ProjectWikit，并支持基于FTML的Wikidot语法。</h3>
 </div>
 
 
