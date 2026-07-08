@@ -170,7 +170,7 @@ sup { vertical-align: top; position: relative; top: -.5em; }
     z-index: 30;
     padding-bottom: 22px;
     margin-top: 14px;
-    border-radius: 14px 14px 0 0;
+    border-radius: 0;
     background:
         url('/-/static/images/wikitHana.png') 16px 43px / 96px 96px no-repeat,
         linear-gradient(120deg, var(--wk-header-1) 0%, var(--wk-header-2) 55%, var(--wk-header-3) 100%);
