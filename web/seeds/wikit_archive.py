@@ -520,8 +520,13 @@ def run_forum(base_path):
 
     for category_id, category in categories.items():
         logging.info('Loading threads for "%s"...', category['title'])
-        for thread_file in os.listdir('%s/meta/forum/%d' % (base_path, category['id'])):
-            with codecs.open('%s/meta/forum/%d/%s' % (base_path, category['id'], thread_file), encoding='utf-8') as f:
+        category_dir = '%s/meta/forum/%d' % (base_path, category['id'])
+        # 空分类在备份中可能没有帖子目录，跳过即可（分类本身仍会被创建，只是没有线程）
+        if not os.path.isdir(category_dir):
+            logging.warning('警告：分类 “%s”（id=%d）没有帖子目录，跳过', category['title'], category['id'])
+            continue
+        for thread_file in os.listdir(category_dir):
+            with codecs.open('%s/%s' % (category_dir, thread_file), encoding='utf-8') as f:
                 thread = json.load(f)
                 category['threads'].append(thread)
                 thread['categoryId'] = category_id
