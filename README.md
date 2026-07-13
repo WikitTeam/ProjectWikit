@@ -141,5 +141,11 @@
    - **页面已经导入过，只想补上标签和评分**：追加 `--update-existing`
      - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive -s pages -t --update-existing`
 
+   - **附件 / 图片显示 not found（物理文件缺失）**：重跑一次页面迁移即可，脚本会检测缺失并从备份补拷
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive -s pages`
+
 > [!NOTE]
 > `forum` 依赖页面数据来关联文章的评论区，因此单独迁移论坛前，请确保对应页面已经迁移完成；使用 `all` 时无需担心，脚本会先迁移页面再迁移论坛。
+
+> [!NOTE]
+> 文件迁移是增量安全的：不会清空已有的媒体目录，重复运行只会补拷缺失的物理文件，不会删除或重复已存在的附件。因此附件出现 not found 时，直接重跑页面迁移即可恢复（前提是备份中的 `files/` 目录仍然完整）。

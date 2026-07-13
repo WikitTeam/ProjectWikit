@@ -365,17 +365,20 @@ def run_pages(base_path, force_tags=False, import_votes=True, update_existing=Fa
     run_in_threads(set_parents, pages)
 
 
+set_tags_lock = threading.Lock()
+
+
 def set_article_tags(article, tags, force_tags):
-    # 默认走普通的 set_tags；当站点禁止用户创建标签时，库中尚不存在的标签会被静默丢弃。
-    # force_tags=True 时先按需新建标签（create=True），再直接写入，绕过该站点级限制。
-    if force_tags:
+    if not force_tags:
+        articles.set_tags(article, tags, log=False)
+        return
+    # 强制创建标签并覆盖；加锁 + tags.set() 以避免多线程下的标签竞态与 GC 误删
+    with set_tags_lock:
         tag_objs = [
             t for t in (articles.get_tag(name, create=True) for name in tags if articles.is_tag_name_allowed(name))
             if t is not None
         ]
-        articles.set_tags_internal(article, tag_objs, log=False)
-    else:
-        articles.set_tags(article, tags, log=False)
+        article.tags.set(tag_objs)
 
 
 def import_article_votes(article, meta, users, g_users, g_users_by_username):

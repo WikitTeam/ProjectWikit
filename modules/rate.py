@@ -89,7 +89,7 @@ def api_get_votes(context, _params):
             visualGroupIndex=db_vote.role.index if db_vote.role else None
         )
         if can_view_votes_timestamp:
-            rendered_vote.date = db_vote.date.isoformat() if db_vote.date else None
+            rendered_vote.date = db_vote.date.isoformat() if db_vote.date else 'migrated'
         votes.append(rendered_vote)
     return {'pageId': context.article.full_name, 'votes': votes, 'rating': rating, 'popularity': popularity, 'mode': mode}
 

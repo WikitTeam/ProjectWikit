@@ -339,11 +339,14 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
   })
 
   const renderVoteDate = useConstCallback((date?: string) => {
-    // 没有时间戳的票为历史迁移数据（wikitCLI 备份不含单票时间），显示为“wikit迁移”
+    if (!date) {
+      return null
+    }
+
     return (
       <>
         &nbsp;
-        <span className="admin-vote-date">({date ? formatDate(new Date(date)) : 'wikit迁移'})</span>
+        <span className="admin-vote-date">({date === 'migrated' ? 'wikit迁移' : formatDate(new Date(date))})</span>
       </>
     )
   })
