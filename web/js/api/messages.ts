@@ -70,3 +70,15 @@ export async function blockUser(userId: number): Promise<{ status: string; block
 export async function unblockUser(userId: number): Promise<{ status: string; blocked: boolean }> {
   return await wFetch(`/api/users/${userId}/block`, { method: 'DELETE', sendJson: true, body: {} })
 }
+
+export async function reportMessages(
+  reportedId: number,
+  messageIds: number[],
+  reason: string,
+): Promise<{ status: string; report_id: number }> {
+  return await wFetch('/api/messages/report', {
+    method: 'POST',
+    sendJson: true,
+    body: { reported_id: reportedId, message_ids: messageIds, reason },
+  })
+}

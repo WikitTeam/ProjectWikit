@@ -24,7 +24,7 @@ from django.contrib import admin
 
 from .views import profile, signup, login
 
-from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages
+from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages, reports as api_reports
 from web.views.article import ArticleView
 from web.views.reactive import reactive_view
 
@@ -70,7 +70,9 @@ api_patterns = [
     path('messages/conversations', api_messages.ConversationsListView.as_view()),
     path('messages/with/<int:user_id>', api_messages.ConversationView.as_view()),
     path('messages/can-send/<int:user_id>', api_messages.MessagePermissionProbeView.as_view()),
+    path('messages/report', api_reports.SubmitReportView.as_view()),
     path('users/<int:user_id>/block', api_messages.BlockUserView.as_view()),
+    path('admin/reports/<int:report_id>/full-conversation', api_reports.AdminReportFullConversationView.as_view()),
 
     path('search', search.SearchView.as_view())
 ]

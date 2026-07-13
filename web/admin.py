@@ -9,6 +9,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib import admin
 from django.urls import path
+from django.utils import timezone
+from django.utils.html import format_html, format_html_join
 from django import forms
 
 import web.fields
@@ -475,3 +477,95 @@ class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
         if obj and obj.slug  in ['everyone', 'registered']:
             return self.readonly_fields + ("slug",)
         return self.readonly_fields
+
+
+class UserReportForm(forms.ModelForm):
+    class Meta:
+        model = UserReport
+        fields = ['status', 'admin_notes']
+
+
+@admin.register(UserReport)
+class UserReportAdmin(admin.ModelAdmin):
+    form = UserReportForm
+    list_display = ['id', 'reporter_display', 'reported_display', 'status', 'message_count', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['reason', 'reporter__username', 'reported__username', 'admin_notes']
+    readonly_fields = [
+        'reporter_display', 'reported_display', 'reason', 'reported_messages_preview',
+        'created_at', 'reviewed_at', 'reviewed_by', 'full_conversation_link',
+    ]
+    fieldsets = (
+        ('检举信息', {
+            'fields': ('reporter_display', 'reported_display', 'created_at', 'reason', 'reported_messages_preview'),
+        }),
+        ('管理员操作', {
+            'fields': ('status', 'admin_notes', 'reviewed_at', 'reviewed_by', 'full_conversation_link'),
+        }),
+    )
+    @admin.display(description='举报人')
+    def reporter_display(self, obj):
+        if obj.reporter is None:
+            return '(已删除)'
+        return obj.reporter
+
+    @admin.display(description='被举报人')
+    def reported_display(self, obj):
+        if obj.reported is None:
+            return '(已删除)'
+        return obj.reported
+
+    @admin.display(description='涉及消息数', ordering=None)
+    def message_count(self, obj):
+        return len(obj.reported_messages or [])
+
+    @admin.display(description='被举报的消息')
+    def reported_messages_preview(self, obj):
+        rows = []
+        for msg in obj.reported_messages or []:
+            rows.append((msg.get('sender_name', ''), msg.get('created_at', ''), msg.get('body', '')))
+        if not rows:
+            return '(无)'
+        return format_html(
+            '<div style="max-width: 720px;">{}</div>',
+            format_html_join(
+                '',
+                '<div style="border:1px solid #ddd;border-radius:4px;padding:8px;margin-bottom:6px;background:#fafafa;">'
+                '<div style="font-size:12px;color:#666;margin-bottom:4px;"><strong>{}</strong> · {}</div>'
+                '<div style="white-space:pre-wrap;word-break:break-word;">{}</div>'
+                '</div>',
+                rows,
+            ),
+        )
+
+    @admin.display(description='查看完整会话')
+    def full_conversation_link(self, obj):
+        if not obj or not obj.pk:
+            return ''
+        return format_html(
+            '<a href="/api/admin/reports/{}/full-conversation" target="_blank">'
+            '打开完整会话 JSON（需要"查看被检举会话全部记录"权限）</a>',
+            obj.pk,
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm('roles.view_user_reports')
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm('roles.view_user_reports')
+
+    def save_model(self, request, obj, form, change):
+        if change and 'status' in form.changed_data:
+            obj.reviewed_at = timezone.now()
+            obj.reviewed_by = request.user
+        super().save_model(request, obj, form, change)
