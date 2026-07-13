@@ -181,11 +181,9 @@ def run_pages(base_path, force_tags=False, import_votes=True, update_existing=Fa
         total_revisions += len(meta.get('revisions', []))
 
     from_files = '%s/files' % base_path
-    to_files = str(Path(settings.MEDIA_ROOT) / 'media')
 
-    if os.path.exists(to_files):
-        logging.info('正在移除旧文件...')
-        shutil.rmtree(to_files, ignore_errors=False)
+    # 注意：不再清空媒体目录。此前这里会 rmtree 整个 media/，一旦重跑就会把已导入的物理文件删光，
+    # 而下方文件已存在时又会跳过拷贝，导致附件记录仍在、文件却 404。改为按需补拷（见下）。
 
     def file_worker_thread(pages):
         nonlocal total_cnt
@@ -200,16 +198,27 @@ def run_pages(base_path, force_tags=False, import_votes=True, update_existing=Fa
             files = meta.get('files', [])
             for file in files:
                 total_cnt += 1
+                from_path = '%s/%s/%d' % (from_files, urls.partial_quote(meta['name']), file['file_id'])
+                if not os.path.exists(from_path):
+                    logging.warning('警告：文件未找到：%s/%s', meta['name'], file['name'])
+                    continue
+
+                existing = File.objects.filter(name=file['name'], article=article).first()
+                if existing:
+                    # 文件记录已存在：确保物理文件在位（媒体目录可能被清空过），缺失则按其现有 media_name 补拷
+                    to_path = existing.local_media_path
+                    if not os.path.exists(to_path):
+                        os.makedirs(os.path.dirname(to_path), exist_ok=True)
+                        shutil.copyfile(from_path, to_path)
+                        logging.info('已补拷缺失文件：%s/%s', meta['name'], file['name'])
+                    continue
+
                 if file['author'] in users:
                     file_user = users[file['author']]
                 else:
                     file_user = users[file['author']] = get_or_create_user(file['author'], g_users, g_users_by_username)
-                from_path = '%s/%s/%d' % (from_files, urls.partial_quote(meta['name']), file['file_id'])
                 _, ext = os.path.splitext(file['name'])
                 media_name = str(uuid4()) + ext
-                if File.objects.filter(name=file['name'], article=article):
-                    logging.warning('警告：文件已存在：%s/%s', meta['name'], file['name'])
-                    continue
                 new_file = File(
                     name=file['name'],
                     media_name=media_name,
@@ -222,9 +231,6 @@ def run_pages(base_path, force_tags=False, import_votes=True, update_existing=Fa
                 if not os.path.exists(local_media_dir):
                     os.makedirs(local_media_dir, exist_ok=True)
                 to_path = new_file.local_media_path
-                if not os.path.exists(from_path):
-                    logging.warning('警告：文件未找到：%s/%s', meta['name'], file['name'])
-                    continue
                 shutil.copyfile(from_path, to_path)
                 new_file.save()
                 new_file.created_at = datetime.datetime.fromtimestamp(file['stamp'], tz=datetime.timezone.utc)
