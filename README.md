@@ -35,7 +35,7 @@
 
 ## 快速部署
 > [!TIP]
-> 在开始部署前，请修改 `prod-web.env.example` 内容，并将文件重命名为 `prod-web.env`。
+> 在开始部署前，请修改 `prod-web.env.example` 内容，并将文件重命名为 `prod-web.env`。若你修改了数据库名称或密码等，请于`docker-compose.yml`中一并更改。
 
 <details>
 <summary>  <code><strong>使用 Docker 快速部署（推荐）</strong></code></summary>
