@@ -187,6 +187,79 @@ export const BackButton = styled.a`
   }
 `
 
+export const HeaderSpacer = styled.div`
+  flex: 1;
+`
+
+export const ReportButton = styled.a`
+  cursor: pointer;
+  color: #c33;
+  text-decoration: none;
+  font-size: 13px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`
+
+export const SelectModeToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  font-size: 13px;
+`
+
+export const ToolbarAction = styled.a<{ danger?: boolean; disabled?: boolean }>`
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
+  color: ${({ danger }) => (danger ? '#c33' : 'inherit')};
+  opacity: ${({ disabled }) => (disabled ? 0.4 : 1)};
+  text-decoration: none;
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
+
+  &:hover {
+    text-decoration: underline;
+  }
+`
+
+export const MessageCheckbox = styled.input.attrs({ type: 'checkbox' })`
+  margin: 0 6px 0 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;
+`
+
+export const SelectableRow = styled.div<{ selected: boolean }>`
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  background: ${({ selected, theme }) => (selected ? theme.higlightBackground : 'transparent')};
+
+  &:hover {
+    background: ${({ theme }) => theme.higlightBackground};
+  }
+`
+
+export const ReportModalTextarea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  max-height: 300px;
+  resize: vertical;
+  padding: 8px;
+  border: 1px solid #aaaaaa;
+  border-radius: 4px;
+  font: inherit;
+  box-sizing: border-box;
+`
+
+export const ReportModalHint = styled.div`
+  font-size: 12px;
+  color: #666666;
+  margin-top: 6px;
+`
+
 export const MessageList = styled.div`
   flex: 1;
   overflow-y: auto;

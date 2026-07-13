@@ -39,7 +39,10 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
         ('论坛', (
             {'model': models.forum.ForumSection},
             {'model': models.forum.ForumCategory},
-        ))
+        )),
+        ('工单管理', (
+            {'model': models.reports.UserReport},
+        )),
     )
 
     app_label_by_model = dict()
