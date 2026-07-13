@@ -35,7 +35,7 @@ class Settings(auto_prefetch.Model):
     # 默认设置 -> 站点设置 -> 分类设置
     @classmethod
     def get_default_settings(cls):
-        return cls(rating_mode=Settings.RatingMode.Stars, can_user_create_tags=Settings.UserCreateTagsMode.Disabled)
+        return cls(rating_mode=Settings.RatingMode.UpDown, can_user_create_tags=Settings.UserCreateTagsMode.Disabled)
 
     # 使用另一个对象中非空的值覆盖当前对象的字段。
     # 返回一个副本。

@@ -62,10 +62,7 @@
      - `docker exec -it wikitgo-web-1 python manage.py seed`
 
 ### 3.其他操作
-   - 从[备份](https://github.com/kakushi-w/wikit)完整迁移Wikidot网站：
-     - 将备份文件夹`_users`、`files`、`forum`、`meta`、`pages` 放入`./archive`中
-     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive`
-     - `docker exec -it wikitgo-web-1 python manage.py seed -a /archive -f`
+   - 从备份完整迁移Wikidot网站：详见下方 [从备份迁移数据](#从备份迁移数据) 章节。
 
    - 完全删除所有数据：
      - `docker compose down`
@@ -103,3 +100,41 @@
          - `python manage.py seed`
  
 </details>
+
+## 从备份迁移数据
+将 [wikitCLI](https://github.com/kakushi-w/wikit) 生成的 Wikidot 备份导入到已部署的站点，包括页面、历史修订、附件、标签、页面评分、父子关系以及论坛。
+
+> [!TIP]
+> 迁移前请确认目标站点已创建（即已执行过 `createsite`）。
+
+### 1.准备备份
+将备份中的 `_users`、`files`、`forum`、`meta`、`pages` 文件夹一并放入 `./archive` 目录。
+
+### 2.执行迁移
+基本命令为 `docker exec -it wikitgo-web-1 python manage.py seed -a <备份路径>`，通过以下参数控制迁移范围与行为。
+
+| 参数 | 作用 |
+| :-- | :-- |
+| `-a, --archive <路径>` | 指定备份归档路径，启用迁移模式 |
+| `-s, --scope {all,pages,forum}` | 迁移范围：`all` 全部、`pages` 仅页面（含文件 / 标签 / 评分 / 父页面）、`forum` 仅论坛。默认 `all` |
+| `-t, --force-tags` | 强制迁移标签：当站点设置为“禁止用户创建标签”时，仍然导入备份中的标签 |
+| `--no-votes` | 跳过页面评分的迁移 |
+
+### 3.常见场景
+   - **完整迁移整个站点**（页面在前、论坛在后，自动按顺序处理）：
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive`
+
+   - **只迁移页面**（例如先导入内容，稍后再单独处理论坛）：
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive -s pages`
+
+   - **只迁移论坛**（页面此前已经导入过）：
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive -s forum`
+
+   - **标签没有被导入**（站点默认禁止创建标签时会出现）：追加 `-t` 强制导入标签
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive -t`
+
+   - **不想导入历史评分**：追加 `--no-votes`
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive --no-votes`
+
+> [!NOTE]
+> `forum` 依赖页面数据来关联文章的评论区，因此单独迁移论坛前，请确保对应页面已经迁移完成；使用 `all` 时无需担心，脚本会先迁移页面再迁移论坛。
