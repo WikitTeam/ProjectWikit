@@ -16,6 +16,8 @@ class Command(BaseCommand):
                             help="强制迁移标签：绕过站点“禁止用户创建标签”设置，导入时按需新建标签")
         parser.add_argument("--no-votes", action='store_true',
                             help="跳过页面评分（votings）的迁移")
+        parser.add_argument("--update-existing", action='store_true',
+                            help="对已存在的文章也重新同步标签与评分（默认已存在文章整体跳过；仅补充缺失的评分，不覆盖已有投票）")
 
     def handle(self, *args, **options):
         if not Site.objects.exists():
@@ -32,6 +34,7 @@ class Command(BaseCommand):
                     scope=options["scope"],
                     force_tags=options["force_tags"],
                     import_votes=not options["no_votes"],
+                    update_existing=options["update_existing"],
                 )
             else:
                 seeds.run()

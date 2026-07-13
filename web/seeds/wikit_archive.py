@@ -142,15 +142,16 @@ def init_users(base_path):
 ####################################################################################################
 
 
-def run(base_path, *, scope='all', force_tags=False, import_votes=True):
+def run(base_path, *, scope='all', force_tags=False, import_votes=True, update_existing=False):
     # 解压wikitCLI备份格式的wikidot存档
     # scope: 'all' 全部, 'pages' 仅页面（含文件/标签/评分/父页面）, 'forum' 仅论坛
     # force_tags: 强制迁移标签（绕过站点“禁止用户创建标签”设置，按需新建标签）
     # import_votes: 是否迁移页面评分（votings）
+    # update_existing: 对已存在的文章也重新同步标签与评分（默认已存在文章整体跳过）
     base_path = base_path.rstrip('/')
 
     if scope in ('all', 'pages'):
-        run_pages(base_path, force_tags=force_tags, import_votes=import_votes)
+        run_pages(base_path, force_tags=force_tags, import_votes=import_votes, update_existing=update_existing)
 
     if scope in ('all', 'forum'):
         # 论坛的评论串需要引用已存在的文章，因此必须在页面迁移之后运行
@@ -162,7 +163,7 @@ def run(base_path, *, scope='all', force_tags=False, import_votes=True):
 ####################################################################################################
 
 
-def run_pages(base_path, force_tags=False, import_votes=True):
+def run_pages(base_path, force_tags=False, import_votes=True, update_existing=False):
     site = get_current_site()
 
     t = time.time()
@@ -262,8 +263,16 @@ def run_pages(base_path, force_tags=False, import_votes=True):
             # 创建文章并设置标签
             article = articles.get_article(pagename)
             if article:
-                logging.warning('警告：文章已存在：%s', pagename)
                 total_cnt_rev += len(meta.get('revisions', []))
+                if update_existing:
+                    # 文章已存在：不重建内容，仅重新同步标签与评分
+                    logging.info('文章已存在，同步标签/评分：%s', pagename)
+                    if tags:
+                        set_article_tags(article, tags, force_tags)
+                    if import_votes:
+                        import_article_votes(article, meta, users, g_users, g_users_by_username)
+                else:
+                    logging.warning('警告：文章已存在：%s', pagename)
                 continue
             article = articles.create_article(pagename, user=user)
             article.created_at = created_at
@@ -367,7 +376,8 @@ def import_article_votes(article, meta, users, g_users, g_users_by_username):
     # 备份中的 votings 为 [[wikidot用户id, 投票值], ...]。
     # 投票值：布尔 true=+1 / false=-1（点赞点踩制）；数字则按原值写入（星级制）。
     # 备份不含单票时间戳，因此 date 留空（null）——前端会显示为“wikit迁移”。
-    seen_users = set()
+    # 预置为该文章已有投票的用户，避免覆盖站点上已存在的真实投票、也避免触发唯一约束。
+    seen_users = set(Vote.objects.filter(article=article).values_list('user_id', flat=True))
     for voting in meta.get('votings', []):
         if not voting:
             continue

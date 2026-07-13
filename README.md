@@ -35,7 +35,7 @@
 
 ## 快速部署
 > [!TIP]
-> 在开始部署前，请修改 `prod-web.env.example` 内容，并将文件重命名为 `prod-web.env`。
+> 在开始部署前，请修改 `prod-web.env.example` 内容，并将文件重命名为 `prod-web.env`。若你修改了数据库名称或密码等，请于`docker-compose.yml`中一并更改。
 
 <details>
 <summary>  <code><strong>使用 Docker 快速部署（推荐）</strong></code></summary>
@@ -49,6 +49,7 @@
   
    - **【STEP2】** 在数据库中创建用户、网站并填充初始数据，请先启动项目，然后使用如下命令：
      - `docker exec -it wikitgo-web-1 python manage.py createsite -s wikit-wiki -d 网站域名(本地填写localhost) -t "网站标题" -H "网站副标题"`
+     - `docker exec -it wikitgo-web-1 python manage.py migrate`
      - `docker exec -it wikitgo-web-1 python manage.py createsuperuser`
      - `docker exec -it wikitgo-web-1 seed`
     
@@ -119,6 +120,7 @@
 | `-s, --scope {all,pages,forum}` | 迁移范围：`all` 全部、`pages` 仅页面（含文件 / 标签 / 评分 / 父页面）、`forum` 仅论坛。默认 `all` |
 | `-t, --force-tags` | 强制迁移标签：当站点设置为“禁止用户创建标签”时，仍然导入备份中的标签 |
 | `--no-votes` | 跳过页面评分的迁移 |
+| `--update-existing` | 对库中已存在的文章也重新同步标签与评分（默认已存在文章整体跳过）。仅补充缺失的评分，不会覆盖已有投票 |
 
 ### 3.常见场景
    - **完整迁移整个站点**（页面在前、论坛在后，自动按顺序处理）：
@@ -135,6 +137,9 @@
 
    - **不想导入历史评分**：追加 `--no-votes`
      - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive --no-votes`
+
+   - **页面已经导入过，只想补上标签和评分**：追加 `--update-existing`
+     - `docker exec -it wikitgo-web-1 python manage.py seed -a ./archive -s pages -t --update-existing`
 
 > [!NOTE]
 > `forum` 依赖页面数据来关联文章的评论区，因此单独迁移论坛前，请确保对应页面已经迁移完成；使用 `all` 时无需担心，脚本会先迁移页面再迁移论坛。
