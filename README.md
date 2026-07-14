@@ -7,12 +7,12 @@
 
 
 > [!NOTE]
-> This project, ProjectWikit, originated as a fork of the [RuFoundation Engine](https://github.com/SCPRu/RuFoundation). However, It has since undergone numerous modifications and has become an independent project, no longer tracking or following updates from the original RuFoundation codebase.
+> This project, ProjectWikit, originated as a fork of the [RuFoundation Engine](https://github.com/SCPRu/RuFoundation). However, It has since undergone numerous modifications and has become an independent project, no longer tracking or following updates from the original RuFoundation codebase, and no longer maintaining compatibility with it.
 > 
 > As a result, ProjectWikit is fully maintained by its own development team. If you encounter any issues or have suggestions, please report them directly to the WikitTeam rather than the original RuFoundation Team.
 >
 > -----
-> ProjectWikit最初是 [RuFoundation引擎](https://github.com/SCPRu/RuFoundation) 的分支。然而，自此之后，它已历经了大量的修改，并已成为独立的项目，不再追踪或跟随原始的RuFoundation代码库的更新。
+> ProjectWikit最初是 [RuFoundation引擎](https://github.com/SCPRu/RuFoundation) 的分支。然而，自此之后，它已历经了大量的修改，并已成为独立的项目，不再追踪或跟随原始的RuFoundation代码库的更新，亦不再保持对其的兼容。
 > 
 > 因此，ProjectWikit完全由其自身的开发团队维护。如果您遇到任何问题或有任何建议，请直接向负责人Kakushi或WikitTeam报告，而不是向原始的RuFoundation团队反馈。
 
