@@ -671,6 +671,14 @@ def run_forum(base_path):
                     t = time.time()
 
     run_in_threads(convert_threads, threads)
+
+    # 用显式 ID 插入后同步各表自增序列，否则新建 section/category/thread/post 时 ID 会与已迁移数据冲突
+    with connection.cursor() as cursor:
+        for tbl in ('web_forumsection', 'web_forumcategory', 'web_forumthread', 'web_forumpost', 'web_forumpostversion'):
+            cursor.execute(
+                "SELECT setval(pg_get_serial_sequence('%s', 'id'), GREATEST((SELECT COALESCE(MAX(id), 1) FROM %s), 1))" % (tbl, tbl)
+            )
+
     logging.info('Done; Added: %d/%d (posts: %d/%d)' % (done_threads, total_threads, done_posts, total_posts))
 
 
