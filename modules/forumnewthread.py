@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from modules import ModuleError
 from renderer import RenderContext, render_template_from_string
 import json
@@ -108,7 +106,7 @@ def api_submit(context, params):
 
     first_post = ForumPost(thread=thread, author=context.user, name=title)
     first_post.save()
-    first_post.updated_at = datetime.now(timezone.utc)
+    first_post.updated_at = first_post.created_at
     first_post.save()
 
     first_post_content = ForumPostVersion(post=first_post, source=source, author=context.user)
