@@ -26,6 +26,16 @@ class StrictUsernameValidator(RegexValidator):
     message = '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。'
     flags = re.ASCII
 
+class StrictDisplayNameValidator(RegexValidator):
+    regex = r'^[\w -]+\Z'
+    message = '显示名只能包含英文字母、数字、空格及符号 [_-]。'
+    flags = re.ASCII
+
+
+def canonicalize_username(name: str) -> str:
+    # 显示名 -> 身份用户名：小写，空格/下划线/连字符的连续段折叠为单个 -，去首尾 -
+    return re.sub(r'[\s_-]+', '-', name or '').strip('-').lower()
+
 class CSSValueValidator(RegexValidator):
     regex = r'^[^;\n\r]+\Z'
     message = 'CSS 值不能包含 ";" 或换行符。'
@@ -64,6 +74,8 @@ class User(AbstractUser, RolesMixin):
 
     wikidot_username = web.fields.CITextField('Wikidot用户名', unique=True, max_length=150, validators=[StrictUsernameValidator()], null=True, blank=False)
 
+    display_name = models.CharField('显示名', max_length=150, null=True, blank=True, validators=[StrictDisplayNameValidator()])
+
     type = models.TextField('用户类型', choices=UserType.choices, default=UserType.Normal)
 
     avatar = models.ImageField('头像', null=True, blank=True, upload_to='-/users')
@@ -99,10 +111,17 @@ class User(AbstractUser, RolesMixin):
             return '/local--files/%s' % self.avatar
         return default
 
+    @property
+    def url_name(self):
+        # 用于个人主页 URL 的规范身份名
+        if self.type == User.UserType.Wikidot:
+            return self.wikidot_username or self.username
+        return self.username
+
     def __str__(self):
         if self.type == User.UserType.Wikidot:
-            return 'wd:%s' % (self.wikidot_username or self.username)
-        return self.username
+            return 'wd:%s' % (self.display_name or self.wikidot_username or self.username)
+        return self.display_name or self.username
 
     def _generate_apikey(self, commit=True):
         self.password = ''

@@ -6,6 +6,7 @@ export interface UserData {
   avatar?: string
   name: string
   username: string
+  urlName?: string
   showAvatar: boolean
   editor?: boolean
   staff?: boolean

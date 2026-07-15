@@ -4,6 +4,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponseRedirect
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 
+from web.models.users import canonicalize_username
+
 
 class LoginView(TemplateResponseMixin, ContextMixin, View):
     template_name = "login/login.html"
@@ -25,7 +27,12 @@ class LoginView(TemplateResponseMixin, ContextMixin, View):
         to = request.GET.get('to', settings.LOGIN_REDIRECT_URL)
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
+        # 先按原样匹配(兼容存量精确用户名);失败再按归一形式匹配(支持输入空格/下划线/大小写)
         user = authenticate(username=username, password=password)
+        if not user:
+            canon = canonicalize_username(username)
+            if canon and canon != username:
+                user = authenticate(username=canon, password=password)
         if user:
             login(request, user)
             return HttpResponseRedirect(redirect_to=to)
