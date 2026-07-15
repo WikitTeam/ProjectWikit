@@ -84,25 +84,25 @@ def run_in_threads(fn, pages):
 get_or_create_user_lock = threading.Lock()
 
 
-def normalize_username(name: str) -> str:
-    return re.sub(r'[^A-Za-z0-9_]+', '-', name).strip('-')
-
-
 @transaction.atomic
 def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
     if user_name_or_id is None:
         return None
     with get_or_create_user_lock:
+        # 备份自带 username(规范身份，小写连字符)与 full_name(显示名)，直接使用
+        display = None
         if type(user_name_or_id) == str:
             user_attrs = user_data_by_un.get(user_name_or_id, None)
             if user_attrs:
-                user_name = normalize_username(user_attrs['full_name']) or user_name_or_id
+                user_name = user_attrs['username']
+                display = user_attrs.get('full_name')
             else:
                 user_name = user_name_or_id
         elif type(user_name_or_id) == int:
             user_attrs = user_data.get(str(user_name_or_id), None)
             if user_attrs:
-                user_name = normalize_username(user_attrs['full_name']) or user_attrs['username']
+                user_name = user_attrs['username']
+                display = user_attrs.get('full_name')
             else:
                 user_name = '已删除-%d' % user_name_or_id
         else:
@@ -112,7 +112,7 @@ def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
         try:
             if not existing:
                 with transaction.atomic():
-                    new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
+                    new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, display_name=display, is_active=False)
                     new_user.save()
                 return new_user
             return existing[0]

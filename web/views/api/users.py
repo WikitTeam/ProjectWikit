@@ -6,8 +6,9 @@ from shared_data import shared_users
 from . import APIView, APIError, takes_json, takes_url_params
 
 from web.models import ActionLogEntry
-from django.utils.http import urlsafe_base64_encode  
-from django.utils.encoding import force_bytes  
+from web.models.users import canonicalize_username
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from web.views.invite import account_activation_token  
 from web.models.site import get_current_site  
 from django.contrib.auth import get_user_model  
@@ -63,8 +64,9 @@ class LookupUserView(APIView):
         if not name:
             raise APIError('请输入用户名', 400)
 
+        canon = canonicalize_username(name)
         user = User.objects.filter(
-            Q(username__iexact=name) | Q(wikidot_username__iexact=name)
+            Q(username__iexact=canon) | Q(wikidot_username__iexact=canon) | Q(display_name__iexact=name)
         ).first()
 
         if not user:

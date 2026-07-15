@@ -70,8 +70,8 @@ def render_user_to_text(user: _UserType):
     if isinstance(user, AnonymousUser):
         return '匿名用户'
     if user.type == User.UserType.Wikidot:
-        return 'wd:'+user.wikidot_username
-    return user.username
+        return 'wd:'+(user.display_name or user.wikidot_username)
+    return user.display_name or user.username
 
 
 def render_user_to_html(user: _UserType, avatar=True, hover=True):
@@ -95,18 +95,18 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True):
         )
     if user.type == 'wikidot':
         user_avatar = settings.WIKIDOT_AVATAR
-        displayname = 'wd:'+user.wikidot_username
+        displayname = 'wd:'+(user.display_name or user.wikidot_username)
     else:
         user_avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
-        displayname = user.username
+        displayname = user.display_name or user.username
 
     return render_template_from_string(
         """
-        <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
+        <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{url_name}}">
             {% if show_avatar %}
-                <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
+                <a href="/-/users/{{url_name}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
-            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
+            <a href="/-/users/{{url_name}}">{{displayname}}</a>
             {% if show_avatar %}
                 {% for icon in tails.icons %}
                     <span class="icon" {% if icon.tooltip %}title="{{icon.tooltip|safe}}"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/></span>
@@ -122,7 +122,7 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True):
         tails=user.name_tails,
         avatar=user_avatar,
         user_id=user.pk,
-        username=user.username,
+        url_name=user.url_name,
         displayname=displayname
     )
 
@@ -160,6 +160,7 @@ class UserJSON(JSONInterface):
     id: Optional[int]=None
     name: Optional[str]=None
     username: Optional[str]=None
+    urlName: Optional[str]=None
     isActive: bool=True
     avatar: Optional[str]=None
     showAvatar: bool=False
@@ -184,6 +185,7 @@ def render_user_to_json(user: _UserType, show_avatar=True, skip_perms=False):
         id=user.pk,
         name=user.__str__(),
         username=user.username,
+        urlName=user.url_name,
         isActive=user.is_active,
         avatar=user.get_avatar(),
         showAvatar=show_avatar,

@@ -240,12 +240,12 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
 
     list_filter = ['is_superuser', 'is_active', 'roles']
     list_display = ['username_or_wd', 'email', 'is_active']
-    search_fields = ['username', 'wikidot_username', 'email']
+    search_fields = ['username', 'wikidot_username', 'display_name', 'email']
     readonly_fields = ['api_key', '_op_index']
     sensitive_fields = ['email']
 
     fieldsets = UserAdmin.fieldsets
-    fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key', '_op_index')
+    fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'display_name', 'type', 'password', 'api_key', '_op_index')
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
     fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'can_send_direct_messages', 'roles', 'is_superuser')
 

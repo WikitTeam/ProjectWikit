@@ -57,9 +57,9 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
       <>
         <span className="printuser w-user">
           <a href={`/-/profile`}>
-            <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.username} />
+            <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.name || user.username} />
           </a>
-          {user.username}
+          {user.name || user.username}
         </span>
         {(user.admin || user.staff) && (
           <>
@@ -70,7 +70,7 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
           </>
         )}
         {'\u00a0|\u00a0'}
-        <a id="my-account" href={`/-/users/${user.id}-${user.username}`}>
+        <a id="my-account" href={`/-/users/${user.urlName || user.username}`}>
           个人资料
         </a>
         {notificationCount > 0 && (

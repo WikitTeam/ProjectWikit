@@ -3,12 +3,14 @@ from django.views.generic import DetailView, UpdateView
 from django.shortcuts import resolve_url, redirect
 from django.conf import settings
 from django.urls import reverse
+from django.db.models import Q
+from django.http import Http404
 
 from renderer import single_pass_render
 from renderer.parser import RenderContext
 from web.forms import UserProfileForm
 from web.models.messages import DirectMessageBlock
-from web.models.users import User
+from web.models.users import User, canonicalize_username
 
 
 class ProfileView(DetailView):
@@ -21,10 +23,10 @@ class ProfileView(DetailView):
 
         if user.type == User.UserType.Wikidot:
             ctx['avatar'] = settings.WIKIDOT_AVATAR
-            ctx['displayname'] = 'wd:'+user.wikidot_username
+            ctx['displayname'] = 'wd:'+(user.display_name or user.wikidot_username)
         else:
             ctx['avatar'] = user.get_avatar(default=settings.DEFAULT_AVATAR)
-            ctx['displayname'] = user.username
+            ctx['displayname'] = user.display_name or user.username
         
         ctx['subtitle'] = ', '.join(user.showcase['titles'])
         ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user), 'inline')
@@ -50,8 +52,15 @@ class ProfileView(DetailView):
         return self.render_to_response(context)
 
     def get_object(self, queryset=None):
-        q = super().get_object(queryset=queryset)
-        return q
+        # 按用户名访问：把输入(可能带空格/下划线/大小写)归一后，匹配 username 或 wikidot_username
+        if 'name' in self.kwargs:
+            canon = canonicalize_username(self.kwargs['name'])
+            qs = queryset if queryset is not None else self.get_queryset()
+            user = qs.filter(Q(username=canon) | Q(wikidot_username=canon)).first()
+            if user is None:
+                raise Http404('用户不存在')
+            return user
+        return super().get_object(queryset=queryset)
 
 
 class ChangeProfileView(LoginRequiredMixin, UpdateView):
