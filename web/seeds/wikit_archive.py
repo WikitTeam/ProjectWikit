@@ -85,7 +85,7 @@ get_or_create_user_lock = threading.Lock()
 
 
 def normalize_username(name: str) -> str:
-    return re.sub(r'[^A-Za-z0-9]+', '-', name).strip('-')
+    return re.sub(r'[^A-Za-z0-9_]+', '-', name).strip('-')
 
 
 @transaction.atomic
