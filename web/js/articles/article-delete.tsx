@@ -133,7 +133,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
         <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
           关闭
         </a>
-        <h1>Удалить страницу</h1>
+        <h1>删除页面</h1>
         <p>此页面已被标记为删除，无法再次删除</p>
       </Styles>
     )

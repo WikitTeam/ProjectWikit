@@ -193,9 +193,9 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
           </>
         )
       } else if (Array.isArray(added_tags) && added_tags.length) {
-        return <>Добавлены теги: {added_tags.join(', ')}.</>
+        return <>已添加标签: {added_tags.join(', ')}.</>
       } else if (Array.isArray(removed_tags) && removed_tags.length) {
-        return <>Удалены теги: {removed_tags.join(', ')}.</>
+        return <>已移除标签: {removed_tags.join(', ')}.</>
       }
       break
 
@@ -311,7 +311,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
       })
       .catch(e => {
         setFatalError(entries === null)
-        setError(e.error || 'Ошибка связи с сервером')
+        setError(e.error || '连接服务器失败')
       })
       .finally(() => {
         setLoading(false)

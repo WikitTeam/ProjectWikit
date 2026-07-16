@@ -123,7 +123,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setPopularity(rating.popularity)
       setMode(rating.mode)
     } catch (e) {
-      setError(e.error || 'Ошибка связи с сервером')
+      setError(e.error || '连接服务器失败')
     } finally {
       setLoading(false)
     }

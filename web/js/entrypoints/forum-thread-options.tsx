@@ -77,7 +77,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         isPinned: !isPinned,
       })
     } catch (e) {
-      setError(e.error || 'Ошибка связи с сервером')
+      setError(e.error || '连接服务器失败')
       setIsLoading(false)
       return
     }
@@ -99,7 +99,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         isLocked: !isLocked,
       })
     } catch (e) {
-      setError(e.error || 'Ошибка связи с сервером')
+      setError(e.error || '连接服务器失败')
       setIsLoading(false)
       return
     }
@@ -171,7 +171,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         <table className="form">
           <tbody>
             <tr>
-              <td>Заголовок темы:</td>
+              <td>主题标题:</td>
               <td>
                 <input
                   className="text form-control"
@@ -231,7 +231,7 @@ const ForumThreadOptions: React.FC<Props> = ({
           { title: '保存', onClick: onMoveSave },
         ]}
       >
-        <h2>Переместить тему</h2>
+        <h2>移动主题</h2>
         <hr className="buttons-hr" />
         <table className="form">
           <tbody>

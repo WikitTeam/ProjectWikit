@@ -423,7 +423,7 @@ def set_parents(base_path_or_list):
     for meta in pages:
         for rev in meta['revisions']:
             if rev['commentary'].startswith('You successfully renamed the page: "') or\
-                    rev['commentary'].startswith('Вы переименовали страницу: "'):
+                    rev['commentary'].startswith('您已成功地重新命名本页: "'):
                 renamed_from = rev['commentary'].split('"')[1]
                 renamed_at = rev['stamp']
                 page_renames.append((renamed_at, renamed_from, meta['name']))
@@ -434,7 +434,7 @@ def set_parents(base_path_or_list):
         parent = None
         for rev in meta['revisions']:
             if rev['commentary'].startswith('Parent page set to: "') or\
-                    rev['commentary'].startswith('Родительской страницей установлена: "'):
+                    rev['commentary'].startswith('将父页面设置为: "'):
                 parent = rev['commentary'].split('"')[1]
                 # 尝试查找是否被重命名
                 for rename in page_renames:
