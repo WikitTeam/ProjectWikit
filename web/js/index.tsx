@@ -22,6 +22,7 @@ import { attachApiMessageListener } from './entrypoints/messages-api-interface'
 import Page404 from './entrypoints/page-404'
 import PageLoginStatus from './entrypoints/page-login-status'
 import PageOptions from './entrypoints/page-options'
+import SearchModule from './entrypoints/search'
 import { attachUserActions } from './entrypoints/user-actions'
 import { makeRecentPosts } from './forum/recent-posts-pagination'
 import { makeForumThread } from './forum/thread-pagination'
@@ -89,6 +90,8 @@ window.addEventListener('DOMContentLoaded', () => {
         makeInterwiki(node)
       } else if (node.classList.contains('w-admin-sus-users')) {
         renderTo(node, <AdminSusUsers />)
+      } else if (node.classList.contains('w-search-module')) {
+        renderTo(node, <SearchModule {...JSON.parse(node.dataset.config!)} />)
       }
     } catch (e) {
       console.error('Failed to process node', node, e)

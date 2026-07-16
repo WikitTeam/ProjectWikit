@@ -24,25 +24,6 @@ def render(context: RenderContext, params):
     config = json.dumps({'category': category})
 
     return render_template_from_string("""
-    <style>
-    .new-page-form {
-      border: 1px solid #ccc;
-      background: #eee;
-      padding: 8px;
-      text-align: center;
-    }
-    .new-page-form form {
-      display: flex;
-      flex-direction: column;
-    }
-    .new-page-form p {
-      margin: 4px 0;
-    }
-    .new-page-form p div {
-      margin: 4px 0;
-    }
-    </style>
-
     <div class="new-page-form w-newpage-module" data-config="{{ config }}">
       <form method="get" action="">
         <p>
