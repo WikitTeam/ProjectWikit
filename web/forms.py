@@ -63,4 +63,4 @@ class SignupForm(forms.Form):
     username = forms.CharField(label='用户名', required=True, validators=[RegexValidator(r'^[\w.-]+\Z', '格式错误')])  
     password = forms.CharField(label='密码', widget=forms.PasswordInput(), required=True)  
     password_confirm = forms.CharField(label='确认密码', widget=forms.PasswordInput(), required=True)  
-    verification_code = forms.CharField(label='验证码', required=False) # TODO：认领 Wikidot 时使用 
+    verification_code = forms.CharField(label='验证码', required=False) 
