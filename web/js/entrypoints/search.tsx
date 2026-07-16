@@ -9,6 +9,12 @@ interface Props {
   tags?: string
   category?: string
   q?: string
+<<<<<<< Updated upstream
+=======
+  author?: string
+  datefrom?: string
+  dateto?: string
+>>>>>>> Stashed changes
 }
 
 function parseTime(s: string | null): Date | null {
@@ -42,12 +48,25 @@ function preciseTime(s: string | null): string {
   return d ? d.toLocaleString() : ''
 }
 
+<<<<<<< Updated upstream
 const SearchModule: React.FC<Props> = ({ placeholder, tags: defaultTags, q: initialQ }) => {
   const [q, setQ] = useState(initialQ || '')
   const [author, setAuthor] = useState('')
+=======
+const SearchModule: React.FC<Props> = ({
+  placeholder,
+  tags: defaultTags,
+  q: initialQ,
+  author: initialAuthor,
+  datefrom: initialDateFrom,
+  dateto: initialDateTo,
+}) => {
+  const [q, setQ] = useState(initialQ || '')
+  const [author, setAuthor] = useState(initialAuthor || '')
+>>>>>>> Stashed changes
   const [tags, setTags] = useState(defaultTags || '')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [dateFrom, setDateFrom] = useState(initialDateFrom || '')
+  const [dateTo, setDateTo] = useState(initialDateTo || '')
 
   const [results, setResults] = useState<SearchResultItem[]>([])
   const [loading, setLoading] = useState(false)
