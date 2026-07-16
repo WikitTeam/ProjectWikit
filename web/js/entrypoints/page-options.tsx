@@ -253,7 +253,7 @@ const PageOptions: React.FC<Props> = ({
         setIsNowWatching(!isNowWatching)
       })
       .catch(e => {
-        setError(e.error || 'Ошибка связи с сервером')
+        setError(e.error || '连接服务器失败')
       })
       .finally(() => {
         clearTimeout(loadDelay)

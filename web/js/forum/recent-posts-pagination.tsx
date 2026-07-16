@@ -61,7 +61,7 @@ export function makeRecentPosts(node: HTMLElement) {
       unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'
-      showErrorModal(e.error || 'Ошибка связи с сервером')
+      showErrorModal(e.error || '连接服务器失败')
     }
   }
 

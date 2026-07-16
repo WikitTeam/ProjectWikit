@@ -48,7 +48,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || 'Ошибка связи с сервером')
+        setError(e.error || '连接服务器失败')
       })
       .finally(() => {
         setLoading(false)

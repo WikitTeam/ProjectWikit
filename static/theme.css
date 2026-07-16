@@ -51,10 +51,12 @@
     --wk-shell:          1240px;
     --wk-sidebar-w:      17em;
 
+    --wk-cjk: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC',
+              'Hiragino Sans GB', 'Source Han Sans SC', 'Nanum Gothic', sans-serif;
     --wk-font: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-               'Helvetica Neue', 'Nanum Gothic', Arial, sans-serif;
-    --wk-mono: 'JetBrains Mono', 'Nanumgothic Coding', ui-monospace,
-               SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+               'Helvetica Neue', Arial, var(--wk-cjk);
+    --wk-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular,
+               'SF Mono', Menlo, Consolas, var(--wk-cjk);
 }
 
 :root {
@@ -232,7 +234,7 @@ sup { vertical-align: top; position: relative; top: -.5em; }
     max-height: 0;
     color: #fff;
     background: transparent;
-    font-family: 'Sans Normalcy', 'Nanum Gothic', var(--wk-font);
+    font-family: 'Sans Normalcy', var(--wk-font);
     font-size: 190%;
     font-weight: 800;
     letter-spacing: .3px;

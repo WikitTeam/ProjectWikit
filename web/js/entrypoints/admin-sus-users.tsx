@@ -264,7 +264,7 @@ const AdminSusUsers: React.FC = () => {
       const data = await fetchAdminSusUsers()
       setUsers(data)
     } catch (e: any) {
-      setError(e.message || e.error || 'Неизвестная ошибка')
+      setError(e.message || e.error || '未知错误')
     } finally {
       setIsLoading(false)
     }
