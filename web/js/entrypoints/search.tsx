@@ -119,7 +119,7 @@ const SearchModule: React.FC<Props> = ({ placeholder, tags: defaultTags }) => {
 
       <div className="w-search-filters">
         <input className="w-search-filter" type="text" value={author} placeholder="作者" onChange={e => setAuthor(e.target.value)} />
-        <input className="w-search-filter" type="text" value={tags} placeholder="标签（空格分隔）" onChange={e => setTags(e.target.value)} />
+        <input className="w-search-filter" type="text" value={tags} placeholder="标签（空格分隔，- 排除）" onChange={e => setTags(e.target.value)} />
         <div className="w-search-dates">
           <input className="w-search-filter w-search-date" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           <span className="w-search-date-sep">–</span>
@@ -168,7 +168,7 @@ const SearchModule: React.FC<Props> = ({ placeholder, tags: defaultTags }) => {
                     </span>
                   )}
                   {r.rating && <span className="w-search-result-rating">{r.rating}</span>}
-                  {r.comments > 0 && <span className="w-search-result-comments">{r.comments} 条评论</span>}
+                  <span className="w-search-result-comments">{r.comments ?? 0} 条评论</span>
                   {!!r.tags.length && <span className="w-search-result-tags">{r.tags.join(' ')}</span>}
                 </div>
               </div>
