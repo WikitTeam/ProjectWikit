@@ -168,7 +168,7 @@ const SearchModule: React.FC<Props> = ({ placeholder, tags: defaultTags }) => {
                     </span>
                   )}
                   {r.rating && <span className="w-search-result-rating">{r.rating}</span>}
-                  {r.comments > 0 && <span className="w-search-result-comments">{r.comments} 条评论</span>}
+                  <span className="w-search-result-comments">{r.comments ?? 0} 条评论</span>
                   {!!r.tags.length && <span className="w-search-result-tags">{r.tags.join(' ')}</span>}
                 </div>
               </div>
