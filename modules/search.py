@@ -11,10 +11,12 @@ def allow_api():
 
 
 def render(context, params):
+    path_params = context.path_params or {}
     config = {
         'placeholder': params.get('placeholder') or '搜索文章标题或内容…',
         'tags': params.get('tags') or '',
         'category': params.get('category') or '',
+        'q': (path_params.get('q') or params.get('q') or '').strip(),
     }
     return render_template_from_string(
         '<div class="w-search-module" data-config="{{config}}"></div>',

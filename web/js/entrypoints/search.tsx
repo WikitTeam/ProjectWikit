@@ -8,6 +8,7 @@ interface Props {
   placeholder?: string
   tags?: string
   category?: string
+  q?: string
 }
 
 function parseTime(s: string | null): Date | null {
@@ -41,8 +42,8 @@ function preciseTime(s: string | null): string {
   return d ? d.toLocaleString() : ''
 }
 
-const SearchModule: React.FC<Props> = ({ placeholder, tags: defaultTags }) => {
-  const [q, setQ] = useState('')
+const SearchModule: React.FC<Props> = ({ placeholder, tags: defaultTags, q: initialQ }) => {
+  const [q, setQ] = useState(initialQ || '')
   const [author, setAuthor] = useState('')
   const [tags, setTags] = useState(defaultTags || '')
   const [dateFrom, setDateFrom] = useState('')
