@@ -95,7 +95,7 @@
     });
 
     function checkWikidotUsername(username) {
-        fetch('/-//signup/check-wikidot?username=' + encodeURIComponent(username))
+        fetch('/-/signup/check-wikidot?username=' + encodeURIComponent(username))
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 setWikidot(data.is_wikidot);
