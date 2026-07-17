@@ -35,7 +35,7 @@
 
 ## 快速部署
 > [!TIP]
-> 在开始部署前，请复制 `.env.example` 为 `.env` 并按需修改：`cp .env.example .env`。数据库名称/密码、对外端口、栈名等所有部署配置都集中在 `.env` 里，无需再改 `docker-compose.yaml`。
+> 在开始部署前，请复制 `.env.example` 为 `.env`。数据库名称/密码、对外端口、栈名等所有部署配置都集中在 `.env` 里，无需再改 `docker-compose.yaml`。
 
 `.env` 示例：
 
