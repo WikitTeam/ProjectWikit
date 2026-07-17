@@ -40,3 +40,9 @@ class UrlCache(object):
 @register.simple_tag
 def md5url(model_object):
     return UrlCache.get_md5(model_object)
+
+
+@register.simple_tag
+def site_theme_url():
+    from web.models.site import get_site_theme_url
+    return get_site_theme_url()

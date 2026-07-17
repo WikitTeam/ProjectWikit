@@ -1,0 +1,139 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}系统更新{% endblock %}
+
+{% block content %}
+<style>
+  .wu-card { border: 1px solid var(--hairline-color, #e0e0e0); border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+  .wu-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 8px; }
+  .wu-label { color: #888; font-size: 12px; }
+  .wu-val { font-size: 16px; font-weight: 600; }
+  .wu-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .wu-badge.ok { background: #e6f4ea; color: #137333; }
+  .wu-badge.new { background: #fef7e0; color: #b06000; }
+  .wu-badge.run { background: #e8f0fe; color: #1967d2; }
+  .wu-badge.err { background: #fce8e6; color: #c5221f; }
+  .wu-notes { white-space: pre-wrap; background: #fafafa; border-radius: 6px; padding: 10px 12px; max-height: 220px; overflow: auto; font-size: 13px; }
+  .wu-log { white-space: pre-wrap; background: #1e1e1e; color: #d4d4d4; border-radius: 6px; padding: 12px; max-height: 340px; overflow: auto; font-size: 12px; font-family: monospace; }
+  #wu-update-btn { padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer; }
+  #wu-update-btn:disabled { opacity: .5; cursor: not-allowed; }
+</style>
+
+<div id="wu-app">
+  <div class="wu-card">
+    <div class="wu-row">
+      <div>
+        <div class="wu-label">当前版本</div>
+        <div class="wu-val" id="wu-current">—</div>
+      </div>
+      <div>
+        <div class="wu-label">最新发布</div>
+        <div class="wu-val" id="wu-latest">—</div>
+      </div>
+      <div>
+        <div class="wu-label">状态</div>
+        <div class="wu-val"><span id="wu-badge" class="wu-badge">—</span></div>
+      </div>
+    </div>
+    <div class="wu-label" id="wu-checked"></div>
+  </div>
+
+  <div class="wu-card" id="wu-release-card" style="display:none">
+    <div class="wu-label">更新说明</div>
+    <div id="wu-release-title" class="wu-val" style="margin:4px 0 8px"></div>
+    <div class="wu-notes" id="wu-notes"></div>
+  </div>
+
+  <div class="wu-card">
+    <button id="wu-update-btn" disabled>更新到最新版本</button>
+    <span id="wu-msg" style="margin-left:12px"></span>
+  </div>
+
+  <div class="wu-card" id="wu-log-card" style="display:none">
+    <div class="wu-label">更新日志</div>
+    <pre class="wu-log" id="wu-log"></pre>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STATUS_URL = "{% url 'wu_update_status' %}";
+  var TRIGGER_URL = "{% url 'wu_update_trigger' %}";
+
+  function csrf() {
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  var btn = document.getElementById('wu-update-btn');
+  var msg = document.getElementById('wu-msg');
+
+  function render(d) {
+    document.getElementById('wu-current').textContent = d.current || '未知';
+    var latest = d.latest || {};
+    document.getElementById('wu-latest').textContent = latest.tag || '暂无发布';
+
+    var badge = document.getElementById('wu-badge');
+    var state = (d.status && d.status.state) || 'idle';
+    if (state === 'running') {
+      badge.className = 'wu-badge run'; badge.textContent = '更新中';
+      btn.disabled = true;
+    } else if (state === 'failed') {
+      badge.className = 'wu-badge err'; badge.textContent = '上次更新失败';
+      btn.disabled = !d.available;
+    } else if (d.available) {
+      badge.className = 'wu-badge new'; badge.textContent = '有可用更新';
+      btn.disabled = false;
+    } else {
+      badge.className = 'wu-badge ok'; badge.textContent = '已是最新';
+      btn.disabled = true;
+    }
+
+    if (d.checked_at) {
+      document.getElementById('wu-checked').textContent = '最近检查：' + d.checked_at;
+    }
+
+    if (latest.tag) {
+      document.getElementById('wu-release-card').style.display = '';
+      document.getElementById('wu-release-title').textContent = latest.name || latest.tag;
+      document.getElementById('wu-notes').textContent = latest.body || '（无更新说明）';
+    }
+
+    if (d.status && d.status.message) {
+      msg.textContent = d.status.message;
+    }
+
+    if (d.log) {
+      document.getElementById('wu-log-card').style.display = '';
+      var log = document.getElementById('wu-log');
+      log.textContent = d.log;
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  function poll() {
+    fetch(STATUS_URL, { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(render)
+      .catch(function () {});
+  }
+
+  btn.addEventListener('click', function () {
+    if (!confirm('确认更新到最新版本？web 服务会在构建完成后自动重启。')) return;
+    btn.disabled = true;
+    msg.textContent = '正在发起更新...';
+    fetch(TRIGGER_URL, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': csrf() }
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { msg.textContent = d.message || ''; poll(); })
+      .catch(function () { msg.textContent = '发起更新失败'; });
+  });
+
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
+{% endblock %}

@@ -37,7 +37,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         path = [urllib.parse.unquote(x) for x in path.split('/')]
         article_name = path[0].strip()
         if not article_name:
-            article_name = 'main'
+            site = get_current_site(required=False)
+            home_page = (site.home_page.strip() if site and site.home_page else '')
+            article_name = home_page or 'main'
 
         path_params = {}
         path = path[1:]

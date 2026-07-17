@@ -288,6 +288,12 @@ JAZZMIN_SETTINGS = {
 
     'site_title': 'Wikit',
     'site_brand': 'Wikit管理面板',
+
+    'custom_js': 'admin/update_notify.js',
+
+    'icons': {
+        'web.SystemUpdate': 'fas fa-cloud-download-alt',
+    },
 }
 
 
