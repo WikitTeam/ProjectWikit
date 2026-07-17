@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from renderer import render_template_from_string
 from renderer.utils import render_user_to_json
 
+from web.models.site import get_site_theme_url
+
 
 def reactive_view(request, *args, **kwargs):
     config = {
@@ -11,7 +13,7 @@ def reactive_view(request, *args, **kwargs):
     }
 
     return HttpResponse(
-        
+
         render_template_from_string(
         """
             <!DOCTYPE html>
@@ -21,7 +23,7 @@ def reactive_view(request, *args, **kwargs):
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <link rel="stylesheet" type="text/css" href="/-/static/fontawesome/css/all.css">
                 <link rel="stylesheet" type="text/css" href="/-/static/wikidot-base.css">
-                <link rel="stylesheet" type="text/css" href="/-/static/theme.css">
+                <link rel="stylesheet" type="text/css" href="{{ theme_url }}">
                 <link rel="stylesheet" type="text/css" href="/-/static/app.css">
                 <script src="/-/static/app.js" type="text/javascript"></script>
             </head>
@@ -31,5 +33,6 @@ def reactive_view(request, *args, **kwargs):
             </body>
             </html>
         """,
-        config=json.dumps(config)
+        config=json.dumps(config),
+        theme_url=get_site_theme_url()
     ))

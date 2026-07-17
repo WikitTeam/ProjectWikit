@@ -22,7 +22,8 @@ from django.urls import path, re_path, include, URLPattern, URLResolver
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordResetView
 from django.contrib import admin
 
-from .views import profile, signup, login
+from .views import profile, signup, login, updates as updates_views
+from .views.theme import SiteThemeView
 
 from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages, reports as api_reports
 from web.views.article import ArticleView
@@ -112,6 +113,12 @@ sys_patterns = [
     path("signup/send-wikidot-code", signup.SendWikidotCodeView.as_view(), name='signup_send_wikidot_code'),
 
     re_path(r'^preferences/', include('dynamic_preferences.urls')),
+
+    path("theme.css", SiteThemeView.as_view(), name='site_theme'),
+
+    path("admin/update/status", updates_views.UpdatesStatusView.as_view(), name='wu_update_status'),
+    path("admin/update/trigger", updates_views.UpdatesTriggerView.as_view(), name='wu_update_trigger'),
+    path("admin/update", updates_views.UpdatesAdminView.as_view(), name='wu_update'),
 
     *make_path("admin", admin.site.urls),
     *make_reactive(reactive_pages)

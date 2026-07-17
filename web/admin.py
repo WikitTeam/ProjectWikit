@@ -164,6 +164,24 @@ class CategoryAdmin(admin.ModelAdmin):
     inlines = [SettingsAdmin]
 
 
+class ThemeForm(forms.ModelForm):
+    class Meta:
+        model = Theme
+        widgets = {
+            'name': forms.TextInput,
+            'external_url': forms.TextInput,
+            'css': forms.Textarea(attrs={'rows': 24, 'style': 'font-family:monospace;width:100%'}),
+        }
+        fields = '__all__'
+
+
+@admin.register(Theme)
+class ThemeAdmin(admin.ModelAdmin):
+    form = ThemeForm
+    list_display = ['name', 'mode', 'updated_at']
+    fields = ['name', 'mode', 'css', 'external_url']
+
+
 class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
@@ -172,9 +190,10 @@ class SiteForm(forms.ModelForm):
             'title': forms.TextInput,
             'headline': forms.TextInput,
             'domain': forms.TextInput,
-            'media_domain': forms.TextInput
+            'media_domain': forms.TextInput,
+            'home_page': forms.TextInput,
         }
-        
+
         fields = '__all__'
 
 
@@ -182,10 +201,32 @@ class SiteForm(forms.ModelForm):
 class SiteAdmin(SingletonModelAdmin):
     form = SiteForm
     inlines = [SettingsAdmin]
-    fields = ['slug', 'title', 'headline', 'domain', 'media_domain']
+    fields = ['slug', 'title', 'headline', 'domain', 'media_domain', 'home_page', 'active_theme']
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+
+
+@admin.register(SystemUpdate)
+class SystemUpdateAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.has_perm('roles.manage_updates')
+
+    def has_module_permission(self, request):
+        return request.user.has_perm('roles.manage_updates')
+
+    def changelist_view(self, request, extra_context=None):
+        from django.shortcuts import redirect
+        return redirect('wu_update')
 
 
 class ForumSectionForm(forms.ModelForm):

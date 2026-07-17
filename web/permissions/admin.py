@@ -82,3 +82,11 @@ class ViewVotesTimestampPermission(BaseRolePermission):
     description = '允许查看文章评分的日期和时间'
     group = '管理后台'
     admin_only = True
+
+
+class ManageUpdatesPermission(BaseRolePermission):
+    name = '管理系统更新'
+    codename = 'manage_updates'
+    description = '允许查看 GitHub 版本更新并从后台执行更新'
+    group = '管理后台'
+    admin_only = True
