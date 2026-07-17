@@ -7,12 +7,12 @@
 
 
 > [!NOTE]
-> This project, ProjectWikit, originated as a fork of the [RuFoundation Engine](https://github.com/SCPRu/RuFoundation). However, It has since undergone numerous modifications and has become an independent project, no longer tracking or following updates from the original RuFoundation codebase.
+> This project, ProjectWikit, originated as a fork of the [RuFoundation Engine](https://github.com/SCPRu/RuFoundation). However, it has since undergone numerous modifications, structural changes, and feature enhancements, becoming an independent project, no longer tracking or following updates from the original RuFoundation codebase, and no longer maintaining compatibility with it.
 > 
 > As a result, ProjectWikit is fully maintained by its own development team. If you encounter any issues or have suggestions, please report them directly to the WikitTeam rather than the original RuFoundation Team.
 >
 > -----
-> ProjectWikit最初是 [RuFoundation引擎](https://github.com/SCPRu/RuFoundation) 的分支。然而，自此之后，它已历经了大量的修改，并已成为独立的项目，不再追踪或跟随原始的RuFoundation代码库的更新。
+> ProjectWikit最初是 [RuFoundation引擎](https://github.com/SCPRu/RuFoundation) 的分支。然而，自此之后，它已历经了大量的修改、结构调整和功能扩展，并已成为一个独立的项目，不再追踪或跟随原始的RuFoundation代码库的更新，亦不再保持对其的兼容。
 > 
 > 因此，ProjectWikit完全由其自身的开发团队维护。如果您遇到任何问题或有任何建议，请直接向负责人Kakushi或WikitTeam报告，而不是向原始的RuFoundation团队反馈。
 
@@ -35,7 +35,7 @@
 
 ## 快速部署
 > [!TIP]
-> 在开始部署前，请复制 `.env.example` 为 `.env` 并按需修改：`cp .env.example .env`。数据库名称/密码、对外端口、栈名等所有部署配置都集中在 `.env` 里，无需再改 `docker-compose.yaml`。
+> 在开始部署前，请**复制** `.env.example` 为 `.env`。数据库名称/密码、对外端口、栈名等所有部署配置都集中在 `.env` 里，无需再改 `docker-compose.yaml`。
 
 `.env` 示例：
 
@@ -160,13 +160,13 @@ DEBUG=false
 | 图标 | 站点图标 |
 | 文章域名（主域名） | 访问 wiki 页面所用的主域名 |
 | 文件域名 | 提供用户上传文件/附件的域名，可与主域名不同以做隔离 |
-| 主页名称 | 访问站点根路径（`/`）时展示哪篇文章，默认 `main` |
+| 主页名称 | 访问站点根路径（`/`）时展示哪个页面，默认 `main` |
 | 站点主题 | 选择当前启用的主题（见下方「主题」） |
 | 评分系统 | 可选 默认 / 禁用 / 点赞·点踩 / 星级评分；默认即点赞·点踩（uv/dv）制 |
 | 用户是否可以创建标签 | `默认` / `禁止` / `允许` |
 
 ### 主页设定
-在「站点」面板的 **主页名称** 填入文章名即可把该文章设为首页（默认 `main`）。例如填 `start`，则访问根路径会显示 `start` 这篇文章。
+在「站点」面板的 **主页名称** 填入页面名即可把该页面设为首页（默认 `main`）。例如填 `start`，则访问根路径会显示 `start` 这篇文章。
 
 ### 主题
 主题允许你在后台直接编辑站点 CSS，无需修改仓库里的文件。
