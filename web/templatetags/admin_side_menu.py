@@ -17,6 +17,9 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
     options = get_settings()
 
     structure = (
+        ('系统管理', (
+            {'model': models.site.SystemUpdate},
+        )),
         ('用户与角色', (
             {'model': models.roles.RoleCategory},
             {'model': models.roles.Role},
@@ -35,6 +38,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': models.articles.Category},
             {'model': models.articles.TagsCategory},
             {'model': models.articles.Tag},
+            {'model': models.site.Theme},
         )),
         ('论坛', (
             {'model': models.forum.ForumSection},
