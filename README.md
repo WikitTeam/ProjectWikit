@@ -3,9 +3,6 @@
   <h3>旨在将Wikidot站点完整地迁移到兼容Wikidot结构的ProjectWikit，并支持基于FTML的Wikidot语法。</h3>
 </div>
 
-
-
-
 > [!NOTE]
 > This project, ProjectWikit, originated as a fork of the [RuFoundation Engine](https://github.com/SCPRu/RuFoundation). However, it has since undergone numerous modifications, structural changes, and feature enhancements, becoming an independent project, no longer tracking or following updates from the original RuFoundation codebase, and no longer maintaining compatibility with it.
 > 
@@ -172,7 +169,6 @@ DEBUG=false
 主题允许你在后台直接编辑站点 CSS，无需修改仓库里的文件。
 
 - 在后台 **`/-/admin` → 主题** 中可以创建多个主题，每个主题取一个名字，并二选一：**内联 CSS** 或 **外部链接**。
-- 推荐使用 **外部链接** 来提升加载速度，可选择在网站中创建一个页面，用 `[[code]]` 来包裹样式代码，然后在后台主题编辑处写入 `https://你的文件域名/local--code/页面名称/1` 来加载。
 - 在「站点」面板的 **站点主题** 下拉中选择要启用的那一个即可切换全站外观。
 - 未选择任何主题时，回退到项目自带的默认样式。
 
