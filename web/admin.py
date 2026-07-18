@@ -169,6 +169,7 @@ class ThemeForm(forms.ModelForm):
         model = Theme
         widgets = {
             'name': forms.TextInput,
+            'slug': forms.TextInput,
             'external_url': forms.TextInput,
             'css': forms.Textarea(attrs={'rows': 24, 'style': 'font-family:monospace;width:100%'}),
         }
@@ -178,8 +179,8 @@ class ThemeForm(forms.ModelForm):
 @admin.register(Theme)
 class ThemeAdmin(admin.ModelAdmin):
     form = ThemeForm
-    list_display = ['name', 'mode', 'updated_at']
-    fields = ['name', 'mode', 'css', 'external_url']
+    list_display = ['name', 'slug', 'mode', 'updated_at']
+    fields = ['name', 'slug', 'mode', 'css', 'external_url']
 
 
 class SiteForm(forms.ModelForm):

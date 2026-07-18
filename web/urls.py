@@ -23,7 +23,7 @@ from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfir
 from django.contrib import admin
 
 from .views import profile, signup, login, updates as updates_views
-from .views.theme import SiteThemeView
+from .views.theme import SiteThemeFileView
 
 from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages, reports as api_reports
 from web.views.article import ArticleView
@@ -114,7 +114,7 @@ sys_patterns = [
 
     re_path(r'^preferences/', include('dynamic_preferences.urls')),
 
-    path("theme.css", SiteThemeView.as_view(), name='site_theme'),
+    path("theme/<slug>.css", SiteThemeFileView.as_view(), name='site_theme_file'),
 
     path("admin/update/status", updates_views.UpdatesStatusView.as_view(), name='wu_update_status'),
     path("admin/update/trigger", updates_views.UpdatesTriggerView.as_view(), name='wu_update_trigger'),
