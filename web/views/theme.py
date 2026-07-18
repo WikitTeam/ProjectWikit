@@ -1,31 +1,22 @@
-from django.conf import settings
-from django.core.cache import cache
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseNotFound
 from django.views import View
 
-from web.models.site import Theme, get_active_theme_meta
+from web.models.site import get_theme_dir
 
 
-class SiteThemeView(View):
-    def get(self, request, *args, **kwargs):
-        meta = get_active_theme_meta()
+class SiteThemeFileView(View):
+    def get(self, request, slug, *args, **kwargs):
+        safe = ''.join(c for c in slug if c.isalnum() or c in '-_')
+        if not safe:
+            return HttpResponseNotFound('theme not found')
 
-        if meta.get('none'):
-            return HttpResponseRedirect(settings.STATIC_URL + 'theme.css')
+        path = get_theme_dir() / (safe + '.css')
+        if not path.exists():
+            return HttpResponseNotFound('theme not found')
 
-        if meta['mode'] == 'external':
-            if meta['external_url']:
-                return HttpResponseRedirect(meta['external_url'])
-            return HttpResponse('', content_type='text/css; charset=utf-8')
+        with open(path, 'rb') as f:
+            data = f.read()
 
-        version = '%s-%s' % (meta['id'], meta['v'])
-        body_key = 'theme_css_body_%s' % version
-        css = cache.get(body_key)
-        if css is None:
-            theme = Theme.objects.filter(pk=meta['id']).only('css').first()
-            css = (theme.css if theme else '') or ''
-            cache.set(body_key, css, 86400)
-
-        resp = HttpResponse(css, content_type='text/css; charset=utf-8')
+        resp = HttpResponse(data, content_type='text/css; charset=utf-8')
         resp['Cache-Control'] = 'public, max-age=31536000, immutable'
         return resp

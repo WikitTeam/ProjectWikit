@@ -4,25 +4,31 @@ __all__ = [
     'SystemUpdate',
     'get_current_site',
     'get_site_theme_url',
-    'get_active_theme_meta',
+    'get_theme_dir',
 ]
 
+import os
+
 from functools import cached_property
+from pathlib import Path
 from typing import Literal, Optional, overload
 
 from solo.models import SingletonModel
 from django.conf import settings as django_settings
-from django.core.cache import cache
+from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete
 from django.dispatch import receiver
+
+
+slug_validator = RegexValidator(r'^[A-Za-z0-9_-]+$', '标识名只能包含英文字母、数字、- 和 _')
 
 from web import threadvars
 from .settings import Settings
 
 
-_THEME_META_CACHE_KEY = 'active_theme_meta_v1'
-_THEME_META_TTL = 60
+def get_theme_dir() -> Path:
+    return Path(django_settings.MEDIA_ROOT) / 'theme'
 
 
 class Theme(models.Model):
@@ -35,6 +41,7 @@ class Theme(models.Model):
         External = ('external', '外部链接')
 
     name = models.TextField('主题名称', null=False)
+    slug = models.TextField('标识名', unique=True, validators=[slug_validator])
     mode = models.TextField('类型', choices=Mode.choices, default=Mode.Inline, null=False)
     css = models.TextField('CSS 内容', blank=True, default='')
     external_url = models.TextField('外部 CSS 链接', blank=True, default='')
@@ -42,6 +49,32 @@ class Theme(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def css_path(self) -> Path:
+        return get_theme_dir() / (self.slug + '.css')
+
+    def write_css_file(self):
+        directory = get_theme_dir()
+        directory.mkdir(parents=True, exist_ok=True)
+        tmp = directory / (self.slug + '.css.tmp')
+        with open(tmp, 'w', encoding='utf-8') as f:
+            f.write(self.css or '')
+        os.replace(tmp, self.css_path)
+
+    def delete_css_file(self):
+        try:
+            self.css_path.unlink()
+        except OSError:
+            pass
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.mode == self.Mode.Inline and self.slug:
+            try:
+                self.write_css_file()
+            except OSError:
+                pass
 
 
 class Site(SingletonModel):
@@ -97,41 +130,26 @@ def get_current_site(required: bool=True) -> Optional[Site]:
     return site
 
 
-def get_active_theme_meta() -> dict:
-    meta = cache.get(_THEME_META_CACHE_KEY)
-    if meta is not None:
-        return meta
+def get_site_theme_url() -> str:
+    default_url = django_settings.STATIC_URL + 'theme.css'
 
     site = get_current_site(required=False)
-    theme = None
-    if site is not None and site.active_theme_id:
-        theme = (Theme.objects
-                 .filter(pk=site.active_theme_id)
-                 .only('id', 'updated_at', 'mode', 'external_url')
-                 .first())
+    if site is None or not site.active_theme_id:
+        return default_url
 
+    theme = (Theme.objects
+             .filter(pk=site.active_theme_id)
+             .only('slug', 'mode', 'external_url', 'updated_at')
+             .first())
     if theme is None:
-        meta = {'none': True}
-    else:
-        meta = {
-            'id': theme.id,
-            'v': int(theme.updated_at.timestamp()),
-            'mode': theme.mode,
-            'external_url': (theme.external_url or '').strip(),
-        }
+        return default_url
 
-    cache.set(_THEME_META_CACHE_KEY, meta, _THEME_META_TTL)
-    return meta
+    if theme.mode == Theme.Mode.External:
+        return (theme.external_url or '').strip() or default_url
+
+    return '/-/theme/%s.css?v=%s' % (theme.slug, int(theme.updated_at.timestamp()))
 
 
-def get_site_theme_url() -> str:
-    meta = get_active_theme_meta()
-    if meta.get('none'):
-        return django_settings.STATIC_URL + 'theme.css'
-    return '/-/theme.css?v=%s-%s' % (meta['id'], meta['v'])
-
-
-@receiver(post_save, sender=Theme)
-@receiver(post_save, sender=Site)
-def _invalidate_active_theme_meta(sender, **kwargs):
-    cache.delete(_THEME_META_CACHE_KEY)
+@receiver(post_delete, sender=Theme)
+def _delete_theme_css_file(sender, instance, **kwargs):
+    instance.delete_css_file()
