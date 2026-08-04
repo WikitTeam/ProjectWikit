@@ -1,69 +1,71 @@
 {% extends "system_base.html" %}
+{% load md5url %}
 
-{% block h1 %}{% block title %}用户注册{% endblock %}{% endblock %}
+{% block title %}用户注册{% endblock %}
+{% block body_class %}wikit-page{% endblock %}
+{% block back_link %}{% endblock %}
+{% block h1 %}{% endblock %}
 
 {% block content %}
-<div class="login-form">
+<div class="wikit-scope">
+  <div class="auth-shell">
+    <form method="POST" id="signup-form" class="auth-column">
+      {% csrf_token %}
 
-    {% if error %}
-    <div class="error">
-        <p>{{ error }}</p>
-    </div>
-    <br>
-    {% endif %}
+      <div class="auth-mark">
+        <img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">
+      </div>
 
-    <form method="POST" id="signup-form">
-        {% csrf_token %}
+      <div class="auth-heading">
+        <h1 class="h1">创建账号</h1>
+      </div>
 
-        <div class="text-input">
-            <span class="icon begin"><i class="fas fa-user"></i></span>
-            <input
-                type="text"
-                placeholder="用户名（认领 Wikidot 账号请填写原名）"
-                name="username"
-                id="id_username"
-                autofocus
-                required
-                value="{{ prefill_username|default:'' }}"
-            >
+      {% if error %}
+      <div class="error-inline">
+        <span class="marker">ERR</span>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label" for="id_username">用户名</label>
+          <input type="text" name="username" id="id_username" required autofocus placeholder="认领 Wikidot 账号请填写原名" value="{{ prefill_username|default:'' }}">
         </div>
 
         <div id="wikidot-section" style="display:{% if is_wikidot %}block{% else %}none{% endif %};">
-            <div style="margin-top: 8px; padding: 6px 10px; background: #f5f5f5; border-left: 3px solid #888; font-size: 12px; color: #555; line-height: 1.4;">
-                <i class="fas fa-info-circle" style="margin-right: 4px;"></i>检测到此用户名对应一个待认领的Wikidot账号。请点击"发送验证码"完成认领。
+          <div class="form-row disabled">
+            <span class="meta"><i class="fas fa-info-circle"></i>&nbsp;检测到此用户名对应一个待认领的 Wikidot 账号，需要验证码</span>
+          </div>
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end;">
+            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+              <label class="label" for="id_verification_code">Wikit 验证码</label>
+              <input type="text" name="verification_code" id="id_verification_code" placeholder="6 位数字" inputmode="numeric">
             </div>
-            <div class="text-input" style="display: flex; align-items: center;">
-                <span class="icon begin"><i class="fas fa-key"></i></span>
-                <input
-                    type="text"
-                    placeholder="Wikit 验证码"
-                    name="verification_code"
-                    id="id_verification_code"
-                    style="flex: 1; min-width: 0;"
-                >
-                <button type="button" id="send-code-btn" class="btn btn-secondary" style="margin-left: 8px; white-space: nowrap; margin-top: 0; padding: 4px 10px; font-size: 13px;">
-                    发送验证码
-                </button>
-            </div>
-            <div id="send-code-msg" class="error" style="display:none; margin-top: 8px;"></div>
+            <button type="button" id="send-code-btn" class="btn-ghost" style="align-self: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px;">发送验证码</button>
+          </div>
+          <div id="send-code-msg" class="form-row" style="display: none;"></div>
         </div>
 
-        <div class="text-input">
-            <span class="icon begin"><i class="fas fa-lock"></i></span>
-            <input type="password" placeholder="设置密码" name="password" required id="id_password">
+        <div class="form-row">
+          <label class="label" for="id_password">设置密码</label>
+          <input type="password" name="password" id="id_password" required placeholder="至少 8 位">
         </div>
-        <div class="text-input">
-            <span class="icon begin"><i class="fas fa-lock"></i></span>
-            <input type="password" placeholder="确认密码" name="password_confirm" required id="id_password_confirm">
+        <div class="form-row">
+          <label class="label" for="id_password_confirm">再次输入密码</label>
+          <input type="password" name="password_confirm" id="id_password_confirm" required placeholder="确认一致">
         </div>
+      </div>
 
-        <button type="submit" class="btn btn-primary" id="submit-btn">立即注册</button>
+      <button type="submit" class="btn-primary" id="submit-btn">立 即 注 册</button>
+
+      <div class="action-row">
+        <span class="meta">普通注册默认分配「读者」权限</span>
+        <a class="link-muted" href="{% url 'login' %}">已有账号 → 登录</a>
+      </div>
+
     </form>
-
-    <div class="under-text">
-        <p>普通注册将默认分配"读者"权限。</p>
-        <a href="{% url 'login' %}">已有账号？去登录</a>
-    </div>
+  </div>
 </div>
 
 <script>
@@ -78,7 +80,7 @@
     let isWikidot = {% if is_wikidot %}true{% else %}false{% endif %};
 
     function updateSubmitBtn() {
-        submitBtn.textContent = isWikidot ? '认领账号' : '立即注册';
+        submitBtn.textContent = isWikidot ? '认 领 账 号' : '立 即 注 册';
     }
     updateSubmitBtn();
 
@@ -120,8 +122,8 @@
         if (!username) return;
 
         sendCodeBtn.disabled = true;
-        sendCodeMsg.classList.remove('error');
-        sendCodeMsg.style.color = '#888';
+        sendCodeMsg.style.color = 'var(--muted)';
+        sendCodeMsg.style.background = 'var(--well)';
         sendCodeMsg.style.display = 'block';
         sendCodeMsg.textContent = '发送中…';
 
@@ -136,10 +138,10 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    sendCodeMsg.classList.remove('error');
-                    sendCodeMsg.style.color = '#4a9eda';
+                    sendCodeMsg.style.color = 'var(--ink)';
+                    sendCodeMsg.style.background = 'var(--well)';
                     sendCodeMsg.style.display = 'block';
-                    sendCodeMsg.textContent = '验证码已发送，请前往Wikidot站内信查收。';
+                    sendCodeMsg.textContent = '验证码已发送，请前往 Wikidot 站内信查收。';
                     let countdown = 60;
                     sendCodeBtn.textContent = `重新发送 (${countdown}s)`;
                     const timer = setInterval(function () {
@@ -153,16 +155,16 @@
                         }
                     }, 1000);
                 } else {
-                    sendCodeMsg.classList.add('error');
-                    sendCodeMsg.style.color = '';
+                    sendCodeMsg.style.color = 'var(--danger)';
+                    sendCodeMsg.style.background = 'transparent';
                     sendCodeMsg.style.display = 'block';
                     sendCodeMsg.textContent = data.error || '发送失败，请稍后重试';
                     sendCodeBtn.disabled = false;
                 }
             })
             .catch(function () {
-                sendCodeMsg.classList.add('error');
-                sendCodeMsg.style.color = '';
+                sendCodeMsg.style.color = 'var(--danger)';
+                sendCodeMsg.style.background = 'transparent';
                 sendCodeMsg.style.display = 'block';
                 sendCodeMsg.textContent = '网络错误，请稍后重试';
                 sendCodeBtn.disabled = false;

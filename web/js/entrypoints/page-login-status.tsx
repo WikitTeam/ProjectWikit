@@ -63,13 +63,13 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
         </span>
         {(user.admin || user.staff) && (
           <>
-            {'\u00a0'}|{'\u00a0'}
+            {' '}|{' '}
             <a id="w-admin-link" href={`/-/admin`} target="_blank">
               管理面板
             </a>
           </>
         )}
-        {'\u00a0|\u00a0'}
+        {' | '}
         <a id="my-account" href={`/-/users/${user.urlName || user.username}`}>
           个人资料
         </a>

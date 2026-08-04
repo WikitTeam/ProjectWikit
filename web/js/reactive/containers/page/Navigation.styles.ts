@@ -1,46 +1,38 @@
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
-import { MOBILE_SIZE } from '~reactive/theme/Theme.consts'
 
 export const Container = styled.div`
-  background: ${({ theme }) => theme.uiBackground};
-  border-right: 1px solid ${({ theme }) => theme.windowStrong};
-  height: 100%;
-  width: 100%;
-
-  @media (max-width: ${MOBILE_SIZE}px) {
-    display: flex;
-
-    & > * {
-      flex: 1 1 0;
-      white-space: nowrap;
-    }
-  }
+  border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
+  padding: 0 24px;
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  min-height: 44px;
+  background: ${({ theme }) => theme.windowPadding};
+  overflow-x: auto;
 `
 
 export const Link = styled(NavLink)`
-  display: block;
-  padding: 16px 8px;
+  padding: 12px 14px;
+  text-decoration: none;
   color: ${({ theme }) => theme.uiForeground};
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 
-  &:link,
-  &:hover,
-  &:active,
-  &:visited {
-    text-decoration: none;
-  }
+  &:link, &:hover, &:active, &:visited { text-decoration: none; }
 
   &:hover {
-    background: ${({ theme }) => `${theme.uiSelection}2f`};
+    color: ${({ theme }) => theme.foreground};
   }
 
-  &.active,
-  &.active:hover {
-    background: ${({ theme }) => theme.uiSelection};
-    color: ${({ theme }) => theme.uiSelectionForeground};
-  }
-
-  @media (max-width: ${MOBILE_SIZE}px) {
-    text-align: center;
+  &.active, &.active:hover {
+    color: ${({ theme }) => theme.foreground};
+    border-bottom-color: ${({ theme }) => theme.foreground};
+    font-weight: 500;
   }
 `

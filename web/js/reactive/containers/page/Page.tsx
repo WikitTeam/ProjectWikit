@@ -5,21 +5,20 @@ import * as Styled from './Page.styles'
 
 interface Props {
   title: string
+  crumb?: string
   hasBorder?: boolean
   children?: React.ReactNode
 }
 
-export const Page: React.FC<Props> = ({ children, title, hasBorder = false }) => {
+export const Page: React.FC<Props> = ({ children, title, crumb }) => {
   return (
     <Styled.Container>
       <Helmet>
-        <title>{title}</title>
+        <title>{title} - ProjectWikit</title>
       </Helmet>
       <Styled.RootStyles />
-      <Styled.HeaderContainer>
-        <Header title={title} />
-      </Styled.HeaderContainer>
-      <Styled.FixedWidthContainer hasBorder={hasBorder}>{children}</Styled.FixedWidthContainer>
+      <Header crumb={crumb || title} />
+      {children}
     </Styled.Container>
   )
 }
