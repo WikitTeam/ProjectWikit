@@ -1,54 +1,76 @@
 import styled, { css } from 'styled-components'
 
 export const Container = styled.div`
-  max-width: 600px;
-  margin: 20px auto;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
-  /*@media (prefers-color-scheme: dark) {
-        box-shadow: 0px 4px 20px 10px rgba(0, 0, 0, 0.1);
-    }*/
-  @media screen and (max-height: 740px) {
-    box-shadow: none;
-    margin: 0;
-  }
+  margin: 0;
+  padding: 0;
 `
 
 export const List = styled.div`
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-  gap: 8px;
+`
+
+export const SectionHead = styled.div`
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`
+
+export const Kicker = styled.div`
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  color: ${({ theme }) => theme.uiForeground};
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+
+  b {
+    color: ${({ theme }) => theme.foreground};
+    font-weight: 500;
+  }
+
+  .sep {
+    color: ${({ theme }) => theme.windowStrong};
+    margin: 0 6px;
+  }
+`
+
+export const H1 = styled.h1`
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: ${({ theme }) => theme.foreground};
 `
 
 export const FilterContainer = styled.div`
   display: flex;
-  justify-content: center;
-  margin: 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
+  gap: 4px;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 `
 
 export const RadioLabel = styled.label<{ checked: boolean }>`
-  padding: 8px 16px;
-  position: relative;
-  top: 1px;
-  border-bottom: 1px solid transparent;
+  padding: 6px 10px;
+  color: ${({ theme }) => theme.uiForeground};
   cursor: pointer;
-  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 2px;
 
-  ${({ checked }) =>
+  ${({ checked, theme }) =>
     checked &&
     css`
-      background: ${({ theme }) => `${theme.windowPadding}7f`};
-      border-bottom: 1px solid ${({ theme }) => theme.uiSelection};
+      color: ${theme.foreground};
+      border-color: ${theme.windowStrong};
+      background: ${theme.windowPadding};
     `};
 
   &:hover {
-    background: ${({ theme }) => `${theme.windowPadding}7f`};
+    color: ${({ theme }) => theme.foreground};
   }
 `
 
@@ -58,15 +80,16 @@ export const RadioInput = styled.input`
 
 export const EmptyMessage = styled.div`
   text-align: center;
-  font-size: 24px;
-  line-height: 28px;
-  font-weight: 500;
-  padding: 16px;
+  padding: 40px 16px;
+  color: ${({ theme }) => theme.uiForeground};
+  font-size: 15px;
 `
 
 export const LoaderContainer = styled.div`
-  padding: 8px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: ${({ theme }) => theme.uiForeground};
+  font-size: 13px;
 `

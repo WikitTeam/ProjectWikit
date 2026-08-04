@@ -1,15 +1,69 @@
 import styled, { css } from 'styled-components'
 
-export const Layout = styled.div`
+export const SectionHead = styled.div`
+  margin-bottom: 20px;
   display: flex;
-  min-height: 500px;
-  height: calc(100vh - 200px);
+  flex-direction: column;
+  gap: 6px;
+`
+
+export const Kicker = styled.div`
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  color: ${({ theme }) => theme.uiForeground};
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+
+  b { color: ${({ theme }) => theme.foreground}; font-weight: 500; }
+  .sep { color: ${({ theme }) => theme.windowStrong}; margin: 0 6px; }
+`
+
+export const H1 = styled.h1`
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: ${({ theme }) => theme.foreground};
+`
+
+export const Layout = styled.div`
+  display: grid;
+  grid-template-columns: 280px 1fr;
   border: 1px solid ${({ theme }) => theme.windowStrong};
+  border-radius: 3px;
+  min-height: 560px;
+  height: calc(100vh - 260px);
+  overflow: hidden;
 
   @media (max-width: 700px) {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     height: auto;
+    min-height: 480px;
   }
+`
+
+export const Sidebar = styled.div<{ hasSelection: boolean }>`
+  border-right: 1px solid ${({ theme }) => theme.windowStrong};
+  background: ${({ theme }) => theme.windowPadding};
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  @media (max-width: 700px) {
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
+    ${({ hasSelection }) => hasSelection && css`display: none;`};
+  }
+`
+
+export const Main = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: ${({ theme }) => theme.windowPadding};
 `
 
 export const SidebarSearch = styled.form`
@@ -18,69 +72,47 @@ export const SidebarSearch = styled.form`
   padding: 10px;
   border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
   background: ${({ theme }) => theme.windowPadding};
-  position: sticky;
-  top: 0;
-  z-index: 1;
 `
 
 export const SearchInput = styled.input`
   flex: 1;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 7px 10px;
   border: 1px solid ${({ theme }) => theme.windowStrong};
-  border-radius: 4px;
-  font: inherit;
+  border-radius: 2px;
+  outline: none;
+  font-size: 13px;
+  font-family: inherit;
+
+  &:focus { border-color: ${({ theme }) => theme.foreground}; }
 `
 
 export const SearchButton = styled.button`
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
+  padding: 7px 12px;
   background: ${({ theme }) => theme.uiSelection};
   color: ${({ theme }) => theme.uiSelectionForeground};
+  border: 1px solid ${({ theme }) => theme.uiSelection};
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  font-weight: 500;
   white-space: nowrap;
 
   &:disabled {
-    opacity: 0.5;
+    background: ${({ theme }) => theme.uiForeground};
+    border-color: ${({ theme }) => theme.uiForeground};
     cursor: not-allowed;
   }
 `
 
 export const SearchError = styled.div`
-  padding: 6px 10px;
-  color: #cc3333;
+  padding: 8px 12px;
+  color: #b32020;
   font-size: 12px;
   border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
   background: #ffeeee;
-`
-
-export const Sidebar = styled.div<{ hasSelection: boolean }>`
-  width: 280px;
-  min-width: 240px;
-  border-right: 1px solid ${({ theme }) => theme.windowStrong};
-  overflow-y: auto;
-  background: ${({ theme }) => theme.windowPadding};
-
-  @media (max-width: 700px) {
-    width: 100%;
-    max-height: 40vh;
-    border-right: none;
-    border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
-    ${({ hasSelection }) =>
-      hasSelection &&
-      css`
-        display: none;
-      `};
-  }
-`
-
-export const Main = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
 `
 
 export const EmptyState = styled.div`
@@ -89,16 +121,16 @@ export const EmptyState = styled.div`
   justify-content: center;
   flex: 1;
   color: ${({ theme }) => theme.uiForeground};
-  opacity: 0.6;
-  padding: 24px;
+  padding: 32px 24px;
   text-align: center;
+  font-size: 14px;
 `
 
 export const ConversationItem = styled.a<{ active: boolean; unread: boolean }>`
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
   text-decoration: none;
   color: inherit;
@@ -108,6 +140,7 @@ export const ConversationItem = styled.a<{ active: boolean; unread: boolean }>`
     active &&
     css`
       background: ${theme.higlightBackground};
+      box-shadow: inset 2px 0 0 ${theme.foreground};
     `};
 
   &:hover {
@@ -117,13 +150,7 @@ export const ConversationItem = styled.a<{ active: boolean; unread: boolean }>`
 `
 
 export const ConversationDot = styled.span<{ unread: boolean }>`
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-top: 8px;
-  flex-shrink: 0;
-  background: ${({ unread, theme }) => (unread ? theme.uiSelection : 'transparent')};
+  display: none;
 `
 
 export const ConversationInfo = styled.div`
@@ -132,17 +159,24 @@ export const ConversationInfo = styled.div`
 `
 
 export const ConversationName = styled.div<{ unread: boolean }>`
-  font-weight: ${({ unread }) => (unread ? 600 : 400)};
+  font-weight: ${({ unread }) => (unread ? 600 : 500)};
   font-size: 14px;
+  color: ${({ theme }) => theme.foreground};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &::before {
+    content: '${({ unread }) => (unread ? '● ' : '')}';
+    color: ${({ theme }) => theme.foreground};
+    font-size: 8px;
+    vertical-align: middle;
+  }
 `
 
 export const ConversationPreview = styled.div<{ unread: boolean }>`
-  font-size: 12px;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
-  opacity: ${({ unread }) => (unread ? 0.9 : 0.6)};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -150,41 +184,47 @@ export const ConversationPreview = styled.div<{ unread: boolean }>`
 `
 
 export const ConversationMeta = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
   color: ${({ theme }) => theme.uiForeground};
-  opacity: 0.6;
-  text-align: right;
-  flex-shrink: 0;
 `
 
 export const UnreadBadge = styled.span`
-  display: inline-block;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  padding: 1px 6px;
   background: ${({ theme }) => theme.uiSelection};
   color: ${({ theme }) => theme.uiSelectionForeground};
-  font-size: 11px;
-  line-height: 1;
-  padding: 2px 6px;
-  border-radius: 10px;
-  margin-top: 4px;
+  border-radius: 999px;
+  line-height: 1.4;
 `
 
 export const ConversationHeader = styled.div`
-  padding: 10px 16px;
+  padding: 12px 20px;
   border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
   font-weight: 500;
   background: ${({ theme }) => theme.windowPadding};
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
+  color: ${({ theme }) => theme.foreground};
+
+  a { color: ${({ theme }) => theme.foreground}; text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
 `
 
 export const BackButton = styled.a`
   display: none;
   cursor: pointer;
+  color: ${({ theme }) => theme.uiForeground};
+  text-decoration: none;
 
-  @media (max-width: 700px) {
-    display: inline;
-  }
+  @media (max-width: 700px) { display: inline; }
 `
 
 export const HeaderSpacer = styled.div`
@@ -193,13 +233,11 @@ export const HeaderSpacer = styled.div`
 
 export const ReportButton = styled.a`
   cursor: pointer;
-  color: #c33;
+  color: ${({ theme }) => theme.uiForeground};
   text-decoration: none;
   font-size: 13px;
 
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { color: #b32020; text-decoration: underline; text-underline-offset: 3px; }
 `
 
 export const SelectModeToolbar = styled.div`
@@ -208,18 +246,17 @@ export const SelectModeToolbar = styled.div`
   gap: 12px;
   width: 100%;
   font-size: 13px;
+  color: ${({ theme }) => theme.foreground};
 `
 
 export const ToolbarAction = styled.a<{ danger?: boolean; disabled?: boolean }>`
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
-  color: ${({ danger }) => (danger ? '#c33' : 'inherit')};
+  color: ${({ danger, theme }) => (danger ? '#b32020' : theme.foreground)};
   opacity: ${({ disabled }) => (disabled ? 0.4 : 1)};
   text-decoration: none;
   pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
 
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { text-decoration: underline; text-underline-offset: 3px; }
 `
 
 export const MessageCheckbox = styled.input.attrs({ type: 'checkbox' })`
@@ -237,9 +274,7 @@ export const SelectableRow = styled.div<{ selected: boolean }>`
   border-radius: 6px;
   background: ${({ selected, theme }) => (selected ? theme.higlightBackground : 'transparent')};
 
-  &:hover {
-    background: ${({ theme }) => theme.higlightBackground};
-  }
+  &:hover { background: ${({ theme }) => theme.higlightBackground}; }
 `
 
 export const ReportModalTextarea = styled.textarea`
@@ -247,9 +282,9 @@ export const ReportModalTextarea = styled.textarea`
   min-height: 100px;
   max-height: 300px;
   resize: vertical;
-  padding: 8px;
+  padding: 8px 10px;
   border: 1px solid #aaaaaa;
-  border-radius: 4px;
+  border-radius: 3px;
   font: inherit;
   box-sizing: border-box;
 `
@@ -263,10 +298,10 @@ export const ReportModalHint = styled.div`
 export const MessageList = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 20px 20px 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 `
 
 export const MessageRow = styled.div<{ mine: boolean }>`
@@ -275,28 +310,43 @@ export const MessageRow = styled.div<{ mine: boolean }>`
 `
 
 export const MessageBubble = styled.div<{ mine: boolean }>`
-  max-width: 70%;
-  padding: 8px 12px;
-  border-radius: 12px;
+  max-width: 68%;
+  padding: 9px 13px;
+  border-radius: 6px;
   white-space: pre-wrap;
   word-break: break-word;
-  background: ${({ mine, theme }) => (mine ? theme.uiSelection : theme.higlightBackground)};
-  color: ${({ mine, theme }) => (mine ? theme.uiSelectionForeground : theme.foreground)};
+  font-size: 14.5px;
+  line-height: 1.5;
+
+  ${({ mine, theme }) =>
+    mine
+      ? css`
+          background: ${theme.uiSelection};
+          color: ${theme.uiSelectionForeground};
+          border: 1px solid ${theme.uiSelection};
+          border-top-right-radius: 2px;
+        `
+      : css`
+          background: ${theme.windowPadding};
+          color: ${theme.foreground};
+          border: 1px solid ${theme.windowStrong};
+          border-top-left-radius: 2px;
+        `}
 `
 
 export const MessageMeta = styled.div<{ mine: boolean }>`
-  font-size: 11px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10.5px;
   color: ${({ theme }) => theme.uiForeground};
-  opacity: 0.6;
-  margin-top: 2px;
+  padding: 2px 4px 0;
   text-align: ${({ mine }) => (mine ? 'right' : 'left')};
 `
 
 export const Composer = styled.form`
   border-top: 1px solid ${({ theme }) => theme.windowStrong};
-  padding: 10px;
+  padding: 10px 20px 14px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: flex-end;
 `
 
@@ -305,38 +355,48 @@ export const ComposerInput = styled.textarea`
   min-height: 44px;
   max-height: 160px;
   resize: vertical;
-  padding: 8px;
+  padding: 10px 12px;
   border: 1px solid ${({ theme }) => theme.windowStrong};
-  border-radius: 4px;
+  border-radius: 3px;
   font: inherit;
+  font-size: 14px;
+  outline: none;
+
+  &:focus { border-color: ${({ theme }) => theme.foreground}; }
 `
 
 export const SendButton = styled.button`
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
+  padding: 10px 18px;
+  border: 1px solid ${({ theme }) => theme.uiSelection};
+  border-radius: 3px;
   background: ${({ theme }) => theme.uiSelection};
   color: ${({ theme }) => theme.uiSelectionForeground};
   cursor: pointer;
-  font-weight: 500;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 
   &:disabled {
-    opacity: 0.5;
+    background: ${({ theme }) => theme.uiForeground};
+    border-color: ${({ theme }) => theme.uiForeground};
     cursor: not-allowed;
   }
 `
 
 export const ErrorBanner = styled.div`
-  background: #ffeeee;
-  border: 1px #ffcccc dashed;
-  padding: 8px;
+  background: transparent;
+  border: 1px solid #b32020;
+  border-radius: 3px;
+  padding: 8px 12px;
   margin: 8px;
   font-size: 13px;
+  color: #b32020;
 `
 
 export const LoadingBanner = styled.div`
-  padding: 8px;
+  padding: 16px;
   text-align: center;
   font-size: 13px;
-  opacity: 0.7;
+  color: ${({ theme }) => theme.uiForeground};
 `

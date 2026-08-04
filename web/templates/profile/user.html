@@ -1,54 +1,82 @@
 {% extends "system_base.html" %}
+{% load md5url %}
 
-{% block title %}
-    {{ displayname }}
-{% endblock %}
-
-{% block h1 %}
-    <style>
-        a.manage-user {
-            color: unset;
-            text-decoration: unset;
-        }
-        a.manage-user:hover {
-            color: #ff5f5f;
-            text-decoration: underline;
-            background-color: transparent;
-        }
-    </style>
-
-    <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
-    {% if can_manage_users %}
-        <a class="manage-user" href="{{ manage_url }}" target="_blank">{{ displayname }}</a>
-    {% else %}
-        {{ displayname }}
-    {% endif %}
-    {% if subtitle %}
-        <div class="user-heading-subtitle">
-            {{ subtitle }}
-        </div>
-    {% endif %}
-    {% if request.user == object %}
-        <div class="edit-button">
-            <a href="{% url "profile_edit" %}" title="编辑中" class="icon"><span>编辑</span> <i class="fas fa-pen"></i></a>
-        </div>
-    {% endif %}
-    {% if can_direct_message %}
-        <div class="user-actions" id="user-actions-container" data-config='{"userId": {{ object.id }}, "isBlocked": {% if is_blocked %}true{% else %}false{% endif %}}'>
-            <a class="pm-button icon" href="/-/messages/{{ object.id }}"><span>发私信</span> <i class="fas fa-envelope"></i></a>
-            <a class="block-button icon" href="javascript:;" data-action="toggle-block"><span class="block-label">{% if is_blocked %}取消拉黑{% else %}拉黑{% endif %}</span> <i class="fas fa-ban"></i></a>
-        </div>
-    {% endif %}
-{% endblock %}
+{% block title %}{{ displayname }}{% endblock %}
+{% block body_class %}wikit-page{% endblock %}
+{% block back_link %}{% endblock %}
+{% block h1 %}{% endblock %}
 
 {% block content %}
-    <div class="profile-form">
-        {% if object.type == 'wikidot' %}<p><b>注意:</b> 该用户是从Wikidot平台迁移而来的非活跃用户。<br><br></p>{% endif %}
-        {% if object.type == 'bot' %}<p><b>注意:</b> 该用户为机器人。<br><br></p>{% endif %}
-        {% if object.first_name or object.last_name %}<p><b>姓名:</b>   
-        {% if object.first_name %}{{ object.first_name }}{% endif %}  
-        {% if object.last_name %} {{ object.last_name }}{% endif %}</p >{% endif %}
-        {% if object.bio %}<p><b>个人简介:</b> {{ bio_rendered }}</p>{% endif %}
-        <p><b>站点成员:</b> 自 <span class="odate w-date" data-timestamp="{{ object.date_joined|date:"U" }}000" data-format="%b%e日, %Y年 %H:%M" style="display: inline">{{ object.date_joined|date:"n月j日, Y年 H:i" }}</span></p>
-    </div>
+<div class="wikit-scope">
+  <div class="app-shell">
+
+    <header class="app-header">
+      <a href="/" class="brand">
+        <img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">
+        <span class="wordmark">ProjectWikit</span>
+      </a>
+      <span class="divider"></span>
+      <span class="path"><b>用户</b><span class="sep">/</span>{{ displayname }}</span>
+      <div class="spacer"></div>
+    </header>
+
+    <main class="app-main">
+
+      <div class="section-head">
+        <div class="kicker-crumb"><b>个人</b><span class="sep">/</span>用户<span class="sep">/</span>{{ object.id }}-{{ displayname }}</div>
+        <h1 class="h1">个人资料</h1>
+      </div>
+
+      <div class="profile-head">
+        <div class="avatar-big">
+          {% if avatar %}<img src="{{ avatar }}" alt="{{ displayname }}">{% else %}{{ displayname|first|upper }}{% endif %}
+        </div>
+        <div class="id">
+          <div class="name">
+            {% if can_manage_users %}
+              <a href="{{ manage_url }}" target="_blank" style="color:inherit;text-decoration:none;">{{ displayname }}</a>
+            {% else %}
+              {{ displayname }}
+            {% endif %}
+          </div>
+          {% if subtitle %}<div class="meta">{{ subtitle }}</div>{% endif %}
+        </div>
+        <div class="actions">
+          {% if request.user == object %}
+            <a class="btn-ghost" href="{% url "profile_edit" %}">编辑资料</a>
+          {% endif %}
+          {% if can_direct_message %}
+            <a class="btn-ghost" href="/-/messages/{{ object.id }}">发私信</a>
+            <span id="user-actions-container" data-config='{"userId": {{ object.id }}, "isBlocked": {% if is_blocked %}true{% else %}false{% endif %}}'>
+              <a class="btn-ghost block-button" href="javascript:;" data-action="toggle-block">
+                <span class="block-label">{% if is_blocked %}取消拉黑{% else %}拉黑{% endif %}</span>
+              </a>
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <dl class="dl">
+        {% if object.type == 'wikidot' %}
+          <dt>账号状态</dt><dd>从 Wikidot 平台迁移而来的非活跃用户</dd>
+        {% endif %}
+        {% if object.type == 'bot' %}
+          <dt>账号类型</dt><dd>机器人</dd>
+        {% endif %}
+        {% if object.first_name or object.last_name %}
+          <dt>姓名</dt><dd>{{ object.first_name }} {{ object.last_name }}</dd>
+        {% endif %}
+        {% if object.bio %}
+          <dt>个人简介</dt><dd>{{ bio_rendered }}</dd>
+        {% endif %}
+        <dt>加入时间</dt>
+        <dd>
+          <span class="odate w-date" data-timestamp="{{ object.date_joined|date:"U" }}000" data-format="%b%e日, %Y年 %H:%M" style="display: inline">{{ object.date_joined|date:"Y 年 n 月 j 日" }}</span>
+        </dd>
+      </dl>
+
+    </main>
+
+  </div>
+</div>
 {% endblock %}

@@ -25,6 +25,11 @@ def reactive_view(request, *args, **kwargs):
                 <link rel="stylesheet" type="text/css" href="/-/static/wikidot-base.css">
                 <link rel="stylesheet" type="text/css" href="{{ theme_url }}">
                 <link rel="stylesheet" type="text/css" href="/-/static/app.css">
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+                <link rel="stylesheet" type="text/css" href="/-/static/wikit-tokens.css">
+                <link rel="stylesheet" type="text/css" href="/-/static/wikit-shell.css">
                 <script src="/-/static/app.js" type="text/javascript"></script>
             </head>
             <body>

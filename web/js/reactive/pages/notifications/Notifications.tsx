@@ -25,7 +25,13 @@ const Notifications: React.FC = () => {
   })
 
   return (
-    <ProfilePage>
+    <ProfilePage crumb="通知">
+      <Styled.SectionHead>
+        <Styled.Kicker>
+          <b>个人</b><span className="sep">/</span>通知
+        </Styled.Kicker>
+        <Styled.H1>通知</Styled.H1>
+      </Styled.SectionHead>
       <Styled.FilterContainer>
         <Styled.RadioLabel checked={showUnread}>
           <Styled.RadioInput type="radio" name="filter" checked={showUnread} onChange={() => onChecked(Paths.notificationsUnread)} />

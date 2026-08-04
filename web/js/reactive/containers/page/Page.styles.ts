@@ -1,95 +1,41 @@
-import styled, { createGlobalStyle, css } from 'styled-components'
-import { MOBILE_SIZE } from '~reactive/theme/Theme.consts'
+import styled, { createGlobalStyle } from 'styled-components'
 
 export const RootStyles = createGlobalStyle`
   *, *::before, *::after {
     box-sizing: border-box;
   }
-  
+
   html, body {
-    overflow: auto;
     background: ${({ theme }) => theme.windowBackground};
-    width: 100%;
+    color: ${({ theme }) => theme.foreground};
+    font-family: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont,
+      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    margin: 0;
+    padding: 0;
     min-height: 100vh;
+  }
+
+  ::selection {
+    background: ${({ theme }) => theme.uiSelection};
+    color: ${({ theme }) => theme.uiSelectionForeground};
   }
 `
 
 export const Container = styled.div`
-  width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  background: ${({ theme }) => theme.pagePadding};
+  background: ${({ theme }) => theme.windowBackground};
 `
 
-export const HeaderContainer = styled.div`
-  background: red;
-  position: relative;
-  z-index: 1;
-`
-
-export const FixedWidthContainer = styled.div<{ hasBorder?: boolean }>`
-  position: relative;
-  z-index: 0;
-  max-width: 1024px;
-  width: min(100%, 1024px);
+export const MainContainer = styled.div`
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
   margin: 0 auto;
-  display: flex;
-  min-width: 0;
-  overflow: hidden;
-  flex-grow: 1;
-
-  ${({ hasBorder }) =>
-    hasBorder &&
-    css`
-      box-shadow: 0 0 8px #0000007f;
-      padding: 0 5px;
-
-      &:before,
-      &:after {
-        content: '';
-        width: 5px;
-        border-left: 1px solid ${({ theme }) => theme.windowStrong};
-        border-right: 1px solid ${({ theme }) => theme.windowStrong};
-        background: ${({ theme }) => theme.windowPadding};
-        position: absolute;
-        top: 0;
-        bottom: 0;
-      }
-
-      &:before {
-        left: 0;
-      }
-
-      &:after {
-        right: 0;
-      }
-    `};
-
-  @media (max-width: ${MOBILE_SIZE}px) {
-    flex-direction: column;
-  }
-`
-
-export const NavContainer = styled.div`
-  background: blue;
-  min-width: 240px;
-  max-width: 240px;
-  flex-shrink: 0;
-  flex-grow: 0;
-  background: ${({ theme }) => theme.windowBackground};
-
-  @media (max-width: ${MOBILE_SIZE}px) {
-    min-width: 0;
-    max-width: none;
-  }
-`
-
-export const ContentContainer = styled.div`
-  flex-grow: 1;
-  background: ${({ theme }) => theme.windowBackground};
-  overflow: auto;
+  padding: 32px 24px 96px;
 `

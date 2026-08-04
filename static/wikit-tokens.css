@@ -1,0 +1,41 @@
+:root {
+  --ink:    #0b0b0d;
+  --paper:  #ffffff;
+  --rule:   #e7e7e9;
+  --muted:  #6b6b70;
+  --well:   #f6f6f7;
+  --danger: #b32020;
+
+  --font-sans: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --w-form:    380px;
+  --w-content: 900px;
+
+  --rad-sm: 2px;
+  --rad:    3px;
+}
+
+.wikit-scope,
+.wikit-scope *,
+.wikit-scope *::before,
+.wikit-scope *::after { box-sizing: border-box; }
+
+.wikit-scope {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wikit-scope a { color: inherit; }
+.wikit-scope img { display: block; max-width: 100%; }
+.wikit-scope button,
+.wikit-scope input,
+.wikit-scope textarea,
+.wikit-scope select { font: inherit; color: inherit; }
+.wikit-scope ::selection { background: var(--ink); color: var(--paper); }

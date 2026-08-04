@@ -11,7 +11,21 @@ interface Props {
 }
 
 const Notification: React.FC<Props> = ({ notification }) => {
-  const notificationContent = useMemo(() => {
+  const unread = !notification.is_viewed
+
+  const typeMark = useMemo(() => {
+    switch (notification.type) {
+      case 'new_post_reply': return 'FORUM'
+      case 'new_thread_post': return 'FORUM'
+      case 'forum_mention': return 'MENTION'
+      case 'new_article_revision': return 'REVISION'
+      case 'welcome': return 'WELCOME'
+      case 'direct_message': return 'PM'
+      default: return 'INFO'
+    }
+  }, [notification.type])
+
+  const body = useMemo(() => {
     if (notification.type === 'new_post_reply' || notification.type === 'new_thread_post' || notification.type === 'forum_mention') {
       const title = {
         new_post_reply: '回复了您的消息',
@@ -58,29 +72,24 @@ const Notification: React.FC<Props> = ({ notification }) => {
               <a href={`/${notification.article.pageId}`}>{pageName}</a>
             </Styled.RevisionArticle>
             <Styled.RevisionFlags>{renderArticleHistoryFlags(logEntry)}</Styled.RevisionFlags>
-            <Styled.RevisionNumber>(rev. {notification.rev_number})</Styled.RevisionNumber>
+            <Styled.RevisionNumber>rev.{notification.rev_number}</Styled.RevisionNumber>
             <Styled.RevisionUser>
               <UserView data={notification.user} />
             </Styled.RevisionUser>
           </Styled.RevisionFields>
-          <Styled.RevisionComment>
-            {comment && (
-              <>
-                <Styled.RevisionCommentCaption>评论：</Styled.RevisionCommentCaption> {comment}
-              </>
-            )}
-          </Styled.RevisionComment>
+          {comment && (
+            <Styled.RevisionComment>
+              <Styled.RevisionCommentCaption>评论：</Styled.RevisionCommentCaption> {comment}
+            </Styled.RevisionComment>
+          )}
         </>
       )
     } else if (notification.type === 'welcome') {
-      return <Styled.TypeName>欢迎来到本站！</Styled.TypeName>
+      return <Styled.TypeName>欢迎来到本站</Styled.TypeName>
     } else if (notification.type === 'direct_message') {
       return (
         <>
-          <Styled.TypeName>收到新私信</Styled.TypeName>
-          <Styled.PostFrom>
-            来自 <a href={`/-/users/${notification.sender_id}-${notification.sender_name}`}>{notification.sender_name}</a>
-          </Styled.PostFrom>
+          <Styled.TypeName>{notification.sender_name} 给你发了新私信</Styled.TypeName>
           <Styled.PostContent>{notification.preview}</Styled.PostContent>
           <Styled.PostName>
             <a href={`/-/messages/${notification.sender_id}`}>查看会话</a>
@@ -88,14 +97,15 @@ const Notification: React.FC<Props> = ({ notification }) => {
         </>
       )
     } else {
-      return '通知渲染失败'
+      return <Styled.TypeName>通知渲染失败</Styled.TypeName>
     }
   }, [notification])
 
   return (
-    <Styled.Container>
+    <Styled.Container unread={unread}>
+      <Styled.TypeMark unread={unread}>{typeMark}</Styled.TypeMark>
+      <Styled.Body>{body}</Styled.Body>
       <Styled.NotificationDate>{formatDate(new Date(notification.created_at))}</Styled.NotificationDate>
-      {notificationContent}
     </Styled.Container>
   )
 }

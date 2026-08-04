@@ -42,7 +42,13 @@ const Messages: React.FC = () => {
   }
 
   return (
-    <ProfilePage>
+    <ProfilePage crumb="站内信">
+      <Styled.SectionHead>
+        <Styled.Kicker>
+          <b>个人</b><span className="sep">/</span>站内信
+        </Styled.Kicker>
+        <Styled.H1>站内信</Styled.H1>
+      </Styled.SectionHead>
       <Styled.Layout>
         <Styled.Sidebar hasSelection={partnerId !== null}>
           <Styled.SidebarSearch onSubmit={handleSearch}>
