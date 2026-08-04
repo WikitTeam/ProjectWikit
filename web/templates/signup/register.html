@@ -21,7 +21,7 @@
       </div>
 
       {% if error %}
-      <div class="error-inline">
+      <div class="error-inline" id="server-error">
         <span class="marker">ERR</span>
         <span>{{ error }}</span>
       </div>
@@ -86,6 +86,9 @@
 
     usernameInput.addEventListener('input', function () {
         clearTimeout(checkTimer);
+        // 横幅是针对上一次输入的
+        const serverError = document.getElementById('server-error');
+        if (serverError) serverError.remove();
         const username = usernameInput.value.trim();
         if (!username) {
             setWikidot(false);

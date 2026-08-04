@@ -5,6 +5,7 @@ __all__ = [
 
 import auto_prefetch
 import re
+import unicodedata
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -21,20 +22,59 @@ import web.fields
 from web.models.roles import RolesMixin
 
 
-class StrictUsernameValidator(RegexValidator):
-    regex = r'^[\w.-]+\Z'
-    message = '用户名只能包含英文字母、数字及符号 [.-_]（不含括号）。'
-    flags = re.ASCII
+DISPLAY_NAME_MAX_LENGTH = 50
 
-class StrictDisplayNameValidator(RegexValidator):
-    regex = r'^[\w -]+\Z'
-    message = '显示名只能包含英文字母、数字、空格及符号 [_-]。'
-    flags = re.ASCII
+FALLBACK_USERNAME_PREFIX = 'wkt-uid'
+
+RESERVED_USERNAME_RE = re.compile(r'^%s-\d+(-\d+)*\Z' % FALLBACK_USERNAME_PREFIX)
+
+# Cc 控制符 Cf 零宽与双向覆盖 Cs 代理对 Co 私用区 Cn 未分配 Zl/Zp 行段分隔
+_BANNED_CHAR_CATEGORIES = frozenset({'Cc', 'Cf', 'Cs', 'Co', 'Cn', 'Zl', 'Zp'})
+
+
+class StrictUsernameValidator(RegexValidator):
+    # 不加 re.ASCII，中日韩身份名要能过
+    regex = r'^[^\W_]+(-[^\W_]+)*\Z'
+    message = '用户名只能由字母、数字以及连接它们的单个连字符组成。'
 
 
 def canonicalize_username(name: str) -> str:
-    # 显示名 -> 身份用户名：小写，空格/下划线/连字符的连续段折叠为单个 -，去首尾 -
-    return re.sub(r'[\s_-]+', '-', name or '').strip('-').lower()
+    # 与 Wikidot unix name 同构；一个字符都折不出来时返回空串，由调用方兜底
+    normalized = unicodedata.normalize('NFKC', name or '').lower()
+    return re.sub(r'[\W_]+', '-', normalized).strip('-')
+
+
+def normalize_display_name(name: str) -> str:
+    # NFKC 把全角和 NBSP 收敛掉，否则肉眼同名的输入会算成两个人
+    normalized = unicodedata.normalize('NFKC', name or '')
+    return re.sub(r'\s+', ' ', normalized).strip()
+
+
+def validate_display_name(name: str):
+    # . @ # 之类最终都会折成 -，没必要在这里列举允许的标点
+    if not name:
+        raise ValidationError('显示名不能为空。')
+    if len(name) > DISPLAY_NAME_MAX_LENGTH:
+        raise ValidationError('显示名不能超过 %d 个字符。' % DISPLAY_NAME_MAX_LENGTH)
+    for char in name:
+        category = unicodedata.category(char)
+        if category in _BANNED_CHAR_CATEGORIES:
+            raise ValidationError('显示名不能包含控制符、零宽字符等不可见字符。')
+        if category == 'Zs' and char != ' ':
+            raise ValidationError('显示名中的空格只能是普通空格。')
+    if unicodedata.category(name[0]) in ('Mn', 'Mc'):
+        raise ValidationError('显示名不能以组合记号开头。')
+
+
+class StrictDisplayNameValidator:
+    def __call__(self, value):
+        validate_display_name(value)
+
+    def __eq__(self, other):
+        return isinstance(other, StrictDisplayNameValidator)
+
+    def deconstruct(self):
+        return ('web.models.users.StrictDisplayNameValidator', [], {})
 
 class CSSValueValidator(RegexValidator):
     regex = r'^[^;\n\r]+\Z'
@@ -143,6 +183,17 @@ class User(AbstractUser, RolesMixin):
         else:
             self.api_key = None
         return super().save(*args, **kwargs)
+
+
+def allocate_fallback_username(user_pk: int) -> str:
+    # 认领时不能拦，所以 Wikidot 上真名就叫 wkt-uid-34 的账号可能已经占住了它
+    base = '%s-%d' % (FALLBACK_USERNAME_PREFIX, user_pk)
+    candidate = base
+    for suffix in range(2, 1000):
+        if not User.objects.filter(username=candidate).exists():
+            return candidate
+        candidate = '%s-%d' % (base, suffix)
+    raise ValidationError('无法为该显示名分配身份用户名，请换一个显示名。')
 
 
 class UsedToken(auto_prefetch.Model):

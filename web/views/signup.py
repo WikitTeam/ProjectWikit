@@ -9,10 +9,22 @@ from django.contrib.auth import login
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.views import View as BaseView
 
-import re
 import requests
 
-from web.models.users import UsedToken, canonicalize_username
+from uuid import uuid4
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import transaction
+
+from web.models.users import (
+    RESERVED_USERNAME_RE,
+    UsedToken,
+    allocate_fallback_username,
+    canonicalize_username,
+    normalize_display_name,
+    validate_display_name,
+)
 from .invite import account_activation_token
 from web.events import EventBase
 from django.shortcuts import redirect
@@ -21,6 +33,9 @@ from web.models.roles import Role
 
 User = get_user_model()
 WIKIT_VERIFY_API = "https://wikit.unitreaty.org/projwikit"
+
+WD_VERIFY_NAME_KEY = 'wd_verify_name'
+WD_VERIFY_FOR_KEY = 'wd_verify_for'
 
 
 class OnUserSignUp(EventBase, name='on_user_signup'):
@@ -67,11 +82,19 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
             username = user.wikidot_username  # 已是规范身份，显示名沿用迁移时的 full_name
             context.update({'is_wikidot': True})
         else:
-            raw = request.POST.get('username', '').strip()
-            if not re.match(r'^[\w -]+\Z', raw, re.ASCII):
-                context.update({'username': raw, 'error': '用户名只能包含英文字母、数字、空格及符号 [_-]。'})
+            raw = normalize_display_name(request.POST.get('username', ''))
+            try:
+                validate_display_name(raw)
+            except ValidationError as e:
+                context.update({'username': raw, 'error': e.messages[0]})
                 return self.render_to_response(context)
             username = canonicalize_username(raw)  # 归一为身份用户名
+            if RESERVED_USERNAME_RE.match(username):
+                context.update({'username': raw, 'error': '该用户名是保留形式，请换一个。'})
+                return self.render_to_response(context)
+            if not username:
+                # 纯符号/表情折不出身份名
+                username = allocate_fallback_username(user.pk)
             display = raw if raw != username else None
         context.update({'username': username})
         password1 = request.POST.get('password', '')
@@ -86,6 +109,11 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
             return self.render_to_response(context)
         if password1 != password2:
             context.update({'error': '两次输入的密码不一致。'})
+            return self.render_to_response(context)
+        try:
+            validate_password(password1, user)
+        except ValidationError as e:
+            context.update({'error': ' '.join(e.messages)})
             return self.render_to_response(context)
         if user.type != User.UserType.Wikidot:
             user.username = username
@@ -117,7 +145,8 @@ class CheckWikidotUsernameView(BaseView):
 
 class SendWikidotCodeView(BaseView):
     def post(self, request, *args, **kwargs):
-        username = canonicalize_username(request.POST.get('username', '').strip())
+        raw_username = request.POST.get('username', '').strip()
+        username = canonicalize_username(raw_username)
         if not username:
             return JsonResponse({'ok': False, 'error': '用户名不能为空'})
 
@@ -126,8 +155,8 @@ class SendWikidotCodeView(BaseView):
         if not wd_user:
             return JsonResponse({'ok': False, 'error': '该用户名不是待认领的 Wikidot 账号'})
 
-        # 外部验证服务按原始大小写的 Wikidot 名(full_name/显示名)识别，不能发小写身份名
-        verify_name = wd_user.display_name or wd_user.wikidot_username
+        # 外部服务按 Wikidot 原名查人，发身份名查不到
+        verify_name = raw_username
 
         try:
             r = requests.post(
@@ -137,6 +166,9 @@ class SendWikidotCodeView(BaseView):
             )
             data = r.json()
             if data.get('status') == 'success':
+                # 外部服务拿这个字符串当验证码的 key
+                request.session[WD_VERIFY_NAME_KEY] = verify_name
+                request.session[WD_VERIFY_FOR_KEY] = username
                 return JsonResponse({'ok': True})
             else:
                 return JsonResponse({'ok': False, 'error': data.get('message', '发送失败，请稍后重试')})
@@ -173,35 +205,57 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
         context = self.get_context_data()
         data = request.POST
 
-        raw_username = data.get('username', '').strip()
+        raw_username = normalize_display_name(data.get('username', ''))
         password = data.get('password', '')
         password_confirm = data.get('password_confirm', '')
 
-        # 输入按显示名校验（允许字母/数字/空格/_/-）
-        if not re.match(r'^[\w -]+\Z', raw_username, re.ASCII):
-            context.update({'error': '用户名只能包含英文字母、数字、空格及符号 [_-]。'})
+        # 认领时要能原样填 Wikidot 上的名字，所以只挡不可见字符
+        try:
+            validate_display_name(raw_username)
+        except ValidationError as e:
+            context.update({'error': e.messages[0], 'prefill_username': raw_username})
             return self.render_to_response(context)
 
-        # 归一为身份用户名（小写，空格/_ 转 -）；带展示价值时保留原样为显示名
         username = canonicalize_username(raw_username)
         display = raw_username if raw_username != username else None
 
-        # 密码一致性校验
-        if password != password_confirm:
-            context.update({'error': '两次输入的密码不一致'})
+        if RESERVED_USERNAME_RE.match(username):
+            context.update({'error': '该用户名是保留形式，请换一个。', 'prefill_username': raw_username})
             return self.render_to_response(context)
 
-        # 判断是否为待认领的Wikidot账号
+        # 放在密码校验前：重渲染时要知道验证码区域展不展开
         wikidot_user = User.objects.filter(
             wikidot_username=username,
             type=User.UserType.Wikidot
-        ).first()
+        ).first() if username else None
+
+        # 密码一致性校验
+        if password != password_confirm:
+            context.update({
+                'error': '两次输入的密码不一致',
+                'prefill_username': raw_username,
+                'is_wikidot': bool(wikidot_user),
+            })
+            return self.render_to_response(context)
+
+        try:
+            validate_password(password, wikidot_user or User(username=username, display_name=display))
+        except ValidationError as e:
+            context.update({
+                'error': ' '.join(e.messages),
+                'prefill_username': raw_username,
+                'is_wikidot': bool(wikidot_user),
+            })
+            return self.render_to_response(context)
 
         if wikidot_user:
-            # Wikidot账号认领流程（显示名沿用迁移时的 full_name，不覆盖）
+            # Wikidot账号认领流程
             code = data.get('verification_code', '').strip()
-            # 外部验证服务按原始大小写的 Wikidot 名识别，与发送验证码时保持一致
-            verify_name = wikidot_user.display_name or wikidot_user.wikidot_username
+            # session 没记录(过期/换标签页)才退回当前输入
+            if request.session.get(WD_VERIFY_FOR_KEY) == username:
+                verify_name = request.session.get(WD_VERIFY_NAME_KEY) or raw_username
+            else:
+                verify_name = raw_username
             ok, err = self._verify_wikidot_code(verify_name, code)
             if not ok:
                 context.update({
@@ -213,9 +267,15 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
 
             wikidot_user.username = username
             wikidot_user.type = User.UserType.Normal
+            # 迁移时没带上 full_name 的账号在这里补
+            if not wikidot_user.display_name and verify_name != username:
+                wikidot_user.display_name = verify_name
             wikidot_user.set_password(password)
             wikidot_user.is_active = True
             wikidot_user.save()
+
+            request.session.pop(WD_VERIFY_NAME_KEY, None)
+            request.session.pop(WD_VERIFY_FOR_KEY, None)
 
             login(request, wikidot_user, backend='django.contrib.auth.backends.ModelBackend')
             OnUserSignUp(request, wikidot_user).emit()
@@ -223,18 +283,26 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
 
         else:
             # 普通注册流程
-            if User.objects.filter(username=username).exists():
-                context.update({'error': '用户名已被使用'})
+            if username and User.objects.filter(username=username).exists():
+                context.update({
+                    # 大小写、空格、点都折成同一个身份名，不说清楚会显得莫名其妙
+                    'error': '用户名已被使用（%s 与已有用户的身份名相同）' % username,
+                    'prefill_username': raw_username,
+                })
                 return self.render_to_response(context)
 
-            user = User.objects.create_user(username=username)
-            if display:
-                user.display_name = display
-            reader_role = Role.objects.get(slug='reader')
-            user.roles.add(reader_role)
-            user.set_password(password)
-            user.is_active = True
-            user.save()
+            with transaction.atomic():
+                # 兜底名要先有 pk 才能拼，先占一个临时的
+                user = User.objects.create_user(username=username or str(uuid4()))
+                if not username:
+                    user.username = allocate_fallback_username(user.pk)
+                if display:
+                    user.display_name = display
+                reader_role = Role.objects.get(slug='reader')
+                user.roles.add(reader_role)
+                user.set_password(password)
+                user.is_active = True
+                user.save()
 
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             OnUserSignUp(request, user).emit()
