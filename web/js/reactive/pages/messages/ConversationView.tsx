@@ -88,12 +88,15 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   }, [partnerId])
 
   useEffect(() => {
-    const el = listRef.current
-    if (!el || selectMode) return
-    if (wasAtBottomRef.current) {
+    if (selectMode) return
+    if (!wasAtBottomRef.current) return
+    const raf = requestAnimationFrame(() => {
+      const el = listRef.current
+      if (!el) return
       el.scrollTop = el.scrollHeight
-    }
-  }, [messages.length, selectMode])
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [messages.length, selectMode, loading])
 
   const handleScroll = () => {
     const el = listRef.current
@@ -108,25 +111,31 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
       if (document.visibilityState !== 'visible') return
       if (selectModeRef.current) return
       if (partnerIdRef.current !== partnerId) return
-      const cur = messagesRef.current
-      if (cur.length === 0) return
-      const lastId = cur[cur.length - 1].id
       try {
-        const conv = await getConversation(partnerId, -1, 50, true, lastId)
+        const conv = await getConversation(partnerId, -1, 50, true)
         if (partnerIdRef.current !== partnerId) return
-        if (!conv.messages || conv.messages.length === 0) return
+        if (!conv.messages) return
+        const freshOrdered = conv.messages.slice().reverse()
         setMessages(prev => {
           const existing = new Set(prev.map(m => m.id))
-          const fresh = conv.messages.filter(m => !existing.has(m.id))
-          if (fresh.length === 0) return prev
-          return [...prev, ...fresh]
+          const news = freshOrdered.filter(m => !existing.has(m.id))
+          if (news.length === 0) return prev
+          return [...prev, ...news]
         })
       } catch {
       }
     }
 
+    poll()
     const interval = setInterval(poll, POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [partnerId])
 
   const handleSend = async (e?: React.FormEvent) => {

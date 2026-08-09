@@ -37,9 +37,11 @@ export const Layout = styled.div`
   overflow: hidden;
 
   @media (max-width: 700px) {
-    grid-template-columns: 1fr;
-    height: auto;
-    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 240px);
+    height: calc(100dvh - 240px);
+    min-height: 400px;
   }
 `
 
@@ -51,11 +53,19 @@ export const Sidebar = styled.div<{ hasSelection: boolean }>`
   min-height: 0;
 
   @media (max-width: 700px) {
-    max-height: 40vh;
+    max-height: 45vh;
+    flex-shrink: 0;
     border-right: none;
     border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
     ${({ hasSelection }) => hasSelection && css`display: none;`};
   }
+`
+
+export const ConvListScroll = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 `
 
 export const Main = styled.div`
@@ -64,6 +74,10 @@ export const Main = styled.div`
   min-width: 0;
   min-height: 0;
   background: ${({ theme }) => theme.windowPadding};
+
+  @media (max-width: 700px) {
+    flex: 1;
+  }
 `
 
 export const SidebarSearch = styled.form`

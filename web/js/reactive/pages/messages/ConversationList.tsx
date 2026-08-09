@@ -56,7 +56,14 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
     }
 
     const interval = setInterval(poll, POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
   if (loading) return <Styled.LoadingBanner>加载中…</Styled.LoadingBanner>
