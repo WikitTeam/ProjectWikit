@@ -45,9 +45,16 @@ export async function getConversation(
   cursor: number = -1,
   limit: number = 30,
   markRead: boolean = false,
+  after: number = -1,
 ): Promise<ConversationResponse> {
+  const params = new URLSearchParams({
+    cursor: String(cursor),
+    limit: String(limit),
+    mark_read: String(markRead),
+  })
+  if (after >= 0) params.set('after', String(after))
   return await wFetch<ConversationResponse>(
-    `/api/messages/with/${partnerId}?cursor=${cursor}&limit=${limit}&mark_read=${markRead}`,
+    `/api/messages/with/${partnerId}?${params.toString()}`,
   )
 }
 

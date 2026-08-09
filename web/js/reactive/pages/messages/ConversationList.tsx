@@ -1,9 +1,11 @@
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ConversationSummary, getConversations } from '~api/messages'
 import formatDate from '~util/date-format'
 import { Paths } from '~reactive/paths'
 import * as Styled from './Messages.styles'
+
+const POLL_INTERVAL_MS = 3000
 
 interface Props {
   selectedPartnerId: number | null
@@ -15,6 +17,8 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
+  const loadedRef = useRef<boolean>(false)
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
@@ -23,6 +27,7 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
       .then(response => {
         if (cancelled) return
         setConversations(response.conversations)
+        loadedRef.current = true
       })
       .catch(err => {
         if (cancelled) return
@@ -35,6 +40,24 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
       cancelled = true
     }
   }, [refreshToken])
+
+  useEffect(() => {
+    const poll = async () => {
+      if (document.visibilityState !== 'visible') return
+      if (!loadedRef.current) return
+      try {
+        const response = await getConversations()
+        setConversations(prev => {
+          if (sameConversations(prev, response.conversations)) return prev
+          return response.conversations
+        })
+      } catch {
+      }
+    }
+
+    const interval = setInterval(poll, POLL_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [])
 
   if (loading) return <Styled.LoadingBanner>加载中…</Styled.LoadingBanner>
   if (error) return <Styled.ErrorBanner>{error}</Styled.ErrorBanner>
@@ -68,6 +91,16 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
       })}
     </>
   )
+}
+
+function sameConversations(a: ConversationSummary[], b: ConversationSummary[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].partner.id !== b[i].partner.id) return false
+    if (a[i].unread_count !== b[i].unread_count) return false
+    if (a[i].last_message.id !== b[i].last_message.id) return false
+  }
+  return true
 }
 
 export default ConversationList

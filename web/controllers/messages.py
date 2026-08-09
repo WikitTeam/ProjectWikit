@@ -102,14 +102,19 @@ def _partner_id_expr(user: _UserType):
     )
 
 
-def get_conversation(user: _UserType, partner: _UserType, cursor: int = -1, limit: int = 30) -> tuple[list[DirectMessage], int]:
+def get_conversation(user: _UserType, partner: _UserType, cursor: int = -1, limit: int = 30, after: int = -1) -> tuple[list[DirectMessage], int]:
     if not user or user.is_anonymous:
         return [], -1
 
     qs = DirectMessage.objects.filter(
         Q(sender=user, recipient=partner) | Q(sender=partner, recipient=user)
-    ).order_by('-id')
+    )
 
+    if after >= 0:
+        messages = list(qs.filter(id__gt=after).order_by('id')[:limit])
+        return messages, -1
+
+    qs = qs.order_by('-id')
     if cursor != -1:
         qs = qs.filter(id__lt=cursor)
 

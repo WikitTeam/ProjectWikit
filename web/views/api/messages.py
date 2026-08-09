@@ -84,11 +84,11 @@ class ConversationsListView(APIView):
 
 class ConversationView(APIView):
     @takes_url_params
-    def get(self, request: HttpRequest, user_id: int, *, cursor: int = -1, limit: int = 30, mark_read: bool = False):
+    def get(self, request: HttpRequest, user_id: int, *, cursor: int = -1, limit: int = 30, mark_read: bool = False, after: int = -1):
         _require_login(request)
         partner = _get_user_or_404(user_id)
 
-        msgs, next_cursor = messages.get_conversation(request.user, partner, cursor=cursor, limit=limit)
+        msgs, next_cursor = messages.get_conversation(request.user, partner, cursor=cursor, limit=limit, after=after)
 
         if mark_read:
             messages.mark_conversation_read(request.user, partner)
