@@ -400,8 +400,28 @@ body.wikit-page .system-content .content .btn-ghost:hover { border-color: var(--
 .wikit-scope .profile-head .actions { display: flex; gap: 8px; }
 
 @media (max-width: 720px) {
-  .wikit-scope .profile-head { grid-template-columns: 1fr; text-align: center; }
-  .wikit-scope .profile-head .actions { justify-content: center; }
+  .wikit-scope .profile-head {
+    grid-template-columns: 60px 1fr;
+    grid-template-areas: "avatar id" "actions actions";
+    text-align: left;
+    gap: 12px 14px;
+  }
+  .wikit-scope .profile-head .avatar-big {
+    grid-area: avatar;
+    width: 60px;
+    height: 60px;
+    font-size: 22px;
+  }
+  .wikit-scope .profile-head .id {
+    grid-area: id;
+    align-self: center;
+  }
+  .wikit-scope .profile-head .id .name { font-size: 22px; }
+  .wikit-scope .profile-head .actions {
+    grid-area: actions;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
   .wikit-scope .dl { grid-template-columns: 1fr; gap: 0; }
   .wikit-scope .dl dt { padding-bottom: 2px; border-top: 1px solid var(--rule); }
   .wikit-scope .dl dd { padding-top: 2px; padding-bottom: 14px; border-top: none; }

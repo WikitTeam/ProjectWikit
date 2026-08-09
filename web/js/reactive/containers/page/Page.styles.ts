@@ -38,4 +38,8 @@ export const MainContainer = styled.div`
   max-width: 900px;
   margin: 0 auto;
   padding: 32px 24px 96px;
+
+  @media (max-width: 700px) {
+    padding: 20px 16px 20px;
+  }
 `

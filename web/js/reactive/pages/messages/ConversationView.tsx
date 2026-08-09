@@ -23,6 +23,8 @@ interface Props {
   onMessageSent: () => void
 }
 
+const POLL_INTERVAL_MS = 3000
+
 const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   const config = useConfigContext()
   const currentUserId = config.user.id
@@ -42,6 +44,14 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const listRef = useRef<HTMLDivElement | null>(null)
+  const wasAtBottomRef = useRef<boolean>(true)
+  const messagesRef = useRef<DirectMessage[]>([])
+  const selectModeRef = useRef<boolean>(false)
+  const partnerIdRef = useRef<number>(partnerId)
+
+  useEffect(() => { messagesRef.current = messages }, [messages])
+  useEffect(() => { selectModeRef.current = selectMode }, [selectMode])
+  useEffect(() => { partnerIdRef.current = partnerId }, [partnerId])
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +61,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
     setPartner(null)
     setSelectMode(false)
     setSelectedIds(new Set())
+    wasAtBottomRef.current = true
 
     Promise.all([
       getConversation(partnerId, -1, 50, true),
@@ -77,10 +88,55 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   }, [partnerId])
 
   useEffect(() => {
-    if (listRef.current && !selectMode) {
-      listRef.current.scrollTop = listRef.current.scrollHeight
+    if (selectMode) return
+    if (!wasAtBottomRef.current) return
+    const raf = requestAnimationFrame(() => {
+      const el = listRef.current
+      if (!el) return
+      el.scrollTop = el.scrollHeight
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [messages.length, selectMode, loading])
+
+  const handleScroll = () => {
+    const el = listRef.current
+    if (!el) return
+    wasAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40
+  }
+
+  useEffect(() => {
+    if (!partnerId || Number.isNaN(partnerId)) return
+
+    const poll = async () => {
+      if (document.visibilityState !== 'visible') return
+      if (selectModeRef.current) return
+      if (partnerIdRef.current !== partnerId) return
+      try {
+        const conv = await getConversation(partnerId, -1, 50, true)
+        if (partnerIdRef.current !== partnerId) return
+        if (!conv.messages) return
+        const freshOrdered = conv.messages.slice().reverse()
+        setMessages(prev => {
+          const existing = new Set(prev.map(m => m.id))
+          const news = freshOrdered.filter(m => !existing.has(m.id))
+          if (news.length === 0) return prev
+          return [...prev, ...news]
+        })
+      } catch {
+      }
     }
-  }, [messages.length, selectMode])
+
+    poll()
+    const interval = setInterval(poll, POLL_INTERVAL_MS)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [partnerId])
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -91,6 +147,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
     setSendError(null)
     try {
       const created = await sendMessage(partnerId, body)
+      wasAtBottomRef.current = true
       setMessages(prev => [...prev, created])
       setDraft('')
       onMessageSent()
@@ -170,7 +227,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
           </>
         )}
       </Styled.ConversationHeader>
-      <Styled.MessageList ref={listRef}>
+      <Styled.MessageList ref={listRef} onScroll={handleScroll}>
         {messages.length === 0 && (
           <Styled.EmptyState>还没有消息。发送第一条消息开始对话吧。</Styled.EmptyState>
         )}

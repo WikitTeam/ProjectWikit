@@ -63,7 +63,9 @@ const Messages: React.FC = () => {
             </Styled.SearchButton>
           </Styled.SidebarSearch>
           {searchError && <Styled.SearchError>{searchError}</Styled.SearchError>}
-          <ConversationList selectedPartnerId={partnerId} refreshToken={refreshToken} />
+          <Styled.ConvListScroll>
+            <ConversationList selectedPartnerId={partnerId} refreshToken={refreshToken} />
+          </Styled.ConvListScroll>
         </Styled.Sidebar>
         <Styled.Main>
           {partnerId !== null && !Number.isNaN(partnerId) ? (
