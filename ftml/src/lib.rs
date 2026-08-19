@@ -110,6 +110,7 @@ extern crate str_macro;
 #[macro_use]
 mod macros;
 
+#[cfg(feature = "python")]
 mod python_interface;
 mod id_prefix;
 mod next_index;
