@@ -65,6 +65,7 @@ func TestLayoutIsFlat(t *testing.T) {
 		"Secrets":  p.Secrets(),
 		"PGData":   p.PGData(),
 		"Postgres": p.Postgres(),
+		"Locales":  p.Locales(),
 	}
 	for name, got := range cases {
 		if filepath.Dir(got) != root {
