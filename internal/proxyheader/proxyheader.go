@@ -27,14 +27,14 @@ func NewTrust(sources []string) (*Trust, error) {
 		if strings.Contains(s, "/") {
 			p, err := netip.ParsePrefix(s)
 			if err != nil {
-				return nil, fmt.Errorf("可信代理网段 %q 解析失败: %w", s, err)
+				return nil, fmt.Errorf("parse trusted proxy CIDR %q: %w", s, err)
 			}
 			t.nets = append(t.nets, p.Masked())
 			continue
 		}
 		a, err := netip.ParseAddr(s)
 		if err != nil {
-			return nil, fmt.Errorf("可信代理地址 %q 解析失败: %w", s, err)
+			return nil, fmt.Errorf("parse trusted proxy address %q: %w", s, err)
 		}
 		a = a.Unmap()
 		t.nets = append(t.nets, netip.PrefixFrom(a, a.BitLen()))

@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	ErrMalformed   = errors.New("密码哈希格式不正确")
-	ErrUnsupported = errors.New("不支持的密码哈希算法")
+	ErrMalformed   = errors.New("malformed password hash")
+	ErrUnsupported = errors.New("unsupported password hash algorithm")
 )
 
 type parsed struct {
@@ -74,32 +74,32 @@ func NeedsRehash(encoded string) bool {
 
 func parse(encoded string) (parsed, error) {
 	if encoded == "" {
-		return parsed{}, fmt.Errorf("%w: 空字符串", ErrMalformed)
+		return parsed{}, fmt.Errorf("%w: empty string", ErrMalformed)
 	}
 	parts := strings.SplitN(encoded, "$", 4)
 	if parts[0] != Algorithm {
 		return parsed{}, fmt.Errorf("%w: %q", ErrUnsupported, parts[0])
 	}
 	if len(parts) != 4 {
-		return parsed{}, fmt.Errorf("%w: 期望 4 段，得到 %d 段", ErrMalformed, len(parts))
+		return parsed{}, fmt.Errorf("%w: want 4 segments, got %d", ErrMalformed, len(parts))
 	}
 	iterations, err := strconv.Atoi(parts[1])
 	if err != nil || iterations < 1 {
-		return parsed{}, fmt.Errorf("%w: 迭代次数 %q", ErrMalformed, parts[1])
+		return parsed{}, fmt.Errorf("%w: iterations %q", ErrMalformed, parts[1])
 	}
 	if parts[2] == "" {
-		return parsed{}, fmt.Errorf("%w: salt 为空", ErrMalformed)
+		return parsed{}, fmt.Errorf("%w: empty salt", ErrMalformed)
 	}
 	digest, err := base64.StdEncoding.DecodeString(parts[3])
 	if err != nil {
-		return parsed{}, fmt.Errorf("%w: 哈希段不是合法 base64: %v", ErrMalformed, err)
+		return parsed{}, fmt.Errorf("%w: hash segment is not valid base64: %v", ErrMalformed, err)
 	}
 	return parsed{iterations: iterations, salt: parts[2], digest: digest}, nil
 }
 
 func encode(plain, salt string, iterations int) (string, error) {
 	if salt == "" || strings.Contains(salt, "$") {
-		return "", fmt.Errorf("%w: salt %q 不可为空且不可含 $", ErrMalformed, salt)
+		return "", fmt.Errorf("%w: salt %q must be non-empty and must not contain $", ErrMalformed, salt)
 	}
 	digest, err := derive(plain, salt, iterations)
 	if err != nil {
@@ -123,7 +123,7 @@ func newSalt() (string, error) {
 	buf := make([]byte, saltLength)
 	for len(out) < saltLength {
 		if _, err := rand.Read(buf); err != nil {
-			return "", fmt.Errorf("生成 salt 失败: %w", err)
+			return "", fmt.Errorf("generate salt: %w", err)
 		}
 		for _, b := range buf {
 			if b < limit && len(out) < saltLength {

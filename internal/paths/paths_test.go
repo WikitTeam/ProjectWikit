@@ -18,10 +18,10 @@ func TestNewPrefersExplicitOverEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 	if p.Root() != explicit {
-		t.Errorf("Root() = %q，期望 %q", p.Root(), explicit)
+		t.Errorf("Root() = %q, want %q", p.Root(), explicit)
 	}
 	if p.Source() != SourceExplicit {
-		t.Errorf("Source() = %q，期望 %q", p.Source(), SourceExplicit)
+		t.Errorf("Source() = %q, want %q", p.Source(), SourceExplicit)
 	}
 }
 
@@ -34,10 +34,10 @@ func TestNewFallsBackToEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 	if p.Root() != dir {
-		t.Errorf("Root() = %q，期望 %q", p.Root(), dir)
+		t.Errorf("Root() = %q, want %q", p.Root(), dir)
 	}
 	if p.Source() != SourceEnv {
-		t.Errorf("Source() = %q，期望 %q", p.Source(), SourceEnv)
+		t.Errorf("Source() = %q, want %q", p.Source(), SourceEnv)
 	}
 }
 
@@ -47,7 +47,7 @@ func TestNewMakesRootAbsolute(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !filepath.IsAbs(p.Root()) {
-		t.Errorf("filepath.IsAbs(Root()) = false，Root() = %q", p.Root())
+		t.Errorf("filepath.IsAbs(Root()) = false, Root() = %q", p.Root())
 	}
 }
 
@@ -69,12 +69,12 @@ func TestLayoutIsFlat(t *testing.T) {
 	}
 	for name, got := range cases {
 		if filepath.Dir(got) != root {
-			t.Errorf("filepath.Dir(%s()) = %q，期望 %q", name, filepath.Dir(got), root)
+			t.Errorf("filepath.Dir(%s()) = %q, want %q", name, filepath.Dir(got), root)
 		}
 	}
 
 	if filepath.Dir(p.Certs()) != p.Secrets() {
-		t.Errorf("filepath.Dir(Certs()) = %q，期望 %q", filepath.Dir(p.Certs()), p.Secrets())
+		t.Errorf("filepath.Dir(Certs()) = %q, want %q", filepath.Dir(p.Certs()), p.Secrets())
 	}
 }
 
@@ -90,16 +90,16 @@ func TestEnsureBaseCreatesDirs(t *testing.T) {
 	for _, dir := range []string{p.Files(), p.Archive(), p.Secrets()} {
 		info, err := os.Stat(dir)
 		if err != nil {
-			t.Errorf("Stat(%s) err = %v，期望 nil", dir, err)
+			t.Errorf("Stat(%s) err = %v, want nil", dir, err)
 			continue
 		}
 		if !info.IsDir() {
-			t.Errorf("%s IsDir() = false，期望 true", dir)
+			t.Errorf("%s IsDir() = false, want true", dir)
 		}
 	}
 
 	if _, err := os.Stat(p.PGData()); !os.IsNotExist(err) {
-		t.Errorf("EnsureBase() 建立了 %s，期望不建立", p.PGData())
+		t.Errorf("EnsureBase() created %s, want it absent", p.PGData())
 	}
 
 	if runtime.GOOS != "windows" {
@@ -108,7 +108,7 @@ func TestEnsureBaseCreatesDirs(t *testing.T) {
 			t.Fatal(err)
 		}
 		if perm := info.Mode().Perm(); perm != 0o700 {
-			t.Errorf("secrets 权限 = %o，期望 700", perm)
+			t.Errorf("secrets mode = %o, want 700", perm)
 		}
 	}
 }
@@ -122,7 +122,7 @@ func TestEnsureBaseIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := p.EnsureBase(); err != nil {
-		t.Errorf("第二次 EnsureBase() err = %v，期望 nil", err)
+		t.Errorf("second EnsureBase() err = %v, want nil", err)
 	}
 }
 
@@ -138,17 +138,17 @@ func TestIsGoRunTemp(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "go run 的构建目录",
+			name: "go run build directory",
 			dir:  filepath.Join(tmp, "go-build2451739961", "b001", "exe"),
 			want: true,
 		},
 		{
-			name: "正常安装位置",
+			name: "normal install location",
 			dir:  filepath.Join(tmp, "pwikit"),
 			want: false,
 		},
 		{
-			name: "临时目录之外的 go-build",
+			name: "go-build outside the temp directory",
 			dir:  filepath.Join("/opt", "go-build", "pwikit"),
 			want: false,
 		},
@@ -157,7 +157,7 @@ func TestIsGoRunTemp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isGoRunTemp(tt.dir); got != tt.want {
-				t.Errorf("isGoRunTemp(%q) = %v，期望 %v", tt.dir, got, tt.want)
+				t.Errorf("isGoRunTemp(%q) = %v, want %v", tt.dir, got, tt.want)
 			}
 		})
 	}
@@ -178,11 +178,11 @@ func TestResolveBlocksEscape(t *testing.T) {
 	for _, tt := range ok {
 		got, err := Resolve(base, tt.rel)
 		if err != nil {
-			t.Errorf("Resolve(%q) err = %v，期望 nil", tt.rel, err)
+			t.Errorf("Resolve(%q) err = %v, want nil", tt.rel, err)
 			continue
 		}
 		if got != tt.want {
-			t.Errorf("Resolve(%q) = %q，期望 %q", tt.rel, got, tt.want)
+			t.Errorf("Resolve(%q) = %q, want %q", tt.rel, got, tt.want)
 		}
 	}
 
@@ -194,7 +194,7 @@ func TestResolveBlocksEscape(t *testing.T) {
 	}
 	for _, rel := range escapes {
 		if got, err := Resolve(base, rel); !errors.Is(err, ErrEscapes) {
-			t.Errorf("Resolve(%q) = %q, err = %v，期望 ErrEscapes", rel, got, err)
+			t.Errorf("Resolve(%q) = %q, err = %v, want ErrEscapes", rel, got, err)
 		}
 	}
 }
@@ -207,7 +207,7 @@ func TestResolveRejectsAbsolute(t *testing.T) {
 		abs = `C:\Windows\System32\config\SAM`
 	}
 	if _, err := Resolve(base, abs); !errors.Is(err, ErrEscapes) {
-		t.Errorf("Resolve(%q) err = %v，期望 ErrEscapes", abs, err)
+		t.Errorf("Resolve(%q) err = %v, want ErrEscapes", abs, err)
 	}
 }
 
@@ -215,12 +215,12 @@ func TestResolveEscapeReturnValues(t *testing.T) {
 	base := filepath.Join(t.TempDir(), "files")
 	got, err := Resolve(base, "../../pwikit.toml")
 	if err == nil {
-		t.Fatalf("Resolve() = %q, err = nil，期望 ErrEscapes", got)
+		t.Fatalf("Resolve() = %q, err = nil, want ErrEscapes", got)
 	}
 	if got != "" {
-		t.Errorf("Resolve() 出错时返回 %q，期望空字符串", got)
+		t.Errorf("Resolve() on error = %q, want empty string", got)
 	}
 	if !strings.Contains(err.Error(), "pwikit.toml") {
-		t.Errorf("err = %v，期望包含 %q", err, "pwikit.toml")
+		t.Errorf("err = %v, want substring %q", err, "pwikit.toml")
 	}
 }

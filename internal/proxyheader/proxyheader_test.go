@@ -11,7 +11,7 @@ func trust(t *testing.T, sources ...string) *Trust {
 	t.Helper()
 	tr, err := NewTrust(sources)
 	if err != nil {
-		t.Fatalf("NewTrust(%v) err = %v，期望 nil", sources, err)
+		t.Fatalf("NewTrust(%v) err = %v, want nil", sources, err)
 	}
 	return tr
 }
@@ -38,14 +38,14 @@ func TestNewTrustRejectsBadSource(t *testing.T) {
 		name   string
 		source string
 	}{
-		{"不是地址", "nonsense"},
-		{"网段位数越界", "10.0.0.0/33"},
-		{"带端口", "10.0.0.1:80"},
+		{"not an address", "nonsense"},
+		{"prefix length out of range", "10.0.0.0/33"},
+		{"with port", "10.0.0.1:80"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if _, err := NewTrust([]string{tt.source}); err == nil {
-				t.Errorf("NewTrust(%q) err = nil，期望非 nil", tt.source)
+				t.Errorf("NewTrust(%q) err = nil, want non-nil", tt.source)
 			}
 		})
 	}
@@ -54,7 +54,7 @@ func TestNewTrustRejectsBadSource(t *testing.T) {
 func TestNewTrustSkipsEmptySource(t *testing.T) {
 	tr := trust(t, "", "  ", "10.0.0.0/8")
 	if len(tr.nets) != 1 {
-		t.Errorf("len(nets) = %d，期望 1", len(tr.nets))
+		t.Errorf("len(nets) = %d, want 1", len(tr.nets))
 	}
 }
 
@@ -72,10 +72,10 @@ func TestTrustedMatchesBareAddress(t *testing.T) {
 		t.Run(tt.addr, func(t *testing.T) {
 			a, ok := PeerAddr(tt.addr)
 			if !ok {
-				t.Fatalf("PeerAddr(%q) ok = false，期望 true", tt.addr)
+				t.Fatalf("PeerAddr(%q) ok = false, want true", tt.addr)
 			}
 			if got := tr.Trusted(a); got != tt.want {
-				t.Errorf("Trusted(%q) = %v，期望 %v", tt.addr, got, tt.want)
+				t.Errorf("Trusted(%q) = %v, want %v", tt.addr, got, tt.want)
 			}
 		})
 	}
@@ -87,10 +87,10 @@ func TestClientIPIgnoresHeaderFromUntrustedPeer(t *testing.T) {
 
 	got, ok := tr.ClientIP(r)
 	if !ok {
-		t.Fatalf("ClientIP() ok = false，期望 true")
+		t.Fatalf("ClientIP() ok = false, want true")
 	}
 	if got.String() != "203.0.113.9" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "203.0.113.9")
+		t.Errorf("ClientIP() = %q, want %q", got, "203.0.113.9")
 	}
 }
 
@@ -100,7 +100,7 @@ func TestClientIPUsesHeaderFromTrustedPeer(t *testing.T) {
 
 	got, _ := tr.ClientIP(r)
 	if got.String() != "1.2.3.4" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "1.2.3.4")
+		t.Errorf("ClientIP() = %q, want %q", got, "1.2.3.4")
 	}
 }
 
@@ -110,7 +110,7 @@ func TestClientIPSkipsTrustedHops(t *testing.T) {
 
 	got, _ := tr.ClientIP(r)
 	if got.String() != "1.2.3.4" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "1.2.3.4")
+		t.Errorf("ClientIP() = %q, want %q", got, "1.2.3.4")
 	}
 }
 
@@ -120,7 +120,7 @@ func TestClientIPReadsRepeatedHeaderLines(t *testing.T) {
 
 	got, _ := tr.ClientIP(r)
 	if got.String() != "1.2.3.4" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "1.2.3.4")
+		t.Errorf("ClientIP() = %q, want %q", got, "1.2.3.4")
 	}
 }
 
@@ -130,7 +130,7 @@ func TestClientIPFallsBackToLeftmostWhenAllHopsTrusted(t *testing.T) {
 
 	got, _ := tr.ClientIP(r)
 	if got.String() != "10.0.0.7" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "10.0.0.7")
+		t.Errorf("ClientIP() = %q, want %q", got, "10.0.0.7")
 	}
 }
 
@@ -140,7 +140,7 @@ func TestClientIPSkipsUnparsableHops(t *testing.T) {
 
 	got, _ := tr.ClientIP(r)
 	if got.String() != "1.2.3.4" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "1.2.3.4")
+		t.Errorf("ClientIP() = %q, want %q", got, "1.2.3.4")
 	}
 }
 
@@ -150,14 +150,14 @@ func TestClientIPWithEmptyTrustAlwaysUsesPeer(t *testing.T) {
 
 	got, _ := tr.ClientIP(r)
 	if got.String() != "10.0.0.1" {
-		t.Errorf("ClientIP() = %q，期望 %q", got, "10.0.0.1")
+		t.Errorf("ClientIP() = %q, want %q", got, "10.0.0.1")
 	}
 }
 
 func TestClientIPReportsUnparsablePeer(t *testing.T) {
 	tr := trust(t, "10.0.0.0/8")
 	if _, ok := tr.ClientIP(request("@", nil)); ok {
-		t.Error("ClientIP() ok = true，期望 false")
+		t.Error("ClientIP() ok = true, want false")
 	}
 }
 
@@ -169,14 +169,14 @@ func TestScheme(t *testing.T) {
 		tls        bool
 		want       string
 	}{
-		{"无头且非 TLS", "10.0.0.1:1", "", false, "http"},
-		{"无头且 TLS", "10.0.0.1:1", "", true, "https"},
-		{"可信来源声称 https", "10.0.0.1:1", "https", false, "https"},
-		{"不可信来源声称 https", "203.0.113.9:1", "https", false, "http"},
-		{"可信来源声称 http 而连接是 TLS", "10.0.0.1:1", "http", true, "http"},
-		{"取逗号分隔的第一个", "10.0.0.1:1", "https, http", false, "https"},
-		{"大小写不敏感", "10.0.0.1:1", "HTTPS", false, "https"},
-		{"取值非法时回退", "10.0.0.1:1", "gopher", false, "http"},
+		{"no header without TLS", "10.0.0.1:1", "", false, "http"},
+		{"no header over TLS", "10.0.0.1:1", "", true, "https"},
+		{"trusted peer claims https", "10.0.0.1:1", "https", false, "https"},
+		{"untrusted peer claims https", "203.0.113.9:1", "https", false, "http"},
+		{"trusted peer claims http over TLS", "10.0.0.1:1", "http", true, "http"},
+		{"takes the first comma separated value", "10.0.0.1:1", "https, http", false, "https"},
+		{"case insensitive", "10.0.0.1:1", "HTTPS", false, "https"},
+		{"falls back on an invalid value", "10.0.0.1:1", "gopher", false, "http"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -190,7 +190,7 @@ func TestScheme(t *testing.T) {
 				r.TLS = &tls.ConnectionState{}
 			}
 			if got := tr.Scheme(r); got != tt.want {
-				t.Errorf("Scheme() = %q，期望 %q", got, tt.want)
+				t.Errorf("Scheme() = %q, want %q", got, tt.want)
 			}
 		})
 	}

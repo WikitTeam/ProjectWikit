@@ -36,7 +36,7 @@ func Load(overrideDir string) (*Bundle, error) {
 		}
 	}
 	if len(b.catalogs[DefaultLanguage]) == 0 {
-		return nil, fmt.Errorf("默认语言 %q 的文案表为空", DefaultLanguage)
+		return nil, fmt.Errorf("catalog for default language %q is empty", DefaultLanguage)
 	}
 	return b, nil
 }
@@ -49,7 +49,7 @@ func (b *Bundle) merge(fsys fs.FS, dir string) error {
 	for _, name := range names {
 		lang := Normalize(strings.TrimSuffix(path.Base(name), fileSuffix))
 		if lang == "" {
-			return fmt.Errorf("文案表 %s 的文件名不是语言标签", name)
+			return fmt.Errorf("catalog %s: filename is not a language tag", name)
 		}
 		raw, err := fs.ReadFile(fsys, name)
 		if err != nil {
@@ -57,7 +57,7 @@ func (b *Bundle) merge(fsys fs.FS, dir string) error {
 		}
 		var entries map[string]string
 		if err := json.Unmarshal(raw, &entries); err != nil {
-			return fmt.Errorf("文案表 %s 解析失败: %w", name, err)
+			return fmt.Errorf("parse catalog %s: %w", name, err)
 		}
 		catalog, ok := b.catalogs[lang]
 		if !ok {

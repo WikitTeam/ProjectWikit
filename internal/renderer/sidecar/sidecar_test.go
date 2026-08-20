@@ -22,15 +22,15 @@ func (f *fakeSidecar) recv() map[string]any {
 	f.t.Helper()
 	var head [4]byte
 	if _, err := io.ReadFull(f.in, head[:]); err != nil {
-		f.t.Fatalf("假 sidecar 读长度 err = %v，期望 nil", err)
+		f.t.Fatalf("fake sidecar read length err = %v, want nil", err)
 	}
 	buf := make([]byte, binary.BigEndian.Uint32(head[:]))
 	if _, err := io.ReadFull(f.in, buf); err != nil {
-		f.t.Fatalf("假 sidecar 读消息体 err = %v，期望 nil", err)
+		f.t.Fatalf("fake sidecar read body err = %v, want nil", err)
 	}
 	var m map[string]any
 	if err := json.Unmarshal(buf, &m); err != nil {
-		f.t.Fatalf("假 sidecar 解析 err = %v，期望 nil", err)
+		f.t.Fatalf("fake sidecar unmarshal err = %v, want nil", err)
 	}
 	return m
 }
@@ -39,7 +39,7 @@ func (f *fakeSidecar) send(v any) {
 	f.t.Helper()
 	buf, err := json.Marshal(v)
 	if err != nil {
-		f.t.Fatalf("假 sidecar 序列化 err = %v，期望 nil", err)
+		f.t.Fatalf("fake sidecar marshal err = %v, want nil", err)
 	}
 	var head [4]byte
 	binary.BigEndian.PutUint32(head[:], uint32(len(buf)))
@@ -82,16 +82,16 @@ func TestRenderHTMLMapsResult(t *testing.T) {
 
 	got, err := r.RenderHTML(context.Background(), "src", renderer.PageInfo{}, renderer.NopCallbacks{}, renderer.ModeArticle)
 	if err != nil {
-		t.Fatalf("RenderHTML() err = %v，期望 nil", err)
+		t.Fatalf("RenderHTML() err = %v, want nil", err)
 	}
 	if got.Body != "<p>ok</p>" {
-		t.Errorf("Body = %q，期望 %q", got.Body, "<p>ok</p>")
+		t.Errorf("Body = %q, want %q", got.Body, "<p>ok</p>")
 	}
 	if len(got.LinkedPages) != 2 || got.LinkedPages[1] != "c" {
-		t.Errorf("LinkedPages = %v，期望 [b c]", got.LinkedPages)
+		t.Errorf("LinkedPages = %v, want [b c]", got.LinkedPages)
 	}
 	if len(got.Code) != 1 || got.Code[0].Language != "rust" || got.Code[0].Source != "fn main() {}" {
-		t.Errorf("Code = %+v，期望 [{rust fn main() {}}]", got.Code)
+		t.Errorf("Code = %+v, want [{rust fn main() {}}]", got.Code)
 	}
 }
 
@@ -104,49 +104,49 @@ func TestRenderSendsRequestFields(t *testing.T) {
 
 	info := renderer.PageInfo{Page: "173", Category: "scp", Domain: "example.org", Tags: []string{"t"}}
 	if _, err := r.RenderText(context.Background(), "源码", info, renderer.NopCallbacks{}, renderer.ModeSystem); err != nil {
-		t.Fatalf("RenderText() err = %v，期望 nil", err)
+		t.Fatalf("RenderText() err = %v, want nil", err)
 	}
 
 	if req["type"] != "render" {
-		t.Errorf("type = %v，期望 render", req["type"])
+		t.Errorf("type = %v, want render", req["type"])
 	}
 	if req["op"] != "text" {
-		t.Errorf("op = %v，期望 text", req["op"])
+		t.Errorf("op = %v, want text", req["op"])
 	}
 	if req["mode"] != "system" {
-		t.Errorf("mode = %v，期望 system", req["mode"])
+		t.Errorf("mode = %v, want system", req["mode"])
 	}
 	if req["source"] != "源码" {
-		t.Errorf("source = %v，期望 源码", req["source"])
+		t.Errorf("source = %v, want %q", req["source"], "源码")
 	}
 	pi, _ := req["page_info"].(map[string]any)
 	if pi["page"] != "173" || pi["category"] != "scp" || pi["domain"] != "example.org" {
-		t.Errorf("page_info = %v，期望含 page=173 category=scp domain=example.org", pi)
+		t.Errorf("page_info = %v, want page=173 category=scp domain=example.org", pi)
 	}
 }
 
 func TestRenderRejectsInvalidMode(t *testing.T) {
 	r := newPair(t, func(f *fakeSidecar) {})
 	if _, err := r.RenderHTML(context.Background(), "s", renderer.PageInfo{}, renderer.NopCallbacks{}, "nonsense"); err == nil {
-		t.Error("RenderHTML(mode=nonsense) err = nil，期望非 nil")
+		t.Error("RenderHTML(mode=nonsense) err = nil, want non-nil")
 	}
 }
 
 func TestRenderRejectsNilCallbacks(t *testing.T) {
 	r := newPair(t, func(f *fakeSidecar) {})
 	if _, err := r.RenderHTML(context.Background(), "s", renderer.PageInfo{}, nil, renderer.ModeArticle); err == nil {
-		t.Error("RenderHTML(cb=nil) err = nil，期望非 nil")
+		t.Error("RenderHTML(cb=nil) err = nil, want non-nil")
 	}
 }
 
 func TestRenderPropagatesSidecarError(t *testing.T) {
 	r := newPair(t, func(f *fakeSidecar) {
 		f.recv()
-		f.send(map[string]any{"type": "error", "message": "炸了"})
+		f.send(map[string]any{"type": "error", "message": "boom"})
 	})
 	_, err := r.RenderHTML(context.Background(), "s", renderer.PageInfo{}, renderer.NopCallbacks{}, renderer.ModeArticle)
-	if err == nil || !strings.Contains(err.Error(), "炸了") {
-		t.Errorf("err = %v，期望包含 %q", err, "炸了")
+	if err == nil || !strings.Contains(err.Error(), "boom") {
+		t.Errorf("err = %v, want substring %q", err, "boom")
 	}
 }
 
@@ -157,7 +157,7 @@ func TestRenderRejectsUnknownMessageType(t *testing.T) {
 	})
 	_, err := r.RenderHTML(context.Background(), "s", renderer.PageInfo{}, renderer.NopCallbacks{}, renderer.ModeArticle)
 	if err == nil || !strings.Contains(err.Error(), "hello") {
-		t.Errorf("err = %v，期望包含 %q", err, "hello")
+		t.Errorf("err = %v, want substring %q", err, "hello")
 	}
 }
 
@@ -169,7 +169,7 @@ func TestRenderContextCanceled(t *testing.T) {
 
 	_, err := r.RenderHTML(ctx, "s", renderer.PageInfo{}, renderer.NopCallbacks{}, renderer.ModeArticle)
 	if !errors.Is(err, context.Canceled) {
-		t.Errorf("err = %v，期望 context.Canceled", err)
+		t.Errorf("err = %v, want context.Canceled", err)
 	}
 }
 
@@ -230,34 +230,34 @@ func TestDispatchRoundTrips(t *testing.T) {
 		t.Run(tt.method, func(t *testing.T) {
 			raw, err := json.Marshal(tt.args)
 			if err != nil {
-				t.Fatalf("marshal err = %v，期望 nil", err)
+				t.Fatalf("marshal err = %v, want nil", err)
 			}
 			got, err := dispatch(cb, tt.method, raw)
 			if err != nil {
-				t.Fatalf("dispatch(%s) err = %v，期望 nil", tt.method, err)
+				t.Fatalf("dispatch(%s) err = %v, want nil", tt.method, err)
 			}
 			encoded, err := marshal(got)
 			if err != nil {
-				t.Fatalf("marshal err = %v，期望 nil", err)
+				t.Fatalf("marshal err = %v, want nil", err)
 			}
 			if string(encoded) != tt.want {
-				t.Errorf("dispatch(%s) = %s，期望 %s", tt.method, encoded, tt.want)
+				t.Errorf("dispatch(%s) = %s, want %s", tt.method, encoded, tt.want)
 			}
 		})
 	}
 
 	if cb.moduleName != "Rate" {
-		t.Errorf("moduleName = %q，期望 Rate", cb.moduleName)
+		t.Errorf("moduleName = %q, want Rate", cb.moduleName)
 	}
 	if len(cb.includes) != 1 || cb.includes[0].FullName != "a" {
-		t.Errorf("includes = %+v，期望 [{a}]", cb.includes)
+		t.Errorf("includes = %+v, want [{a}]", cb.includes)
 	}
 }
 
 func TestDispatchUnknownMethod(t *testing.T) {
 	_, err := dispatch(renderer.NopCallbacks{}, "no_such_callback", json.RawMessage(`{}`))
 	if err == nil || !strings.Contains(err.Error(), "no_such_callback") {
-		t.Errorf("err = %v，期望包含 %q", err, "no_such_callback")
+		t.Errorf("err = %v, want substring %q", err, "no_such_callback")
 	}
 }
 
@@ -275,10 +275,10 @@ func TestEncodeExpression(t *testing.T) {
 	for _, tt := range tests {
 		got, err := marshal(encodeExpression(tt.in))
 		if err != nil {
-			t.Fatalf("marshal err = %v，期望 nil", err)
+			t.Fatalf("marshal err = %v, want nil", err)
 		}
 		if string(got) != tt.want {
-			t.Errorf("encodeExpression(%+v) = %s，期望 %s", tt.in, got, tt.want)
+			t.Errorf("encodeExpression(%+v) = %s, want %s", tt.in, got, tt.want)
 		}
 	}
 }

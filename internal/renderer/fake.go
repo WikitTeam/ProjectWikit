@@ -49,7 +49,7 @@ func (f *Fake) record(op string, ctx context.Context, source string, info PageIn
 		return Result{}, f.Err
 	}
 	if !mode.Valid() {
-		return Result{}, fmt.Errorf("未知渲染模式 %q", mode)
+		return Result{}, fmt.Errorf("unknown render mode %q", mode)
 	}
 	return f.Result, nil
 }

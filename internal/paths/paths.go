@@ -32,7 +32,7 @@ func New(override string) (*Paths, error) {
 
 	abs, err := filepath.Abs(root)
 	if err != nil {
-		return nil, fmt.Errorf("状态目录 %q 无法转为绝对路径: %w", root, err)
+		return nil, fmt.Errorf("resolve state directory %q to an absolute path: %w", root, err)
 	}
 
 	return &Paths{root: abs, source: source}, nil
@@ -51,7 +51,7 @@ func resolveRoot(override string) (string, Source, error) {
 func executableDir() (string, Source, error) {
 	exe, err := os.Executable()
 	if err != nil {
-		return "", "", fmt.Errorf("定位可执行文件失败: %w", err)
+		return "", "", fmt.Errorf("locate executable: %w", err)
 	}
 
 	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
@@ -62,7 +62,7 @@ func executableDir() (string, Source, error) {
 	if isGoRunTemp(dir) {
 		cwd, err := os.Getwd()
 		if err != nil {
-			return "", "", fmt.Errorf("go run 下取当前目录失败: %w", err)
+			return "", "", fmt.Errorf("get working directory under go run: %w", err)
 		}
 		return cwd, SourceGoRun, nil
 	}
@@ -102,21 +102,21 @@ func (p *Paths) Certs() string { return filepath.Join(p.Secrets(), "certs") }
 
 func (p *Paths) EnsureBase() error {
 	if err := os.MkdirAll(p.Secrets(), 0o700); err != nil {
-		return fmt.Errorf("建立 %s 失败: %w", p.Secrets(), err)
+		return fmt.Errorf("create %s: %w", p.Secrets(), err)
 	}
 	for _, dir := range []string{p.Files(), p.Archive()} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return fmt.Errorf("建立 %s 失败: %w", dir, err)
+			return fmt.Errorf("create %s: %w", dir, err)
 		}
 	}
 	return nil
 }
 
-var ErrEscapes = errors.New("路径越界")
+var ErrEscapes = errors.New("path escapes its base directory")
 
 func Resolve(base, rel string) (string, error) {
 	if filepath.IsAbs(rel) {
-		return "", fmt.Errorf("%w: %q 是绝对路径", ErrEscapes, rel)
+		return "", fmt.Errorf("%w: %q is absolute", ErrEscapes, rel)
 	}
 
 	joined := filepath.Join(base, rel)

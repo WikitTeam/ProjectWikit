@@ -19,8 +19,8 @@ var injectedCode string
 const MaxIncludeLevel = 25
 
 var (
-	ErrUserNotFound = errors.New("用户不存在")
-	ErrNoRepository = errors.New("没有配置数据源")
+	ErrUserNotFound = errors.New("user not found")
+	ErrNoRepository = errors.New("no repository configured")
 )
 
 type ModuleError struct{ Message string }

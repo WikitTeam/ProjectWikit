@@ -2,12 +2,11 @@ package expr
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
 
-var errSyntax = errors.New("表达式语法错误")
+var errSyntax = errors.New("expr: syntax error")
 
 type node interface{}
 
@@ -98,7 +97,7 @@ func lex(src string) ([]token, error) {
 		default:
 			op := matchOperator(src[i:])
 			if op == "" {
-				return nil, fmt.Errorf("%w: 无法识别的字符 %q", errSyntax, string(c))
+				return nil, errSyntax
 			}
 			out = append(out, token{kind: tokOp, text: op})
 			i += len(op)
@@ -134,7 +133,7 @@ func lexString(src string, start int) (string, int, error) {
 			return b.String(), i + 1, nil
 		case backslash:
 			if i+1 >= len(src) {
-				return "", 0, fmt.Errorf("%w: 字符串以反斜杠结尾", errSyntax)
+				return "", 0, errSyntax
 			}
 			switch src[i+1] {
 			case 'n':
@@ -152,7 +151,7 @@ func lexString(src string, start int) (string, int, error) {
 			i++
 		}
 	}
-	return "", 0, fmt.Errorf("%w: 字符串没有闭合", errSyntax)
+	return "", 0, errSyntax
 }
 
 func lexNumber(src string, start int) (Value, int, error) {
@@ -181,13 +180,13 @@ func lexNumber(src string, start int) (Value, int, error) {
 	if isFloat {
 		f, err := strconv.ParseFloat(text, 64)
 		if err != nil {
-			return None(), 0, fmt.Errorf("%w: %q 不是数字", errSyntax, text)
+			return None(), 0, errSyntax
 		}
 		return FloatOf(f), i, nil
 	}
 	n, err := strconv.ParseInt(text, 10, 64)
 	if err != nil {
-		return None(), 0, fmt.Errorf("%w: %q 不是整数", errSyntax, text)
+		return None(), 0, errSyntax
 	}
 	return IntOf(n), i, nil
 }
@@ -218,7 +217,7 @@ func parse(src string) (node, error) {
 		return nil, err
 	}
 	if p.peek().kind != tokEOF {
-		return nil, fmt.Errorf("%w: 表达式结尾有多余内容", errSyntax)
+		return nil, errSyntax
 	}
 	return n, nil
 }
@@ -351,7 +350,7 @@ func (p *parser) parseAtom() (node, error) {
 			return &constNode{v: None()}, nil
 		}
 		if _, ok := p.acceptOp("("); !ok {
-			return nil, fmt.Errorf("%w: 名字 %q 不是常量也不是函数调用", errSyntax, t.text)
+			return nil, errSyntax
 		}
 		args, err := p.parseArgs()
 		if err != nil {
@@ -365,12 +364,12 @@ func (p *parser) parseAtom() (node, error) {
 				return nil, err
 			}
 			if _, ok := p.acceptOp(")"); !ok {
-				return nil, fmt.Errorf("%w: 括号没有闭合", errSyntax)
+				return nil, errSyntax
 			}
 			return inner, nil
 		}
 	}
-	return nil, fmt.Errorf("%w: 意料之外的 %q", errSyntax, t.text)
+	return nil, errSyntax
 }
 
 func (p *parser) parseArgs() ([]node, error) {
@@ -390,6 +389,6 @@ func (p *parser) parseArgs() ([]node, error) {
 		if _, ok := p.acceptOp(")"); ok {
 			return args, nil
 		}
-		return nil, fmt.Errorf("%w: 参数列表没有闭合", errSyntax)
+		return nil, errSyntax
 	}
 }

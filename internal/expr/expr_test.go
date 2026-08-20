@@ -6,7 +6,7 @@ func check(t *testing.T, src string, want Value) {
 	t.Helper()
 	got := Evaluate(src)
 	if got != want {
-		t.Errorf("Evaluate(%q) = %+v，期望 %+v", src, got, want)
+		t.Errorf("Evaluate(%q) = %+v, want %+v", src, got, want)
 	}
 }
 
@@ -260,7 +260,7 @@ func TestEvaluateRandomStaysInRange(t *testing.T) {
 	for range 50 {
 		got := Evaluate("random(1, 3)")
 		if got.Kind != KindInt || got.Int < 1 || got.Int > 3 {
-			t.Fatalf("Evaluate(\"random(1, 3)\") = %+v，期望 1..3 的整数", got)
+			t.Fatalf("Evaluate(\"random(1, 3)\") = %+v, want an int in 1..3", got)
 		}
 	}
 	check(t, "random(3, 1)", None())
@@ -282,7 +282,7 @@ func TestPyStr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.want, func(t *testing.T) {
 			if got := tt.in.PyStr(); got != tt.want {
-				t.Errorf("PyStr(%+v) = %q，期望 %q", tt.in, got, tt.want)
+				t.Errorf("PyStr(%+v) = %q, want %q", tt.in, got, tt.want)
 			}
 		})
 	}
@@ -304,7 +304,7 @@ func TestTruthy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.in.PyStr(), func(t *testing.T) {
 			if got := tt.in.Truthy(); got != tt.want {
-				t.Errorf("Truthy(%+v) = %v，期望 %v", tt.in, got, tt.want)
+				t.Errorf("Truthy(%+v) = %v, want %v", tt.in, got, tt.want)
 			}
 		})
 	}

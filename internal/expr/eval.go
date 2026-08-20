@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -32,12 +31,12 @@ func eval(n node) (Value, error) {
 	case *callNode:
 		return evalCall(n)
 	}
-	return None(), fmt.Errorf("%w: 未知节点", errType)
+	return None(), errType
 }
 
 func evalUnary(n *unaryNode) (Value, error) {
 	if n.op != "-" {
-		return None(), fmt.Errorf("%w: 一元运算 %q", errType, n.op)
+		return None(), errType
 	}
 	x, err := eval(n.x)
 	if err != nil {
@@ -80,7 +79,7 @@ func evalBinary(n *binNode) (Value, error) {
 			return None(), errType
 		}
 		if y.toFloat() == 0 {
-			return None(), fmt.Errorf("%w: 除以零", errType)
+			return None(), errType
 		}
 		return FloatOf(x.toFloat() / y.toFloat()), nil
 	case "^":
@@ -92,7 +91,7 @@ func evalBinary(n *binNode) (Value, error) {
 		}
 		return IntOf(x.toInt() ^ y.toInt()), nil
 	}
-	return None(), fmt.Errorf("%w: 二元运算 %q", errType, n.op)
+	return None(), errType
 }
 
 func arith(x, y Value, ints func(a, b int64) int64, floats func(a, b float64) float64) (Value, error) {
@@ -162,7 +161,7 @@ func compare(x Value, op string, y Value) (bool, error) {
 	case ">=":
 		return cmp >= 0, nil
 	}
-	return false, fmt.Errorf("%w: 比较运算 %q", errType, op)
+	return false, errType
 }
 
 func equal(x, y Value) bool {

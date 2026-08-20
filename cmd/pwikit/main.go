@@ -34,7 +34,7 @@ func main() {
 func run(args []string) error {
 	if len(args) == 0 {
 		usage()
-		return errors.New("缺少子命令")
+		return errors.New("missing subcommand")
 	}
 	switch args[0] {
 	case "serve":
@@ -48,27 +48,27 @@ func run(args []string) error {
 		return nil
 	default:
 		usage()
-		return fmt.Errorf("未知子命令 %q", args[0])
+		return fmt.Errorf("unknown subcommand %q", args[0])
 	}
 }
 
 func usage() {
-	fmt.Fprint(os.Stderr, `用法: pwikit <子命令> [选项]
+	fmt.Fprint(os.Stderr, `Usage: pwikit <command> [options]
 
-子命令:
-  serve   启动 HTTP 服务
-  routes  打印静态路由表
-  modules 打印 wikidot 模块清单
-  help    显示本帮助
+Commands:
+  serve     start the HTTP server
+  routes    print the static route table
+  modules   print the wikidot module list
+  help      show this help
 `)
 }
 
 func serve(args []string) error {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
-	listen := fs.String("listen", defaultListen, "监听地址")
-	upstream := fs.String("upstream", envOr(envUpstream, defaultUpstream), "转发未处理请求的上游地址")
-	dataDir := fs.String("data-dir", "", "状态目录，默认取可执行文件所在目录")
-	trusted := fs.String("trusted-proxies", "", "可信前置代理的地址或网段，逗号分隔；留空则不信任任何 X-Forwarded-* 头")
+	listen := fs.String("listen", defaultListen, "listen address")
+	upstream := fs.String("upstream", envOr(envUpstream, defaultUpstream), "upstream address for requests pwikit does not handle")
+	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
+	trusted := fs.String("trusted-proxies", "", "trusted reverse proxy addresses or CIDRs, comma separated; empty trusts no X-Forwarded-* header")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil

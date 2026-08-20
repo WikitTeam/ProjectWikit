@@ -32,14 +32,14 @@ func New(binary string) (*Renderer, error) {
 	cmd := exec.Command(binary)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, fmt.Errorf("接管 sidecar stdin 失败: %w", err)
+		return nil, fmt.Errorf("open sidecar stdin: %w", err)
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, fmt.Errorf("接管 sidecar stdout 失败: %w", err)
+		return nil, fmt.Errorf("open sidecar stdout: %w", err)
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("启动 sidecar %q 失败: %w", binary, err)
+		return nil, fmt.Errorf("start sidecar %q: %w", binary, err)
 	}
 
 	return &Renderer{
@@ -102,10 +102,10 @@ type wireResult struct {
 
 func (r *Renderer) render(ctx context.Context, op, source string, info renderer.PageInfo, cb renderer.Callbacks, mode renderer.Mode) (renderer.Result, error) {
 	if !mode.Valid() {
-		return renderer.Result{}, fmt.Errorf("未知渲染模式 %q", mode)
+		return renderer.Result{}, fmt.Errorf("unknown render mode %q", mode)
 	}
 	if cb == nil {
-		return renderer.Result{}, fmt.Errorf("Callbacks 为 nil")
+		return renderer.Result{}, fmt.Errorf("callbacks is nil")
 	}
 
 	r.mu.Lock()
@@ -147,7 +147,7 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 			}, nil
 
 		case "error":
-			return renderer.Result{}, fmt.Errorf("sidecar 报错: %s", msg.Message)
+			return renderer.Result{}, fmt.Errorf("sidecar error: %s", msg.Message)
 
 		case "callback":
 			value, err := dispatch(cb, msg.Method, msg.Args)
@@ -159,7 +159,7 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 			}
 
 		default:
-			return renderer.Result{}, fmt.Errorf("sidecar 消息 type = %q，期望 result/error/callback", msg.Type)
+			return renderer.Result{}, fmt.Errorf("sidecar message type = %q, want result/error/callback", msg.Type)
 		}
 	}
 }
@@ -181,16 +181,16 @@ func marshal(v any) ([]byte, error) {
 func (r *Renderer) send(v any) error {
 	buf, err := marshal(v)
 	if err != nil {
-		return fmt.Errorf("序列化出站消息失败: %w", err)
+		return fmt.Errorf("encode outbound message: %w", err)
 	}
 
 	var head [4]byte
 	binary.BigEndian.PutUint32(head[:], uint32(len(buf)))
 	if _, err := r.in.Write(head[:]); err != nil {
-		return fmt.Errorf("写消息长度失败: %w", err)
+		return fmt.Errorf("write message length: %w", err)
 	}
 	if _, err := r.in.Write(buf); err != nil {
-		return fmt.Errorf("写消息体失败: %w", err)
+		return fmt.Errorf("write message body: %w", err)
 	}
 	return nil
 }
@@ -198,18 +198,18 @@ func (r *Renderer) send(v any) error {
 func (r *Renderer) recv(v any) error {
 	var head [4]byte
 	if _, err := io.ReadFull(r.out, head[:]); err != nil {
-		return fmt.Errorf("读消息长度失败: %w", err)
+		return fmt.Errorf("read message length: %w", err)
 	}
 	n := binary.BigEndian.Uint32(head[:])
 	if n > maxMessageBytes {
-		return fmt.Errorf("消息长度 %d 超过上限 %d", n, maxMessageBytes)
+		return fmt.Errorf("message length %d exceeds limit %d", n, maxMessageBytes)
 	}
 	buf := make([]byte, n)
 	if _, err := io.ReadFull(r.out, buf); err != nil {
-		return fmt.Errorf("读消息体失败: %w", err)
+		return fmt.Errorf("read message body: %w", err)
 	}
 	if err := json.Unmarshal(buf, v); err != nil {
-		return fmt.Errorf("解析入站消息失败: %w", err)
+		return fmt.Errorf("decode inbound message: %w", err)
 	}
 	return nil
 }

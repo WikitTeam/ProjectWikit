@@ -19,7 +19,7 @@ func newProxy(t *testing.T, upstream *httptest.Server) *Proxy {
 	t.Helper()
 	p, err := New(upstream.URL, nil, quietLog())
 	if err != nil {
-		t.Fatalf("New(%q) err = %v，期望 nil", upstream.URL, err)
+		t.Fatalf("New(%q) err = %v, want nil", upstream.URL, err)
 	}
 	return p
 }
@@ -29,15 +29,15 @@ func TestNewRejectsBadTarget(t *testing.T) {
 		name   string
 		target string
 	}{
-		{"空串", ""},
-		{"缺 scheme", "127.0.0.1:8000"},
-		{"scheme 不是 http", "ftp://127.0.0.1:8000"},
-		{"缺 host", "http://"},
+		{"empty string", ""},
+		{"missing scheme", "127.0.0.1:8000"},
+		{"scheme is not http", "ftp://127.0.0.1:8000"},
+		{"missing host", "http://"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if _, err := New(tt.target, nil, quietLog()); err == nil {
-				t.Errorf("New(%q) err = nil，期望非 nil", tt.target)
+				t.Errorf("New(%q) err = nil, want non-nil", tt.target)
 			}
 		})
 	}
@@ -57,12 +57,12 @@ func TestProxyPreservesHost(t *testing.T) {
 	req.Host = "scpfoundation.example"
 	resp, err := front.Client().Do(req)
 	if err != nil {
-		t.Fatalf("Do() err = %v，期望 nil", err)
+		t.Fatalf("Do() err = %v, want nil", err)
 	}
 	resp.Body.Close()
 
 	if got != "scpfoundation.example" {
-		t.Errorf("上游收到的 Host = %q，期望 %q", got, "scpfoundation.example")
+		t.Errorf("upstream got Host = %q, want %q", got, "scpfoundation.example")
 	}
 }
 
@@ -82,15 +82,15 @@ func TestProxyDropsClientForwardedHeaders(t *testing.T) {
 	req.Header.Set("X-Forwarded-Proto", "https")
 	resp, err := front.Client().Do(req)
 	if err != nil {
-		t.Fatalf("Do() err = %v，期望 nil", err)
+		t.Fatalf("Do() err = %v, want nil", err)
 	}
 	resp.Body.Close()
 
 	if strings.Contains(xff, "1.2.3.4") {
-		t.Errorf("上游收到的 X-Forwarded-For = %q，期望不含客户端伪造的 1.2.3.4", xff)
+		t.Errorf("upstream got X-Forwarded-For = %q, want no client-supplied 1.2.3.4", xff)
 	}
 	if proto != "http" {
-		t.Errorf("上游收到的 X-Forwarded-Proto = %q，期望 %q", proto, "http")
+		t.Errorf("upstream got X-Forwarded-Proto = %q, want %q", proto, "http")
 	}
 }
 
@@ -106,12 +106,12 @@ func TestProxyPassesRequestURIThrough(t *testing.T) {
 
 	resp, err := front.Client().Get(front.URL + "/local--files/a%2Fb.png?size=200")
 	if err != nil {
-		t.Fatalf("Get() err = %v，期望 nil", err)
+		t.Fatalf("Get() err = %v, want nil", err)
 	}
 	resp.Body.Close()
 
 	if got != "/local--files/a%2Fb.png?size=200" {
-		t.Errorf("上游收到的 RequestURI = %q，期望 %q", got, "/local--files/a%2Fb.png?size=200")
+		t.Errorf("upstream got RequestURI = %q, want %q", got, "/local--files/a%2Fb.png?size=200")
 	}
 }
 
@@ -128,19 +128,19 @@ func TestProxyPassesStatusAndBody(t *testing.T) {
 
 	resp, err := front.Client().Get(front.URL + "/")
 	if err != nil {
-		t.Fatalf("Get() err = %v，期望 nil", err)
+		t.Fatalf("Get() err = %v, want nil", err)
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusTeapot {
-		t.Errorf("StatusCode = %d，期望 %d", resp.StatusCode, http.StatusTeapot)
+		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusTeapot)
 	}
 	if resp.Header.Get("X-Wikit") != "1" {
-		t.Errorf("X-Wikit = %q，期望 %q", resp.Header.Get("X-Wikit"), "1")
+		t.Errorf("X-Wikit = %q, want %q", resp.Header.Get("X-Wikit"), "1")
 	}
 	if string(body) != "内容" {
-		t.Errorf("body = %q，期望 %q", body, "内容")
+		t.Errorf("body = %q, want %q", body, "内容")
 	}
 }
 
@@ -154,12 +154,12 @@ func TestProxyReturns502WhenUpstreamDown(t *testing.T) {
 
 	resp, err := front.Client().Get(front.URL + "/")
 	if err != nil {
-		t.Fatalf("Get() err = %v，期望 nil", err)
+		t.Fatalf("Get() err = %v, want nil", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusBadGateway {
-		t.Errorf("StatusCode = %d，期望 %d", resp.StatusCode, http.StatusBadGateway)
+		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusBadGateway)
 	}
 }
 
@@ -172,11 +172,11 @@ func TestProxyHonorsForwardedForFromTrustedPeer(t *testing.T) {
 
 	trust, err := proxyheader.NewTrust([]string{"127.0.0.0/8", "::1/128"})
 	if err != nil {
-		t.Fatalf("NewTrust() err = %v，期望 nil", err)
+		t.Fatalf("NewTrust() err = %v, want nil", err)
 	}
 	p, err := New(up.URL, trust, quietLog())
 	if err != nil {
-		t.Fatalf("New() err = %v，期望 nil", err)
+		t.Fatalf("New() err = %v, want nil", err)
 	}
 
 	front := httptest.NewServer(p)
@@ -186,12 +186,12 @@ func TestProxyHonorsForwardedForFromTrustedPeer(t *testing.T) {
 	req.Header.Set("X-Forwarded-For", "1.2.3.4")
 	resp, err := front.Client().Do(req)
 	if err != nil {
-		t.Fatalf("Do() err = %v，期望 nil", err)
+		t.Fatalf("Do() err = %v, want nil", err)
 	}
 	resp.Body.Close()
 
 	if xff != "1.2.3.4" {
-		t.Errorf("上游收到的 X-Forwarded-For = %q，期望 %q", xff, "1.2.3.4")
+		t.Errorf("upstream got X-Forwarded-For = %q, want %q", xff, "1.2.3.4")
 	}
 }
 
@@ -209,11 +209,11 @@ func TestProxySetsForwardedHostToInboundHost(t *testing.T) {
 	req.Host = "media.example"
 	resp, err := front.Client().Do(req)
 	if err != nil {
-		t.Fatalf("Do() err = %v，期望 nil", err)
+		t.Fatalf("Do() err = %v, want nil", err)
 	}
 	resp.Body.Close()
 
 	if got != "media.example" {
-		t.Errorf("上游收到的 X-Forwarded-Host = %q，期望 %q", got, "media.example")
+		t.Errorf("upstream got X-Forwarded-Host = %q, want %q", got, "media.example")
 	}
 }

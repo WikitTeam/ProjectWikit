@@ -14,7 +14,7 @@ func stub(body string) http.Handler {
 
 func TestValidateAcceptsTable(t *testing.T) {
 	if err := Validate(Table); err != nil {
-		t.Errorf("Validate(Table) err = %v，期望 nil", err)
+		t.Errorf("Validate(Table) err = %v, want nil", err)
 	}
 }
 
@@ -23,16 +23,16 @@ func TestValidateRejectsBadTable(t *testing.T) {
 		name  string
 		table []Route
 	}{
-		{"前缀不以 / 开头", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "api/", Owner: OwnerDjango}}},
-		{"前缀不以 / 结尾", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api", Owner: OwnerDjango}}},
-		{"前缀重复", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerGo}}},
-		{"owner 非法", []Route{{Prefix: "/", Owner: "rust"}}},
-		{"缺兜底前缀", []Route{{Prefix: "/api/", Owner: OwnerDjango}}},
+		{"prefix does not start with slash", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "api/", Owner: OwnerDjango}}},
+		{"prefix does not end with slash", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api", Owner: OwnerDjango}}},
+		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerGo}}},
+		{"invalid owner", []Route{{Prefix: "/", Owner: "rust"}}},
+		{"missing fallback prefix", []Route{{Prefix: "/api/", Owner: OwnerDjango}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := Validate(tt.table); err == nil {
-				t.Error("Validate() err = nil，期望非 nil")
+				t.Error("Validate() err = nil, want non-nil")
 			}
 		})
 	}
@@ -41,7 +41,7 @@ func TestValidateRejectsBadTable(t *testing.T) {
 func TestMuxRouteLongestPrefixWins(t *testing.T) {
 	m, err := New(Table, stub("django"), nil)
 	if err != nil {
-		t.Fatalf("New() err = %v，期望 nil", err)
+		t.Fatalf("New() err = %v, want nil", err)
 	}
 
 	tests := []struct {
@@ -62,7 +62,7 @@ func TestMuxRouteLongestPrefixWins(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			if got := m.Route(tt.path).Prefix; got != tt.want {
-				t.Errorf("Route(%q).Prefix = %q，期望 %q", tt.path, got, tt.want)
+				t.Errorf("Route(%q).Prefix = %q, want %q", tt.path, got, tt.want)
 			}
 		})
 	}
@@ -70,14 +70,14 @@ func TestMuxRouteLongestPrefixWins(t *testing.T) {
 
 func TestNewRejectsNilDjango(t *testing.T) {
 	if _, err := New(Table, nil, nil); err == nil {
-		t.Error("New(django=nil) err = nil，期望非 nil")
+		t.Error("New(django=nil) err = nil, want non-nil")
 	}
 }
 
 func TestNewRejectsGoRouteWithoutHandler(t *testing.T) {
 	table := []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerGo}}
 	if _, err := New(table, stub("django"), nil); err == nil {
-		t.Error("New() err = nil，期望非 nil")
+		t.Error("New() err = nil, want non-nil")
 	}
 }
 
@@ -85,7 +85,7 @@ func TestNewRejectsDjangoRouteWithHandler(t *testing.T) {
 	table := []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerDjango}}
 	handlers := map[string]http.Handler{"/api/": stub("go")}
 	if _, err := New(table, stub("django"), handlers); err == nil {
-		t.Error("New() err = nil，期望非 nil")
+		t.Error("New() err = nil, want non-nil")
 	}
 }
 
@@ -93,7 +93,7 @@ func TestNewRejectsHandlerOutsideTable(t *testing.T) {
 	table := []Route{{Prefix: "/", Owner: OwnerDjango}}
 	handlers := map[string]http.Handler{"/forum/": stub("go")}
 	if _, err := New(table, stub("django"), handlers); err == nil {
-		t.Error("New() err = nil，期望非 nil")
+		t.Error("New() err = nil, want non-nil")
 	}
 }
 
@@ -104,7 +104,7 @@ func TestMuxServeHTTPDispatches(t *testing.T) {
 	}
 	m, err := New(table, stub("django"), map[string]http.Handler{"/api/": stub("go")})
 	if err != nil {
-		t.Fatalf("New() err = %v，期望 nil", err)
+		t.Fatalf("New() err = %v, want nil", err)
 	}
 
 	tests := []struct {
@@ -119,7 +119,7 @@ func TestMuxServeHTTPDispatches(t *testing.T) {
 			rec := httptest.NewRecorder()
 			m.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tt.path, nil))
 			if got := rec.Body.String(); got != tt.want {
-				t.Errorf("ServeHTTP(%q) = %q，期望 %q", tt.path, got, tt.want)
+				t.Errorf("ServeHTTP(%q) = %q, want %q", tt.path, got, tt.want)
 			}
 		})
 	}

@@ -10,12 +10,12 @@ import (
 func dispatch(cb renderer.Callbacks, method string, raw json.RawMessage) (any, error) {
 	decode := func(v any) error {
 		if err := json.Unmarshal(raw, v); err != nil {
-			return fmt.Errorf("回调 %s 的参数解析失败: %w", method, err)
+			return fmt.Errorf("decode arguments for callback %s: %w", method, err)
 		}
 		return nil
 	}
 	fail := func(err error) (any, error) {
-		return nil, fmt.Errorf("回调 %s 失败: %w", method, err)
+		return nil, fmt.Errorf("callback %s: %w", method, err)
 	}
 
 	switch method {
@@ -179,7 +179,7 @@ func dispatch(cb renderer.Callbacks, method string, raw json.RawMessage) (any, e
 		return v, nil
 	}
 
-	return nil, fmt.Errorf("sidecar 请求了未知回调 %q", method)
+	return nil, fmt.Errorf("sidecar asked for unknown callback %q", method)
 }
 
 func encodeExpression(v renderer.ExpressionResult) map[string]any {

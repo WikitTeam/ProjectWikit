@@ -24,7 +24,7 @@ type Value struct {
 	Str   string
 }
 
-var errType = errors.New("类型不支持该运算")
+var errType = errors.New("expr: unsupported operand types")
 
 func None() Value             { return Value{Kind: KindNone} }
 func BoolOf(b bool) Value     { return Value{Kind: KindBool, Bool: b} }

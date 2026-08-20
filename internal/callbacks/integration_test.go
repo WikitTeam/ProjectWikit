@@ -54,24 +54,24 @@ func renderWith(t *testing.T, source string) string {
 	t.Helper()
 	binary := os.Getenv(sidecar.EnvBinary)
 	if binary == "" {
-		t.Skipf("未设置 %s，跳过真实渲染链路测试", sidecar.EnvBinary)
+		t.Skipf("%s not set, skipping the real render chain test", sidecar.EnvBinary)
 	}
 	r, err := sidecar.New(binary)
 	if err != nil {
-		t.Fatalf("sidecar.New(%q) err = %v，期望 nil", binary, err)
+		t.Fatalf("sidecar.New(%q) err = %v, want nil", binary, err)
 	}
 	t.Cleanup(func() { r.Close() })
 
 	bundle, err := i18n.Load("")
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v，期望 nil", err)
+		t.Fatalf("i18n.Load() err = %v, want nil", err)
 	}
 	cb := New(bundle.Localizer(i18n.DefaultLanguage), siteRepo{existing: map[string]bool{"exists": true}})
 
 	info := renderer.PageInfo{Page: "173", Category: "scp", Domain: "example.org"}
 	got, err := r.RenderHTML(context.Background(), source, info, cb, renderer.ModeArticle)
 	if err != nil {
-		t.Fatalf("RenderHTML(%q) err = %v，期望 nil", source, err)
+		t.Fatalf("RenderHTML(%q) err = %v, want nil", source, err)
 	}
 	return got.Body
 }
@@ -82,20 +82,20 @@ func TestRealRenderUsesCallbacks(t *testing.T) {
 		source string
 		want   string
 	}{
-		{"模块", "[[module Rate]]", `<div class="module">Rate|</div>`},
-		{"带 body 的模块", "[[module CSS]]div{}[[/module]]", `<div class="module">CSS|div{}</div>`},
-		{"红链", "[[[missing|红]]]", `class="newpage"`},
-		{"已存在的链接不是红链", "[[[exists|蓝]]]", `href="/exists"`},
-		{"用户", "[[user kakushi]]", `<span class="user">kakushi</span>`},
-		{"用户不存在", "[[user nobody]]", "用户 'nobody' 不存在"},
-		{"include 缺失", "[[include :other:page]]", "不存在"},
-		{"include 存在", "[[include exists]]", "<strong>被包含的内容</strong>"},
+		{"module", "[[module Rate]]", `<div class="module">Rate|</div>`},
+		{"module with a body", "[[module CSS]]div{}[[/module]]", `<div class="module">CSS|div{}</div>`},
+		{"red link", "[[[missing|红]]]", `class="newpage"`},
+		{"existing link is not a red link", "[[[exists|蓝]]]", `href="/exists"`},
+		{"user", "[[user kakushi]]", `<span class="user">kakushi</span>`},
+		{"user not found", "[[user nobody]]", "用户 'nobody' 不存在"},
+		{"include miss", "[[include :other:page]]", "不存在"},
+		{"include hit", "[[include exists]]", "<strong>被包含的内容</strong>"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := renderWith(t, tt.source)
 			if !strings.Contains(got, tt.want) {
-				t.Errorf("RenderHTML(%q) = %q，期望包含 %q", tt.source, got, tt.want)
+				t.Errorf("RenderHTML(%q) = %q, want substring %q", tt.source, got, tt.want)
 			}
 		})
 	}
@@ -104,6 +104,6 @@ func TestRealRenderUsesCallbacks(t *testing.T) {
 func TestRealRenderUsesI18nCatalog(t *testing.T) {
 	got := renderWith(t, "正文[[footnote]]脚注内容[[/footnote]]")
 	if !strings.Contains(got, "脚注") {
-		t.Errorf("RenderHTML() = %q，期望包含 %q", got, "脚注")
+		t.Errorf("RenderHTML() = %q, want substring %q", got, "脚注")
 	}
 }

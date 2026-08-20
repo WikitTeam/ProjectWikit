@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"fmt"
 	"math"
 	"math/rand/v2"
 	"strings"
@@ -23,7 +22,7 @@ func evalCall(n *callNode) (Value, error) {
 	}
 
 	if brokenTrig[n.name] {
-		return None(), fmt.Errorf("%w: %s 在 Python 侧就是坏的", errType, n.name)
+		return None(), errType
 	}
 
 	switch n.name {
@@ -52,7 +51,7 @@ func evalCall(n *callNode) (Value, error) {
 	case "substr":
 		return substrOf(args)
 	}
-	return None(), fmt.Errorf("%w: 未知函数 %q", errType, n.name)
+	return None(), errType
 }
 
 func arity(args []Value, allowed ...int) error {
@@ -61,12 +60,12 @@ func arity(args []Value, allowed ...int) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("%w: 参数个数 %d", errType, len(args))
+	return errType
 }
 
 func extremum(name string, args []Value) (Value, error) {
 	if len(args) < 2 {
-		return None(), fmt.Errorf("%w: %s 需要至少两个参数", errType, name)
+		return None(), errType
 	}
 	best := args[0]
 	for _, v := range args[1:] {
@@ -151,7 +150,7 @@ func floorDiv(args []Value) (Value, error) {
 		return None(), errType
 	}
 	if y.toFloat() == 0 {
-		return None(), fmt.Errorf("%w: 除以零", errType)
+		return None(), errType
 	}
 	if x.integral() && y.integral() {
 		a, b := x.toInt(), y.toInt()
@@ -173,7 +172,7 @@ func randomOf(args []Value) (Value, error) {
 	}
 	low, high := args[0].toInt(), args[1].toInt()
 	if low > high {
-		return None(), fmt.Errorf("%w: random 的下界大于上界", errType)
+		return None(), errType
 	}
 	return IntOf(low + rand.Int64N(high-low+1)), nil
 }
@@ -187,7 +186,7 @@ func sqrtOf(args []Value) (Value, error) {
 	}
 	f := args[0].toFloat()
 	if f < 0 {
-		return None(), fmt.Errorf("%w: sqrt 的参数为负", errType)
+		return None(), errType
 	}
 	return FloatOf(math.Sqrt(f)), nil
 }

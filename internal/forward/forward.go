@@ -30,13 +30,13 @@ var _ http.Handler = (*Proxy)(nil)
 func New(target string, trust *proxyheader.Trust, log *slog.Logger) (*Proxy, error) {
 	u, err := url.Parse(target)
 	if err != nil {
-		return nil, fmt.Errorf("上游地址 %q 解析失败: %w", target, err)
+		return nil, fmt.Errorf("parse upstream %q: %w", target, err)
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
-		return nil, fmt.Errorf("上游地址 %q 的 scheme = %q，期望 http 或 https", target, u.Scheme)
+		return nil, fmt.Errorf("upstream %q scheme = %q, want http or https", target, u.Scheme)
 	}
 	if u.Host == "" {
-		return nil, fmt.Errorf("上游地址 %q 缺少 host", target)
+		return nil, fmt.Errorf("upstream %q has no host", target)
 	}
 	if trust == nil {
 		trust, err = proxyheader.NewTrust(nil)
@@ -80,6 +80,6 @@ func (p *Proxy) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, context.Canceled) {
 		return
 	}
-	p.log.Error("转发失败", "path", r.URL.Path, "upstream", p.target.String(), "err", err)
-	http.Error(w, "无法连接上游 "+p.target.String(), http.StatusBadGateway)
+	p.log.Error("forward failed", "path", r.URL.Path, "upstream", p.target.String(), "err", err)
+	http.Error(w, "cannot reach upstream "+p.target.String(), http.StatusBadGateway)
 }
