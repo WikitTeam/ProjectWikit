@@ -107,3 +107,26 @@ func TestRealRenderUsesI18nCatalog(t *testing.T) {
 		t.Errorf("RenderHTML() = %q, want substring %q", got, "脚注")
 	}
 }
+
+func TestRealRenderMatchesDjangoExpressionOutput(t *testing.T) {
+	tests := []struct {
+		expr string
+		want string
+	}{
+		{"1 == 1", "<p>1</p>"},
+		{"1 == 2", "<p>0</p>"},
+		{"1 + 1", "<p>2</p>"},
+		{"2 ^ 3", "<p>1</p>"},
+		{"sin(0)", "<p></p>"},
+		{"round(2.5)", "<p>2</p>"},
+		{"'a' or 'b'", "<p>1</p>"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.expr, func(t *testing.T) {
+			got := strings.TrimSpace(renderWith(t, "[[#expr "+tt.expr+"]]"))
+			if got != tt.want {
+				t.Errorf("[[#expr %s]] = %q, want %q", tt.expr, got, tt.want)
+			}
+		})
+	}
+}
