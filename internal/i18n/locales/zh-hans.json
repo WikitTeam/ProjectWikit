@@ -5,7 +5,11 @@
   "footnote": "脚注",
   "footnote-block-title": "脚注",
   "image-context-bad": "图像地址不正确",
+  "include-create": "立刻创建",
+  "include-loop": "插入的页面 \"{name}\" 导致了无限包含循环",
+  "include-missing": "插入的页面 \"{name}\" 不存在",
   "table-of-contents": "内容",
   "toc-close": "关闭",
-  "toc-open": "展开"
+  "toc-open": "展开",
+  "user-not-found": "用户 '{name}' 不存在"
 }

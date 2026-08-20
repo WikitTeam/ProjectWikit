@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
+	"github.com/WikitTeam/ProjectWikit/internal/modules"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
@@ -38,6 +39,8 @@ func run(args []string) error {
 	switch args[0] {
 	case "serve":
 		return serve(args[1:])
+	case "modules":
+		return printModules()
 	case "routes":
 		return printRoutes()
 	case "help", "-h", "--help":
@@ -55,6 +58,7 @@ func usage() {
 子命令:
   serve   启动 HTTP 服务
   routes  打印静态路由表
+  modules 打印 wikidot 模块清单
   help    显示本帮助
 `)
 }
@@ -121,6 +125,22 @@ func printRoutes() error {
 	fmt.Fprintln(w, "PREFIX\tOWNER\tLABEL")
 	for _, r := range routing.Table {
 		fmt.Fprintf(w, "%s\t%s\t%s\n", r.Prefix, r.Owner, r.Label)
+	}
+	return w.Flush()
+}
+
+func printModules() error {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "MODULE\tBODY\tSTATUS")
+	for _, info := range modules.All() {
+		status := "pending"
+		switch {
+		case info.Removed:
+			status = "removed"
+		case info.Ported:
+			status = "ported"
+		}
+		fmt.Fprintf(w, "%s\t%t\t%s\n", info.Name, info.HasContent, status)
 	}
 	return w.Flush()
 }
