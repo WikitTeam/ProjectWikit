@@ -7,11 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
 )
 
@@ -62,7 +64,11 @@ func serve(args []string) error {
 	listen := fs.String("listen", defaultListen, "监听地址")
 	upstream := fs.String("upstream", envOr(envUpstream, defaultUpstream), "转发未处理请求的上游地址")
 	dataDir := fs.String("data-dir", "", "状态目录，默认取可执行文件所在目录")
+	trusted := fs.String("trusted-proxies", "", "可信前置代理的地址或网段，逗号分隔；留空则不信任任何 X-Forwarded-* 头")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 
@@ -76,7 +82,12 @@ func serve(args []string) error {
 
 	log := slog.Default()
 
-	proxy, err := forward.New(*upstream, log)
+	trust, err := proxyheader.NewTrust(strings.Split(*trusted, ","))
+	if err != nil {
+		return err
+	}
+
+	proxy, err := forward.New(*upstream, trust, log)
 	if err != nil {
 		return err
 	}

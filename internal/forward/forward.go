@@ -8,17 +8,26 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
+)
+
+const (
+	headerFor   = "X-Forwarded-For"
+	headerHost  = "X-Forwarded-Host"
+	headerProto = "X-Forwarded-Proto"
 )
 
 type Proxy struct {
 	target *url.URL
+	trust  *proxyheader.Trust
 	rp     *httputil.ReverseProxy
 	log    *slog.Logger
 }
 
 var _ http.Handler = (*Proxy)(nil)
 
-func New(target string, log *slog.Logger) (*Proxy, error) {
+func New(target string, trust *proxyheader.Trust, log *slog.Logger) (*Proxy, error) {
 	u, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("上游地址 %q 解析失败: %w", target, err)
@@ -29,11 +38,17 @@ func New(target string, log *slog.Logger) (*Proxy, error) {
 	if u.Host == "" {
 		return nil, fmt.Errorf("上游地址 %q 缺少 host", target)
 	}
+	if trust == nil {
+		trust, err = proxyheader.NewTrust(nil)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if log == nil {
 		log = slog.Default()
 	}
 
-	p := &Proxy{target: u, log: log}
+	p := &Proxy{target: u, trust: trust, log: log}
 	p.rp = &httputil.ReverseProxy{Rewrite: p.rewrite, ErrorHandler: p.handleError}
 	return p, nil
 }
@@ -45,10 +60,17 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Proxy) rewrite(pr *httputil.ProxyRequest) {
-	pr.Out.Header.Del("X-Forwarded-For")
-	pr.Out.Header.Del("X-Forwarded-Host")
-	pr.Out.Header.Del("X-Forwarded-Proto")
-	pr.SetXForwarded()
+	client, ok := p.trust.ClientIP(pr.In)
+	scheme := p.trust.Scheme(pr.In)
+
+	pr.Out.Header.Del(headerFor)
+	pr.Out.Header.Del(headerHost)
+	pr.Out.Header.Del(headerProto)
+	if ok {
+		pr.Out.Header.Set(headerFor, client.String())
+	}
+	pr.Out.Header.Set(headerHost, pr.In.Host)
+	pr.Out.Header.Set(headerProto, scheme)
 
 	pr.SetURL(p.target)
 	pr.Out.Host = pr.In.Host

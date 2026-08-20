@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 )
 
 func quietLog() *slog.Logger {
@@ -15,7 +17,7 @@ func quietLog() *slog.Logger {
 
 func newProxy(t *testing.T, upstream *httptest.Server) *Proxy {
 	t.Helper()
-	p, err := New(upstream.URL, quietLog())
+	p, err := New(upstream.URL, nil, quietLog())
 	if err != nil {
 		t.Fatalf("New(%q) err = %v，期望 nil", upstream.URL, err)
 	}
@@ -34,7 +36,7 @@ func TestNewRejectsBadTarget(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := New(tt.target, quietLog()); err == nil {
+			if _, err := New(tt.target, nil, quietLog()); err == nil {
 				t.Errorf("New(%q) err = nil，期望非 nil", tt.target)
 			}
 		})
@@ -158,5 +160,60 @@ func TestProxyReturns502WhenUpstreamDown(t *testing.T) {
 
 	if resp.StatusCode != http.StatusBadGateway {
 		t.Errorf("StatusCode = %d，期望 %d", resp.StatusCode, http.StatusBadGateway)
+	}
+}
+
+func TestProxyHonorsForwardedForFromTrustedPeer(t *testing.T) {
+	var xff string
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		xff = r.Header.Get("X-Forwarded-For")
+	}))
+	defer up.Close()
+
+	trust, err := proxyheader.NewTrust([]string{"127.0.0.0/8", "::1/128"})
+	if err != nil {
+		t.Fatalf("NewTrust() err = %v，期望 nil", err)
+	}
+	p, err := New(up.URL, trust, quietLog())
+	if err != nil {
+		t.Fatalf("New() err = %v，期望 nil", err)
+	}
+
+	front := httptest.NewServer(p)
+	defer front.Close()
+
+	req, _ := http.NewRequest(http.MethodGet, front.URL+"/", nil)
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+	resp, err := front.Client().Do(req)
+	if err != nil {
+		t.Fatalf("Do() err = %v，期望 nil", err)
+	}
+	resp.Body.Close()
+
+	if xff != "1.2.3.4" {
+		t.Errorf("上游收到的 X-Forwarded-For = %q，期望 %q", xff, "1.2.3.4")
+	}
+}
+
+func TestProxySetsForwardedHostToInboundHost(t *testing.T) {
+	var got string
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("X-Forwarded-Host")
+	}))
+	defer up.Close()
+
+	front := httptest.NewServer(newProxy(t, up))
+	defer front.Close()
+
+	req, _ := http.NewRequest(http.MethodGet, front.URL+"/", nil)
+	req.Host = "media.example"
+	resp, err := front.Client().Do(req)
+	if err != nil {
+		t.Fatalf("Do() err = %v，期望 nil", err)
+	}
+	resp.Body.Close()
+
+	if got != "media.example" {
+		t.Errorf("上游收到的 X-Forwarded-Host = %q，期望 %q", got, "media.example")
 	}
 }
