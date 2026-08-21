@@ -737,6 +737,12 @@ pub unsafe extern "C" fn ftml_result_code_contents_at(
     }
 }
 
+// The ABI version is part of the symbol name so a mismatched library fails at
+// link time rather than at runtime. Bump it here, in ftml.h and in ABI_VERSION
+// together whenever the C interface changes shape.
+#[no_mangle]
+pub extern "C" fn ftml_abi_1() {}
+
 #[no_mangle]
 pub extern "C" fn ftml_version() -> FtmlStr {
     FtmlStr::borrow(VERSION.as_str())

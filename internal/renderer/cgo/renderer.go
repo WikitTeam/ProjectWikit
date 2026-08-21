@@ -25,6 +25,7 @@ type Renderer struct{}
 var _ renderer.Renderer = (*Renderer)(nil)
 
 func New() *Renderer {
+	C.ftml_abi_1()
 	return &Renderer{}
 }
 

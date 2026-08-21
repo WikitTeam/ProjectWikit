@@ -92,6 +92,7 @@ FtmlStr ftml_result_html_at(const FtmlResult *result, size_t index);
 size_t ftml_result_code_len(const FtmlResult *result);
 FtmlStr ftml_result_code_language_at(const FtmlResult *result, size_t index);
 FtmlStr ftml_result_code_contents_at(const FtmlResult *result, size_t index);
+void ftml_abi_1(void);
 FtmlStr ftml_version(void);
 
 /* The vtable is filled on the C side because cgo cannot take the address of an
