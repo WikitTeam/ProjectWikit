@@ -1,0 +1,12 @@
+[package]
+name = "ftml-capi"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "ftml_capi"
+crate-type = ["staticlib"]
+
+[dependencies]
+ftml = { path = "../ftml", default-features = false, features = ["html"] }
