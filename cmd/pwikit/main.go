@@ -43,6 +43,8 @@ func run(args []string) error {
 		return printModules()
 	case "routes":
 		return printRoutes()
+	case "render":
+		return render(args[1:])
 	case "help", "-h", "--help":
 		usage()
 		return nil
@@ -58,6 +60,7 @@ func usage() {
 Commands:
   serve     start the HTTP server
   routes    print the static route table
+  render    render wikitext read from stdin or a file
   modules   print the wikidot module list
   help      show this help
 `)

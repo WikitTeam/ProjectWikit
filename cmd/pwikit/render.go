@@ -1,0 +1,195 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"sort"
+	"strings"
+
+	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
+	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/renderer"
+	"github.com/WikitTeam/ProjectWikit/internal/repo"
+)
+
+const envSidecar = "PWIKIT_FTML_SIDECAR"
+
+func render(args []string) error {
+	fs := flag.NewFlagSet("render", flag.ContinueOnError)
+	file := fs.String("file", "", "read wikitext from this file instead of stdin")
+	mode := fs.String("mode", string(renderer.ModeArticle), "wikitext mode: article, message, inline, system, system-with-modules")
+	output := fs.String("output", "html", "what to produce: html, text, backlinks, code")
+	dsn := fs.String("dsn", "", "PostgreSQL connection string; without it links are never resolved and includes always miss")
+	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
+	trace := fs.String("trace", "", "write the callback sequence to this file, or - for stderr")
+	page := fs.String("page", "page", "page name reported to ftml")
+	category := fs.String("category", "_default", "page category reported to ftml")
+	domain := fs.String("domain", "example.org", "site domain reported to ftml")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+
+	if !renderer.Mode(*mode).Valid() {
+		return fmt.Errorf("unknown mode %q", *mode)
+	}
+
+	source, err := readSource(*file)
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	engine, closeEngine, err := newRenderer(*sidecar)
+	if err != nil {
+		return err
+	}
+	defer closeEngine()
+
+	bundle, err := i18n.Load("")
+	if err != nil {
+		return err
+	}
+
+	store := cliRepository{}
+	if *dsn != "" {
+		conn, err := db.Open(ctx, *dsn)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+		store.data = repo.New(ctx, conn)
+	}
+
+	var cb renderer.Callbacks = callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
+	var recorder *tracer
+	if *trace != "" {
+		recorder = &tracer{inner: cb}
+		cb = recorder
+	}
+
+	info := renderer.PageInfo{Page: *page, Category: *category, Domain: *domain, Title: *page}
+	if err := emit(ctx, engine, *output, source, info, cb, renderer.Mode(*mode)); err != nil {
+		return err
+	}
+	return writeTrace(*trace, recorder)
+}
+
+func readSource(file string) (string, error) {
+	if file == "" {
+		data, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			return "", fmt.Errorf("read stdin: %w", err)
+		}
+		return string(data), nil
+	}
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func emit(ctx context.Context, engine renderer.Renderer, output, source string, info renderer.PageInfo, cb renderer.Callbacks, mode renderer.Mode) error {
+	switch output {
+	case "html":
+		result, err := engine.RenderHTML(ctx, source, info, cb, mode)
+		if err != nil {
+			return err
+		}
+		fmt.Println(result.Body)
+	case "text":
+		result, err := engine.RenderText(ctx, source, info, cb, mode)
+		if err != nil {
+			return err
+		}
+		fmt.Println(result.Body)
+	case "backlinks":
+		result, err := engine.CollectBacklinks(ctx, source, info, cb, mode)
+		if err != nil {
+			return err
+		}
+		printList("included", result.IncludedPages)
+		printList("linked", result.LinkedPages)
+	case "code":
+		parts, err := engine.CollectCodeAndHTML(ctx, source, info, cb, mode)
+		if err != nil {
+			return err
+		}
+		for _, block := range parts.Code {
+			fmt.Printf("--- code (%s) ---\n%s\n", block.Language, block.Source)
+		}
+		for _, block := range parts.HTML {
+			fmt.Printf("--- html ---\n%s\n", block)
+		}
+	default:
+		return fmt.Errorf("unknown output %q", output)
+	}
+	return nil
+}
+
+func printList(label string, values []string) {
+	for _, value := range values {
+		fmt.Printf("%s\t%s\n", label, value)
+	}
+}
+
+func writeTrace(target string, recorder *tracer) error {
+	if recorder == nil {
+		return nil
+	}
+	body := strings.Join(recorder.lines, "\n") + "\n"
+	if target == "-" {
+		_, err := io.WriteString(os.Stderr, body)
+		return err
+	}
+	return os.WriteFile(target, []byte(body), 0o644)
+}
+
+type cliRepository struct {
+	data *repo.Repository
+}
+
+var _ callbacks.Repository = cliRepository{}
+
+func (r cliRepository) RenderModule(name string, params map[string]string, _ string) (string, error) {
+	keys := make([]string, 0, len(params))
+	for key := range params {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	pairs := make([]string, 0, len(keys))
+	for _, key := range keys {
+		pairs = append(pairs, key+"="+params[key])
+	}
+	return `<div class="module">[` + name + " " + strings.Join(pairs, " ") + `]</div>`, nil
+}
+
+func (r cliRepository) RenderUser(username string, _ bool) (string, error) {
+	return `<span class="printuser">[` + username + `]</span>`, nil
+}
+
+func (r cliRepository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error) {
+	if r.data == nil {
+		return nil, nil
+	}
+	return r.data.PageInfo(refs)
+}
+
+func (r cliRepository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.FetchedPage, error) {
+	if r.data == nil {
+		out := make([]renderer.FetchedPage, 0, len(refs))
+		for _, ref := range refs {
+			out = append(out, renderer.FetchedPage{FullName: ref.FullName})
+		}
+		return out, nil
+	}
+	return r.data.IncludeSources(refs)
+}
