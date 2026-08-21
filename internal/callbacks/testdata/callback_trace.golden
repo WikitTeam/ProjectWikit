@@ -1,0 +1,86 @@
+== plain ==
+next_include_level()
+include_pages([])
+get_page_info([])
+
+== links ==
+next_include_level()
+include_pages([])
+normalize_page_name("exists")
+normalize_page_name("missing")
+get_page_info([exists missing])
+
+== module-plain ==
+next_include_level()
+include_pages([])
+module_has_body(Rate)
+get_page_info([])
+render_module(Rate, {}, body="")
+
+== module-params ==
+next_include_level()
+include_pages([])
+module_has_body(Rate)
+get_page_info([])
+render_module(Rate, {limit="5", showVotes="true"}, body="")
+
+== module-needs-body-inline ==
+next_include_level()
+include_pages([])
+module_has_body(ListPages)
+get_page_info([])
+
+== module-body ==
+next_include_level()
+include_pages([])
+module_has_body(ListPages)
+get_page_info([])
+render_module(ListPages, {}, body="%%title%%")
+
+== include-hit ==
+next_include_level()
+include_pages([exists{a="1", b="2"}])
+next_include_level()
+include_pages([])
+get_page_info([])
+
+== include-miss ==
+next_include_level()
+include_pages([no-such-page{}])
+no_such_include(no-such-page)
+next_include_level()
+include_pages([])
+get_page_info([])
+
+== user ==
+next_include_level()
+include_pages([])
+get_page_info([])
+render_user(kakushi, avatar=false)
+render_user(nobody, avatar=true)
+
+== expression ==
+next_include_level()
+include_pages([])
+evaluate_expression("1 + 1")
+get_page_info([])
+
+== footnote ==
+next_include_level()
+include_pages([])
+get_page_info([])
+get_i18n_message(footnote-block-title)
+
+== toc ==
+next_include_level()
+include_pages([])
+get_page_info([])
+get_i18n_message(toc-close)
+get_i18n_message(toc-open)
+get_i18n_message(table-of-contents)
+
+== code ==
+next_include_level()
+include_pages([])
+get_page_info([])
+

@@ -1,0 +1,54 @@
+[
+  [
+    "plain",
+    "//斜体// 和 **粗体**"
+  ],
+  [
+    "links",
+    "[[[exists|蓝]]] 和 [[[missing|红]]]"
+  ],
+  [
+    "module-plain",
+    "[[module Rate]]"
+  ],
+  [
+    "module-params",
+    "[[module Rate showVotes=\"true\" limit=\"5\"]]"
+  ],
+  [
+    "module-needs-body-inline",
+    "[[module ListPages perPage=\"20\" category=\"scp\"]]"
+  ],
+  [
+    "module-body",
+    "[[module ListPages]]\n%%title%%\n[[/module]]"
+  ],
+  [
+    "include-hit",
+    "[[include exists |a=1 |b=2]]"
+  ],
+  [
+    "include-miss",
+    "[[include no-such-page]]"
+  ],
+  [
+    "user",
+    "[[user kakushi]] 和 [[*user nobody]]"
+  ],
+  [
+    "expression",
+    "[[#expr 1 + 1]]"
+  ],
+  [
+    "footnote",
+    "文本[[footnote]]注[[/footnote]]"
+  ],
+  [
+    "toc",
+    "[[toc]]\n\n+ 标题"
+  ],
+  [
+    "code",
+    "[[code type=\"python\"]]\nprint(1)\n[[/code]]"
+  ]
+]
