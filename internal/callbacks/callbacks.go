@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/expr"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/modules"
@@ -67,7 +68,7 @@ func (c *Callbacks) RenderModule(name string, params map[string]string, body str
 	html, err := c.repo.RenderModule(name, lowered, body)
 	var moduleErr *ModuleError
 	if errors.As(err, &moduleErr) {
-		return `<div class="error-block"><p>` + djangoEscape(moduleErr.Message) + `</p></div>`, nil
+		return `<div class="error-block"><p>` + escape.HTML(moduleErr.Message) + `</p></div>`, nil
 	}
 	if err != nil {
 		return "", err
@@ -81,7 +82,7 @@ func (c *Callbacks) RenderUser(username string, avatar bool) (string, error) {
 	}
 	html, err := c.repo.RenderUser(username, avatar)
 	if errors.Is(err, ErrUserNotFound) {
-		return `<span class="error-inline">` + c.text("user-not-found", "name", djangoEscape(username)) + `</span>`, nil
+		return `<span class="error-inline">` + c.text("user-not-found", "name", escape.HTML(username)) + `</span>`, nil
 	}
 	if err != nil {
 		return "", err
@@ -162,13 +163,3 @@ func (c *Callbacks) text(id string, args ...any) string {
 	}
 	return c.loc.T(id, args...)
 }
-
-var escaper = strings.NewReplacer(
-	"&", "&amp;",
-	"<", "&lt;",
-	">", "&gt;",
-	`"`, "&quot;",
-	"'", "&#x27;",
-)
-
-func djangoEscape(s string) string { return escaper.Replace(s) }
