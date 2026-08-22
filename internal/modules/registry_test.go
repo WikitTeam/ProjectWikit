@@ -75,3 +75,13 @@ func TestAllIsSortedByName(t *testing.T) {
 		}
 	}
 }
+
+func TestRatIsRemoved(t *testing.T) {
+	info, ok := Lookup("rat")
+	if !ok {
+		t.Fatal("Lookup(\"rat\") ok = false, want true")
+	}
+	if !info.Removed {
+		t.Error("Lookup(\"rat\").Removed = false, want true")
+	}
+}

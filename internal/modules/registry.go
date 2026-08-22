@@ -28,7 +28,7 @@ var registry = map[string]Info{
 	"pagedescription": {Name: "pagedescription", HasContent: true},
 	"pageimage":       {Name: "pageimage"},
 	"pagesbytag":      {Name: "pagesbytag"},
-	"rat":             {Name: "rat"},
+	"rat":             {Name: "rat", Removed: true},
 	"rate":            {Name: "rate"},
 	"recentposts":     {Name: "recentposts"},
 	"redirect":        {Name: "redirect"},
