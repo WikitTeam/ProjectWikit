@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer/sidecar"
 )
@@ -24,7 +26,12 @@ func newTestRepo(t *testing.T) *Repository {
 		t.Fatalf("db.Open() err = %v, want nil", err)
 	}
 	t.Cleanup(d.Close)
-	return New(context.Background(), d)
+	bundle, err := i18n.Load("")
+	if err != nil {
+		t.Fatalf("i18n.Load() err = %v, want nil", err)
+	}
+	users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), nil)
+	return New(context.Background(), d, users)
 }
 
 func TestPageInfoDropsMissingPages(t *testing.T) {
@@ -109,5 +116,41 @@ func TestRenderAgainstDatabase(t *testing.T) {
 	}
 	if !strings.Contains(got.Body, "这是一个被 include 的组件") {
 		t.Errorf("RenderHTML() = %q, want the included page body", got.Body)
+	}
+}
+
+func TestRenderUserExternalSkipsTheDatabase(t *testing.T) {
+	r := newTestRepo(t)
+
+	got, err := r.RenderUser("EXTERNAL:Some User", false)
+	if err != nil {
+		t.Fatalf("RenderUser() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `data-user-id="-1"`) {
+		t.Errorf("RenderUser() = %q, want it to contain %q", got, `data-user-id="-1"`)
+	}
+	if !strings.Contains(got, "https://www.wikidot.com/user:info/some-user") {
+		t.Errorf("RenderUser() = %q, want it to contain %q", got, "https://www.wikidot.com/user:info/some-user")
+	}
+}
+
+func TestRenderUserUnknown(t *testing.T) {
+	r := newTestRepo(t)
+
+	_, err := r.RenderUser("no-such-user", false)
+	if !errors.Is(err, callbacks.ErrUserNotFound) {
+		t.Errorf("RenderUser(\"no-such-user\") err = %v, want ErrUserNotFound", err)
+	}
+}
+
+func TestRenderUserFromTheDatabase(t *testing.T) {
+	r := newTestRepo(t)
+
+	got, err := r.RenderUser("SeedUser", false)
+	if err != nil {
+		t.Fatalf("RenderUser() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `<a href="/-/users/seeduser">seeduser</a>`) {
+		t.Errorf("RenderUser() = %q, want it to contain %q", got, `<a href="/-/users/seeduser">seeduser</a>`)
 	}
 }

@@ -13,8 +13,11 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
+	"github.com/WikitTeam/ProjectWikit/internal/roles"
 )
 
 const envSidecar = "PWIKIT_FTML_SIDECAR"
@@ -25,6 +28,7 @@ func render(args []string) error {
 	mode := fs.String("mode", string(renderer.ModeArticle), "wikitext mode: article, message, inline, system, system-with-modules")
 	output := fs.String("output", "html", "what to produce: html, text, backlinks, code")
 	dsn := fs.String("dsn", "", "PostgreSQL connection string; without it links are never resolved and includes always miss")
+	dataDir := fs.String("data-dir", "", "state directory holding role icons; defaults to the directory holding the executable")
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	trace := fs.String("trace", "", "write the callback sequence to this file, or - for stderr")
 	page := fs.String("page", "page", "page name reported to ftml")
@@ -65,7 +69,12 @@ func render(args []string) error {
 			return err
 		}
 		defer conn.Close()
-		store.data = repo.New(ctx, conn)
+		p, err := paths.New(*dataDir)
+		if err != nil {
+			return err
+		}
+		users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), roles.FileIcons(p.Files()))
+		store.data = repo.New(ctx, conn, users)
 	}
 
 	var cb renderer.Callbacks = callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
@@ -172,8 +181,11 @@ func (r cliRepository) RenderModule(name string, params map[string]string, _ str
 	return `<div class="module">[` + name + " " + strings.Join(pairs, " ") + `]</div>`, nil
 }
 
-func (r cliRepository) RenderUser(username string, _ bool) (string, error) {
-	return `<span class="printuser">[` + username + `]</span>`, nil
+func (r cliRepository) RenderUser(username string, avatar bool) (string, error) {
+	if r.data == nil {
+		return `<span class="printuser">[` + username + `]</span>`, nil
+	}
+	return r.data.RenderUser(username, avatar)
 }
 
 func (r cliRepository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error) {

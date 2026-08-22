@@ -11,5 +11,11 @@
   "table-of-contents": "内容",
   "toc-close": "关闭",
   "toc-open": "展开",
-  "user-not-found": "用户 '{name}' 不存在"
+  "user-anonymous": "匿名用户",
+  "user-banned": "封禁",
+  "user-banned-tooltip": "用户已被封禁",
+  "user-bot": "机器人",
+  "user-bot-tooltip": "机器账户",
+  "user-not-found": "用户 '{name}' 不存在",
+  "user-system": "系统"
 }

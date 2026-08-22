@@ -4,23 +4,28 @@ package repo
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
+	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
 
 var ErrNotPorted = errors.New("repo: not ported yet")
 
 type Repository struct {
-	ctx context.Context
-	db  *db.DB
+	ctx   context.Context
+	db    *db.DB
+	users *printuser.Renderer
 }
 
 var _ callbacks.Repository = (*Repository)(nil)
 
-func New(ctx context.Context, d *db.DB) *Repository {
-	return &Repository{ctx: ctx, db: d}
+func New(ctx context.Context, d *db.DB, users *printuser.Renderer) *Repository {
+	return &Repository{ctx: ctx, db: d, users: users}
 }
 
 func (r *Repository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error) {
@@ -65,6 +70,50 @@ func (r *Repository) RenderModule(name string, params map[string]string, body st
 	return "", ErrNotPorted
 }
 
+// RenderUser mirrors the prefix handling in renderer/__init__.py: external:
+// never touches the database, wd: may only ever match an imported account, and
+// a bare name is matched against both name columns.
 func (r *Repository) RenderUser(username string, avatar bool) (string, error) {
-	return "", ErrNotPorted
+	opts := printuser.Options{Avatar: avatar, Hover: true}
+
+	if external, ok := cutPrefixFold(username, "external:"); ok {
+		return r.users.External(external, opts), nil
+	}
+
+	var (
+		user *db.User
+		err  error
+	)
+	if wd, ok := cutPrefixFold(username, "wd:"); ok {
+		user, err = r.db.UserByWikidotName(r.ctx, wikidot.CanonicalizeUsername(wd))
+	} else {
+		user, err = r.db.UserByName(r.ctx, wikidot.CanonicalizeUsername(username))
+	}
+	if errors.Is(err, db.ErrNotFound) {
+		return "", callbacks.ErrUserNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+
+	roleList, err := r.db.RolesByUser(r.ctx, user.ID)
+	if err != nil {
+		return "", err
+	}
+	return r.users.User(printuser.User{
+		ID:              user.ID,
+		Type:            user.Type,
+		Username:        user.Username,
+		WikidotUsername: user.WikidotUsername,
+		DisplayName:     user.DisplayName,
+		Avatar:          user.Avatar,
+		IsActive:        user.ActiveAt(time.Now()),
+	}, roleList, opts)
+}
+
+func cutPrefixFold(s, prefix string) (string, bool) {
+	if len(s) < len(prefix) || !strings.EqualFold(s[:len(prefix)], prefix) {
+		return "", false
+	}
+	return s[len(prefix):], true
 }
