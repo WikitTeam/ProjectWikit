@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -22,9 +23,21 @@ type User struct {
 	WikidotUsername string
 	DisplayName     string
 	Avatar          string
+	IsActive        bool
+	InactiveUntil   *time.Time
 }
 
-const userColumns = `id, type, username, wikidot_username, display_name, avatar`
+// ActiveAt reproduces User.__init__, where a deadline in the future overrides
+// the stored flag in both directions: is_active is ignored whenever
+// inactive_until is set.
+func (u *User) ActiveAt(now time.Time) bool {
+	if u.InactiveUntil == nil {
+		return u.IsActive
+	}
+	return now.After(*u.InactiveUntil)
+}
+
+const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until`
 
 // Django's QuerySet.first() falls back to ordering by primary key when the
 // queryset carries no ordering of its own, so these two are not stray sorts.
@@ -60,7 +73,8 @@ func (d *DB) scanUser(ctx context.Context, sql, canonical string) (*User, error)
 		wikidotUsername, displayName, avatar *string
 	)
 	err := d.pool.QueryRow(ctx, sql, canonical).Scan(
-		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar)
+		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
+		&u.IsActive, &u.InactiveUntil)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
