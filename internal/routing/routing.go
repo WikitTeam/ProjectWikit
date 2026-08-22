@@ -25,7 +25,7 @@ const root = "/"
 var Table = []Route{
 	{Prefix: "/", Owner: OwnerDjango, Label: "articles"},
 	{Prefix: "/-/", Owner: OwnerDjango, Label: "system pages"},
-	{Prefix: "/-/static/", Owner: OwnerDjango, Label: "static assets"},
+	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
 	{Prefix: "/api/", Owner: OwnerDjango, Label: "API"},
 	{Prefix: "/local--files/", Owner: OwnerDjango, Label: "site files"},
 	{Prefix: "/local--code/", Owner: OwnerDjango, Label: "code blocks"},

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	iofs "io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
+	"github.com/WikitTeam/ProjectWikit/internal/static"
 )
 
 const (
@@ -72,6 +74,7 @@ func serve(args []string) error {
 	upstream := fs.String("upstream", envOr(envUpstream, defaultUpstream), "upstream address for requests pwikit does not handle")
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	trusted := fs.String("trusted-proxies", "", "trusted reverse proxy addresses or CIDRs, comma separated; empty trusts no X-Forwarded-* header")
+	staticDir := fs.String("static-dir", "", "directory holding the frontend asset bundle; without it every asset request goes upstream")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -98,12 +101,19 @@ func serve(args []string) error {
 	if err != nil {
 		return err
 	}
-	mux, err := routing.New(routing.Table, proxy, nil)
+	assets, err := assetFS(*staticDir)
+	if err != nil {
+		return err
+	}
+	mux, err := routing.New(routing.Table, proxy, map[string]http.Handler{
+		static.Prefix: static.New(assets, proxy),
+	})
 	if err != nil {
 		return err
 	}
 
-	log.Info("pwikit serve", "listen", *listen, "upstream", proxy.Target(), "root", p.Root(), "root_source", string(p.Source()))
+	log.Info("pwikit serve", "listen", *listen, "upstream", proxy.Target(), "root", p.Root(),
+		"root_source", string(p.Source()), "static_dir", *staticDir)
 
 	srv := &http.Server{
 		Addr:              *listen,
@@ -111,6 +121,23 @@ func serve(args []string) error {
 		ReadHeaderTimeout: 20 * time.Second,
 	}
 	return srv.ListenAndServe()
+}
+
+// assetFS is the development shape of the bundle. D8 puts it inside the
+// binary; until the build produces it, an empty path means every asset
+// request falls through to the upstream.
+func assetFS(dir string) (iofs.FS, error) {
+	if dir == "" {
+		return nil, nil
+	}
+	info, err := os.Stat(dir)
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() {
+		return nil, fmt.Errorf("static-dir %q is not a directory", dir)
+	}
+	return os.DirFS(dir), nil
 }
 
 func envOr(key, fallback string) string {

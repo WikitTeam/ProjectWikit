@@ -38,8 +38,20 @@ func TestValidateRejectsBadTable(t *testing.T) {
 	}
 }
 
+// goHandlers supplies a stub for every route the table gives to Go, so this
+// file does not have to be edited each time one changes hands.
+func goHandlers() map[string]http.Handler {
+	out := make(map[string]http.Handler)
+	for _, r := range Table {
+		if r.Owner == OwnerGo {
+			out[r.Prefix] = stub("go " + r.Prefix)
+		}
+	}
+	return out
+}
+
 func TestMuxRouteLongestPrefixWins(t *testing.T) {
-	m, err := New(Table, stub("django"), nil)
+	m, err := New(Table, stub("django"), goHandlers())
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
