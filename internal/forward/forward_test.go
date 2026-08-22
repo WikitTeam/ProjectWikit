@@ -147,6 +147,7 @@ func TestProxyPassesStatusAndBody(t *testing.T) {
 func TestProxyReturns502WhenUpstreamDown(t *testing.T) {
 	up := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 	dead := newProxy(t, up)
+	upstream := up.URL
 	up.Close()
 
 	front := httptest.NewServer(dead)
@@ -160,6 +161,13 @@ func TestProxyReturns502WhenUpstreamDown(t *testing.T) {
 
 	if resp.StatusCode != http.StatusBadGateway {
 		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusBadGateway)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("ReadAll() err = %v, want nil", err)
+	}
+	if strings.Contains(string(body), upstream) {
+		t.Errorf("body = %q, want it to omit %q", body, upstream)
 	}
 }
 
