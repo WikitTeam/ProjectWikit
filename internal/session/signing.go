@@ -26,10 +26,22 @@ type Signer struct {
 }
 
 func (s Signer) signature(value, key string) string {
-	derived := sha256.Sum256([]byte(s.Salt + "signer" + key))
+	return b64Encode(saltedHMAC(s.Salt+"signer", key, value))
+}
+
+// keys puts the current secret first, the order Django tries them in while a
+// key rotation is in flight.
+func (s Signer) keys() []string {
+	return append([]string{s.Key}, s.Fallbacks...)
+}
+
+// saltedHMAC derives a key from the salt and the secret before signing, so two
+// different salts never produce the same signature for the same value.
+func saltedHMAC(keySalt, secret, value string) []byte {
+	derived := sha256.Sum256([]byte(keySalt + secret))
 	mac := hmac.New(sha256.New, derived[:])
 	mac.Write([]byte(value))
-	return b64Encode(mac.Sum(nil))
+	return mac.Sum(nil)
 }
 
 func (s Signer) Sign(value string) string {

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"compress/zlib"
 	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +26,8 @@ const (
 	AuthUserID      = "_auth_user_id"
 	AuthUserBackend = "_auth_user_backend"
 	AuthUserHash    = "_auth_user_hash"
+
+	authHashSalt = "django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"
 
 	compressedPrefix = "."
 )
@@ -78,6 +82,27 @@ func (s *Store) Decode(sessionData string) (map[string]any, error) {
 		return nil, ErrUnsupportedFormat
 	}
 	return out, nil
+}
+
+// AuthHash ties a session to the password it was opened under. Without this
+// check a stolen session keeps working after the password changes.
+func (s *Store) AuthHash(passwordHash string) string {
+	return hex.EncodeToString(saltedHMAC(authHashSalt, s.Signer.Signer.Key, passwordHash))
+}
+
+// AuthHashMatches tries the fallback secrets too, so a key rotation does not
+// sign everyone out.
+func (s *Store) AuthHashMatches(passwordHash, want string) bool {
+	if want == "" {
+		return false
+	}
+	for _, key := range s.Signer.Signer.keys() {
+		got := hex.EncodeToString(saltedHMAC(authHashSalt, key, passwordHash))
+		if subtle.ConstantTimeCompare([]byte(got), []byte(want)) == 1 {
+			return true
+		}
+	}
+	return false
 }
 
 func UserID(data map[string]any) (string, bool) {

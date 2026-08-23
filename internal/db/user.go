@@ -93,3 +93,32 @@ func deref(s *string) string {
 	}
 	return *s
 }
+
+var qUserForSession = register("UserForSession", `
+SELECT `+userColumns+`, password
+FROM web_user
+WHERE id = $1`)
+
+// UserForSession returns the password hash alongside the user because the
+// session carries a hash of it; a session opened under an older password has to
+// stop working. The hash is kept out of User so it cannot travel by accident.
+func (d *DB) UserForSession(ctx context.Context, id int64) (*User, string, error) {
+	var (
+		u                                    User
+		wikidotUsername, displayName, avatar *string
+		password                             string
+	)
+	err := d.pool.QueryRow(ctx, qUserForSession, id).Scan(
+		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
+		&u.IsActive, &u.InactiveUntil, &password)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", ErrNotFound
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("lookup user %d: %w", id, err)
+	}
+	u.WikidotUsername = deref(wikidotUsername)
+	u.DisplayName = deref(displayName)
+	u.Avatar = deref(avatar)
+	return &u, password, nil
+}
