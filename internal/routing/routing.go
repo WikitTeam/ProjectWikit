@@ -27,7 +27,7 @@ var Table = []Route{
 	{Prefix: "/-/", Owner: OwnerDjango, Label: "system pages"},
 	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
 	{Prefix: "/api/", Owner: OwnerDjango, Label: "API"},
-	{Prefix: "/local--files/", Owner: OwnerDjango, Label: "site files"},
+	{Prefix: "/local--files/", Owner: OwnerGo, Label: "site files"},
 	{Prefix: "/local--code/", Owner: OwnerDjango, Label: "code blocks"},
 	{Prefix: "/local--html/", Owner: OwnerDjango, Label: "embedded HTML"},
 	{Prefix: "/local--theme/", Owner: OwnerDjango, Label: "page theme"},

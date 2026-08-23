@@ -153,3 +153,56 @@ func TestMediaPrefixesAreInRouteTable(t *testing.T) {
 		}
 	}
 }
+
+func TestDecideHeaders(t *testing.T) {
+	merged := Site{Domain: "wiki.example", MediaDomain: "wiki.example"}
+
+	tests := []struct {
+		name string
+		site Site
+		host string
+		path string
+		want map[string]string
+	}{
+		{"media host", split, "media.example", "/local--files/a.png", crossOriginHeaders},
+		{"main host", split, "wiki.example", "/scp-173", sameOriginHeaders},
+		{"merged domains, media path", merged, "wiki.example", "/local--files/a.png", crossOriginHeaders},
+		// Merged domains make every host the media host, so nosniff and DENY
+		// are never sent anywhere.
+		{"merged domains, page path", merged, "wiki.example", "/scp-173", crossOriginHeaders},
+		{"unknown host", split, "other.example", "/scp-173", sameOriginHeaders},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Decide(tt.site, tt.host, mustURL(t, tt.path))
+			if got.Action != Serve {
+				t.Fatalf("Decide(...).Action = %v, want Serve", got.Action)
+			}
+			if len(got.Headers) != len(tt.want) {
+				t.Fatalf("Decide(...).Headers = %v, want %v", got.Headers, tt.want)
+			}
+			for k, v := range tt.want {
+				if got.Headers[k] != v {
+					t.Errorf("Decide(...).Headers[%q] = %q, want %q", k, got.Headers[k], v)
+				}
+			}
+		})
+	}
+}
+
+func TestDecideRedirectCarriesNoHeaders(t *testing.T) {
+	for _, tt := range []struct{ host, path string }{
+		{"media.example", "/scp-173"},
+		{"wiki.example", "/local--files/a.png"},
+	} {
+		t.Run(tt.host+tt.path, func(t *testing.T) {
+			got := Decide(split, tt.host, mustURL(t, tt.path))
+			if got.Action != Redirect {
+				t.Fatalf("Decide(...).Action = %v, want Redirect", got.Action)
+			}
+			if got.Headers != nil {
+				t.Errorf("Decide(...).Headers = %v, want nil", got.Headers)
+			}
+		})
+	}
+}

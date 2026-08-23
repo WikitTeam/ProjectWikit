@@ -1,26 +1,32 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	iofs "io/fs"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
+	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/modules"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 )
 
 const (
+	envDatabase     = "DATABASE_URL"
 	envUpstream     = "PWIKIT_UPSTREAM"
 	defaultUpstream = "http://127.0.0.1:8000"
 	defaultListen   = "127.0.0.1:8080"
@@ -75,6 +81,7 @@ func serve(args []string) error {
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	trusted := fs.String("trusted-proxies", "", "trusted reverse proxy addresses or CIDRs, comma separated; empty trusts no X-Forwarded-* header")
 	staticDir := fs.String("static-dir", "", "directory holding the frontend asset bundle; without it every asset request goes upstream")
+	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string; without it every request needing the database goes upstream")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -105,15 +112,32 @@ func serve(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	var conn *db.DB
+	if *database != "" {
+		conn, err = db.Open(context.Background(), *database)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+	}
+
+	// Without a database the whole prefix goes upstream, host rules included.
+	var mediaHandler http.Handler = proxy
+	if conn != nil {
+		mediaHandler = site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), proxy)
+	}
+
 	mux, err := routing.New(routing.Table, proxy, map[string]http.Handler{
 		static.Prefix: static.New(assets, proxy),
+		media.Prefix:  mediaHandler,
 	})
 	if err != nil {
 		return err
 	}
 
 	log.Info("pwikit serve", "listen", *listen, "upstream", proxy.Target(), "root", p.Root(),
-		"root_source", string(p.Source()), "static_dir", *staticDir)
+		"root_source", string(p.Source()), "static_dir", *staticDir, "database", *database != "")
 
 	srv := &http.Server{
 		Addr:              *listen,
@@ -121,6 +145,16 @@ func serve(args []string) error {
 		ReadHeaderTimeout: 20 * time.Second,
 	}
 	return srv.ListenAndServe()
+}
+
+// listenPort feeds the host lookup its second candidate, the way Django reads
+// SERVER_PORT.
+func listenPort(addr string) string {
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return ""
+	}
+	return port
 }
 
 // assetFS is the development shape of the bundle. D8 puts it inside the

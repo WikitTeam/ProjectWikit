@@ -28,23 +28,36 @@ const (
 type Decision struct {
 	Action   Action
 	Location string
+	// Headers go on the response after the handler runs. A redirect carries
+	// none.
+	Headers map[string]string
 }
 
-func Decide(s Site, rawHost string, u *url.URL) Decision {
-	if s.MediaDomain == "" || s.MediaDomain == s.Domain {
-		return Decision{Action: Serve}
+var (
+	crossOriginHeaders = map[string]string{"Access-Control-Allow-Origin": "*"}
+	sameOriginHeaders  = map[string]string{
+		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options":        "DENY",
 	}
+)
 
+func Decide(s Site, rawHost string, u *url.URL) Decision {
 	onMediaHost := StripPort(rawHost) == s.MediaDomain
 	wantsMedia := IsMediaPath(u.Path)
 
-	switch {
-	case onMediaHost && !wantsMedia:
-		return Decision{Action: Redirect, Location: "//" + s.Domain + u.RequestURI()}
-	case !onMediaHost && wantsMedia:
-		return Decision{Action: Redirect, Location: "//" + s.MediaDomain + u.RequestURI()}
+	if s.MediaDomain != "" && s.MediaDomain != s.Domain {
+		switch {
+		case onMediaHost && !wantsMedia:
+			return Decision{Action: Redirect, Location: "//" + s.Domain + u.RequestURI()}
+		case !onMediaHost && wantsMedia:
+			return Decision{Action: Redirect, Location: "//" + s.MediaDomain + u.RequestURI()}
+		}
 	}
-	return Decision{Action: Serve}
+
+	if onMediaHost || (s.Domain == s.MediaDomain && wantsMedia) {
+		return Decision{Action: Serve, Headers: crossOriginHeaders}
+	}
+	return Decision{Action: Serve, Headers: sameOriginHeaders}
 }
 
 func IsMediaPath(path string) bool {
