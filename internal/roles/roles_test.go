@@ -121,19 +121,3 @@ func TestColorizeIconRejectsFileWithoutSVGTag(t *testing.T) {
 		t.Errorf("ColorizeIcon() err = %v, want %v", err, ErrNoSVGTag)
 	}
 }
-
-func TestQuoteKeepsPythonSafeSet(t *testing.T) {
-	cases := []struct{ in, want string }{
-		{"abcXYZ019", "abcXYZ019"},
-		{"_.-~/", "_.-~/"},
-		{" ", "%20"},
-		{":", "%3A"},
-		{"&+,;=@$", "%26%2B%2C%3B%3D%40%24"},
-		{"中", "%E4%B8%AD"},
-	}
-	for _, c := range cases {
-		if got := quote(c.in); got != c.want {
-			t.Errorf("quote(%q) = %q, want %q", c.in, got, c.want)
-		}
-	}
-}

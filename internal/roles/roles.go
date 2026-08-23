@@ -5,6 +5,8 @@ import (
 	"errors"
 	"slices"
 	"strings"
+
+	"github.com/WikitTeam/ProjectWikit/internal/escape"
 )
 
 type InlineVisualMode string
@@ -145,25 +147,5 @@ func ColorizeIcon(svg, color string) (string, error) {
 	}
 	parts := strings.Split(svg[start:], ">")
 	parts = slices.Insert(parts, 1, "<style>svg{color:"+color+"}</style")
-	return quote(strings.Join(parts, ">")), nil
-}
-
-const unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~/"
-
-// quote is urllib.parse.quote with its default safe="/". Neither url.PathEscape
-// nor url.QueryEscape matches: they leave $&+,;=:@ alone and encode ~.
-func quote(s string) string {
-	var b strings.Builder
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if strings.IndexByte(unreserved, c) >= 0 {
-			b.WriteByte(c)
-			continue
-		}
-		const hex = "0123456789ABCDEF"
-		b.WriteByte('%')
-		b.WriteByte(hex[c>>4])
-		b.WriteByte(hex[c&0x0F])
-	}
-	return b.String()
+	return escape.URLQuote(strings.Join(parts, ">")), nil
 }
