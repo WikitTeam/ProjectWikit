@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	CookieName = "sessionid"
+	CookieName = "pwikit_sessionid"
 	CookieAge  = 14 * 24 * time.Hour
 
 	Salt = "django.contrib.sessions.SessionStore"

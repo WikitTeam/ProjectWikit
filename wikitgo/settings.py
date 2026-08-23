@@ -147,6 +147,12 @@ CACHES = {
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 
+# Renaming these logs every signed-in user out once, so the two names have to
+# change on both sides of the rewrite at the same time.
+SESSION_COOKIE_NAME = 'pwikit_sessionid'
+CSRF_COOKIE_NAME = 'pwikit_csrftoken'
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
