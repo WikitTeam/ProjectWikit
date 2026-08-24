@@ -2,7 +2,10 @@
 // run before ftml sees the source.
 package page
 
-import "regexp"
+import (
+	"regexp"
+	"strconv"
+)
 
 // Go's dot excludes newlines by default, the same as Python's without DOTALL,
 // so a %% pair may not span lines.
@@ -18,5 +21,26 @@ func ApplyTemplate(template string, resolve func(name string) (string, bool)) st
 			return value
 		}
 		return match
+	})
+}
+
+// ThisVars is the pass an included page goes through. %%this|name%% reaches the
+// page that pulled it in, and every other name is left standing for whatever
+// pass claims it later.
+func ThisVars(source string, vars *Vars) string {
+	return ApplyTemplate(source, vars.This)
+}
+
+// PageVars is the pass the category template goes through, where a variable
+// carries no prefix. index and total exist nowhere else.
+func PageVars(template string, vars *Vars, index, total int) string {
+	return ApplyTemplate(template, func(name string) (string, bool) {
+		switch name {
+		case "index":
+			return strconv.Itoa(index), true
+		case "total":
+			return strconv.Itoa(total), true
+		}
+		return vars.Lookup(name)
 	})
 }

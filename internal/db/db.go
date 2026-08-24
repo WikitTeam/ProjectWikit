@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -47,4 +48,14 @@ var queries []query
 func register(name, sql string) string {
 	queries = append(queries, query{name: name, sql: sql})
 	return sql
+}
+
+// prefixed qualifies a column list with a table alias so joins can reuse the
+// one list the scan order is written against.
+func prefixed(alias, columns string) string {
+	parts := strings.Split(columns, ", ")
+	for i, c := range parts {
+		parts[i] = alias + "." + c
+	}
+	return strings.Join(parts, ", ")
 }

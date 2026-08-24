@@ -5,7 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 )
 
@@ -16,6 +18,7 @@ type fakeRepo struct {
 	moduleName  string
 	moduleParam map[string]string
 	includeSeen []renderer.IncludeRef
+	includeBody string
 }
 
 func (r *fakeRepo) RenderModule(name string, params map[string]string, body string) (string, error) {
@@ -46,7 +49,10 @@ func (r *fakeRepo) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetche
 	r.includeSeen = refs
 	out := make([]renderer.FetchedPage, 0, len(refs))
 	for _, ref := range refs {
-		body := "内容"
+		body := r.includeBody
+		if body == "" {
+			body = "内容"
+		}
 		out = append(out, renderer.FetchedPage{FullName: ref.FullName, Content: &body})
 	}
 	return out, nil
@@ -329,5 +335,32 @@ func TestPureCallbacksWorkWithoutRepository(t *testing.T) {
 	}
 	if _, err := c.NextIncludeLevel(); err != nil {
 		t.Errorf("NextIncludeLevel() err = %v, want nil", err)
+	}
+}
+
+func TestIncludePagesSubstitutesThisVars(t *testing.T) {
+	repo := &fakeRepo{includeBody: "before %%this|title%% after"}
+	c := newCallbacks(t, repo)
+	c.SetPageVars(page.NewVars(&db.Article{Title: "Host Title"}, nil, nil, nil))
+
+	got, err := c.IncludePages([]renderer.IncludeRef{{FullName: "component:box"}})
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	if want := "before Host Title after"; *got[0].Content != want {
+		t.Errorf("Content = %q, want %q", *got[0].Content, want)
+	}
+}
+
+func TestIncludePagesWithoutPageVarsKeepsThisVars(t *testing.T) {
+	repo := &fakeRepo{includeBody: "before %%this|title%% after"}
+	c := newCallbacks(t, repo)
+
+	got, err := c.IncludePages([]renderer.IncludeRef{{FullName: "component:box"}})
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	if want := "before %%this|title%% after"; *got[0].Content != want {
+		t.Errorf("Content = %q, want %q", *got[0].Content, want)
 	}
 }

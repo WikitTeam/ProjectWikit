@@ -1,0 +1,68 @@
+{
+  "articles": [
+    {
+      "name": "probe:full",
+      "viewer": "probeauthor"
+    },
+    {
+      "name": "probe:full",
+      "viewer": ""
+    },
+    {
+      "name": "probe:bare",
+      "viewer": ""
+    },
+    {
+      "name": "probe:parent",
+      "viewer": ""
+    },
+    {
+      "name": "probestars:rated",
+      "viewer": "probevoter"
+    },
+    {
+      "name": "probe:half",
+      "viewer": ""
+    }
+  ],
+  "names": [
+    "name",
+    "category",
+    "fullname",
+    "title",
+    "title_linked",
+    "linked_title",
+    "link",
+    "content",
+    "rating",
+    "rating_votes",
+    "popularity",
+    "current_user_voted",
+    "revisions",
+    "created_by",
+    "created_by_linked",
+    "created_by_linked_plain",
+    "updated_by",
+    "updated_by_linked",
+    "updated_by_linked_plain",
+    "authors_count",
+    "tags",
+    "tags_linked",
+    "created_at",
+    "updated_at",
+    "parent_name",
+    "parent_category",
+    "parent_fullname",
+    "parent_title",
+    "parent_title_linked",
+    "parent_linked_title",
+    "created_at|%Y",
+    "updated_at|%d.%m.%Y",
+    "this|title",
+    "this|TITLE",
+    "this|fullname",
+    "this|nosuchvar",
+    "notthis",
+    "Title"
+  ]
+}

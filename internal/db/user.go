@@ -68,23 +68,32 @@ func (d *DB) UserByWikidotName(ctx context.Context, canonical string) (*User, er
 }
 
 func (d *DB) scanUser(ctx context.Context, sql, canonical string) (*User, error) {
-	var (
-		u                                    User
-		wikidotUsername, displayName, avatar *string
-	)
-	err := d.pool.QueryRow(ctx, sql, canonical).Scan(
-		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
-		&u.IsActive, &u.InactiveUntil)
+	var u User
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, sql, canonical).Scan(dest...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("lookup user %q: %w", canonical, err)
 	}
-	u.WikidotUsername = deref(wikidotUsername)
-	u.DisplayName = deref(displayName)
-	u.Avatar = deref(avatar)
+	finish()
 	return &u, nil
+}
+
+// userDest lists the scan targets for userColumns, in order. Three of the
+// columns are nullable text, so finish has to run before the user is read.
+func userDest(u *User) (dest []any, finish func()) {
+	var wikidotUsername, displayName, avatar *string
+	dest = []any{
+		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
+		&u.IsActive, &u.InactiveUntil,
+	}
+	return dest, func() {
+		u.WikidotUsername = deref(wikidotUsername)
+		u.DisplayName = deref(displayName)
+		u.Avatar = deref(avatar)
+	}
 }
 
 func deref(s *string) string {
@@ -104,21 +113,17 @@ WHERE id = $1`)
 // stop working. The hash is kept out of User so it cannot travel by accident.
 func (d *DB) UserForSession(ctx context.Context, id int64) (*User, string, error) {
 	var (
-		u                                    User
-		wikidotUsername, displayName, avatar *string
-		password                             string
+		u        User
+		password string
 	)
-	err := d.pool.QueryRow(ctx, qUserForSession, id).Scan(
-		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
-		&u.IsActive, &u.InactiveUntil, &password)
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserForSession, id).Scan(append(dest, &password)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, "", ErrNotFound
 	}
 	if err != nil {
 		return nil, "", fmt.Errorf("lookup user %d: %w", id, err)
 	}
-	u.WikidotUsername = deref(wikidotUsername)
-	u.DisplayName = deref(displayName)
-	u.Avatar = deref(avatar)
+	finish()
 	return &u, password, nil
 }

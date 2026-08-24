@@ -1,0 +1,458 @@
+=== probe:full name
+full
+=== probe:full category
+probe
+=== probe:full fullname
+probe:full
+=== probe:full title
+Probe Full
+=== probe:full title_linked
+[[[probe:full|]]]
+=== probe:full linked_title
+[[[probe:full|]]]
+=== probe:full link
+/Probe Full
+=== probe:full content
+full source
+second line
+=== probe:full rating
++1
+=== probe:full rating_votes
+3
+=== probe:full popularity
+67
+=== probe:full current_user_voted
+True
+=== probe:full revisions
+1
+=== probe:full created_by
+[[span]]Probe Author[[/span]] [[span]]wd:Probe WD[[/span]]
+=== probe:full created_by_linked
+[[*user probeauthor]] [[*user probewd]]
+=== probe:full created_by_linked_plain
+[[user probeauthor]] [[user probewd]]
+=== probe:full updated_by
+Probe Author
+=== probe:full updated_by_linked
+[[*user probeauthor]]
+=== probe:full updated_by_linked_plain
+[[user probeauthor]]
+=== probe:full authors_count
+2
+=== probe:full tags
+alpha, lang:en, zeta
+=== probe:full tags_linked
+[/system:page-tags/tag/alpha alpha], [/system:page-tags/tag/lang%3Aen lang:en], [/system:page-tags/tag/zeta zeta]
+=== probe:full created_at
+[[date 1614834367]]
+=== probe:full updated_at
+[[date 1657271411]]
+=== probe:full parent_name
+parent
+=== probe:full parent_category
+probe
+=== probe:full parent_fullname
+probe:parent
+=== probe:full parent_title
+Probe Parent
+=== probe:full parent_title_linked
+[[[probe:parent|Probe Parent]]]
+=== probe:full parent_linked_title
+[[[probe:parent|Probe Parent]]]
+=== probe:full created_at|%Y
+[[date 1614834367 format="%Y"]]
+=== probe:full updated_at|%d.%m.%Y
+[[date 1657271411 format="%d.%m.%Y"]]
+=== probe:full this|title
+Probe Full
+=== probe:full this|TITLE
+Probe Full
+=== probe:full this|fullname
+probe:full
+=== probe:full this|nosuchvar
+%%this|nosuchvar%%
+=== probe:full notthis
+%%notthis%%
+=== probe:full Title
+%%Title%%
+=== probe:full name
+full
+=== probe:full category
+probe
+=== probe:full fullname
+probe:full
+=== probe:full title
+Probe Full
+=== probe:full title_linked
+[[[probe:full|]]]
+=== probe:full linked_title
+[[[probe:full|]]]
+=== probe:full link
+/Probe Full
+=== probe:full content
+full source
+second line
+=== probe:full rating
++1
+=== probe:full rating_votes
+3
+=== probe:full popularity
+67
+=== probe:full current_user_voted
+False
+=== probe:full revisions
+1
+=== probe:full created_by
+[[span]]Probe Author[[/span]] [[span]]wd:Probe WD[[/span]]
+=== probe:full created_by_linked
+[[*user probeauthor]] [[*user probewd]]
+=== probe:full created_by_linked_plain
+[[user probeauthor]] [[user probewd]]
+=== probe:full updated_by
+Probe Author
+=== probe:full updated_by_linked
+[[*user probeauthor]]
+=== probe:full updated_by_linked_plain
+[[user probeauthor]]
+=== probe:full authors_count
+2
+=== probe:full tags
+alpha, lang:en, zeta
+=== probe:full tags_linked
+[/system:page-tags/tag/alpha alpha], [/system:page-tags/tag/lang%3Aen lang:en], [/system:page-tags/tag/zeta zeta]
+=== probe:full created_at
+[[date 1614834367]]
+=== probe:full updated_at
+[[date 1657271411]]
+=== probe:full parent_name
+parent
+=== probe:full parent_category
+probe
+=== probe:full parent_fullname
+probe:parent
+=== probe:full parent_title
+Probe Parent
+=== probe:full parent_title_linked
+[[[probe:parent|Probe Parent]]]
+=== probe:full parent_linked_title
+[[[probe:parent|Probe Parent]]]
+=== probe:full created_at|%Y
+[[date 1614834367 format="%Y"]]
+=== probe:full updated_at|%d.%m.%Y
+[[date 1657271411 format="%d.%m.%Y"]]
+=== probe:full this|title
+Probe Full
+=== probe:full this|TITLE
+Probe Full
+=== probe:full this|fullname
+probe:full
+=== probe:full this|nosuchvar
+%%this|nosuchvar%%
+=== probe:full notthis
+%%notthis%%
+=== probe:full Title
+%%Title%%
+=== probe:bare name
+bare
+=== probe:bare category
+probe
+=== probe:bare fullname
+probe:bare
+=== probe:bare title
+Probe Bare
+=== probe:bare title_linked
+[[[probe:bare|]]]
+=== probe:bare linked_title
+[[[probe:bare|]]]
+=== probe:bare link
+/Probe Bare
+=== probe:bare content
+bare source
+=== probe:bare rating
++0
+=== probe:bare rating_votes
+0
+=== probe:bare popularity
+0
+=== probe:bare current_user_voted
+False
+=== probe:bare revisions
+1
+=== probe:bare created_by
+
+=== probe:bare created_by_linked
+
+=== probe:bare created_by_linked_plain
+
+=== probe:bare updated_by
+系统
+=== probe:bare updated_by_linked
+系统
+=== probe:bare updated_by_linked_plain
+系统
+=== probe:bare authors_count
+0
+=== probe:bare tags
+
+=== probe:bare tags_linked
+
+=== probe:bare created_at
+[[date 1614834367]]
+=== probe:bare updated_at
+[[date 1657271411]]
+=== probe:bare parent_name
+%%parent_name%%
+=== probe:bare parent_category
+%%parent_category%%
+=== probe:bare parent_fullname
+%%parent_fullname%%
+=== probe:bare parent_title
+%%parent_title%%
+=== probe:bare parent_title_linked
+%%parent_title_linked%%
+=== probe:bare parent_linked_title
+%%parent_linked_title%%
+=== probe:bare created_at|%Y
+[[date 1614834367 format="%Y"]]
+=== probe:bare updated_at|%d.%m.%Y
+[[date 1657271411 format="%d.%m.%Y"]]
+=== probe:bare this|title
+Probe Bare
+=== probe:bare this|TITLE
+Probe Bare
+=== probe:bare this|fullname
+probe:bare
+=== probe:bare this|nosuchvar
+%%this|nosuchvar%%
+=== probe:bare notthis
+%%notthis%%
+=== probe:bare Title
+%%Title%%
+=== probe:parent name
+parent
+=== probe:parent category
+probe
+=== probe:parent fullname
+probe:parent
+=== probe:parent title
+Probe Parent
+=== probe:parent title_linked
+[[[probe:parent|]]]
+=== probe:parent linked_title
+[[[probe:parent|]]]
+=== probe:parent link
+/Probe Parent
+=== probe:parent content
+parent source
+=== probe:parent rating
++0
+=== probe:parent rating_votes
+0
+=== probe:parent popularity
+0
+=== probe:parent current_user_voted
+False
+=== probe:parent revisions
+1
+=== probe:parent created_by
+[[span]]Probe Author[[/span]]
+=== probe:parent created_by_linked
+[[*user probeauthor]]
+=== probe:parent created_by_linked_plain
+[[user probeauthor]]
+=== probe:parent updated_by
+Probe Author
+=== probe:parent updated_by_linked
+[[*user probeauthor]]
+=== probe:parent updated_by_linked_plain
+[[user probeauthor]]
+=== probe:parent authors_count
+1
+=== probe:parent tags
+
+=== probe:parent tags_linked
+
+=== probe:parent created_at
+[[date 1614834367]]
+=== probe:parent updated_at
+[[date 1657271411]]
+=== probe:parent parent_name
+%%parent_name%%
+=== probe:parent parent_category
+%%parent_category%%
+=== probe:parent parent_fullname
+%%parent_fullname%%
+=== probe:parent parent_title
+%%parent_title%%
+=== probe:parent parent_title_linked
+%%parent_title_linked%%
+=== probe:parent parent_linked_title
+%%parent_linked_title%%
+=== probe:parent created_at|%Y
+[[date 1614834367 format="%Y"]]
+=== probe:parent updated_at|%d.%m.%Y
+[[date 1657271411 format="%d.%m.%Y"]]
+=== probe:parent this|title
+Probe Parent
+=== probe:parent this|TITLE
+Probe Parent
+=== probe:parent this|fullname
+probe:parent
+=== probe:parent this|nosuchvar
+%%this|nosuchvar%%
+=== probe:parent notthis
+%%notthis%%
+=== probe:parent Title
+%%Title%%
+=== probestars:rated name
+rated
+=== probestars:rated category
+probestars
+=== probestars:rated fullname
+probestars:rated
+=== probestars:rated title
+Probe Rated
+=== probestars:rated title_linked
+[[[probestars:rated|]]]
+=== probestars:rated linked_title
+[[[probestars:rated|]]]
+=== probestars:rated link
+/Probe Rated
+=== probestars:rated content
+rated source
+=== probestars:rated rating
+4.5
+=== probestars:rated rating_votes
+2
+=== probestars:rated popularity
+100
+=== probestars:rated current_user_voted
+True
+=== probestars:rated revisions
+1
+=== probestars:rated created_by
+[[span]]Probe Author[[/span]]
+=== probestars:rated created_by_linked
+[[*user probeauthor]]
+=== probestars:rated created_by_linked_plain
+[[user probeauthor]]
+=== probestars:rated updated_by
+Probe Author
+=== probestars:rated updated_by_linked
+[[*user probeauthor]]
+=== probestars:rated updated_by_linked_plain
+[[user probeauthor]]
+=== probestars:rated authors_count
+1
+=== probestars:rated tags
+
+=== probestars:rated tags_linked
+
+=== probestars:rated created_at
+[[date 1614834367]]
+=== probestars:rated updated_at
+[[date 1657271411]]
+=== probestars:rated parent_name
+%%parent_name%%
+=== probestars:rated parent_category
+%%parent_category%%
+=== probestars:rated parent_fullname
+%%parent_fullname%%
+=== probestars:rated parent_title
+%%parent_title%%
+=== probestars:rated parent_title_linked
+%%parent_title_linked%%
+=== probestars:rated parent_linked_title
+%%parent_linked_title%%
+=== probestars:rated created_at|%Y
+[[date 1614834367 format="%Y"]]
+=== probestars:rated updated_at|%d.%m.%Y
+[[date 1657271411 format="%d.%m.%Y"]]
+=== probestars:rated this|title
+Probe Rated
+=== probestars:rated this|TITLE
+Probe Rated
+=== probestars:rated this|fullname
+probestars:rated
+=== probestars:rated this|nosuchvar
+%%this|nosuchvar%%
+=== probestars:rated notthis
+%%notthis%%
+=== probestars:rated Title
+%%Title%%
+=== probe:half name
+half
+=== probe:half category
+probe
+=== probe:half fullname
+probe:half
+=== probe:half title
+Probe Half
+=== probe:half title_linked
+[[[probe:half|]]]
+=== probe:half linked_title
+[[[probe:half|]]]
+=== probe:half link
+/Probe Half
+=== probe:half content
+half source
+=== probe:half rating
+-6
+=== probe:half rating_votes
+8
+=== probe:half popularity
+12
+=== probe:half current_user_voted
+False
+=== probe:half revisions
+1
+=== probe:half created_by
+[[span]]Probe Author[[/span]]
+=== probe:half created_by_linked
+[[*user probeauthor]]
+=== probe:half created_by_linked_plain
+[[user probeauthor]]
+=== probe:half updated_by
+Probe Author
+=== probe:half updated_by_linked
+[[*user probeauthor]]
+=== probe:half updated_by_linked_plain
+[[user probeauthor]]
+=== probe:half authors_count
+1
+=== probe:half tags
+
+=== probe:half tags_linked
+
+=== probe:half created_at
+[[date 1614834367]]
+=== probe:half updated_at
+[[date 1657271411]]
+=== probe:half parent_name
+%%parent_name%%
+=== probe:half parent_category
+%%parent_category%%
+=== probe:half parent_fullname
+%%parent_fullname%%
+=== probe:half parent_title
+%%parent_title%%
+=== probe:half parent_title_linked
+%%parent_title_linked%%
+=== probe:half parent_linked_title
+%%parent_linked_title%%
+=== probe:half created_at|%Y
+[[date 1614834367 format="%Y"]]
+=== probe:half updated_at|%d.%m.%Y
+[[date 1657271411 format="%d.%m.%Y"]]
+=== probe:half this|title
+Probe Half
+=== probe:half this|TITLE
+Probe Half
+=== probe:half this|fullname
+probe:half
+=== probe:half this|nosuchvar
+%%this|nosuchvar%%
+=== probe:half notthis
+%%notthis%%
+=== probe:half Title
+%%Title%%

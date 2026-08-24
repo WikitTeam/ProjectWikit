@@ -13,6 +13,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
@@ -31,7 +32,7 @@ func render(args []string) error {
 	dataDir := fs.String("data-dir", "", "state directory holding role icons; defaults to the directory holding the executable")
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	trace := fs.String("trace", "", "write the callback sequence to this file, or - for stderr")
-	page := fs.String("page", "page", "page name reported to ftml")
+	pageName := fs.String("page", "page", "page name reported to ftml")
 	category := fs.String("category", "_default", "page category reported to ftml")
 	domain := fs.String("domain", "example.org", "site domain reported to ftml")
 	if err := fs.Parse(args); err != nil {
@@ -63,6 +64,7 @@ func render(args []string) error {
 	}
 
 	store := cliRepository{}
+	var vars *page.Vars
 	if *dsn != "" {
 		conn, err := db.Open(ctx, *dsn)
 		if err != nil {
@@ -75,20 +77,48 @@ func render(args []string) error {
 		}
 		users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), roles.FileIcons(p.Files()))
 		store.data = repo.New(ctx, conn, users)
+		vars, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), *category, *pageName, *domain)
+		if err != nil {
+			return err
+		}
 	}
 
-	var cb renderer.Callbacks = callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
+	cb := callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
+	cb.SetPageVars(vars)
+	source = page.ThisVars(source, vars)
+	var handler renderer.Callbacks = cb
 	var recorder *tracer
 	if *trace != "" {
 		recorder = &tracer{inner: cb}
-		cb = recorder
+		handler = recorder
 	}
 
-	info := renderer.PageInfo{Page: *page, Category: *category, Domain: *domain, Title: *page}
-	if err := emit(ctx, engine, *output, source, info, cb, renderer.Mode(*mode)); err != nil {
+	info := renderer.PageInfo{Page: *pageName, Category: *category, Domain: *domain, Title: *pageName}
+	if err := emit(ctx, engine, *output, source, info, handler, renderer.Mode(*mode)); err != nil {
 		return err
 	}
 	return writeTrace(*trace, recorder)
+}
+
+// cliPageVars resolves the page being rendered to a real row when there is one,
+// so %%this|x%% answers with that page rather than staying put.
+func cliPageVars(ctx context.Context, conn *db.DB, loc *i18n.Localizer, category, name, domain string) (*page.Vars, error) {
+	ref := name
+	if category != db.DefaultCategory {
+		ref = category + ":" + name
+	}
+	article, err := conn.ArticleByName(ctx, ref)
+	if errors.Is(err, db.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var siteID int64
+	if site, err := conn.SiteByHosts(ctx, []string{domain}); err == nil {
+		siteID = site.ID
+	}
+	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, siteID), loc), nil
 }
 
 func readSource(file string) (string, error) {

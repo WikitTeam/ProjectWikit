@@ -10,6 +10,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/expr"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/modules"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
@@ -38,11 +39,17 @@ type Repository interface {
 type Callbacks struct {
 	loc           *i18n.Localizer
 	repo          Repository
+	vars          *page.Vars
 	level         int
 	includeErrors map[string]bool
 }
 
 var _ renderer.Callbacks = (*Callbacks)(nil)
+
+// SetPageVars names the page whose %%this|x%% an included page reaches. Without
+// it every such name is left standing, which is what a render with no article
+// of its own gets in Django too.
+func (c *Callbacks) SetPageVars(vars *page.Vars) { c.vars = vars }
 
 func New(loc *i18n.Localizer, repo Repository) *Callbacks {
 	return &Callbacks{
@@ -138,7 +145,20 @@ func (c *Callbacks) IncludePages(refs []renderer.IncludeRef) ([]renderer.Fetched
 	if c.repo == nil {
 		return nil, ErrNoRepository
 	}
-	return c.repo.IncludeSources(refs)
+	fetched, err := c.repo.IncludeSources(refs)
+	if err != nil {
+		return nil, err
+	}
+	// %%this|x%% in an included page names the including page, so the pass runs
+	// here, on the way in, rather than wherever the include came from.
+	for i := range fetched {
+		if fetched[i].Content == nil {
+			continue
+		}
+		substituted := page.ThisVars(*fetched[i].Content, c.vars)
+		fetched[i].Content = &substituted
+	}
+	return fetched, nil
 }
 
 func (c *Callbacks) NoSuchInclude(fullName string) (string, error) {
