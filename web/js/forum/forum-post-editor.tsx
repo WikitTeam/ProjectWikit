@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import { Editor, Monaco } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 import * as React from 'react'
@@ -122,7 +123,7 @@ const ForumPostEditor: React.FC<Props> = ({
         })
         .catch(e => {
           setFatalError(true)
-          setError(e.error || '连接服务器失败')
+          setError(e.error || t('common.server-unreachable'))
         })
         .finally(() => {
           setLoading(false)
@@ -135,7 +136,7 @@ const ForumPostEditor: React.FC<Props> = ({
       })
       .catch(e => {
         setFatalError(false)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
 
     return () => {
@@ -222,7 +223,7 @@ const ForumPostEditor: React.FC<Props> = ({
       } catch (e) {
         setLoading(false)
         setFatalError(false)
-        setError(e.message || e.error || '连接服务器失败')
+        setError(e.message || e.error || t('common.server-unreachable'))
       } finally {
         setSaving(false)
       }
@@ -287,18 +288,18 @@ const ForumPostEditor: React.FC<Props> = ({
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('forum.post-editor.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功！</p>
+          <p>{t('forum.post-editor.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('forum.post-editor.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('forum.post-editor.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
@@ -306,7 +307,7 @@ const ForumPostEditor: React.FC<Props> = ({
         <table className="form" style={{ margin: '1em 0' }}>
           <tbody>
             <tr>
-              <td>{isThread ? '主题' : '帖子'}标题:</td>
+              <td>{isThread ? t('forum.post-editor.thread-title-label') : t('forum.post-editor.post-title-label')}</td>
               <td>
                 <input
                   className="text form-control"
@@ -323,7 +324,7 @@ const ForumPostEditor: React.FC<Props> = ({
             </tr>
             {isThread && (
               <tr>
-                <td>主题简短描述:</td>
+                <td>{t('forum.post-editor.description-label')}</td>
                 <td>
                   <textarea
                     cols={40}
@@ -358,7 +359,7 @@ const ForumPostEditor: React.FC<Props> = ({
           {useAdvancedEditor && (
             <StyledEditor
               className="form-control"
-              loading="加载中，请稍候..."
+              loading={t('forum.post-editor.loading')}
               height="250px"
               value={source}
               onChange={onSourceChange}
@@ -374,7 +375,7 @@ const ForumPostEditor: React.FC<Props> = ({
             className="btn btn-danger"
             type="button"
             name="cancel"
-            value="取消"
+            value={t('forum.post-editor.cancel')}
             onClick={onCancel}
             disabled={loading || saving}
           />
@@ -383,7 +384,7 @@ const ForumPostEditor: React.FC<Props> = ({
             className="btn btn-primary"
             type="button"
             name="preview"
-            value="预览"
+            value={t('forum.post-editor.preview')}
             onClick={onPreview}
             disabled={loading || saving}
           />
@@ -392,7 +393,7 @@ const ForumPostEditor: React.FC<Props> = ({
             className="btn btn-primary"
             type="button"
             name="save"
-            value="提交"
+            value={t('forum.post-editor.submit')}
             onClick={onSubmit}
             disabled={loading || saving}
           />

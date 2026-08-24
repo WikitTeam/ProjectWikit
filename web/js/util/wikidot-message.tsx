@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React from 'react'
 import styled from 'styled-components'
 import { renderTo, unmountFromRoot } from '~util/react-render-into'
@@ -80,13 +81,13 @@ export function showPreviewMessage() {
     <WikidotMessage
       background={'#FDD'}
       buttons={[
-        { title: '向下到编辑器', onClick: onDown },
-        { title: '关闭消息', onClick: onClose },
+        { title: t('util.wikidot-message.to-editor'), onClick: onDown },
+        { title: t('util.wikidot-message.dismiss'), onClick: onClose },
       ]}
     >
-      提示：这只是预览。
+      {t('util.wikidot-message.preview-note')}
       <br />
-      如果现在关闭此页面，更改将不会保存。
+      {t('util.wikidot-message.unsaved-note')}
     </WikidotMessage>
   )
 
@@ -111,28 +112,28 @@ export function showVersionMessage(num: number, date: Date, user: UserData, page
     <WikidotMessage
       background={'#EEF'}
       buttons={[
-        { title: '向下到版本列表', onClick: onDown },
-        { title: '关闭消息', onClick: onClose },
+        { title: t('util.wikidot-message.to-revisions'), onClick: onDown },
+        { title: t('util.wikidot-message.dismiss'), onClick: onClose },
       ]}
     >
       <table>
         <tbody>
           <tr>
-            <td>版本号：</td>
+            <td>{t('util.wikidot-message.revision-label')}</td>
             <td>{num}</td>
           </tr>
           <tr>
-            <td>创建日期：</td>
+            <td>{t('util.wikidot-message.date-label')}</td>
             <td>{formatDate(date)}</td>
           </tr>
           <tr>
-            <td>作者：</td>
+            <td>{t('util.wikidot-message.author-label')}</td>
             <td>
               <UserView data={user} />
             </td>
           </tr>
           <tr>
-            <td>页面名称：</td>
+            <td>{t('util.wikidot-message.page-label')}</td>
             <td>{pageId}</td>
           </tr>
         </tbody>

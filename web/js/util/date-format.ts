@@ -1,3 +1,8 @@
+import { t } from '~util/i18n'
+
+const MONTH_KEYS = Array.from({ length: 12 }, (_, i) => `util.date-format.month-${i + 1}`)
+const DAY_KEYS = Array.from({ length: 7 }, (_, i) => `util.date-format.day-${i + 1}`)
+
 function padString(paddingValue: string, str: string) {
   return String(paddingValue + str).slice(-paddingValue.length)
 }
@@ -5,22 +10,22 @@ function padString(paddingValue: string, str: string) {
 function formatTimeAgo(diffMs: number) {
   const minutes = Math.floor(diffMs / 1000 / 60)
   if (minutes < 1) {
-    return '刚刚'
+    return t('util.date-format.just-now')
   }
   if (minutes < 60) {
-    return `${minutes}分钟前`
+    return t('util.date-format.minutes-ago', { minutes })
   }
   const hours = Math.floor(minutes / 60)
   if (hours < 24) {
-    return `${hours}小时前`
+    return t('util.date-format.hours-ago', { hours })
   }
   const days = Math.floor(hours / 24)
-  return `${days}天前`
+  return t('util.date-format.days-ago', { days })
 }
 
 export default function formatDate(date: Date, format: string = '%m.%d.%Y %H:%M') {
-  const localizedMonthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-  const localizedDayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周天']
+  const localizedMonthNames = MONTH_KEYS.map(key => t(key))
+  const localizedDayNames = DAY_KEYS.map(key => t(key))
 
   if (!format) format = window.localStorage.dateFormat
   var months = localizedMonthNames

@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import { SigmaContainer, useLoadGraph, useRegisterEvents, useSigma } from '@react-sigma/core'
 import Graph from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
@@ -264,7 +265,7 @@ const AdminSusUsers: React.FC = () => {
       const data = await fetchAdminSusUsers()
       setUsers(data)
     } catch (e: any) {
-      setError(e.message || e.error || '未知错误')
+      setError(e.message || e.error || t('admin-sus-users.unknown-error'))
     } finally {
       setIsLoading(false)
     }
@@ -365,11 +366,11 @@ const AdminSusUsers: React.FC = () => {
   })
 
   if (error) {
-    return <>无法加载图表: {error}</>
+    return <>{t('admin-sus-users.chart-failed')} {error}</>
   }
 
   if (isLoading) {
-    return <>加载中...</>
+    return <>{t('admin-sus-users.loading')}</>
   }
 
   return (
@@ -377,7 +378,7 @@ const AdminSusUsers: React.FC = () => {
       <Wrapper />
       <SettingsRow>
         <label>
-          掩码 (仅IPv4):{' '}
+          {t('admin-sus-users.mask-label')}{' '}
           <select onChange={handleChangeMask}>
             <option value="32">/32</option>
             <option value="24">/24</option>
@@ -387,7 +388,7 @@ const AdminSusUsers: React.FC = () => {
         </label>
         <form onSubmit={handleFilterUser}>
           <label>
-            按名称/IP筛选 (回车确认): <input type="text" style={{ padding: '8px', height: '32px' }} ref={userSearchRef} />
+            {t('admin-sus-users.filter-label')} <input type="text" style={{ padding: '8px', height: '32px' }} ref={userSearchRef} />
           </label>
         </form>
       </SettingsRow>
@@ -405,10 +406,10 @@ const AdminSusUsers: React.FC = () => {
         {renderSelect(ignoredUsersRef, userToIp, (x: string) => ignoredUsers.includes(x))}
         <div>
           <button className="btn btn-info" onClick={handleIgnoreUsers}>
-            <span className="fas fa-angle-up" /> 选择
+            <span className="fas fa-angle-up" /> {t('admin-sus-users.select')}
           </button>{' '}
           <button className="btn btn-info" onClick={handleUnignoreUsers}>
-            <span className="fas fa-angle-down" /> 不选择
+            <span className="fas fa-angle-down" /> {t('admin-sus-users.deselect')}
           </button>
         </div>
         {renderSelect(allUsersRef, userToIp, (x: string) => !ignoredUsers.includes(x))}
@@ -417,10 +418,10 @@ const AdminSusUsers: React.FC = () => {
         {renderSelect(ignoredIPsRef, ipToUser, (x: string) => ignoredIPs.includes(x))}
         <div>
           <button className="btn btn-info" onClick={handleIgnoreIPs}>
-            <span className="fas fa-angle-up" /> 选择
+            <span className="fas fa-angle-up" /> {t('admin-sus-users.select')}
           </button>{' '}
           <button className="btn btn-info" onClick={handleUnignoreIPs}>
-            <span className="fas fa-angle-down" /> 不选择
+            <span className="fas fa-angle-down" /> {t('admin-sus-users.deselect')}
           </button>
         </div>
         {renderSelect(allIPsRef, ipToUser, (x: string) => !ignoredIPs.includes(x))}

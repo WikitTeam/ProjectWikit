@@ -1,4 +1,6 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
+import Trans from '~util/trans'
 import { useEffect, useState } from 'react'
 import { sprintf } from 'sprintf-js'
 import styled from 'styled-components'
@@ -75,77 +77,77 @@ export function renderArticleHistoryFlags(entry: ArticleLogEntry) {
     switch (type) {
       case 'new':
         return (
-          <span className="spantip" title="已创建新页面">
+          <span className="spantip" title={t('articles.history.flag-new')}>
             N
           </span>
         )
 
       case 'title':
         return (
-          <span className="spantip" title="标题已更改">
+          <span className="spantip" title={t('articles.history.flag-title')}>
             T
           </span>
         )
 
       case 'source':
         return (
-          <span className="spantip" title="内容已更改">
+          <span className="spantip" title={t('articles.history.flag-source')}>
             S
           </span>
         )
 
       case 'tags':
         return (
-          <span className="spantip" title="标签已更改">
+          <span className="spantip" title={t('articles.history.flag-tags')}>
             A
           </span>
         )
 
       case 'name':
         return (
-          <span className="spantip" title="页面已重命名/删除">
+          <span className="spantip" title={t('articles.history.flag-name')}>
             R
           </span>
         )
 
       case 'parent':
         return (
-          <span className="spantip" title="父页面已更改">
+          <span className="spantip" title={t('articles.history.flag-parent')}>
             M
           </span>
         )
 
       case 'file_added':
         return (
-          <span className="spantip" title="已上传文件">
+          <span className="spantip" title={t('articles.history.flag-file-added')}>
             F
           </span>
         )
 
       case 'file_deleted':
         return (
-          <span className="spantip" title="已删除文件">
+          <span className="spantip" title={t('articles.history.flag-file-deleted')}>
             F
           </span>
         )
 
       case 'file_renamed':
         return (
-          <span className="spantip" title="文件已重命名">
+          <span className="spantip" title={t('articles.history.flag-file-renamed')}>
             F
           </span>
         )
 
       case 'votes_deleted':
         return (
-          <span className="spantip" title="评分已更改">
+          <span className="spantip" title={t('articles.history.flag-votes')}>
             V
           </span>
         )
 
       case 'wikidot':
         return (
-          <span className="spantip" title="从Wikidot迁移的版本">
+          <span className="spantip" title={t('articles.history.flag-migrated')}>
             W
           </span>
         )
@@ -167,20 +169,22 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
 
   switch (entry.type) {
     case 'new':
-      return '正在创建新页面'
+      return t('articles.history.created')
 
     case 'title':
       return (
-        <>
-          标题已从 "<em>{entry.meta.prev_title}</em>" 更改为 "<em>{entry.meta.title}</em>"
-        </>
+        <Trans
+          id="articles.history.title-changed"
+          children={{ from: <em>{entry.meta.prev_title}</em>, to: <em>{entry.meta.title}</em> }}
+        />
       )
 
     case 'name':
       return (
-        <>
-          页面已从 "<em>{entry.meta.prev_name}</em>" 更改为 "<em>{entry.meta.name}</em>"
-        </>
+        <Trans
+          id="articles.history.name-changed"
+          children={{ from: <em>{entry.meta.prev_name}</em>, to: <em>{entry.meta.name}</em> }}
+        />
       )
 
     case 'tags':
@@ -188,58 +192,50 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
       let removed_tags = entry.meta.removed_tags.map((tag: any) => tag['name'])
       if (Array.isArray(added_tags) && added_tags.length && Array.isArray(removed_tags) && removed_tags.length) {
         return (
-          <>
-            已添加标签: {added_tags.join(', ')}. 已移除标签: {removed_tags.join(', ')}.
-          </>
+          <>{t('articles.history.tags-added-removed', { added: added_tags.join(', '), removed: removed_tags.join(', ') })}</>
         )
       } else if (Array.isArray(added_tags) && added_tags.length) {
-        return <>已添加标签: {added_tags.join(', ')}.</>
+        return <>{t('articles.history.tags-added', { added: added_tags.join(', ') })}</>
       } else if (Array.isArray(removed_tags) && removed_tags.length) {
-        return <>已移除标签: {removed_tags.join(', ')}.</>
+        return <>{t('articles.history.tags-removed', { removed: removed_tags.join(', ') })}</>
       }
       break
 
     case 'parent':
       if (entry.meta.prev_parent && entry.meta.parent) {
         return (
-          <>
-            父页面已从 "<em>{entry.meta.prev_parent}</em>" 更改为 "<em>{entry.meta.parent}</em>"
-          </>
+          <Trans
+            id="articles.history.parent-changed"
+            children={{ from: <em>{entry.meta.prev_parent}</em>, to: <em>{entry.meta.parent}</em> }}
+          />
         )
       } else if (entry.meta.prev_parent) {
         return (
-          <>
-            已移除父页面 "<em>{entry.meta.prev_parent}</em>"
-          </>
+          <Trans id="articles.history.parent-removed" children={{ parent: <em>{entry.meta.prev_parent}</em> }} />
         )
       } else if (entry.meta.parent) {
         return (
-          <>
-            已设置父页面 "<em>{entry.meta.parent}</em>"
-          </>
+          <Trans id="articles.history.parent-set" children={{ parent: <em>{entry.meta.parent}</em> }} />
         )
       }
       break
 
     case 'file_added':
       return (
-        <>
-          已上传文件: "<em>{entry.meta.name}</em>"
-        </>
+        <Trans id="articles.history.file-added" children={{ name: <em>{entry.meta.name}</em> }} />
       )
 
     case 'file_deleted':
       return (
-        <>
-          已删除文件: "<em>{entry.meta.name}</em>"
-        </>
+        <Trans id="articles.history.file-deleted" children={{ name: <em>{entry.meta.name}</em> }} />
       )
 
     case 'file_renamed':
       return (
-        <>
-          文件已重命名: "<em>{entry.meta.prev_name}</em>" 至 "<em>{entry.meta.name}</em>"
-        </>
+        <Trans
+          id="articles.history.file-renamed"
+          children={{ from: <em>{entry.meta.prev_name}</em>, to: <em>{entry.meta.name}</em> }}
+        />
       )
 
     case 'votes_deleted': {
@@ -251,7 +247,11 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
       }
       return (
         <>
-          页面评分已重置: {ratingStr} (评分数: {entry.meta.votes_count}, 人气: {entry.meta.popularity}%)
+          {t('articles.history.votes-deleted', {
+            rating: ratingStr,
+            votes: entry.meta.votes_count,
+            popularity: entry.meta.popularity,
+          })}
         </>
       )
     }
@@ -261,19 +261,17 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
       let removed_authors = entry.meta.removed_authors
       if (Array.isArray(added_authors) && added_authors.length && Array.isArray(removed_authors) && removed_authors.length) {
         return (
-          <>
-            已添加作者: {added_authors.join(', ')}. 已移除作者: {removed_authors.join(', ')}.
-          </>
+          <>{t('articles.history.authors-added-removed', { added: added_authors.join(', '), removed: removed_authors.join(', ') })}</>
         )
       } else if (Array.isArray(added_authors) && added_authors.length) {
-        return <>已添加作者: {added_authors.join(', ')}.</>
+        return <>{t('articles.history.authors-added', { added: added_authors.join(', ') })}</>
       } else if (Array.isArray(removed_authors) && removed_authors.length) {
-        return <>已移除作者: {removed_authors.join(', ')}.</>
+        return <>{t('articles.history.authors-removed', { removed: removed_authors.join(', ') })}</>
       }
     }
 
     case 'revert':
-      return <>页面已回滚至版本 #{entry.meta.rev_number}</>
+      return <>{t('articles.history.reverted', { revision: entry.meta.rev_number })}</>
   }
 }
 
@@ -311,7 +309,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
       })
       .catch(e => {
         setFatalError(entries === null)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -343,14 +341,14 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
     }
     return (
       <>
-        <a href="#" onClick={e => displayArticleVersion(e, entry)} title="检视页面版本">
+        <a href="#" onClick={e => displayArticleVersion(e, entry)} title={t('articles.history.view-version')}>
           V
         </a>
-        <a href="#" onClick={e => displayVersionSource(e, entry)} title="检视页面源代码">
+        <a href="#" onClick={e => displayVersionSource(e, entry)} title={t('articles.history.view-source')}>
           S
         </a>
         {entryCount !== entry.revNumber + 1 && (
-          <a href="#" onClick={e => revertArticleVersion(e, entry)} title="回复至修订版本">
+          <a href="#" onClick={e => revertArticleVersion(e, entry)} title={t('articles.history.revert')}>
             R
           </a>
         )}
@@ -424,24 +422,24 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
   return (
     <Styles>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.history.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.history.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
-        关闭
+        {t('articles.history.close')}
       </a>
-      <h1>页面更改历史</h1>
+      <h1>{t('articles.history.title')}</h1>
       <div id="revision-list" className={`${loading ? 'loading' : ''}`}>
         {loading && <Loader className="loader" />}
         <div className="buttons">
-          <input type="button" className="btn btn-default btn-sm" value="更新列表" onClick={() => loadHistory()} />
+          <input type="button" className="btn btn-default btn-sm" value={t('articles.history.refresh')} onClick={() => loadHistory()} />
           <input
             type="button"
             className="btn btn-default btn-sm"
-            value="比较版本"
+            value={t('articles.history.compare')}
             name="compare"
             id="history-compare-button"
             onClick={displayVersionDiff}
@@ -452,13 +450,13 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
           <table className="page-history">
             <tbody>
               <tr>
-                <td>版本</td>
+                <td>{t('articles.history.column-revision')}</td>
                 <td>&nbsp;</td>
-                <td>标记</td>
-                <td>操作</td>
-                <td>由</td>
-                <td>日期</td>
-                <td>评论</td>
+                <td>{t('articles.history.column-flags')}</td>
+                <td>{t('articles.history.column-actions')}</td>
+                <td>{t('articles.history.column-author')}</td>
+                <td>{t('articles.history.column-date')}</td>
+                <td>{t('articles.history.column-comment')}</td>
               </tr>
               {entries.map(entry => {
                 return (

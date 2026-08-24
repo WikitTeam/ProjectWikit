@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React from 'react'
 import * as Styled from './Header.styles'
 
@@ -17,7 +18,7 @@ const Header: React.FC<Props> = ({ crumb }) => {
         <b>{crumb}</b>
       </Styled.Path>
       <Styled.Spacer />
-      <Styled.GoHome href="/">返回站点</Styled.GoHome>
+      <Styled.GoHome href="/">{t('page.header.back-to-site')}</Styled.GoHome>
     </Styled.Container>
   )
 }

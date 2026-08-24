@@ -1,3 +1,5 @@
+import Trans from '~util/trans'
+import { t } from '~util/i18n'
 import React, { useMemo } from 'react'
 import { ArticleLogEntry } from '~api/articles'
 import { Notification as INotification } from '~api/notifications'
@@ -28,20 +30,27 @@ const Notification: React.FC<Props> = ({ notification }) => {
   const body = useMemo(() => {
     if (notification.type === 'new_post_reply' || notification.type === 'new_thread_post' || notification.type === 'forum_mention') {
       const title = {
-        new_post_reply: '回复了您的消息',
-        new_thread_post: '新的论坛消息',
-        forum_mention: '在论坛中提到您',
+        new_post_reply: t('notifications.item.type-post-reply'),
+        new_thread_post: t('notifications.item.type-new-post'),
+        forum_mention: t('notifications.item.type-mention'),
       }
       return (
         <>
           <Styled.TypeName>{title[notification.type as keyof typeof title]}</Styled.TypeName>
           <Styled.PostFrom>
-            来自 <UserView data={notification.author} /> 在话题中 <a href={notification.section.url}>{notification.section.name}</a> &raquo;{' '}
+            <Trans
+              id="notifications.item.from-author-in"
+              children={{
+                author: <UserView data={notification.author} />,
+                section: <a href={notification.section.url}>{notification.section.name}</a>,
+              }}
+            />{' '}
+            &raquo;{' '}
             <a href={notification.category.url}>{notification.category.name}</a> &raquo;{' '}
             <a href={notification.thread.url}>{notification.thread.name}</a>
           </Styled.PostFrom>
           <Styled.PostName>
-            <a href={notification.post.url}>{notification.post.name || '查看消息'}</a>
+            <a href={notification.post.url}>{notification.post.name || t('notifications.item.view-post')}</a>
           </Styled.PostName>
           <Styled.PostContent>
             <div dangerouslySetInnerHTML={{ __html: notification.message }} />
@@ -66,7 +75,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
 
       return (
         <>
-          <Styled.TypeName>关注的页面有新的编辑</Styled.TypeName>
+          <Styled.TypeName>{t('notifications.item.type-watched-edit')}</Styled.TypeName>
           <Styled.RevisionFields>
             <Styled.RevisionArticle>
               <a href={`/${notification.article.pageId}`}>{pageName}</a>
@@ -79,25 +88,25 @@ const Notification: React.FC<Props> = ({ notification }) => {
           </Styled.RevisionFields>
           {comment && (
             <Styled.RevisionComment>
-              <Styled.RevisionCommentCaption>评论：</Styled.RevisionCommentCaption> {comment}
+              <Styled.RevisionCommentCaption>{t('notifications.item.comment-label')}</Styled.RevisionCommentCaption> {comment}
             </Styled.RevisionComment>
           )}
         </>
       )
     } else if (notification.type === 'welcome') {
-      return <Styled.TypeName>欢迎来到本站</Styled.TypeName>
+      return <Styled.TypeName>{t('notifications.item.type-welcome')}</Styled.TypeName>
     } else if (notification.type === 'direct_message') {
       return (
         <>
-          <Styled.TypeName>{notification.sender_name} 给你发了新私信</Styled.TypeName>
+          <Styled.TypeName>{t('notifications.item.new-message', { sender: notification.sender_name })}</Styled.TypeName>
           <Styled.PostContent>{notification.preview}</Styled.PostContent>
           <Styled.PostName>
-            <a href={`/-/messages/${notification.sender_id}`}>查看会话</a>
+            <a href={`/-/messages/${notification.sender_id}`}>{t('notifications.item.view-conversation')}</a>
           </Styled.PostName>
         </>
       )
     } else {
-      return <Styled.TypeName>通知渲染失败</Styled.TypeName>
+      return <Styled.TypeName>{t('notifications.item.render-failed')}</Styled.TypeName>
     }
   }, [notification])
 

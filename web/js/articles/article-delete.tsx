@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -54,7 +55,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -96,7 +97,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
       }
     } catch (e) {
       setFatalError(false)
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setSaving(false)
     }
@@ -131,10 +132,10 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
     return (
       <Styles>
         <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-          关闭
+          {t('articles.delete.close-blocked')}
         </a>
-        <h1>删除页面</h1>
-        <p>此页面已被标记为删除，无法再次删除</p>
+        <h1>{t('articles.delete.title-blocked')}</h1>
+        <p>{t('articles.delete.already-deleted')}</p>
       </Styles>
     )
   }
@@ -143,36 +144,36 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>删除中...</p>
+          <p>{t('articles.delete.deleting')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>删除成功!</p>
+          <p>{t('articles.delete.deleted')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.delete.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.delete.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.delete.close')}
       </a>
-      <h1>删除页面</h1>
+      <h1>{t('articles.delete.title')}</h1>
       {canDelete ? (
-        <p>您可以将页面移至“deleted”分类，或永久删除（此操作不可恢复，请谨慎操作）。</p>
+        <p>{t('articles.delete.note')}</p>
       ) : (
-        <p>您可以将页面移至“deleted”分类以完成删除。永久删除功能不可用。</p>
+        <p>{t('articles.delete.note-no-permanent')}</p>
       )}
 
       {canDelete && (
         <table className="form">
           <tbody>
             <tr>
-              <td>如何操作?</td>
+              <td>{t('articles.delete.how-label')}</td>
               <td>
                 <input
                   type="checkbox"
@@ -183,7 +184,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
                   checked={!permanent}
                   disabled={loading || saving || !canRename}
                 />
-                <label htmlFor="page-rename-input">重命名{!canRename && ' (不可用)'}</label>
+                <label htmlFor="page-rename-input">{t('articles.delete.option-rename')}{!canRename && t('articles.delete.option-unavailable')}</label>
               </td>
             </tr>
             <tr>
@@ -198,7 +199,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
                   checked={permanent}
                   disabled={loading || saving}
                 />
-                <label htmlFor="page-permanent-input">永久删除</label>
+                <label htmlFor="page-permanent-input">{t('articles.delete.option-permanent')}</label>
               </td>
             </tr>
           </tbody>
@@ -208,24 +209,24 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
       {!permanent ? (
         <form method="POST" onSubmit={onSubmit}>
           <p>
-            为页面添加前缀“deleted:”可将其移至其他分类（命名空间）。此操作相当于删除，但信息不会丢失。
+            {t('articles.delete.rename-note')}
           </p>
           {isAlreadyDeleted && (
             <p>
-              <strong>注意:</strong> 该页面已在“deleted”分类中。如需永久删除，请使用“永久删除”。
+              <strong>{t('articles.delete.warning-label')}</strong> {t('articles.delete.warning-already-deleted')}
             </p>
           )}
           <div className="buttons form-actions">
-            <input type="button" className="btn btn-danger" value="取消" onClick={onCancel} />
-            {!isAlreadyDeleted && <input type="button" className="btn btn-primary" value={'移动至分类 "deleted"'} onClick={onSubmit} />}
+            <input type="button" className="btn btn-danger" value={t('articles.delete.cancel')} onClick={onCancel} />
+            {!isAlreadyDeleted && <input type="button" className="btn btn-primary" value={t('articles.delete.move')} onClick={onSubmit} />}
           </div>
         </form>
       ) : (
         <form method="POST" onSubmit={onSubmit}>
-          <p>此操作将永久删除页面且无法恢复。确定要继续吗？</p>
+          <p>{t('articles.delete.confirm-permanent')}</p>
           <div className="buttons form-actions">
-            <input type="button" className="btn btn-danger" value="取消" onClick={onCancel} />
-            <input type="button" className="btn btn-primary" value="删除" onClick={onSubmit} />
+            <input type="button" className="btn btn-danger" value={t('articles.delete.confirm-cancel')} onClick={onCancel} />
+            <input type="button" className="btn btn-primary" value={t('articles.delete.confirm')} onClick={onSubmit} />
           </div>
         </form>
       )}

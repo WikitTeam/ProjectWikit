@@ -1,4 +1,6 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
+import Trans from '~util/trans'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { UserData } from '~api/user'
 import {
@@ -76,7 +78,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
       })
       .catch(err => {
         if (cancelled) return
-        setError(err?.error || '加载会话失败')
+        setError(err?.error || t('messages.conversation-view.load-failed'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -152,7 +154,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
       setDraft('')
       onMessageSent()
     } catch (err: any) {
-      setSendError(err?.error || '发送失败')
+      setSendError(err?.error || t('messages.conversation-view.send-failed'))
     } finally {
       setSending(false)
     }
@@ -198,11 +200,11 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   }
 
   const partnerLabel = useMemo(() => {
-    if (!partner) return `用户 #${partnerId}`
+    if (!partner) return t('messages.conversation-view.unknown-user', { id: partnerId })
     return partner.name
   }, [partner, partnerId])
 
-  if (loading) return <Styled.LoadingBanner>加载中…</Styled.LoadingBanner>
+  if (loading) return <Styled.LoadingBanner>{t('messages.conversation-view.loading')}</Styled.LoadingBanner>
   if (error) return <Styled.ErrorBanner>{error}</Styled.ErrorBanner>
 
   return (
@@ -210,26 +212,29 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
       <Styled.ConversationHeader>
         {selectMode ? (
           <Styled.SelectModeToolbar>
-            <span>已选 {selectedIds.size} 条</span>
-            <Styled.ToolbarAction onClick={selectAll}>全选</Styled.ToolbarAction>
-            <Styled.ToolbarAction onClick={cancelSelectMode}>取消</Styled.ToolbarAction>
+            <span>{t('messages.conversation-view.selected-count', { count: selectedIds.size })}</span>
+            <Styled.ToolbarAction onClick={selectAll}>{t('messages.conversation-view.select-all')}</Styled.ToolbarAction>
+            <Styled.ToolbarAction onClick={cancelSelectMode}>{t('messages.conversation-view.select-cancel')}</Styled.ToolbarAction>
             <Styled.HeaderSpacer />
             <Styled.ToolbarAction danger disabled={selectedIds.size === 0} onClick={openReportModal}>
-              下一步 →
+              {t('messages.conversation-view.next')}
             </Styled.ToolbarAction>
           </Styled.SelectModeToolbar>
         ) : (
           <>
             <Styled.BackButton href={`/-${Paths.messages}`}>← </Styled.BackButton>
-            与 <a href={`/-/users/${partnerId}-${partner?.username || ''}`}>{partnerLabel}</a> 的对话
+            <Trans
+              id="messages.conversation-view.with-partner"
+              children={{ partner: <a href={`/-/users/${partnerId}-${partner?.username || ''}`}>{partnerLabel}</a> }}
+            />
             <Styled.HeaderSpacer />
-            <Styled.ReportButton onClick={enterSelectMode}>检举</Styled.ReportButton>
+            <Styled.ReportButton onClick={enterSelectMode}>{t('messages.conversation-view.report')}</Styled.ReportButton>
           </>
         )}
       </Styled.ConversationHeader>
       <Styled.MessageList ref={listRef} onScroll={handleScroll}>
         {messages.length === 0 && (
-          <Styled.EmptyState>还没有消息。发送第一条消息开始对话吧。</Styled.EmptyState>
+          <Styled.EmptyState>{t('messages.conversation-view.empty')}</Styled.EmptyState>
         )}
         {messages.map(msg => {
           const mine = msg.sender_id === currentUserId
@@ -273,11 +278,11 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={canSend ? '输入消息…（回车发送，Shift+回车换行）' : '你无法向该用户发送消息'}
+            placeholder={canSend ? t('messages.conversation-view.input-placeholder') : t('messages.conversation-view.cannot-send')}
             disabled={!canSend || sending}
           />
           <Styled.SendButton type="submit" disabled={!canSend || sending || !draft.trim()}>
-            {sending ? '发送中…' : '发送'}
+            {sending ? t('messages.conversation-view.sending') : t('messages.conversation-view.send')}
           </Styled.SendButton>
         </Styled.Composer>
       )}
@@ -302,9 +307,9 @@ function showReportModal(reportedId: number, messageIds: number[], onSuccess: ()
       await reportMessages(reportedId, messageIds, trimmed)
       close()
       onSuccess()
-      showInfoModal('检举已提交，管理员会尽快处理。')
+      showInfoModal(t('messages.conversation-view.report-submitted'))
     } catch (err: any) {
-      showErrorModal(err?.error || '提交失败')
+      showErrorModal(err?.error || t('messages.conversation-view.report-failed'))
     } finally {
       submitting = false
     }
@@ -313,21 +318,21 @@ function showReportModal(reportedId: number, messageIds: number[], onSuccess: ()
   uuid = addUnmanagedModal(
     <WikidotModal
       buttons={[
-        { title: '取消', onClick: close },
-        { title: '提交检举', onClick: submit, type: 'danger' },
+        { title: t('messages.conversation-view.report-cancel'), onClick: close },
+        { title: t('messages.conversation-view.report-submit'), onClick: submit, type: 'danger' },
       ]}
     >
       <p>
-        <strong>检举 {messageIds.length} 条消息</strong>
+        <strong>{t('messages.conversation-view.report-count', { count: messageIds.length })}</strong>
       </p>
       <Styled.ReportModalTextarea
-        placeholder="请说明检举理由（管理员会看到，最多 2000 字）"
+        placeholder={t('messages.conversation-view.report-placeholder')}
         onChange={e => {
           reason = e.target.value
         }}
       />
       <Styled.ReportModalHint>
-        提交后，选中的消息内容会连同你的理由一起发送给管理员。
+        {t('messages.conversation-view.report-note')}
       </Styled.ReportModalHint>
     </WikidotModal>,
   )
@@ -339,7 +344,7 @@ function showInfoModal(text: string) {
     if (uuid) removeUnmanagedModal(uuid)
   }
   uuid = addUnmanagedModal(
-    <WikidotModal buttons={[{ title: '好', onClick: close }]}>
+    <WikidotModal buttons={[{ title: t('messages.conversation-view.ok'), onClick: close }]}>
       <p>{text}</p>
     </WikidotModal>,
   )

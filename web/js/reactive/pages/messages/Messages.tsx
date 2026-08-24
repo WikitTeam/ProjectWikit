@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -29,25 +30,25 @@ const Messages: React.FC = () => {
     try {
       const user = await lookupUser(name)
       if (!user.id) {
-        setSearchError('未找到该用户')
+        setSearchError(t('messages.user-not-found'))
         return
       }
       setSearchInput('')
       navigate(`${Paths.messages}/${user.id}`)
     } catch (err: any) {
-      setSearchError(err?.error || '未找到该用户')
+      setSearchError(err?.error || t('messages.user-not-found'))
     } finally {
       setSearching(false)
     }
   }
 
   return (
-    <ProfilePage crumb="站内信">
+    <ProfilePage crumb={t('messages.crumb')}>
       <Styled.SectionHead>
         <Styled.Kicker>
-          <b>个人</b><span className="sep">/</span>站内信
+          <b>{t('messages.breadcrumb-profile')}</b><span className="sep">/</span>{t('messages.breadcrumb')}
         </Styled.Kicker>
-        <Styled.H1>站内信</Styled.H1>
+        <Styled.H1>{t('messages.title')}</Styled.H1>
       </Styled.SectionHead>
       <Styled.Layout>
         <Styled.Sidebar hasSelection={partnerId !== null}>
@@ -56,10 +57,10 @@ const Messages: React.FC = () => {
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="输入用户名查找并发信…"
+              placeholder={t('messages.search-placeholder')}
             />
             <Styled.SearchButton type="submit" disabled={searching || !searchInput.trim()}>
-              {searching ? '查找中' : '查找'}
+              {searching ? t('messages.searching') : t('messages.search')}
             </Styled.SearchButton>
           </Styled.SidebarSearch>
           {searchError && <Styled.SearchError>{searchError}</Styled.SearchError>}
@@ -71,7 +72,7 @@ const Messages: React.FC = () => {
           {partnerId !== null && !Number.isNaN(partnerId) ? (
             <ConversationView partnerId={partnerId} onMessageSent={bumpList} />
           ) : (
-            <Styled.EmptyState>请选择一个会话查看，或前往任意用户资料页发起私信。</Styled.EmptyState>
+            <Styled.EmptyState>{t('messages.empty')}</Styled.EmptyState>
           )}
         </Styled.Main>
       </Styled.Layout>

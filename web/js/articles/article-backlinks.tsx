@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -48,7 +49,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -73,20 +74,20 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
   return (
     <Styles>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.backlinks.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.backlinks.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.backlinks.close')}
       </a>
-      <h1>依赖此页面的其他页面</h1>
+      <h1>{t('articles.backlinks.title')}</h1>
       {loading && <Loader className="loader" />}
       {data?.links?.length ? (
         <>
-          <h2>反向链接</h2>
+          <h2>{t('articles.backlinks.links-heading')}</h2>
           <ul>
             {data.links.map((x, i) => (
               <li key={i}>
@@ -100,7 +101,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
       ) : null}
       {data?.includes?.length ? (
         <>
-          <h2>嵌入 (使用 [[include]])</h2>
+          <h2>{t('articles.backlinks.includes-heading')}</h2>
           <ul>
             {data.includes.map((x, i) => (
               <li key={i}>
@@ -114,7 +115,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
       ) : null}
       {data?.children?.length ? (
         <>
-          <h2>子页面</h2>
+          <h2>{t('articles.backlinks.children-heading')}</h2>
           <ul>
             {data.children.map((x, i) => (
               <li key={i}>
@@ -126,7 +127,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
           </ul>
         </>
       ) : null}
-      {!data?.children?.length && !data?.links?.length && !data?.includes?.length && !loading && <p>此页面没有反向链接</p>}
+      {!data?.children?.length && !data?.links?.length && !data?.includes?.length && !loading && <p>{t('articles.backlinks.empty')}</p>}
     </Styles>
   )
 }

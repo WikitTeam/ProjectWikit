@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React, { useRef, useState } from 'react'
 import { sprintf } from 'sprintf-js'
 import { useTheme } from 'styled-components'
@@ -52,7 +53,7 @@ export const Search: React.FC = () => {
       containerRef.current?.scrollTo(0, 0)
       setError(undefined)
     } catch (e: any) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setIsSearching(false)
     }
@@ -89,7 +90,7 @@ export const Search: React.FC = () => {
       })
       setError(undefined)
     } catch (e: any) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setIsSearching(false)
     }
@@ -100,27 +101,27 @@ export const Search: React.FC = () => {
   })
 
   return (
-    <Page title="站内搜索">
+    <Page title={t('search.page.title')}>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('search.page.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('search.page.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <Styled.Container ref={containerRef}>
         <Styled.SearchFieldContainer>
           <Styled.SearchFieldWrapper onSubmit={handleSearchSubmit} isDisabled={isSearching}>
-            <Styled.SearchField placeholder="您的查询" ref={searchRef} value={searchText} onChange={handleSearchChange} disabled={isSearching} />
+            <Styled.SearchField placeholder={t('search.page.query-placeholder')} ref={searchRef} value={searchText} onChange={handleSearchChange} disabled={isSearching} />
             <Styled.LoaderContainer>
-              <Styled.SearchSubmit disabled={isSearching} onClick={handleSearchSubmit} value={isSearching ? '' : '搜索'} />
+              <Styled.SearchSubmit disabled={isSearching} onClick={handleSearchSubmit} value={isSearching ? '' : t('search.page.submit')} />
               {isSearching && <Styled.Loader color={theme.uiSelectionForeground} />}
             </Styled.LoaderContainer>
           </Styled.SearchFieldWrapper>
           <Styled.CheckboxContainer>
             <label>
               <input type="checkbox" checked={isSource} onChange={handleSourceChange} />
-              <span>搜索源代码</span>
+              <span>{t('search.page.include-source')}</span>
             </label>
           </Styled.CheckboxContainer>
         </Styled.SearchFieldContainer>
@@ -136,7 +137,7 @@ export const Search: React.FC = () => {
                 <Styled.SearchResultSlug>{article.pageId}</Styled.SearchResultSlug>
                 <Styled.SearchResultMeta>
                   <Styled.SearchResultMetaItem>
-                    <Styled.SearchResultMetaKey>作者:</Styled.SearchResultMetaKey>
+                    <Styled.SearchResultMetaKey>{t('search.page.author-label')}</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>
                       {article.authors?.map(author => (
                         <React.Fragment key={author.id}>
@@ -146,21 +147,21 @@ export const Search: React.FC = () => {
                     </Styled.SearchResultMetaValue>
                   </Styled.SearchResultMetaItem>
                   <Styled.SearchResultMetaItem>
-                    <Styled.SearchResultMetaKey>创建时间:</Styled.SearchResultMetaKey>
+                    <Styled.SearchResultMetaKey>{t('search.page.created-label')}</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>{formatDate(new Date(article.createdAt))}</Styled.SearchResultMetaValue>
                   </Styled.SearchResultMetaItem>
                   <Styled.SearchResultMetaItem>
-                    <Styled.SearchResultMetaKey>最后修改:</Styled.SearchResultMetaKey>
+                    <Styled.SearchResultMetaKey>{t('search.page.updated-label')}</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>{formatDate(new Date(article.updatedAt))}</Styled.SearchResultMetaValue>
                   </Styled.SearchResultMetaItem>
                   <Styled.SearchResultMetaItem>
-                    <Styled.SearchResultMetaKey>评分:</Styled.SearchResultMetaKey>
+                    <Styled.SearchResultMetaKey>{t('search.page.rating-label')}</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>
                       {renderRating(article.rating.value, article.rating.mode)}
                       {article.rating.votes > 0 && (
                         <>
                           {' '}
-                          来自 {article.rating.votes} 人 (人气: {sprintf('%d%%', article.rating.popularity)})
+                          {t('search.page.rating-detail', { votes: article.rating.votes, popularity: sprintf('%d%%', article.rating.popularity) })}
                         </>
                       )}
                     </Styled.SearchResultMetaValue>
@@ -182,7 +183,7 @@ export const Search: React.FC = () => {
           })}
           {searchResults && searchResults.results.length > 0 && searchResults.results.length % 25 === 0 && (
             <Styled.Button onClick={handleLoadMore} isDisabled={isSearching} disabled={isSearching}>
-              {isSearching ? <Styled.Loader color={theme.uiSelectionForeground} /> : '更多结果'}
+              {isSearching ? <Styled.Loader color={theme.uiSelectionForeground} /> : t('search.page.more')}
             </Styled.Button>
           )}
         </Styled.SearchResultsWrapper>

@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
@@ -379,9 +380,9 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
       </TagListContainer>
       <TagInputArea>
         <TagInputTitle>
-          添加标签:
+          {t('components.tag-editor.add-label')}
           <br />
-          （输入以搜索标签）
+          {t('components.tag-editor.search-hint')}
         </TagInputTitle>
         <TagInput onChange={onInputChange} type="text" value={inputValue} onFocus={onInputFocus} ref={inputRef} onKeyDown={onInputKeyDown} />
         {!!inputValue.trim().length && !!filteredCategories.length && suggestionsOpen && (

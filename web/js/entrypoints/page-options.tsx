@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { sprintf } from 'sprintf-js'
@@ -253,7 +254,7 @@ const PageOptions: React.FC<Props> = ({
         setIsNowWatching(!isNowWatching)
       })
       .catch(e => {
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         clearTimeout(loadDelay)
@@ -373,93 +374,93 @@ const PageOptions: React.FC<Props> = ({
         <div className="page-watch-options">
           {pageId === 'forum:thread' && (
             <a href="#" id="watchThread" onClick={onWatch}>
-              {isNowWatching ? '停止' : '开始'} 关注
+              {isNowWatching ? t('page-options.watch-stop') : t('page-options.watch-start')}
             </a>
           )}
           {!pageId.startsWith('forum:') && (
             <a href="#" id="watchPage" onClick={onWatch}>
-              {isNowWatching ? '停止' : '开始'} 关注
+              {isNowWatching ? t('page-options.watch-stop') : t('page-options.watch-start')}
             </a>
           )}
         </div>
       )}
       {isSaving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('page-options.saving')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('page-options.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('page-options.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <div id="page-options-bottom" className="page-options-bottom">
         {editable && (
           <a id="edit-button" className="btn btn-default" href="#" onClick={onEdit}>
-            编辑
+            {t('page-options.edit')}
           </a>
         )}
         {ratingMode != 'disabled' && (
           <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>
-            {canRate ? '评分' : '评分'}&nbsp;({renderRating()})
+            {t('page-options.rate')} ({renderRating()})
           </a>
         )}
         {tagable && (
           <a id="tags-button" className="btn btn-default" href="#" onClick={onTags}>
-            标签
+            {t('page-options.tags')}
           </a>
         )}
         {canViewComments && (
           <a id="discuss-button" className="btn btn-default" href={commentThread || '/forum/start'}>
-            {canComment ? '讨论' : '讨论'}&nbsp;({commentCount || 0})
+            {t('page-options.discuss')} ({commentCount || 0})
           </a>
         )}
         <a id="history-button" className="btn btn-default" href="#" onClick={onHistory}>
-          历史记录
+          {t('page-options.history')}
         </a>
         <a id="files-button" className="btn btn-default" href="#" onClick={onFiles}>
-          附件
+          {t('page-options.files')}
         </a>
         <a id="more-options-button" className="btn btn-default" href="#" onClick={toggleExtOptions}>
-          {extOptions ? '-' : '+'}&nbsp;{'选项'}
+          {extOptions ? '-' : '+'} {t('page-options.more')}
         </a>
       </div>
       {extOptions && (
         <div id="page-options-bottom-2" className="page-options-bottom form-actions">
           <a id="backlinks-button" className="btn btn-default" href="#" onClick={onBacklinks}>
-            反向链接
+            {t('page-options.backlinks')}
           </a>
           <a id="view-source-button" className="btn btn-default" href="#" onClick={onSource}>
-            页面源代码
+            {t('page-options.source')}
           </a>
           <a id="view-authorship-button" className="btn btn-default" href="#" onClick={onAuthorship}>
-            作者信息
+            {t('page-options.authorship')}
           </a>
           {editable && (
             <a id="parent-page-button" className="btn btn-default" href="#" onClick={onParent}>
-              父页面
+              {t('page-options.parent')}
             </a>
           )}
           {canCreateHere && (
             <a id="child-page-button" className="btn btn-default" href="#" onClick={onChild}>
-              创建子页面
+              {t('page-options.new-child')}
             </a>
           )}
           {lockable && (
             <a id="page-block-button" className="btn btn-default" href="#" onClick={onLock}>
-              锁定页面
+              {t('page-options.lock')}
             </a>
           )}
           {canRename && (
             <a id="rename-move-button" className="btn btn-default" href="#" onClick={onRename}>
-              重新命名
+              {t('page-options.rename')}
             </a>
           )}
           {(canRename || canDelete) && (
             <a id="delete-button" className="btn btn-default" href="#" onClick={onDelete}>
-              删除
+              {t('page-options.delete')}
             </a>
           )}
         </div>

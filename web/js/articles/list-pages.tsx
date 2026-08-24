@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React from 'react'
 import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import { callModule, ModuleRenderResponse } from '../api/modules'
@@ -63,7 +64,7 @@ export function makeListPages(node: HTMLElement) {
       unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'
-      showErrorModal(e.error || '连接服务器失败')
+      showErrorModal(e.error || t('common.server-unreachable'))
     }
   }
 

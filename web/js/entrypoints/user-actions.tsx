@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import WikidotModal, {
   addUnmanagedModal,
@@ -27,8 +28,8 @@ function showConfirmModal(text: string, onConfirm: () => void) {
     <WikidotModal
       isError
       buttons={[
-        { title: '取消', onClick: onClose },
-        { title: '确定', onClick: onOk, type: 'danger' },
+        { title: t('user-actions.cancel'), onClick: onClose },
+        { title: t('user-actions.confirm'), onClick: onOk, type: 'danger' },
       ]}
     >
       <p>{text}</p>
@@ -62,9 +63,9 @@ export function attachUserActions() {
         currentBlocked = true
       }
       const label = container.querySelector('.block-label')
-      if (label) label.textContent = currentBlocked ? '取消拉黑' : '拉黑'
+      if (label) label.textContent = currentBlocked ? t('user-actions.unblock') : t('user-actions.block')
     } catch (err: any) {
-      showErrorModal(err?.error || '操作失败')
+      showErrorModal(err?.error || t('user-actions.failed'))
     }
   }
 
@@ -72,8 +73,8 @@ export function attachUserActions() {
     e.preventDefault()
     e.stopPropagation()
     const text = currentBlocked
-      ? '确定要取消对该用户的拉黑吗？'
-      : '拉黑该用户后，对方将无法向你发送私信。确定拉黑吗？'
+      ? t('user-actions.confirm-unblock')
+      : t('user-actions.confirm-block')
     showConfirmModal(text, runToggle)
   })
 }

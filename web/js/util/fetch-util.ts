@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import { getCookie } from './cookie-util'
 
 export type WRequestUploadProgressHandler = (lengthComputable: boolean, total: number, loaded: number) => void
@@ -89,7 +90,7 @@ export async function wFetch<T>(url: string, props?: WRequestInit): Promise<T> {
     j = await rsp.json()
   } catch (e) {
     const error: any = (await readErrorFromBody(e)) || {}
-    throw new APIError(error.error || '读取响应失败', e.status || 0, error.fields || null, undefined)
+    throw new APIError(error.error || t('util.fetch-util.read-failed'), e.status || 0, error.fields || null, undefined)
   }
   if (!rsp.ok) {
     throw new APIError(j.error, rsp.status, j.fields || null, undefined)

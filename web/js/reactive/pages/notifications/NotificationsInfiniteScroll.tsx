@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from 'styled-components'
@@ -96,7 +97,7 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
           <Loader color={theme.primary} />
         </Styled.LoaderContainer>
       )}
-      {!hasMore && items.length === 0 && <Styled.EmptyMessage>暂无通知 :(</Styled.EmptyMessage>}
+      {!hasMore && items.length === 0 && <Styled.EmptyMessage>{t('notifications.infinite-scroll.empty')}</Styled.EmptyMessage>}
     </>
   )
 }

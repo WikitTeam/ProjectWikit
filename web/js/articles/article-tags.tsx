@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -75,7 +76,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -107,7 +108,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
       window.location.reload()
     } catch (e) {
       setFatalError(false)
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setSaving(false)
     }
@@ -144,34 +145,34 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('articles.tags.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功!</p>
+          <p>{t('articles.tags.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.tags.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.tags.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.tags.close')}
       </a>
-      <h1>页面标签</h1>
+      <h1>{t('articles.tags.title')}</h1>
       <p>
-        标签是整理站点内容、在相关页面间建立“横向导航”的有效方式。您可以为每个页面添加多个标签。了解更多关于{' '}
-        <a href="http://zh.wikipedia.org/wiki/标签_(元数据)" target="_blank">
+        {t('articles.tags.note')}{' '}
+        <a href={t('articles.tags.tag-wiki-url')} target="_blank">
           {' '}
-          标签
+          {t('articles.tags.tag-wiki-label')}
         </a>
-        , 以及{' '}
-        <a href="http://zh.wikipedia.org/wiki/标签云" target="_blank">
-          标签云{' '}
+        {t('articles.tags.note-and')}{' '}
+        <a href={t('articles.tags.tag-cloud-wiki-url')} target="_blank">
+          {t('articles.tags.tag-cloud-wiki-label')}{' '}
         </a>
       </p>
 
@@ -179,7 +180,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
         <table className="form">
           <tbody>
             <tr>
-              <td>标签:</td>
+              <td>{t('articles.tags.tags-label')}</td>
             </tr>
             <tr>
               <td className="w-tag-editor-container">
@@ -190,9 +191,9 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
           </tbody>
         </table>
         <div className="buttons form-actions">
-          <input type="button" className="btn btn-danger" value="关闭" onClick={onCancel} />
-          <input type="button" className="btn btn-default" value="清除" onClick={onClear} />
-          <input type="button" className="btn btn-primary" value="保存标签" onClick={onSubmit} />
+          <input type="button" className="btn btn-danger" value={t('articles.tags.cancel')} onClick={onCancel} />
+          <input type="button" className="btn btn-default" value={t('articles.tags.clear')} onClick={onClear} />
+          <input type="button" className="btn btn-primary" value={t('articles.tags.save')} onClick={onSubmit} />
         </div>
       </form>
     </Styles>

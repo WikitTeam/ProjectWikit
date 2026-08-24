@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { sprintf } from 'sprintf-js'
@@ -123,7 +124,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setPopularity(rating.popularity)
       setMode(rating.mode)
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setLoading(false)
     }
@@ -147,7 +148,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setPopularity(rating.popularity)
       setMode(rating.mode)
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setLoading(false)
     }
@@ -188,20 +189,20 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <div className="w-rate-module page-rate-widget-box" data-page-id={pageId}>
         <span className="rate-points">
-          评分:&nbsp;<span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>
+          {t('articles.rating.updown-label')}<span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>
         </span>
         <span className="rateup btn btn-default">
-          <a title="喜欢" href="#">
+          <a title={t('articles.rating.like')} href="#">
             +
           </a>
         </span>
         <span className="ratedown btn btn-default">
-          <a title="不喜欢" href="#">
+          <a title={t('articles.rating.dislike')} href="#">
             -
           </a>
         </span>
         <span className="cancel btn btn-default">
-          <a title="取消评分" href="#">
+          <a title={t('articles.rating.cancel-vote')} href="#">
             X
           </a>
         </span>
@@ -213,7 +214,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <div className="w-stars-rate-module" data-page-id={pageId}>
         <div className="w-stars-rate-rating">
-          评分:&nbsp;<span className="w-stars-rate-number">{votes.length ? sprintf('%.1f', rating) : '—'}</span>
+          {t('articles.rating.stars-label')}<span className="w-stars-rate-number">{votes.length ? sprintf('%.1f', rating) : '—'}</span>
         </div>
         <div className="w-stars-rate-control">
           <div className="w-stars-rate-stars-wrapper">
@@ -222,11 +223,11 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
           <div className="w-stars-rate-cancel" />
         </div>
         <div className="w-stars-rate-votes">
-          <span className="w-stars-rate-number" title="评分数">
+          <span className="w-stars-rate-number" title={t('articles.rating.votes-title')}>
             {votes.length}
           </span>
           /
-          <span className="w-stars-rate-popularity" title="人气值（3.0分及以上评分占比）">
+          <span className="w-stars-rate-popularity" title={t('articles.rating.popularity-title')}>
             {popularity}
           </span>
           %
@@ -320,7 +321,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
           <>
             <br />
             <button className="w-rating-clear-rating-button" onClick={onAskClearRating}>
-              重置评分
+              {t('articles.rating.reset')}
             </button>
           </>
         )}
@@ -346,7 +347,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <>
         &nbsp;
-        <span className="admin-vote-date">({date === 'migrated' ? 'wikit迁移' : formatDate(new Date(date))})</span>
+        <span className="admin-vote-date">({date === 'migrated' ? t('articles.rating.migrated') : formatDate(new Date(date))})</span>
       </>
     )
   })
@@ -383,7 +384,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     const otherVotes = votes.filter(x => !x.visualGroup)
     if (otherVotes.length) {
       groups.push({
-        name: '其他用户的评分',
+        name: t('articles.rating.other-voters'),
         index: -1,
         votes: otherVotes,
         isUngrouped: true,
@@ -410,29 +411,29 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
   return (
     <Styles>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.rating.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.rating.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       {deleting && (
         <WikidotModal
           buttons={[
-            { title: '取消', onClick: onCancelClearRating },
-            { title: '是的，我确认重置', onClick: onClearRating },
+            { title: t('articles.rating.reset-cancel'), onClick: onCancelClearRating },
+            { title: t('articles.rating.reset-confirm'), onClick: onClearRating },
           ]}
         >
-          <h1>重置页面评分?</h1>
-          <p>请注意，此操作可通过版本历史进行回滚。</p>
+          <h1>{t('articles.rating.reset-title')}</h1>
+          <p>{t('articles.rating.reset-note')}</p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
-        关闭
+        {t('articles.rating.close')}
       </a>
-      <h1>页面评分</h1>
+      <h1>{t('articles.rating.title')}</h1>
       <span>
-        评价页面:
+        {t('articles.rating.rate-label')}
         <br />
         <br />
         <div className="article-rating-widgets-area">

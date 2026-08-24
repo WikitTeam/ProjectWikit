@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useRef, useState } from 'react'
 import styled from 'styled-components'
@@ -47,7 +48,7 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
     if (isFullNameAllowed(child) && child != pageId) {
       window.location.href = `/${child}/edit/true/parent/${pageId}`
     } else {
-      setError('无效的子页面ID!')
+      setError(t('articles.child.invalid-name'))
     }
   })
 
@@ -81,20 +82,20 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
   return (
     <Styles>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.child.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.child.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.child.close')}
       </a>
-      <h1>创建子页面</h1>
-      <p>此操作将创建一个以此页面为父页面的新页面</p>
+      <h1>{t('articles.child.title')}</h1>
+      <p>{t('articles.child.note')}</p>
       <p>
         {' '}
-        <em>提示:</em> <a onClick={e => onSnippet(e, 'fragment:')}>fragment:</a> /{' '}
+        <em>{t('articles.child.hint-label')}</em> <a onClick={e => onSnippet(e, 'fragment:')}>fragment:</a> /{' '}
         <a onClick={e => onSnippet(e, `fragment:${pageId}_`)}>{`fragment:${pageId}_`}</a>
       </p>
 
@@ -102,11 +103,11 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
         <table className="form">
           <tbody>
             <tr>
-              <td>此页面名称:</td>
+              <td>{t('articles.child.parent-name-label')}</td>
               <td>{pageId}</td>
             </tr>
             <tr>
-              <td>子页面名称:</td>
+              <td>{t('articles.child.child-name-label')}</td>
               <td>
                 <input ref={inputRef} type="text" name="child" className="text" onChange={onChange} id="page-child-input" value={child} autoFocus />
               </td>
@@ -114,8 +115,8 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
           </tbody>
         </table>
         <div className="buttons form-actions">
-          <input type="button" className="btn btn-danger" value="关闭" onClick={onCancel} />
-          <input type="button" className="btn btn-primary" value="创建" onClick={onSubmit} />
+          <input type="button" className="btn btn-danger" value={t('articles.child.cancel')} onClick={onCancel} />
+          <input type="button" className="btn btn-primary" value={t('articles.child.create')} onClick={onSubmit} />
         </div>
       </form>
     </Styles>

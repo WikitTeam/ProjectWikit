@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer'
@@ -83,7 +84,7 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
       setFirstSource(first.source)
       setSecondSource(second.source)
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setLoading(false)
     }
@@ -105,32 +106,32 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
   return (
     <Styles>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.diff.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.diff.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
-        关闭
+        {t('articles.diff.close')}
       </a>
-      <h1>比较页面版本</h1>
+      <h1>{t('articles.diff.title')}</h1>
       <div className="diff-box">
         <table className="page-compare">
           <tbody>
             <tr>
               <th></th>
-              <th>版本 {firstEntry.revNumber}</th>
-              <th>版本 {secondEntry.revNumber}</th>
+              <th>{t('articles.diff.revision-label')} {firstEntry.revNumber}</th>
+              <th>{t('articles.diff.revision-label')} {secondEntry.revNumber}</th>
             </tr>
             <tr>
-              <td>创建于:</td>
+              <td>{t('articles.diff.created-label')}</td>
               <td>{formatDate(new Date(firstEntry.createdAt))}</td>
               <td>{formatDate(new Date(secondEntry.createdAt))}</td>
             </tr>
           </tbody>
         </table>
-        <h3>更改源代码:</h3>
+        <h3>{t('articles.diff.source-heading')}</h3>
         {loading && <Loader className="loader" />}
         <ReactDiffViewer oldValue={firstSource} newValue={secondSource} compareMethod={DiffMethod.WORDS} splitView={false} styles={diffStyles} />
       </div>

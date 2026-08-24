@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import { sprintf } from 'sprintf-js'
 import { ModuleRateResponse, ratePage } from '../api/rate'
 import { showErrorModal } from '../util/wikidot-modal'
@@ -8,7 +9,7 @@ async function onClick(e: MouseEvent, pageId: string, vote: number | null): Prom
   try {
     return await ratePage({ pageId, value: vote })
   } catch (e) {
-    showErrorModal(e.error || '连接服务器失败')
+    showErrorModal(e.error || t('common.server-unreachable'))
     throw e
   }
 }

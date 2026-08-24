@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useState } from 'react'
 import { matchPath, useNavigate } from 'react-router-dom'
@@ -25,21 +26,21 @@ const Notifications: React.FC = () => {
   })
 
   return (
-    <ProfilePage crumb="通知">
+    <ProfilePage crumb={t('notifications.crumb')}>
       <Styled.SectionHead>
         <Styled.Kicker>
-          <b>个人</b><span className="sep">/</span>通知
+          <b>{t('notifications.breadcrumb-profile')}</b><span className="sep">/</span>{t('notifications.breadcrumb')}
         </Styled.Kicker>
-        <Styled.H1>通知</Styled.H1>
+        <Styled.H1>{t('notifications.title')}</Styled.H1>
       </Styled.SectionHead>
       <Styled.FilterContainer>
         <Styled.RadioLabel checked={showUnread}>
           <Styled.RadioInput type="radio" name="filter" checked={showUnread} onChange={() => onChecked(Paths.notificationsUnread)} />
-          未读
+          {t('notifications.tab-unread')}
         </Styled.RadioLabel>
         <Styled.RadioLabel checked={!showUnread}>
           <Styled.RadioInput type="radio" name="filter" checked={!showUnread} onChange={() => onChecked(Paths.notificationsAll)} />
-          全部
+          {t('notifications.tab-all')}
         </Styled.RadioLabel>
       </Styled.FilterContainer>
       <NotificationsInfiniteScroll key={`tab-${showUnread}`} batchSize={10} showUnread={showUnread} isForceUpdate={isForceUpdate} />

@@ -1,4 +1,6 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
+import Trans from '~util/trans'
 import { useEffect, useRef, useState } from 'react'
 import { searchModule, SearchResultItem } from '../api/search-module'
 import { highlightWords } from '../reactive/pages/search/Search.utils'
@@ -32,12 +34,12 @@ function relTime(s: string | null): string {
     day = 86400,
     hour = 3600,
     min = 60
-  if (diff >= year) return Math.floor(diff / year) + '年前'
-  if (diff >= month) return Math.floor(diff / month) + '个月前'
-  if (diff >= day) return Math.floor(diff / day) + '天前'
-  if (diff >= hour) return Math.floor(diff / hour) + '小时前'
-  if (diff >= min) return Math.floor(diff / min) + '分钟前'
-  return '刚刚'
+  if (diff >= year) return t('search.years-ago', { count: Math.floor(diff / year) })
+  if (diff >= month) return t('search.months-ago', { count: Math.floor(diff / month) })
+  if (diff >= day) return t('search.days-ago', { count: Math.floor(diff / day) })
+  if (diff >= hour) return t('search.hours-ago', { count: Math.floor(diff / hour) })
+  if (diff >= min) return t('search.minutes-ago', { count: Math.floor(diff / min) })
+  return t('search.just-now')
 }
 
 function preciseTime(s: string | null): string {
@@ -90,7 +92,7 @@ const SearchModule: React.FC<Props> = ({
       setSearched(true)
     } catch (e: any) {
       if (my !== seq.current) return
-      setError(e?.message || '搜索失败，请稍后再试。')
+      setError(e?.message || t('search.failed'))
     } finally {
       if (my === seq.current) {
         setLoading(false)
@@ -123,14 +125,14 @@ const SearchModule: React.FC<Props> = ({
           className="w-search-input"
           type="text"
           value={q}
-          placeholder={placeholder || '搜索…'}
+          placeholder={placeholder || t('search.placeholder')}
           onChange={e => setQ(e.target.value)}
         />
       </div>
 
       <div className="w-search-filters">
-        <input className="w-search-filter" type="text" value={author} placeholder="作者" onChange={e => setAuthor(e.target.value)} />
-        <input className="w-search-filter" type="text" value={tags} placeholder="标签（空格分隔，- 排除）" onChange={e => setTags(e.target.value)} />
+        <input className="w-search-filter" type="text" value={author} placeholder={t('search.author-placeholder')} onChange={e => setAuthor(e.target.value)} />
+        <input className="w-search-filter" type="text" value={tags} placeholder={t('search.tags-placeholder')} onChange={e => setTags(e.target.value)} />
         <div className="w-search-dates">
           <input className="w-search-filter w-search-date" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           <span className="w-search-date-sep">–</span>
@@ -151,10 +153,10 @@ const SearchModule: React.FC<Props> = ({
           ))}
         </div>
       ) : searched && !results.length && !error ? (
-        <div className="w-search-empty">未找到匹配的文章。</div>
+        <div className="w-search-empty">{t('search.empty')}</div>
       ) : (
         <>
-          {!!results.length && <div className="w-search-total">共 {total} 条结果</div>}
+          {!!results.length && <div className="w-search-total">{t('search.total', { total })}</div>}
           <div className="w-search-results">
             {results.map((r, i) => (
               <div className="w-search-result" key={`${r.url}-${i}`}>
@@ -170,16 +172,16 @@ const SearchModule: React.FC<Props> = ({
                   )}
                   {r.createdAt && (
                     <span className="w-search-result-date" title={preciseTime(r.createdAt)}>
-                      创建 {relTime(r.createdAt)}
+                      {t('search.created', { when: relTime(r.createdAt) })}
                     </span>
                   )}
                   {r.updatedAt && (
                     <span className="w-search-result-date" title={preciseTime(r.updatedAt)}>
-                      更新 {relTime(r.updatedAt)}
+                      {t('search.updated', { when: relTime(r.updatedAt) })}
                     </span>
                   )}
                   {r.rating && <span className="w-search-result-rating">{r.rating}</span>}
-                  <span className="w-search-result-comments">{r.comments ?? 0} 条评论</span>
+                  <span className="w-search-result-comments">{t('search.comment-count', { count: r.comments ?? 0 })}</span>
                   {!!r.tags.length && <span className="w-search-result-tags">{r.tags.join(' ')}</span>}
                 </div>
               </div>
@@ -187,14 +189,17 @@ const SearchModule: React.FC<Props> = ({
           </div>
           {hasMore && (
             <button className="w-search-more" onClick={onLoadMore} disabled={loadingMore}>
-              {loadingMore ? '加载中…' : '加载更多'}
+              {loadingMore ? t('search.loading-more') : t('search.load-more')}
             </button>
           )}
         </>
       )}
 
       <div className="w-search-footer">
-        由 <img className="w-search-footer-icon" src="/-/static/images/wikitHana.png" alt="Wikit" /> Wikit Search 支持搜索服务
+        <Trans
+          id="search.powered-by"
+          children={{ icon: <img className="w-search-footer-icon" src="/-/static/images/wikitHana.png" alt="Wikit" /> }}
+        />
       </div>
     </div>
   )

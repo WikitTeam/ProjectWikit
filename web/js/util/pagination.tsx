@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { t } from '~util/i18n'
 import useConstCallback from './const-callback'
 
 interface Props {
@@ -100,12 +101,12 @@ const Pagination: React.FC<Props> = ({ page, maxPages, onChange }) => {
   return (
     <div className="pager">
       <span className="pager-no">
-        第&nbsp;{page}&nbsp;页，共&nbsp;{maxPages}&nbsp;页
+        {t('util.pagination.page-of-total', { page, maxPages })}
       </span>
       {page > 1 && (
         <span className="target">
           <a href="#" onClick={e => onClick(e, page - 1)}>
-            &laquo;&nbsp;上一页
+            {t('util.pagination.previous')}
           </a>
         </span>
       )}
@@ -117,7 +118,7 @@ const Pagination: React.FC<Props> = ({ page, maxPages, onChange }) => {
       {page < maxPages && (
         <span className="target">
           <a href="#" onClick={e => onClick(e, page + 1)}>
-            下一页&nbsp;&raquo;
+            {t('util.pagination.next')}
           </a>
         </span>
       )}

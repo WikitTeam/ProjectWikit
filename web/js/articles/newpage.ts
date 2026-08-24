@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import { callModule } from '../api/modules'
 import { APIError } from '../util/fetch-util'
 import { showErrorModal } from '../util/wikidot-modal'
@@ -40,7 +41,7 @@ export function makeNewPageModule(node: HTMLElement) {
       })
       window.location.href = response.url
     } catch (err) {
-      showErrorModal(err instanceof APIError ? err.error : '创建页面时出错')
+      showErrorModal(err instanceof APIError ? err.error : t('articles.newpage.create-failed'))
       if (submitBtn) submitBtn.disabled = false
     }
   })

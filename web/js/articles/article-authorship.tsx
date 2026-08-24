@@ -6,6 +6,7 @@ import { fetchAllUsers, UserData } from '../api/user'
 import AuthorshipEditorComponent from '../components/authorship-editor'
 import sleep from '../util/async-sleep'
 import useConstCallback from '../util/const-callback'
+import { t } from '~util/i18n'
 import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
 
@@ -79,7 +80,7 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -88,7 +89,7 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
 
   const onAskSubmit = useConstCallback(async () => {
     if (authors.length == 0) {
-      setError('必须至少指定一个作者')
+      setError(t('articles.authorship.needs-one-author'))
       return
     }
     if (user && originAuthors.includes(user) && !authors.includes(user)) {
@@ -118,7 +119,7 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
       window.location.reload()
     } catch (e) {
       setFatalError(false)
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setSaving(false)
     }
@@ -159,44 +160,44 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('articles.authorship.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功！</p>
+          <p>{t('articles.authorship.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.authorship.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误：</strong> {error}
+            <strong>{t('articles.authorship.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       {askTransferOwnership && (
         <WikidotModal
           buttons={[
-            { title: '取消', onClick: onCancelTransferOwnership },
-            { title: '是，我要放弃', onClick: onSubmit },
+            { title: t('articles.authorship.disown-cancel'), onClick: onCancelTransferOwnership },
+            { title: t('articles.authorship.disown-confirm'), onClick: onSubmit },
           ]}
         >
-          <h1>是否放弃页面作者身份?</h1>
+          <h1>{t('articles.authorship.disown-title')}</h1>
           <p>
-            请注意，只有该页面作者栏中指定的人或管理员才能将作者权归还给您
+            {t('articles.authorship.disown-note')}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.authorship.close')}
       </a>
-      <h1>页面作者信息</h1>
+      <h1>{t('articles.authorship.title')}</h1>
 
       <form method="POST" onSubmit={onSubmit}>
         <table className="form">
           <tbody>
             <tr>
-              <td>作者:</td>
+              <td>{t('articles.authorship.author-label')}</td>
             </tr>
             <tr>
               <td className="w-authorship-editor-container">
@@ -208,9 +209,9 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
         </table>
         {editable && (
           <div className="buttons form-actions">
-            <input type="button" className="btn btn-danger" value="关闭" onClick={onCancel} />
-            <input type="button" className="btn btn-default" value="清除" onClick={onClear} />
-            <input type="button" className="btn btn-primary" value="保存" onClick={onAskSubmit} />
+            <input type="button" className="btn btn-danger" value={t('articles.authorship.close')} onClick={onCancel} />
+            <input type="button" className="btn btn-default" value={t('articles.authorship.clear')} onClick={onClear} />
+            <input type="button" className="btn btn-primary" value={t('articles.authorship.save')} onClick={onAskSubmit} />
           </div>
         )}
       </form>

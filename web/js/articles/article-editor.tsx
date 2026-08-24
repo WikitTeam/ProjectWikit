@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import { Editor } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 import * as React from 'react'
@@ -147,7 +148,7 @@ const ArticleEditor: React.FC<Props> = ({
         })
         .catch(e => {
           setFatalError(true)
-          setError(e.error || '连接服务器失败')
+          setError(e.error || t('common.server-unreachable'))
         })
         .finally(() => {
           setLoading(false)
@@ -213,7 +214,7 @@ const ArticleEditor: React.FC<Props> = ({
         .catch(e => {
           setSaved(false)
           setFatalError(false)
-          setError(e.error || '连接服务器失败')
+          setError(e.error || t('common.server-unreachable'))
         })
         .finally(() => {
           setSaving(false)
@@ -237,7 +238,7 @@ const ArticleEditor: React.FC<Props> = ({
           setSavingSuccess(false)
           setFatalError(false)
           setSaved(false)
-          setError(e.error || '连接服务器失败')
+          setError(e.error || t('common.server-unreachable'))
         })
         .finally(() => {
           setSaving(false)
@@ -319,27 +320,27 @@ const ArticleEditor: React.FC<Props> = ({
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('articles.editor.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功!</p>
+          <p>{t('articles.editor.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.editor.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.editor.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
-      {isNew ? <h1>创建页面</h1> : <h1>编辑页面</h1>}
+      {isNew ? <h1>{t('articles.editor.title-new')}</h1> : <h1>{t('articles.editor.title-edit')}</h1>}
       <form id="edit-page-form" onSubmit={onSubmit}>
         <table className="form" style={{ margin: '0.5em auto 1em 0' }}>
           <tbody>
             <tr>
-              <td>页面标题:</td>
+              <td>{t('articles.editor.page-title-label')}</td>
               <td>
                 <input
                   id="edit-page-title"
@@ -373,7 +374,7 @@ const ArticleEditor: React.FC<Props> = ({
           )}
           {useAdvancedEditor && (
             <StyledEditor
-              loading="加载中，请稍候..."
+              loading={t('articles.editor.loading')}
               height="350px"
               value={source}
               isFullscreen={fullscreenEditor}
@@ -382,7 +383,7 @@ const ArticleEditor: React.FC<Props> = ({
               options={monacoOptions}
             />
           )}
-          <p>更改摘要:</p>
+          <p>{t('articles.editor.comment-label')}</p>
           <textarea
             id="edit-page-comments"
             value={comment}
@@ -401,7 +402,7 @@ const ArticleEditor: React.FC<Props> = ({
             className="btn btn-danger"
             type="button"
             name="cancel"
-            value="取消"
+            value={t('articles.editor.cancel')}
             onClick={onCancel}
             disabled={loading || saving}
           />
@@ -410,7 +411,7 @@ const ArticleEditor: React.FC<Props> = ({
             className="btn btn-primary"
             type="button"
             name="preview"
-            value="预览"
+            value={t('articles.editor.preview')}
             onClick={onPreview}
             disabled={loading || saving}
           />
@@ -419,7 +420,7 @@ const ArticleEditor: React.FC<Props> = ({
             className="btn btn-primary"
             type="button"
             name="save"
-            value="保存"
+            value={t('articles.editor.save')}
             onClick={onSubmit}
             disabled={loading || saving}
           />

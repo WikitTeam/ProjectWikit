@@ -1,4 +1,6 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
+import Trans from '~util/trans'
 import { useState } from 'react'
 import useConstCallback from '../util/const-callback'
 
@@ -23,12 +25,12 @@ const Page404: React.FC<Props> = ({ pageId, pathParams }) => {
     return (
       <>
         <p id="404-message">
-          您请求的页面 <em>{pageId}</em> 不存在
+          <Trans id="page-404.not-found" children={{ page: <em>{pageId}</em> }} />
         </p>
         <ul id="create-it-now-link">
           <li>
             <a href="#" onClick={onCreate}>
-              创建页面
+              {t('page-404.create-page')}
             </a>
           </li>
         </ul>

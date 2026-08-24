@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React from 'react'
 import { useConfigContext } from '~reactive/config'
 import { ProfilePage } from '~reactive/containers/page'
@@ -13,9 +14,9 @@ const Profile: React.FC = () => {
     <ProfilePage>
       <Styled.Container>
         <Styled.Buttons>
-          <Styled.Link href={`/-/users/${user.id}-${user.username}`}>公开资料</Styled.Link>
+          <Styled.Link href={`/-/users/${user.id}-${user.username}`}>{t('profile.public-title')}</Styled.Link>
           <Styled.Separator />
-          <Styled.Link href={`/-/profile/edit`}>编辑</Styled.Link>
+          <Styled.Link href={`/-/profile/edit`}>{t('profile.edit')}</Styled.Link>
         </Styled.Buttons>
       </Styled.Container>
     </ProfilePage>

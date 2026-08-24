@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { ConversationSummary, getConversations } from '~api/messages'
@@ -31,7 +32,7 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
       })
       .catch(err => {
         if (cancelled) return
-        setError(err?.error || '加载会话列表失败')
+        setError(err?.error || t('messages.conversation-list.load-failed'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -66,10 +67,10 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
     }
   }, [])
 
-  if (loading) return <Styled.LoadingBanner>加载中…</Styled.LoadingBanner>
+  if (loading) return <Styled.LoadingBanner>{t('messages.conversation-list.loading')}</Styled.LoadingBanner>
   if (error) return <Styled.ErrorBanner>{error}</Styled.ErrorBanner>
   if (conversations.length === 0) {
-    return <Styled.LoadingBanner>暂无会话。前往任意用户资料页可发起私信。</Styled.LoadingBanner>
+    return <Styled.LoadingBanner>{t('messages.conversation-list.empty')}</Styled.LoadingBanner>
   }
 
   return (

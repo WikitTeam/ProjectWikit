@@ -1,3 +1,5 @@
+import Trans from '~util/trans'
+import { t } from '~util/i18n'
 import React, { useEffect, useState } from 'react'
 import * as ReactDOM from 'react-dom'
 import styled from 'styled-components'
@@ -168,9 +170,9 @@ export function showErrorModal(error: string) {
   }
 
   const modal = (
-    <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+    <WikidotModal buttons={[{ title: t('util.wikidot-modal.error-dismiss'), onClick: onCloseError }]} isError>
       <p>
-        <strong>错误：</strong> {error}
+        <strong>{t('util.wikidot-modal.error-label')}</strong> {error}
       </p>
     </WikidotModal>
   )
@@ -202,13 +204,13 @@ export function showRevertModal(pageId: string, entry: ArticleLogEntry) {
   const modal = (
     <WikidotModal
       buttons={[
-        { title: '取消', onClick: onClose },
-        { title: '是，恢复', onClick: onRevert },
+        { title: t('util.wikidot-modal.revert-cancel'), onClick: onClose },
+        { title: t('util.wikidot-modal.revert-confirm-button'), onClick: onRevert },
       ]}
     >
-      <h1>恢复页面版本？</h1>
+      <h1>{t('util.wikidot-modal.revert-title')}</h1>
       <p>
-        您确定要回退到版本 <strong>#{entry.revNumber}</strong>吗？
+        <Trans id="util.wikidot-modal.revert-confirm" children={{ revision: <strong>#{entry.revNumber}</strong> }} />
       </p>
     </WikidotModal>
   )

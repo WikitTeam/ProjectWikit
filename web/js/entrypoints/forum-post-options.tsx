@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import React, { useEffect, useRef, useState } from 'react'
 import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import {
@@ -204,7 +205,7 @@ const ForumPostOptions: React.FC<Props> = ({
         }
       })
       .catch(e => {
-        setDeleteError(e.error || '连接服务器失败')
+        setDeleteError(e.error || t('common.server-unreachable'))
       })
   })
 
@@ -230,7 +231,7 @@ const ForumPostOptions: React.FC<Props> = ({
       })
       .catch(e => {
         setRevisionsOpen(false)
-        setDeleteError(e.error || '连接服务器失败')
+        setDeleteError(e.error || t('common.server-unreachable'))
       })
   })
 
@@ -269,22 +270,22 @@ const ForumPostOptions: React.FC<Props> = ({
     <>
       {hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen && (
         <div className="changes" style={{ display: 'block' }}>
-          最后编辑于{' '}
+          {t('forum-post-options.last-edited')}{' '}
           <span className="odate" style={{ display: 'inline' }}>
             {formatDate(new Date(lastRevisionDate))}
           </span>{' '}
-          来自 <UserView data={lastRevisionAuthor} hideAvatar />{' '}
+          {t('forum-post-options.by')} <UserView data={lastRevisionAuthor} hideAvatar />{' '}
           <a href="#" onClick={onOpenRevisions}>
-            <i className="icon-plus" /> 显示更多
+            <i className="icon-plus" /> {t('forum-post-options.show-more')}
           </a>
         </div>
       )}
       {revisionsOpen && (
         <div className="revisions" style={{ display: 'block' }}>
           <a href="#" onClick={onCloseRevisions}>
-            - 隐藏
+            {t('forum-post-options.hide')}
           </a>
-          <div className="title">消息版本</div>
+          <div className="title">{t('forum-post-options.revisions-title')}</div>
           <table className="table">
             <tbody>
               {(revisions || []).map((rev, i) => (
@@ -295,7 +296,7 @@ const ForumPostOptions: React.FC<Props> = ({
                   <td>{formatDate(new Date(rev.createdAt))}</td>
                   <td>
                     <a href="#" onClick={e => onShowRevision(e, rev.createdAt)}>
-                      显示编辑记录
+                      {t('forum-post-options.show-revisions')}
                     </a>
                   </td>
                 </tr>
@@ -306,34 +307,34 @@ const ForumPostOptions: React.FC<Props> = ({
       )}
       <div style={{ display: 'none' }} ref={r => (refSelf.current = r?.parentElement ?? undefined)} />
       {deleteError && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('forum-post-options.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {deleteError}
+            <strong>{t('forum-post-options.error-label')}</strong> {deleteError}
           </p>
         </WikidotModal>
       )}
       {canReply && (
         <strong>
           <a href="#" onClick={onReply}>
-            回复
+            {t('forum-post-options.reply')}
           </a>
         </strong>
       )}{' '}
       {(canEdit || canDelete) && (
         <a href="#" onClick={onToggle}>
-          选项
+          {t('forum-post-options.options')}
         </a>
       )}
       {open && (
         <div className="options">
           {canEdit && (
             <a href="#" onClick={onEdit}>
-              编辑
+              {t('forum-post-options.edit')}
             </a>
           )}{' '}
           {canDelete && (
             <a href="#" onClick={onDelete}>
-              删除
+              {t('forum-post-options.delete')}
             </a>
           )}
         </div>

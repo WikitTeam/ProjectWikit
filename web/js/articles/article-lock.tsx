@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -51,7 +52,7 @@ const ArticleLock: React.FC<Props> = ({ pageId, isNew, onClose }) => {
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -83,7 +84,7 @@ const ArticleLock: React.FC<Props> = ({ pageId, isNew, onClose }) => {
       window.location.reload()
     } catch (e) {
       setFatalError(false)
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setSaving(false)
     }
@@ -119,34 +120,34 @@ const ArticleLock: React.FC<Props> = ({ pageId, isNew, onClose }) => {
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('articles.lock.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功!</p>
+          <p>{t('articles.lock.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.lock.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.lock.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.lock.close')}
       </a>
-      <h1>锁定此页面</h1>
+      <h1>{t('articles.lock.title')}</h1>
       <p>
-        页面被锁定（保护）后，只有站点版主和管理员可以编辑。此功能适用于首页等需要保护的页面。
+        {t('articles.lock.note')}
       </p>
 
       <form method="POST" onSubmit={onSubmit}>
         <table className="form">
           <tbody>
             <tr>
-              <td>页面已锁定:</td>
+              <td>{t('articles.lock.locked-label')}</td>
               <td>
                 <input
                   type="checkbox"
@@ -162,8 +163,8 @@ const ArticleLock: React.FC<Props> = ({ pageId, isNew, onClose }) => {
           </tbody>
         </table>
         <div className="buttons form-actions">
-          <input type="button" className="btn btn-danger" value="关闭" onClick={onCancel} />
-          <input type="button" className="btn btn-primary" value="保存" onClick={onSubmit} />
+          <input type="button" className="btn btn-danger" value={t('articles.lock.cancel')} onClick={onCancel} />
+          <input type="button" className="btn btn-primary" value={t('articles.lock.save')} onClick={onSubmit} />
         </div>
       </form>
     </Styles>

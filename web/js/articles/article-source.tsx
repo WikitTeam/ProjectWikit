@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -64,7 +65,7 @@ const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDelegate, sour
         setError('')
         setSource(article.source)
       } catch (e) {
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       } finally {
         setLoading(false)
       }
@@ -87,16 +88,16 @@ const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDelegate, sour
   return (
     <Styles>
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.source.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.source.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
-        关闭
+        {t('articles.source.close')}
       </a>
-      <h1>页面源代码</h1>
+      <h1>{t('articles.source.title')}</h1>
       <div id="source-code" className={`${loading ? 'loading' : ''}`}>
         {loading && <Loader className="loader" />}
         <textarea value={source || ''} readOnly />

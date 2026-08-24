@@ -1,4 +1,6 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
+import Trans from '~util/trans'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { fetchArticle, updateArticle } from '../api/articles'
@@ -51,7 +53,7 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -82,7 +84,7 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
       window.location.href = `/${newName}`
     } catch (e) {
       setFatalError(false)
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setSaving(false)
     }
@@ -115,38 +117,38 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('articles.rename.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功!</p>
+          <p>{t('articles.rename.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.rename.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.rename.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.rename.close')}
       </a>
-      <h1>重命名/移动页面</h1>
+      <h1>{t('articles.rename.title')}</h1>
       <p>
-        <em>重命名</em> 操作将更改页面的“unix名称”，即页面的访问地址。{' '}
+        <Trans id="articles.rename.note" children={{ action: <em>{t('articles.rename.note-action')}</em> }} />{' '}
       </p>
 
       <form method="POST" onSubmit={onSubmit}>
         <table className="form">
           <tbody>
             <tr>
-              <td>页面名称:</td>
+              <td>{t('articles.rename.current-name-label')}</td>
               <td>{pageId}</td>
             </tr>
             <tr>
-              <td>新页面名称:</td>
+              <td>{t('articles.rename.new-name-label')}</td>
               <td>
                 <input
                   type="text"
@@ -163,8 +165,8 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
           </tbody>
         </table>
         <div className="buttons form-actions">
-          <input type="button" className="btn btn-danger" value="关闭" onClick={onCancel} />
-          <input type="button" className="btn btn-primary" value="重命名/移动" onClick={onSubmit} />
+          <input type="button" className="btn btn-danger" value={t('articles.rename.cancel')} onClick={onCancel} />
+          <input type="button" className="btn btn-primary" value={t('articles.rename.submit')} onClick={onSubmit} />
         </div>
       </form>
     </Styles>

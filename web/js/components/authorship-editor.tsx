@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
@@ -257,9 +258,9 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
       {editable && (
         <AuthorshipInputArea>
           <AuthorInputTitle>
-            添加作者:
+            {t('components.authorship-editor.add-label')}
             <br />
-            （输入以搜索用户）
+            {t('components.authorship-editor.search-hint')}
           </AuthorInputTitle>
           <UserInput onChange={onInputChange} type="text" value={inputValue} onFocus={onInputFocus} ref={inputRef} onKeyDown={onInputKeyDown} />
           {!!inputValue.trim().length && !!filteredUsers.length && suggestionsOpen && (

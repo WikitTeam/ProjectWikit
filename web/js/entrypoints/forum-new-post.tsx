@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useState } from 'react'
 import { createForumPost, ForumNewPostRequest } from '../api/forum'
@@ -50,7 +51,7 @@ const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences
   return !open ? (
     <div className="new-post">
       <a href="#" onClick={onOpen}>
-        新回复
+        {t('forum-new-post.title')}
       </a>
     </div>
   ) : (

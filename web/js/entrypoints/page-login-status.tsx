@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Paths } from '~reactive/paths'
@@ -44,11 +45,11 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
     return (
       <>
         <a className="login-status-create-account btn" href="/-/signup">
-          创建账户
+          {t('page-login-status.sign-up')}
         </a>{' '}
-        <span>或</span>{' '}
+        <span>{t('page-login-status.or')}</span>{' '}
         <a className="login-status-sign-in btn btn-primary" href={`/-/login?to=${encodeURIComponent(window.location.href)}`}>
-          登录
+          {t('page-login-status.sign-in')}
         </a>
       </>
     )
@@ -65,13 +66,13 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
           <>
             {' '}|{' '}
             <a id="w-admin-link" href={`/-/admin`} target="_blank">
-              管理面板
+              {t('page-login-status.admin')}
             </a>
           </>
         )}
         {' | '}
         <a id="my-account" href={`/-/users/${user.urlName || user.username}`}>
-          个人资料
+          {t('page-login-status.profile')}
         </a>
         {notificationCount > 0 && (
           <>
@@ -88,16 +89,16 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
           <div id="account-options" ref={menuRef} style={{ display: 'block' }}>
             <ul>
               <li>
-                <a href={`/-/notifications`}>通知</a>
+                <a href={`/-/notifications`}>{t('page-login-status.notifications')}</a>
               </li>
               <li>
-                <a href={`/-/messages`}>站内信</a>
+                <a href={`/-/messages`}>{t('page-login-status.messages')}</a>
               </li>
               <li>
-                <a href={`/-/profile/edit`}>设置</a>
+                <a href={`/-/profile/edit`}>{t('page-login-status.settings')}</a>
               </li>
               <li>
-                <a href={`/-/logout?to=${encodeURIComponent(window.location.href)}`}>登出</a>
+                <a href={`/-/logout?to=${encodeURIComponent(window.location.href)}`}>{t('page-login-status.sign-out')}</a>
               </li>
             </ul>
           </div>

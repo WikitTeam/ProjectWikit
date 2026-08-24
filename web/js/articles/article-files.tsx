@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { Component } from 'react'
 import styled from 'styled-components'
@@ -188,7 +189,7 @@ class ArticleFiles extends Component<Props, State> {
       const { files, softLimit, hardLimit, softUsed, hardUsed } = await fetchArticleFiles(pageId)
       this.setState({ loading: false, error: undefined, files, softLimit, hardLimit, softUsed, hardUsed, optionsIndex: null, renameIndex: null })
     } catch (e) {
-      this.setState({ loading: false, error: e.error || '连接服务器失败' })
+      this.setState({ loading: false, error: e.error || t('common.server-unreachable') })
     }
   }
 
@@ -213,7 +214,7 @@ class ArticleFiles extends Component<Props, State> {
     const roundTo2 = (value: number) => Math.round(value * 100) / 100
 
     if (size < sizeKb) {
-      return `${size} 字节`
+      return t('articles.files.size-bytes', { size })
     }
     if (size < sizeMb) {
       return `${roundTo2(size / sizeKb)} KB`
@@ -259,7 +260,7 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ uploadFiles })
       this.loadFiles()
     } catch (e) {
-      this.updateFile(file, { error: e.error || '文件上传失败', uploading: false })
+      this.updateFile(file, { error: e.error || t('articles.files.upload-failed'), uploading: false })
     }
   }
 
@@ -291,7 +292,7 @@ class ArticleFiles extends Component<Props, State> {
       <>
         <div className="w-upload-files">
           <div className="w-upload-control">
-            <span>点击上传文件，或拖拽文件至此处</span>
+            <span>{t('articles.files.drop-hint')}</span>
             <input type="file" onChange={this.onFileChange} multiple />
           </div>
           {uploadFiles.length ? (
@@ -305,7 +306,7 @@ class ArticleFiles extends Component<Props, State> {
                       <span className="w-upload-size">{this.formatSize(file.file.size)}</span>
                       {!file.uploading ? (
                         <a href="#" className="w-upload-btn" onClick={e => this.onUploadFile(e, file)}>
-                          上传
+                          {t('articles.files.upload')}
                         </a>
                       ) : null}
                     </div>
@@ -316,12 +317,12 @@ class ArticleFiles extends Component<Props, State> {
                         </div>
                       </>
                     ) : null}
-                    {file.error ? <div className="w-upload-progress-error">文件未上传: {file.error}</div> : null}
+                    {file.error ? <div className="w-upload-progress-error">{t('articles.files.not-uploaded-label')} {file.error}</div> : null}
                   </div>
                 )
               })}
               <a href="#" className="w-upload-btn w-upload-all" onClick={this.onUploadAll}>
-                上传全部
+                {t('articles.files.upload-all')}
               </a>
             </div>
           ) : null}
@@ -364,7 +365,7 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ optionsIndex: null })
       this.loadFiles()
     } catch (e) {
-      this.setState({ loading: false, error: e.error || '删除文件失败' })
+      this.setState({ loading: false, error: e.error || t('articles.files.delete-failed') })
     }
   }
 
@@ -383,7 +384,7 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ optionsIndex: null })
       this.loadFiles()
     } catch (e) {
-      this.setState({ loading: false, error: e.error || '重命名文件失败' })
+      this.setState({ loading: false, error: e.error || t('articles.files.rename-failed') })
     }
   }
 
@@ -397,29 +398,29 @@ class ArticleFiles extends Component<Props, State> {
     return (
       <Styles>
         {error && (
-          <WikidotModal buttons={[{ title: '关闭', onClick: this.onCloseError }]} isError>
+          <WikidotModal buttons={[{ title: t('articles.files.error-dismiss'), onClick: this.onCloseError }]} isError>
             <p>
-              <strong>错误:</strong> {error}
+              <strong>{t('articles.files.error-label')}</strong> {error}
             </p>
           </WikidotModal>
         )}
         {renameIndex != null && (
           <WikidotModal
             buttons={[
-              { title: '重命名', onClick: this.onRename },
-              { title: '取消', onClick: this.onCancelRename },
+              { title: t('articles.files.rename-confirm'), onClick: this.onRename },
+              { title: t('articles.files.rename-cancel'), onClick: this.onCancelRename },
             ]}
           >
-            <h1>重命名</h1>
+            <h1>{t('articles.files.rename-title')}</h1>
             <div className="w-rename-modal">
               <table className="form">
                 <tbody>
                   <tr>
-                    <td>当前名称:</td>
+                    <td>{t('articles.files.current-name-label')}</td>
                     <td>{files?.[renameIndex].name}</td>
                   </tr>
                   <tr>
-                    <td>新名称:</td>
+                    <td>{t('articles.files.new-name-label')}</td>
                     <td>
                       <input type="text" value={renameName ?? ''} onChange={this.onRenameChange} />
                     </td>
@@ -430,21 +431,21 @@ class ArticleFiles extends Component<Props, State> {
           </WikidotModal>
         )}
         <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>
-          关闭
+          {t('articles.files.close')}
         </a>
-        <h1>文件</h1>
+        <h1>{t('articles.files.title')}</h1>
         <div className={`w-files-area ${loading ? 'loading' : ''}`}>
           {loading && <Loader className="loader" />}
           {!!files ? (
             <>
               <p>
-                文件数量: {files.length}
+                {t('articles.files.count-label')} {files.length}
                 <br />
-                总大小: {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
+                {t('articles.files.total-size-label')} {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
                 {(softLimit > 0 || hardLimit > 0) && (
                   <>
                     <br />
-                    站点已使用空间:
+                    {t('articles.files.site-usage-label')}
                     {softLimit > 0 && (
                       <>
                         {' '}
@@ -464,9 +465,9 @@ class ArticleFiles extends Component<Props, State> {
               <table className="table table-striped table-hover page-files">
                 <thead>
                   <tr>
-                    <th>文件名</th>
-                    <th>文件类型</th>
-                    <th>大小</th>
+                    <th>{t('articles.files.column-name')}</th>
+                    <th>{t('articles.files.column-type')}</th>
+                    <th>{t('articles.files.column-size')}</th>
                     <th />
                   </tr>
                 </thead>
@@ -485,7 +486,7 @@ class ArticleFiles extends Component<Props, State> {
                           <td>{this.formatSize(file.size)}</td>
                           <td>
                             <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptions(e, i)}>
-                              选项
+                              {t('articles.files.options')}
                             </a>
                           </td>
                         </tr>
@@ -497,11 +498,11 @@ class ArticleFiles extends Component<Props, State> {
                             <td />
                             <td colSpan={4} className="options">
                               <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptionsRename(e, i)}>
-                                重命名
+                                {t('articles.files.rename')}
                               </a>
                               &nbsp;
                               <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptionsDelete(e, i)}>
-                                删除
+                                {t('articles.files.delete')}
                               </a>
                             </td>
                           </tr>

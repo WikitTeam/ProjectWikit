@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useState } from 'react'
 import { updateForumThread } from '../api/forum'
@@ -77,7 +78,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         isPinned: !isPinned,
       })
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
       setIsLoading(false)
       return
     }
@@ -99,7 +100,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         isLocked: !isLocked,
       })
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
       setIsLoading(false)
       return
     }
@@ -135,7 +136,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         description: editDescription,
       })
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
       setIsLoading(false)
       return
     }
@@ -162,16 +163,16 @@ const ForumThreadOptions: React.FC<Props> = ({
     return (
       <WikidotModal
         buttons={[
-          { title: '取消', onClick: onEditCancel },
-          { title: '保存', onClick: onEditSave },
+          { title: t('forum-thread-options.edit-cancel'), onClick: onEditCancel },
+          { title: t('forum-thread-options.edit-save'), onClick: onEditSave },
         ]}
       >
-        <h2>编辑主题名称和描述</h2>
+        <h2>{t('forum-thread-options.edit-title')}</h2>
         <hr className="buttons-hr" />
         <table className="form">
           <tbody>
             <tr>
-              <td>主题标题:</td>
+              <td>{t('forum-thread-options.name-label')}</td>
               <td>
                 <input
                   className="text form-control"
@@ -184,7 +185,7 @@ const ForumThreadOptions: React.FC<Props> = ({
               </td>
             </tr>
             <tr>
-              <td>描述:</td>
+              <td>{t('forum-thread-options.description-label')}</td>
               <td>
                 <textarea
                   cols={50}
@@ -210,7 +211,7 @@ const ForumThreadOptions: React.FC<Props> = ({
         categoryId: moveCategoryId,
       })
     } catch (e) {
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
       setIsLoading(false)
       return
     }
@@ -227,16 +228,16 @@ const ForumThreadOptions: React.FC<Props> = ({
     return (
       <WikidotModal
         buttons={[
-          { title: '取消', onClick: onMoveCancel },
-          { title: '保存', onClick: onMoveSave },
+          { title: t('forum-thread-options.move-cancel'), onClick: onMoveCancel },
+          { title: t('forum-thread-options.move-save'), onClick: onMoveSave },
         ]}
       >
-        <h2>移动主题</h2>
+        <h2>{t('forum-thread-options.move-title')}</h2>
         <hr className="buttons-hr" />
         <table className="form">
           <tbody>
             <tr>
-              <td>请指定新分类:</td>
+              <td>{t('forum-thread-options.category-label')}</td>
               <td>
                 <select className="form-control" value={moveCategoryId} onChange={e => onChange('moveCategoryId', Number.parseInt(e.target.value))}>
                   {moveTo.map(c => (
@@ -263,34 +264,34 @@ const ForumThreadOptions: React.FC<Props> = ({
       {isMoving && renderMove()}
       {isLoading && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('forum-thread-options.saving')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('forum-thread-options.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('forum-thread-options.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       {canEdit && (
         <a href="#" onClick={onEdit} className="btn btn-default btn-small btn-sm">
-          编辑名称和描述
+          {t('forum-thread-options.edit-action')}
         </a>
       )}{' '}
       {canPin && (
         <a href="#" onClick={onPin} className="btn btn-default btn-small btn-sm">
-          {isPinned ? '取消置顶' : '置顶'}
+          {isPinned ? t('forum-thread-options.unpin') : t('forum-thread-options.pin')}
         </a>
       )}{' '}
       {canLock && (
         <a href="#" onClick={onLock} className="btn btn-default btn-small btn-sm">
-          {isLocked ? '解除锁定' : '锁定'}
+          {isLocked ? t('forum-thread-options.unlock') : t('forum-thread-options.lock')}
         </a>
       )}{' '}
       {canMove && (
         <a href="#" onClick={onMove} className="btn btn-default btn-small btn-sm">
-          移动
+          {t('forum-thread-options.move-action')}
         </a>
       )}
     </>

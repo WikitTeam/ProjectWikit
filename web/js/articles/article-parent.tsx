@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -50,7 +51,7 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
       })
       .catch(e => {
         setFatalError(true)
-        setError(e.error || '连接服务器失败')
+        setError(e.error || t('common.server-unreachable'))
       })
       .finally(() => {
         setLoading(false)
@@ -82,7 +83,7 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
       window.location.reload()
     } catch (e) {
       setFatalError(false)
-      setError(e.error || '连接服务器失败')
+      setError(e.error || t('common.server-unreachable'))
     } finally {
       setSaving(false)
     }
@@ -119,44 +120,44 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
     <Styles>
       {saving && (
         <WikidotModal isLoading>
-          <p>保存中...</p>
+          <p>{t('articles.parent.saving')}</p>
         </WikidotModal>
       )}
       {savingSuccess && (
         <WikidotModal>
-          <p>保存成功!</p>
+          <p>{t('articles.parent.saved')}</p>
         </WikidotModal>
       )}
       {error && (
-        <WikidotModal buttons={[{ title: '关闭', onClick: onCloseError }]} isError>
+        <WikidotModal buttons={[{ title: t('articles.parent.error-dismiss'), onClick: onCloseError }]} isError>
           <p>
-            <strong>错误:</strong> {error}
+            <strong>{t('articles.parent.error-label')}</strong> {error}
           </p>
         </WikidotModal>
       )}
       <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
-        关闭
+        {t('articles.parent.close')}
       </a>
-      <h1>父页面与面包屑</h1>
+      <h1>{t('articles.parent.title')}</h1>
       <p>
-        想要创建清晰的“返回”导航路径或构建站点结构？请为此页面设置父页面（上一级页面）。
+        {t('articles.parent.note')}
       </p>
       <p>
-        如果不需要{' '}
+        {t('articles.parent.note-before-link')}{' '}
         <a
-          href="https://zh.wikipedia.org/wiki/面包屑导航"
+          href={t('articles.parent.breadcrumb-wiki-url')}
           target="_blank"
         >
-          面包屑导航
+          {t('articles.parent.breadcrumb-wiki-label')}
         </a>{' '}
-        请将输入框留空。
+        {t('articles.parent.note-after-link')}
       </p>
 
       <form method="POST" onSubmit={onSubmit}>
         <table className="form">
           <tbody>
             <tr>
-              <td>父页面名称:</td>
+              <td>{t('articles.parent.parent-name-label')}</td>
               <td>
                 <input
                   type="text"
@@ -172,9 +173,9 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
           </tbody>
         </table>
         <div className="buttons form-actions">
-          <input type="button" className="btn btn-danger" value="关闭" onClick={onCancel} />
-          <input type="button" className="btn btn-default" value="清除" onClick={onClear} />
-          <input type="button" className="btn btn-primary" value="设置父页面" onClick={onSubmit} />
+          <input type="button" className="btn btn-danger" value={t('articles.parent.cancel')} onClick={onCancel} />
+          <input type="button" className="btn btn-default" value={t('articles.parent.clear')} onClick={onClear} />
+          <input type="button" className="btn btn-primary" value={t('articles.parent.save')} onClick={onSubmit} />
         </div>
       </form>
     </Styles>

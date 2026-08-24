@@ -1,3 +1,4 @@
+import { t } from '~util/i18n'
 export function makeFootnote(node: HTMLElement) {
   // hack: mark node as already processed because it was
   if ((node as any)._footnote) {
@@ -36,14 +37,14 @@ export function makeFootnote(node: HTMLElement) {
       display: 'none',
     })
     footnoteHovertip.innerHTML =
-      '<div class="content"><div class="footnote"><div class="f-heading"></div><div class="f-content"></div><div class="f-footer">（点击查看脚注）</div></div></div>'
+      `<div class="content"><div class="footnote"><div class="f-heading"></div><div class="f-content"></div><div class="f-footer">${t('articles.footnote.hint')}</div></div></div>`
     footnoteContainer.appendChild(footnoteHovertip)
   }
 
   const footnoteHeading: HTMLElement = footnoteHovertip.querySelector('.f-heading')!
   const footnoteContent: HTMLElement = footnoteHovertip.querySelector('.f-content')!
 
-  const shouldBeHeading = `脚注 ${(node.textContent ?? '').trim()}.`
+  const shouldBeHeading = t('articles.footnote.heading', { number: (node.textContent ?? '').trim() })
   const shouldBeContent: HTMLElement = el.cloneNode(true) as HTMLElement
 
   // drop the initial link and dot from shouldBeContent
