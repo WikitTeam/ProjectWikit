@@ -57,19 +57,19 @@ impl Bridge {
     }
 
     fn recv(&self) -> Option<Value> {
-        read_msg(&mut *self.input.borrow_mut()).expect("读入站消息失败")
+        read_msg(&mut *self.input.borrow_mut()).expect("read inbound message")
     }
 
     fn send(&self, v: &Value) {
-        write_msg(&mut *self.output.borrow_mut(), v).expect("写出站消息失败");
+        write_msg(&mut *self.output.borrow_mut(), v).expect("write outbound message");
     }
 
     fn call(&self, method: &str, args: Value) -> Value {
         self.send(&json!({"type": "callback", "method": method, "args": args}));
-        let reply = self.recv().expect("宿主在回调应答前关闭了连接");
+        let reply = self.recv().expect("host closed the connection before answering the callback");
         match reply.get("type").and_then(Value::as_str) {
             Some("callback_result") => reply.get("value").cloned().unwrap_or(Value::Null),
-            other => panic!("回调 {method}: type = {other:?}，期望 callback_result"),
+            other => panic!("callback {method} got type = {other:?}, want callback_result"),
         }
     }
 
@@ -330,7 +330,7 @@ fn main() {
 
     while let Some(msg) = bridge.recv() {
         if msg.get("type").and_then(Value::as_str) != Some("render") {
-            bridge.send(&json!({"type": "error", "message": "期望 type = render"}));
+            bridge.send(&json!({"type": "error", "message": "want type = render"}));
             continue;
         }
 
