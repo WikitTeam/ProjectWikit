@@ -20,6 +20,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/modules"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
+	"github.com/WikitTeam/ProjectWikit/internal/respheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
@@ -129,8 +130,10 @@ func serve(args []string) error {
 	}
 
 	mux, err := routing.New(routing.Table, proxy, map[string]http.Handler{
+		// The bundle is the one route answered above the session layer, so it
+		// is also the one that does not vary on the cookie.
 		static.Prefix: static.New(assets, proxy),
-		media.Prefix:  mediaHandler,
+		media.Prefix:  respheader.VaryCookie(mediaHandler),
 	})
 	if err != nil {
 		return err
@@ -141,7 +144,7 @@ func serve(args []string) error {
 
 	srv := &http.Server{
 		Addr:              *listen,
-		Handler:           mux,
+		Handler:           respheader.OriginPolicy(mux),
 		ReadHeaderTimeout: 20 * time.Second,
 	}
 	return srv.ListenAndServe()

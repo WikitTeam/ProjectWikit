@@ -8,6 +8,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 )
 
+const redirectContentType = "text/html; charset=utf-8"
+
 // Lookup resolves a request's Host to a site. *db.DB satisfies it.
 type Lookup interface {
 	SiteByHosts(ctx context.Context, hosts []string) (*db.Site, error)
@@ -47,6 +49,10 @@ func (h *HostRules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Not http.Redirect: it writes an HTML body for GET, and Django sends
 		// none.
 		w.Header().Set("Location", decision.Location)
+		// The type of the body Django would have sent, kept so the two agree.
+		w.Header().Set("Content-Type", redirectContentType)
+		// Written out because net/http leaves it off a HEAD it did not size.
+		w.Header().Set("Content-Length", "0")
 		w.WriteHeader(http.StatusFound)
 		return
 	}

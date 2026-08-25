@@ -57,13 +57,29 @@ func TestHostRulesRedirectsMediaPathToMediaHost(t *testing.T) {
 	}
 }
 
-func TestHostRulesRedirectCarriesNoHeaders(t *testing.T) {
+func TestHostRulesRedirectOmitsMediaHeaders(t *testing.T) {
 	w := serve(newRules(t, &fakeLookup{site: splitSite}), "wiki.example", "/local--files/a.png")
 
 	for _, name := range []string{"Access-Control-Allow-Origin", "X-Content-Type-Options", "X-Frame-Options"} {
 		if got := w.Header().Get(name); got != "" {
 			t.Errorf("%s = %q, want %q", name, got, "")
 		}
+	}
+}
+
+func TestHostRulesRedirectSetsContentType(t *testing.T) {
+	w := serve(newRules(t, &fakeLookup{site: splitSite}), "wiki.example", "/local--files/a.png")
+
+	if got, want := w.Header().Get("Content-Type"), "text/html; charset=utf-8"; got != want {
+		t.Errorf("Content-Type = %q, want %q", got, want)
+	}
+}
+
+func TestHostRulesRedirectSetsContentLength(t *testing.T) {
+	w := serve(newRules(t, &fakeLookup{site: splitSite}), "wiki.example", "/local--files/a.png")
+
+	if got, want := w.Header().Get("Content-Length"), "0"; got != want {
+		t.Errorf("Content-Length = %q, want %q", got, want)
 	}
 }
 

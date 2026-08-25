@@ -1,0 +1,22 @@
+# Requests aimed at the media host. One run carries one Host, so these cannot
+# live in default.txt:
+#
+#   PWIKIT_DIFF_HOST=media.localhost PWIKIT_DIFF_CORPUS=corpus/media.txt go test ./internal/difftest -run TestCorpusDiff -v
+#
+# The probe files come from internal/media/testdata/oracle_seed.py.
+
+/local--files/nonexistent.png
+/local--files/-/probe/empty
+
+# whole-file responses: Django streams them, and its gzip layer puts
+# Accept-Encoding into Vary. pwikit does not compress yet -- reason in PROGRESS.
+!/local--files/-/probe/a.pdf
+!HEAD /local--files/-/probe/a.pdf
+!/local--files/-/probe/a.txt
+!/local--files/-/probe/a.txt.gz
+!/local--files/-/probe/a.bin
+
+# the redirect back to the main host, the other direction of the rule
+# default.txt exercises
+/main
+/-/login

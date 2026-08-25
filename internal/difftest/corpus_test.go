@@ -20,13 +20,20 @@ const (
 //go:embed corpus/default.txt
 var defaultCorpus string
 
-func TestDefaultCorpusParses(t *testing.T) {
-	corpus, err := ParseCorpus(defaultCorpus)
-	if err != nil {
-		t.Fatalf("ParseCorpus(defaultCorpus) err = %v, want nil", err)
-	}
-	if len(corpus) == 0 {
-		t.Fatal("len(corpus) = 0, want more than 0")
+//go:embed corpus/media.txt
+var mediaCorpus string
+
+func TestCorpusFilesParse(t *testing.T) {
+	for name, src := range map[string]string{"default.txt": defaultCorpus, "media.txt": mediaCorpus} {
+		t.Run(name, func(t *testing.T) {
+			corpus, err := ParseCorpus(src)
+			if err != nil {
+				t.Fatalf("ParseCorpus(%s) err = %v, want nil", name, err)
+			}
+			if len(corpus) == 0 {
+				t.Fatalf("len(ParseCorpus(%s)) = 0, want more than 0", name)
+			}
+		})
 	}
 }
 
