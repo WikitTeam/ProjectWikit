@@ -1,0 +1,742 @@
+{
+  "queried": [
+    "view_articles",
+    "rate_articles",
+    "create_articles",
+    "edit_articles",
+    "tag_articles",
+    "move_articles",
+    "lock_articles",
+    "manage_article_files",
+    "delete_articles",
+    "reset_article_votes",
+    "comment_articles",
+    "view_article_comments",
+    "manage_article_authors"
+  ],
+  "scenarios": [
+    {
+      "name": "anonymous without object",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "anonymous",
+        "roles": null
+      },
+      "object": null
+    },
+    {
+      "name": "anonymous on an article",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "anonymous",
+        "roles": null
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "registered user takes the union of three roles",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a restriction beats a permission inside one role",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "half",
+          "permissions": [
+            "delete_articles",
+            "lock_articles"
+          ],
+          "restrictions": [
+            "delete_articles"
+          ]
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "half"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a restriction in one role does not take away what another grants",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "half",
+          "permissions": null,
+          "restrictions": [
+            "view_articles"
+          ]
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "half"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a category override grants to one role",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": [
+          {
+            "role": "editor",
+            "permissions": [
+              "delete_articles"
+            ],
+            "restrictions": null
+          }
+        ],
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a category override restricts the role that granted it",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": [
+          {
+            "role": "everyone",
+            "permissions": null,
+            "restrictions": [
+              "view_articles"
+            ]
+          }
+        ],
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a category override restricting one role leaves the others",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "viewer",
+          "permissions": [
+            "view_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "viewer"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": [
+          {
+            "role": "everyone",
+            "permissions": null,
+            "restrictions": [
+              "view_articles"
+            ]
+          }
+        ],
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "the override reaches a category asked about directly",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "category",
+        "overrides": [
+          {
+            "role": "editor",
+            "permissions": [
+              "delete_articles"
+            ],
+            "restrictions": null
+          }
+        ],
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a locked article takes six permissions from whoever cannot unlock",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": true,
+        "author": false
+      }
+    },
+    {
+      "name": "a locked article keeps everything for whoever can unlock",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "locker",
+          "permissions": [
+            "lock_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor",
+          "locker"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": true,
+        "author": false
+      }
+    },
+    {
+      "name": "an author gains authorship management",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": true
+      }
+    },
+    {
+      "name": "a lock beats authorship",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": true,
+        "author": true
+      }
+    },
+    {
+      "name": "an inactive user gets nothing",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "inactive",
+        "roles": [
+          "editor"
+        ]
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": false
+      }
+    },
+    {
+      "name": "a superuser gets everything",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "superuser",
+        "roles": null
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": true,
+        "author": false
+      }
+    },
+    {
+      "name": "an inactive superuser gets nothing",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "inactive_superuser",
+        "roles": null
+      },
+      "object": {
+        "kind": "article",
+        "overrides": null,
+        "locked": false,
+        "author": false
+      }
+    }
+  ]
+}
