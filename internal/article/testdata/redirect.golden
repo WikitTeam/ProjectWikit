@@ -1,0 +1,16 @@
+main -> <none>
+main/a/1 -> <none>
+Main -> /main
+Main/ -> /main
+Main/a/1/ -> /main/a/1
+Main/a/ -> /main/a/
+Main/b/2/a/1 -> /main/a/1/b/2
+Main/A/1/B/2 -> /main/a/1/b/2
+Main/norender/true/foo -> /main/norender/true/foo
+Main/x/y%20z -> /main/x/y%20z
+Main//x -> /main//x
+Main/a/%2Fb -> /main/a/%2Fb
+Main/%20x/1 -> /main/%20x/1
+%D1%80%D1%83%D1%81/a/1 -> /rus/a/1
+Some%20Page/a/1 -> /some-page/a/1
+SCP-173 -> /scp-173

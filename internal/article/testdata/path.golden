@@ -1,0 +1,86 @@
+=== 
+name "main"
+=== /
+name "main"
+=== main
+name "main"
+=== main/
+name "main"
+=== main/a/1
+name "main"
+param "a" = "1"
+=== main/a/1/
+name "main"
+param "a" = "1"
+=== main/a/
+name "main"
+param "a" = ""
+=== main/norender
+name "main"
+param "norender" = <none>
+=== main/a/1/b
+name "main"
+param "a" = "1"
+param "b" = <none>
+=== main/A/1/B/2
+name "main"
+param "a" = "1"
+param "b" = "2"
+=== main/b/2/a/1
+name "main"
+param "b" = "2"
+param "a" = "1"
+=== main/a/1/a/2
+name "main"
+param "a" = "2"
+=== main//x
+name "main"
+param "" = "x"
+===  main 
+name "main"
+=== MAIN/A/B
+name "MAIN"
+param "a" = "B"
+=== main/a/%2Fb
+name "main"
+param "a" = "/b"
+=== main/%20x/%20y
+name "main"
+param " x" = " y"
+=== main/uni/%E4%B8%AD
+name "main"
+param "uni" = "中"
+=== main/bad/%FF%FF
+name "main"
+param "bad" = "��"
+=== main/bad/%E4%B8
+name "main"
+param "bad" = "�"
+=== main/bad/%ZZ
+name "main"
+param "bad" = "%ZZ"
+=== scp-173/norender/true
+name "scp-173"
+param "norender" = "true"
+=== %D1%80%D1%83%D1%81/a/1
+name "рус"
+param "a" = "1"
+=== forum/start
+name "forum:start"
+=== forum/start/x/1
+name "forum:start"
+param "x" = "1"
+=== forum/c-12/x/1
+name "forum:category"
+param "c" = "12"
+param "x" = "1"
+=== forum/t-7
+name "forum:thread"
+param "t" = "7"
+=== forum/s-3/a/b
+name "forum:start"
+param "s" = "3"
+param "a" = "b"
+=== forum/other
+name "forum"
+param "other" = <none>

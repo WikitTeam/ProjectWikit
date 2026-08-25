@@ -1,0 +1,18 @@
+[
+  "main",
+  "main/a/1",
+  "Main",
+  "Main/",
+  "Main/a/1/",
+  "Main/a/",
+  "Main/b/2/a/1",
+  "Main/A/1/B/2",
+  "Main/norender/true/foo",
+  "Main/x/y%20z",
+  "Main//x",
+  "Main/a/%2Fb",
+  "Main/%20x/1",
+  "%D1%80%D1%83%D1%81/a/1",
+  "Some%20Page/a/1",
+  "SCP-173"
+]

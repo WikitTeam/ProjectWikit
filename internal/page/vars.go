@@ -223,7 +223,7 @@ func (v *Vars) compute(name string) (string, bool) {
 		}
 		parts := make([]string, len(tags))
 		for i, tag := range tags {
-			parts[i] = "[/system:page-tags/tag/" + quoteAll(tag) + " " + tag + "]"
+			parts[i] = "[/system:page-tags/tag/" + QuoteAll(tag) + " " + tag + "]"
 		}
 		return strings.Join(parts, ", "), true
 	case "created_at":
@@ -440,8 +440,8 @@ func (v *Vars) userText(u *db.User) string {
 	return u.Username
 }
 
-// quoteAll matches Python's quote(safe=”), which escapes the slash too and
+// QuoteAll matches Python's quote(safe=”), which escapes the slash too and
 // spells a space %20 rather than a plus.
-func quoteAll(s string) string {
+func QuoteAll(s string) string {
 	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 }
