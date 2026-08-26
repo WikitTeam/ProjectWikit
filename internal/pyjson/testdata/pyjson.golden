@@ -1,0 +1,68 @@
+=== null
+null
+=== true
+true
+=== false
+false
+=== 0
+0
+=== -17
+-17
+=== 4.0
+4.0
+=== 3.5
+3.5
+=== -0.25
+-0.25
+=== 0.1
+0.1
+=== 100.0
+100.0
+=== 1e-05
+1e-05
+=== ""
+""
+=== "plain"
+"plain"
+=== "with \"quotes\" and \\ backslash"
+"with \"quotes\" and \\ backslash"
+=== "tab\there"
+"tab\there"
+=== "line\nbreak"
+"line\nbreak"
+=== "\u0007bell"
+"\u0007bell"
+=== "\u007fdel"
+"\u007fdel"
+=== "<b>&amp;</b>"
+"<b>&amp;</b>"
+=== "it's"
+"it's"
+=== "中文"
+"\u4e2d\u6587"
+=== "emoji 😀"
+"emoji \ud83d\ude00"
+=== "\u00a0nbsp"
+"\u00a0nbsp"
+=== []
+[]
+=== [1, 2, 3]
+[1, 2, 3]
+=== ["a", null, true, 2.0]
+["a", null, true, 2.0]
+=== [[1], [], [null]]
+[[1], [], [null]]
+=== {}
+{}
+=== {"a": 1}
+{"a": 1}
+=== {"b": 1, "a": 2}
+{"b": 1, "a": 2}
+=== {"user": {"type": "anonymous", "name": "匿名用户", "username": null}, "notificationCount": 0}
+{"user": {"type": "anonymous", "name": "\u533f\u540d\u7528\u6237", "username": null}, "notificationCount": 0}
+=== {"nested": {"list": [{"k": "v"}, {}]}}
+{"nested": {"list": [{"k": "v"}, {}]}}
+=== {"键": "值"}
+{"\u952e": "\u503c"}
+=== {"rating": 4.0, "votes": 12, "popularity": 92, "mode": "updown"}
+{"rating": 4.0, "votes": 12, "popularity": 92, "mode": "updown"}
