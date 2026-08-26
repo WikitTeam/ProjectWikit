@@ -1,0 +1,153 @@
+{{/* Django's two load tags print nothing and leave these two newlines behind. */}}
+
+<!DOCTYPE html>
+<html lang="{{esc .Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-language" content="{{esc .Lang}}">
+
+    <meta property="og:site_name" content="{{esc .SiteName}}">
+    <meta property="og:title" content="{{esc .OGTitle}}">
+    <meta property="og:description" content="{{esc .OGDescription}}">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{esc .OGURL}}">
+    <link rel="canonical" href="{{esc .OGURL}}">
+    {{if .OGImage}}
+        <meta property="og:image" content="{{esc .OGImage}}">
+        <meta name="twitter:card" content="summary_large_image">
+    {{else}}
+        <meta name="twitter:card" content="summary">
+    {{end}}
+
+    {{if .NoIndex}}
+        <meta name="robots" content="noindex">
+    {{end}}
+
+    <title>{{esc .SiteTitle}}</title>
+
+    <link rel="icon" type="image/x-icon" href="/local--files/{{esc .SiteIcon}}">
+
+    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "fontawesome/css/all.css")}}">
+
+    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "wikidot-base.css")}}">
+    <link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">
+
+    <script src="{{esc (.Asset "app.js")}}" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "app.css")}}">
+
+    {{if .ComputedStyle}}
+        <style id="computed-style">{{.ComputedStyle}}</style>
+    {{end}}
+
+    {{if .GoogleTagID}}
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{esc .GoogleTagID}}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', '{{escjs .GoogleTagID}}');
+        </script>
+    {{end}}
+</head>
+<body id="html-body">
+    <div id="skrollr-body">
+        <a name="page-top"></a>
+        <div id="container-wrap-wrap">
+            <div id="container-wrap">
+                <div id="container">
+                    <div id="header">
+                        <h1><a href="/"><span>{{esc .SiteName}}</span></a></h1>
+                        <h2><span>{{esc .SiteHeadline}}</span></h2>
+                        <div id="search-top-box" class="form-search">
+                            <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="{{esc (.T "page.search-placeholder")}}">
+                                <input class="button btn" type="submit" value="{{esc (.T "page.search-submit")}}">
+                            </form>
+                        </div>
+                        <div id="top-bar">
+                            {{.NavTop}}
+                        </div>
+                        <div id="login-status" data-config="{{esc .LoginStatusConfig}}">
+                        </div>
+                        <div id="header-extra-div-1"></div>
+                        <div id="header-extra-div-2"></div>
+                        <div id="header-extra-div-3"></div>
+                    </div>
+                    <div id="content-wrap">
+                        <div id="side-bar">
+                            {{.NavSide}}
+                        </div>
+                        <div id="main-content">
+                            <div id="action-area-top"></div>
+                            <div id="page-title" style="{{if not .Title}}display: none{{end}}">
+                                {{esc .Title}}
+                            </div>
+                            {{if gt (len .Breadcrumbs) 1}}{{$last := sub (len .Breadcrumbs) 1}}
+                                <div id="breadcrumbs">
+                                {{range $i, $crumb := .Breadcrumbs}}
+                                    {{if lt $i $last}}
+                                        <a href="{{esc $crumb.URL}}">{{esc $crumb.Title}}</a>
+                                        &raquo;
+                                    {{else}}
+                                        {{esc $crumb.Title}}
+                                    {{end}}
+                                {{end}}
+                                </div>
+                            {{end}}
+                            <div id="page-content">
+                                {{.Content}}
+                            </div>
+                            <div class="page-tags">
+                                <span>
+                                <div>
+                                    {{range .TagCategories}}
+                                        <div>
+                                            <strong>{{esc .Name}}:</strong>
+                                            {{range .Tags}}
+                                                {{if not .Hidden}}
+                                                    <a href="/system:page-tags/tag/{{esc .FullName}}#pages">{{esc .Name}}</a>
+                                                {{end}}
+                                            {{end}}
+                                        </div>
+                                    {{end}}
+                                </div>
+                                </span>
+                            </div>
+                            <div id="page-info-break"></div>
+                            {{if not .UpdatedAt.IsZero}}
+                                <div id="page-info">{{.PageInfo}}</div>
+                            {{end}}
+                            <div id="page-options-container" data-config="{{esc .OptionsConfig}}"></div>
+                            <div id="action-area"></div>
+                        </div>
+                    </div>
+                    <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
+                    <div id="license-area" class="license-area">
+                        {{.License}}
+                    </div>
+                    <div id="extrac-div-1"><span></span></div>
+                    <div id="extrac-div-2"><span></span></div>
+                    <div id="extrac-div-3"><span></span></div>
+                </div>
+            </div>
+            <div id="extra-div-1"><span></span></div>
+            <div id="extra-div-2"><span></span></div>
+            <div id="extra-div-3"><span></span></div>
+            <div id="extra-div-4"><span></span></div>
+            <div id="extra-div-5"><span></span></div>
+            <div id="extra-div-6"><span></span></div>
+            <div id="w-extra-div-1"><span></span></div>
+            <div id="w-extra-div-2"><span></span></div>
+            <div id="w-extra-div-3"><span></span></div>
+            <div id="w-extra-div-4"><span></span></div>
+            <div id="w-extra-div-5"><span></span></div>
+            <div id="w-extra-div-6"><span></span></div>
+        </div>
+    </div>
+    <div id="dummy-ondomready-block" style="display: none"></div>
+    <div id="w-modals"></div>
+</body>
+</html>

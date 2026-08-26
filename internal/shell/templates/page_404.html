@@ -1,0 +1,5 @@
+{{if .AllowCreate}}
+    <div id="create-new-page" data-config="{{esc .Options}}"></div>
+{{else}}
+    <p id="404-message">{{.Message}}
+{{end}}
