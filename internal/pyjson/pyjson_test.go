@@ -59,8 +59,6 @@ func corpus() []string {
 	}
 }
 
-// decode turns one corpus document into the pyjson values that spell it, which
-// is where an int stays an int and 4.0 stays a float.
 func decode(t *testing.T, doc string) any {
 	t.Helper()
 	dec := json.NewDecoder(strings.NewReader(doc))
