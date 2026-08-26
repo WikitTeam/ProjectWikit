@@ -17,6 +17,7 @@ from django.utils import timezone
 
 from web.controllers import articles
 from web.models.articles import Article, Category, Tag, TagsCategory, Vote
+from web.models.notifications import UserNotification, UserNotificationMapping
 from web.models.settings import Settings
 from web.models.site import Site
 from web.models.users import User
@@ -52,6 +53,13 @@ def make_tag(slug, name):
     category, _ = TagsCategory.objects.get_or_create(slug=slug, defaults=dict(name=slug))
     tag, _ = Tag.objects.get_or_create(category=category, name=name.lower())
     return tag
+
+
+def notify(user, kind, viewed):
+    notification, _ = UserNotification.objects.get_or_create(type=kind, meta={'probe': kind})
+    UserNotificationMapping.objects.update_or_create(
+        recipient=user, notification=notification, defaults=dict(is_viewed=viewed),
+    )
 
 
 def vote(article, user, rate):
@@ -97,6 +105,9 @@ bare.authors.clear()
 full.tags.set([make_tag('_default', 'Zeta'), make_tag('_default', 'alpha'), make_tag('lang', 'en')])
 TagsCategory.objects.filter(slug='lang').update(priority=1)
 bare.tags.clear()
+
+notify(author, UserNotification.NotificationType.Welcome, False)
+notify(author, UserNotification.NotificationType.DirectMessage, True)
 
 vote(full, author, 1)
 vote(full, coauthor, 1)
