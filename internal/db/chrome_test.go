@@ -130,3 +130,19 @@ func TestCategoryIndexedOfUnknownCategory(t *testing.T) {
 		t.Errorf("CategoryIndexed(no-such-category) = false, want true")
 	}
 }
+
+func TestUnreadNotificationsCountsOnlyUnviewed(t *testing.T) {
+	d := newTestDB(t)
+
+	u, err := d.UserByName(context.Background(), "probeauthor")
+	if err != nil {
+		t.Fatalf("UserByName() err = %v, want nil", err)
+	}
+	got, err := d.UnreadNotifications(context.Background(), u.ID)
+	if err != nil {
+		t.Fatalf("UnreadNotifications() err = %v, want nil", err)
+	}
+	if got != 1 {
+		t.Errorf("UnreadNotifications(probeauthor) = %d, want 1", got)
+	}
+}

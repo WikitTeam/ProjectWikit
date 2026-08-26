@@ -46,6 +46,10 @@ type Role struct {
 	BadgeShowBorder   bool
 }
 
+func (r Role) IsVisual() bool {
+	return r.GroupVotes || r.InlineVisualMode != InlineHidden || r.ProfileVisualMode != ProfileHidden
+}
+
 type Badge struct {
 	Text       string
 	Bg         string

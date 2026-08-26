@@ -38,6 +38,29 @@ func (u *User) ActiveAt(now time.Time) bool {
 	return now.After(*u.InactiveUntil)
 }
 
+func (u *User) DisplayLabel() string {
+	if u.Type == UserTypeWikidot {
+		return "wd:" + firstNonEmpty(u.DisplayName, u.WikidotUsername, u.Username)
+	}
+	return firstNonEmpty(u.DisplayName, u.Username)
+}
+
+func (u *User) URLName() string {
+	if u.Type == UserTypeWikidot {
+		return firstNonEmpty(u.WikidotUsername, u.Username)
+	}
+	return u.Username
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
 const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser`
 
 // Django's QuerySet.first() falls back to ordering by primary key when the
