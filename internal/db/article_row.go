@@ -44,6 +44,8 @@ const DefaultCategory = "_default"
 
 const articleColumns = `id, category, name, title, parent_id, locked, created_at, updated_at, media_name`
 
+const prefixedArticleColumns = `a.id, a.category, a.name, a.title, a.parent_id, a.locked, a.created_at, a.updated_at, a.media_name`
+
 var qArticleByName = register("ArticleByName", `
 SELECT `+articleColumns+`
 FROM web_article

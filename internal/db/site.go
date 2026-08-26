@@ -16,10 +16,12 @@ type Site struct {
 	Domain      string
 	MediaDomain string
 	HomePage    string
+	Icon        string
+	ThemeID     *int64
 }
 
 var qSiteByHost = register("SiteByHost", `
-SELECT id, slug, title, headline, domain, media_domain, home_page
+SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id
 FROM web_site
 WHERE domain = $1 OR media_domain = $1
 ORDER BY id
@@ -32,7 +34,8 @@ func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 	for _, host := range hosts {
 		var s Site
 		err := d.pool.QueryRow(ctx, qSiteByHost, host).Scan(
-			&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage)
+			&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage,
+			&s.Icon, &s.ThemeID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			continue
 		}

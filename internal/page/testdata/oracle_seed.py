@@ -95,6 +95,7 @@ full.save()
 full.authors.set([author, coauthor])
 bare.authors.clear()
 full.tags.set([make_tag('_default', 'Zeta'), make_tag('_default', 'alpha'), make_tag('lang', 'en')])
+TagsCategory.objects.filter(slug='lang').update(priority=1)
 bare.tags.clear()
 
 vote(full, author, 1)
