@@ -34,7 +34,7 @@ type corpusArticle struct {
 
 var corpus = varsCorpus{
 	Articles: []corpusArticle{
-		{Name: "probe:full", Viewer: "probeauthor"},
+		{Name: "probe:full", Viewer: "probe-author"},
 		{Name: "probe:full", Viewer: ""},
 		{Name: "probe:bare", Viewer: ""},
 		{Name: "probe:parent", Viewer: ""},

@@ -28,15 +28,15 @@ True
 === probe:full created_by
 [[span]]Probe Author[[/span]] [[span]]wd:Probe WD[[/span]]
 === probe:full created_by_linked
-[[*user probeauthor]] [[*user probewd]]
+[[*user probe-author]] [[*user 576c0df3-8a28-4468-9770-ede851d88c67]]
 === probe:full created_by_linked_plain
-[[user probeauthor]] [[user probewd]]
+[[user probe-author]] [[user 576c0df3-8a28-4468-9770-ede851d88c67]]
 === probe:full updated_by
 Probe Author
 === probe:full updated_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probe:full updated_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probe:full authors_count
 2
 === probe:full tags
@@ -105,15 +105,15 @@ False
 === probe:full created_by
 [[span]]Probe Author[[/span]] [[span]]wd:Probe WD[[/span]]
 === probe:full created_by_linked
-[[*user probeauthor]] [[*user probewd]]
+[[*user probe-author]] [[*user 576c0df3-8a28-4468-9770-ede851d88c67]]
 === probe:full created_by_linked_plain
-[[user probeauthor]] [[user probewd]]
+[[user probe-author]] [[user 576c0df3-8a28-4468-9770-ede851d88c67]]
 === probe:full updated_by
 Probe Author
 === probe:full updated_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probe:full updated_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probe:full authors_count
 2
 === probe:full tags
@@ -257,15 +257,15 @@ False
 === probe:parent created_by
 [[span]]Probe Author[[/span]]
 === probe:parent created_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probe:parent created_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probe:parent updated_by
 Probe Author
 === probe:parent updated_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probe:parent updated_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probe:parent authors_count
 1
 === probe:parent tags
@@ -333,15 +333,15 @@ True
 === probestars:rated created_by
 [[span]]Probe Author[[/span]]
 === probestars:rated created_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probestars:rated created_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probestars:rated updated_by
 Probe Author
 === probestars:rated updated_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probestars:rated updated_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probestars:rated authors_count
 1
 === probestars:rated tags
@@ -409,15 +409,15 @@ False
 === probe:half created_by
 [[span]]Probe Author[[/span]]
 === probe:half created_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probe:half created_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probe:half updated_by
 Probe Author
 === probe:half updated_by_linked
-[[*user probeauthor]]
+[[*user probe-author]]
 === probe:half updated_by_linked_plain
-[[user probeauthor]]
+[[user probe-author]]
 === probe:half authors_count
 1
 === probe:half tags

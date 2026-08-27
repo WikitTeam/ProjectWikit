@@ -2,7 +2,7 @@
   "articles": [
     {
       "name": "probe:full",
-      "viewer": "probeauthor"
+      "viewer": "probe-author"
     },
     {
       "name": "probe:full",
