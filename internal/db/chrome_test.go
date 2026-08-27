@@ -134,15 +134,74 @@ func TestCategoryIndexedOfUnknownCategory(t *testing.T) {
 func TestUnreadNotificationsCountsOnlyUnviewed(t *testing.T) {
 	d := newTestDB(t)
 
-	u, err := d.UserByName(context.Background(), "probeauthor")
-	if err != nil {
-		t.Fatalf("UserByName() err = %v, want nil", err)
-	}
-	got, err := d.UnreadNotifications(context.Background(), u.ID)
+	got, err := d.UnreadNotifications(context.Background(), userID(t, d, "probe-author"))
 	if err != nil {
 		t.Fatalf("UnreadNotifications() err = %v, want nil", err)
 	}
 	if got != 1 {
-		t.Errorf("UnreadNotifications(probeauthor) = %d, want 1", got)
+		t.Errorf("UnreadNotifications(probe-author) = %d, want 1", got)
+	}
+}
+
+func userID(t *testing.T, d *DB, name string) int64 {
+	t.Helper()
+	u, err := d.UserByName(context.Background(), name)
+	if err != nil {
+		t.Fatalf("UserByName(%q) err = %v, want nil", name, err)
+	}
+	return u.ID
+}
+
+func TestArticleTagNamesRepeatsPrefixedTags(t *testing.T) {
+	d := newTestDB(t)
+
+	got, err := d.ArticleTagNames(context.Background(), articleID(t, d, "probe:full"))
+	if err != nil {
+		t.Fatalf("ArticleTagNames() err = %v, want nil", err)
+	}
+	want := []string{"zeta", "alpha", "lang:en", "en"}
+	if len(got) != len(want) {
+		t.Fatalf("len(ArticleTagNames(probe:full)) = %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("ArticleTagNames(probe:full)[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestArticleTagNamesOfUntaggedPage(t *testing.T) {
+	d := newTestDB(t)
+
+	got, err := d.ArticleTagNames(context.Background(), articleID(t, d, "probe:bare"))
+	if err != nil {
+		t.Fatalf("ArticleTagNames() err = %v, want nil", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("len(ArticleTagNames(probe:bare)) = %d, want 0", len(got))
+	}
+}
+
+func TestCategoryExists(t *testing.T) {
+	d := newTestDB(t)
+
+	got, err := d.CategoryExists(context.Background(), "probestars")
+	if err != nil {
+		t.Fatalf("CategoryExists() err = %v, want nil", err)
+	}
+	if !got {
+		t.Errorf("CategoryExists(probestars) = false, want true")
+	}
+}
+
+func TestCategoryExistsOfUnknownCategory(t *testing.T) {
+	d := newTestDB(t)
+
+	got, err := d.CategoryExists(context.Background(), "no-such-category")
+	if err != nil {
+		t.Fatalf("CategoryExists() err = %v, want nil", err)
+	}
+	if got {
+		t.Errorf("CategoryExists(no-such-category) = true, want false")
 	}
 }

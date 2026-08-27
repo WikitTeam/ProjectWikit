@@ -127,13 +127,24 @@ func (d *DB) LatestRevNumber(ctx context.Context, articleID int64) (int, error) 
 	return n, nil
 }
 
+var qCategoryExists = register("CategoryExists", `
+SELECT EXISTS(SELECT 1 FROM web_category WHERE name = $1)`)
+
+// The page skips the permission check entirely when neither it nor its category
+// has a row, which is how a 404 wins over a 403 there.
+func (d *DB) CategoryExists(ctx context.Context, name string) (bool, error) {
+	var exists bool
+	if err := d.pool.QueryRow(ctx, qCategoryExists, name).Scan(&exists); err != nil {
+		return false, fmt.Errorf("check category %q: %w", name, err)
+	}
+	return exists, nil
+}
+
 var qCategoryIndexed = register("CategoryIndexed", `
 SELECT is_indexed
 FROM web_category
 WHERE name = $1`)
 
-// CategoryIndexed answers for categories with no row of their own too, where the
-// model default decides.
 func (d *DB) CategoryIndexed(ctx context.Context, name string) (bool, error) {
 	var indexed bool
 	err := d.pool.QueryRow(ctx, qCategoryIndexed, name).Scan(&indexed)
@@ -173,4 +184,39 @@ func (d *DB) ThemeByID(ctx context.Context, id int64) (*Theme, error) {
 		return nil, fmt.Errorf("lookup theme %d: %w", id, err)
 	}
 	return &t, nil
+}
+
+var qArticleTagNames = register("ArticleTagNames", `
+SELECT CASE WHEN c.slug = '_default' THEN t.name ELSE c.slug || ':' || t.name END,
+       CASE WHEN c.slug = '_default' THEN '' ELSE t.name END
+FROM web_article_tags link
+JOIN web_tag t ON t.id = link.tag_id
+JOIN web_tagscategory c ON c.id = t.category_id
+WHERE link.article_id = $1
+ORDER BY link.id`)
+
+// ArticleTagNames is the list ftml is told about, where a tag outside the
+// default category appears twice, prefixed and bare. Hidden tags stay in.
+func (d *DB) ArticleTagNames(ctx context.Context, articleID int64) ([]string, error) {
+	rows, err := d.pool.Query(ctx, qArticleTagNames, articleID)
+	if err != nil {
+		return nil, fmt.Errorf("query tag names of article %d: %w", articleID, err)
+	}
+	defer rows.Close()
+
+	var out []string
+	for rows.Next() {
+		var full, bare string
+		if err := rows.Scan(&full, &bare); err != nil {
+			return nil, fmt.Errorf("scan tag name of article %d: %w", articleID, err)
+		}
+		out = append(out, full)
+		if bare != "" {
+			out = append(out, bare)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read tag names of article %d: %w", articleID, err)
+	}
+	return out, nil
 }
