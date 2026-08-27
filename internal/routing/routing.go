@@ -33,6 +33,18 @@ var Table = []Route{
 	{Prefix: "/local--theme/", Owner: OwnerDjango, Label: "page theme"},
 }
 
+// WithOwner copies the table with one prefix handed to someone else, which is
+// how a route moves while the code answering it is still being written.
+func WithOwner(table []Route, prefix string, owner Owner) []Route {
+	out := slices.Clone(table)
+	for i := range out {
+		if out[i].Prefix == prefix {
+			out[i].Owner = owner
+		}
+	}
+	return out
+}
+
 func Validate(table []Route) error {
 	seen := make(map[string]bool, len(table))
 	hasRoot := false
