@@ -323,22 +323,28 @@ func (v *Vars) voteStats() (db.VoteStats, bool) {
 }
 
 func (v *Vars) ratingMode() (string, bool) {
-	mode := RatingModeUpDown
 	site, err := v.src.SiteRatingMode()
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return "", v.fail(err)
-	}
-	if site != "" && site != RatingModeDefault {
-		mode = site
 	}
 	category, err := v.src.CategoryRatingMode(v.article.Category)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return "", v.fail(err)
 	}
-	if category != "" && category != RatingModeDefault {
-		mode = category
+	return RatingMode(site, category), true
+}
+
+// RatingMode walks the settings chain, where the built-in default is updown and
+// a level that says default hands the question to the level above it.
+func RatingMode(siteMode, categoryMode string) string {
+	mode := RatingModeUpDown
+	if siteMode != "" && siteMode != RatingModeDefault {
+		mode = siteMode
 	}
-	return mode, true
+	if categoryMode != "" && categoryMode != RatingModeDefault {
+		mode = categoryMode
+	}
+	return mode
 }
 
 func (v *Vars) formattedRating() (string, bool) {
