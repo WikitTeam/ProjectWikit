@@ -62,5 +62,5 @@ func (h *HostRules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for name, value := range decision.Headers {
 		w.Header().Set(name, value)
 	}
-	h.next.ServeHTTP(w, r)
+	h.next.ServeHTTP(w, r.WithContext(WithSite(r.Context(), found)))
 }
