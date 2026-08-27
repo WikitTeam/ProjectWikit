@@ -91,7 +91,7 @@ func TestCorpusDiff(t *testing.T) {
 	}
 	if known > 0 {
 		t.Logf("%d known differences were reported but not failed; "+
-			"each one needs a reason in the TODO ledger of PROGRESS.md", known)
+			"each one needs a recorded reason", known)
 	}
 }
 

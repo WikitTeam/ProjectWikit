@@ -29,7 +29,7 @@ LIMIT 1`)
 
 // SiteByHosts tries each host in turn and returns the first that matches.
 // Callers pass site.LookupHosts, whose ordering carries the host:port round
-// that has to run before the bare-host one (FINDINGS §13).
+// that has to run before the bare-host one.
 func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 	for _, host := range hosts {
 		var s Site

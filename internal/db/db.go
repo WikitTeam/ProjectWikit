@@ -1,4 +1,4 @@
-// Package db is the only place in pwikit that issues SQL (D5).
+// Package db is the only place in pwikit that issues SQL.
 package db
 
 import (

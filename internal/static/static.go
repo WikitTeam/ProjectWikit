@@ -46,8 +46,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", contentType(name))
 	w.Header().Set("Cache-Control", cacheControl)
-	// Pages on media_domain load these from the other origin (FINDINGS 4.5),
-	// so the bundle has to be readable cross-origin.
+	// Pages on media_domain load these from the other origin, so the bundle has
+	// to be readable cross-origin.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("ETag", etag(data))
 

@@ -184,9 +184,9 @@ func listenPort(addr string) string {
 	return port
 }
 
-// assetFS is the development shape of the bundle. D8 puts it inside the
-// binary; until the build produces it, an empty path means every asset
-// request falls through to the upstream.
+// assetFS is the development shape of the bundle, which ends up inside the
+// binary. Until the build produces it, an empty path means every asset request
+// falls through to the upstream.
 func assetFS(dir string) (iofs.FS, error) {
 	if dir == "" {
 		return nil, nil

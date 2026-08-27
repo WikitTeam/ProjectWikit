@@ -9,7 +9,7 @@ import (
 
 // CanonicalizeUsername mirrors canonicalize_username in web/models/users.py.
 // Unlike Normalize it keeps non-Latin letters, so a Chinese name canonicalizes
-// to itself rather than to an empty string (FINDINGS §12).
+// to itself rather than to an empty string.
 //
 // Python's [\W_]+ is every run that is neither a letter nor a number, because
 // \W excludes the underscore that the class then adds back.

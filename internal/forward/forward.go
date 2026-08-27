@@ -83,6 +83,6 @@ func (p *Proxy) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	p.log.Error("forward failed", "path", r.URL.Path, "upstream", p.target.String(), "err", err)
 	// The visitor gets the bare status phrase: the upstream address is
 	// internal, and prose here would have to go through i18n in a package
-	// that ships no user-facing text of its own (D6).
+	// that ships no user-facing text of its own.
 	http.Error(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
 }
