@@ -49,6 +49,11 @@ var DefaultScrubbers = []Scrubber{
 		Pattern: regexp.MustCompile(`(name="csrfmiddlewaretoken"\s+value=")[^"]*(")`),
 		Repl:    "${1}SCRUBBED${2}",
 	},
+	{
+		Name:    "html-lang",
+		Pattern: regexp.MustCompile(`(<html lang="|<meta http-equiv="content-language" content=")zh(-hans)?(")`),
+		Repl:    "${1}SCRUBBED${3}",
+	},
 }
 
 var DefaultIgnoredHeaders = []string{
