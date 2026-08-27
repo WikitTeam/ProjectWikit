@@ -1,0 +1,33 @@
+# The corpus for a pwikit that answers article pages itself.
+# Run it with serve -articles-from-go; the default corpus is for the forwarding shape.
+# ! = known to differ; still run and reported, just not failed.
+
+/probe:bare
+/probe:parent
+/probe:full
+/probe:full/offset/2/bare
+/probe:host
+/probe:included
+/probe:half
+/probestars:rated
+/component:box
+/nav:top
+/nav:side
+/no-such-page
+/this-page-does-not-exist
+
+/probe:described
+/probe:imaged
+/probe:tagged
+/probe:taggedplain
+/probe:unknownmodule
+/probe:full/nomodule/true
+/probe:redirect
+
+!/probe:bydisplay
+# pwikit resolves [[user <display name>]] and Django does not. deliberate.
+
+!/main
+!/scp-173
+# both carry a module, and modules are not ported yet, so pwikit leaves a gap
+# where the widget goes. drop the ! once the modules land.
