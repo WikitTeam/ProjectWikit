@@ -85,6 +85,19 @@ func (d *DB) UserByName(ctx context.Context, canonical string) (*User, error) {
 	return d.scanUser(ctx, qUserByName, canonical)
 }
 
+var qUserByDisplayName = register("UserByDisplayName", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE lower(display_name) = lower($1)
+ORDER BY id
+LIMIT 1`)
+
+// The oldest row wins so a later account cannot take over a name a page already
+// points at.
+func (d *DB) UserByDisplayName(ctx context.Context, name string) (*User, error) {
+	return d.scanUser(ctx, qUserByDisplayName, name)
+}
+
 // UserByWikidotName resolves the wd: prefix, which may only ever match an
 // imported Wikidot account.
 func (d *DB) UserByWikidotName(ctx context.Context, canonical string) (*User, error) {
