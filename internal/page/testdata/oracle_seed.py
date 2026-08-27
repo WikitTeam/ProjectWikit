@@ -17,10 +17,13 @@ from django.utils import timezone
 
 from web.controllers import articles
 from web.models.articles import Article, Category, Tag, TagsCategory, Vote
-from web.models.notifications import UserNotification, UserNotificationMapping
+from web.models.forum import ForumPost, ForumThread
+from web.models.notifications import UserNotification, UserNotificationMapping, UserNotificationSubscription
 from web.models.settings import Settings
 from web.models.site import Site
 from web.models.users import User
+
+NL = chr(10)
 
 CREATED_AT = datetime.datetime(2021, 3, 4, 5, 6, 7, tzinfo=datetime.timezone.utc)
 UPDATED_AT = datetime.datetime(2022, 7, 8, 9, 10, 11, tzinfo=datetime.timezone.utc)
@@ -62,6 +65,21 @@ def notify(user, kind, viewed):
     )
 
 
+def comment_thread(article, user, posts):
+    thread, _ = ForumThread.objects.get_or_create(article=article, defaults=dict(name=article.title))
+    for i in range(posts):
+        ForumPost.objects.get_or_create(
+            thread=thread, name='probe post %d' % i, defaults=dict(author=user),
+        )
+    return thread
+
+
+def subscribe(user, article=None, forum_thread=None):
+    UserNotificationSubscription.objects.get_or_create(
+        subscriber=user, article=article, forum_thread=forum_thread,
+    )
+
+
 def vote(article, user, rate):
     Vote.objects.update_or_create(
         article=article, user=user,
@@ -70,16 +88,19 @@ def vote(article, user, rate):
 
 
 author = make_user(
-    'probeauthor',
+    'probe-author',
     display_name='Probe Author',
     type=User.UserType.Normal,
     api_key='probe-key-author',
 )
+# An imported Wikidot account nobody has claimed yet. The uuid is fixed rather
+# than generated so the golden stays put; the importer generates one per user.
 coauthor = make_user(
-    'probewd',
+    '576c0df3-8a28-4468-9770-ede851d88c67',
     display_name='Probe WD',
-    wikidot_username='Probe WD Original',
+    wikidot_username='probe-wd-original',
     type=User.UserType.Wikidot,
+    is_active=False,
     api_key='probe-key-wd',
 )
 voter = make_user('probevoter', type=User.UserType.Normal, api_key='probe-key-voter')
@@ -97,6 +118,21 @@ included = make_article(
     'probe:included', 'Included Page',
     'host=%%this|title%% full=%%this|fullname%% own=%%title%% miss=%%this|nosuchvar%%', None)
 host = make_article('probe:host', 'Probe Host', '[[include probe:included]]', None)
+redirect = make_article('probe:redirect', 'Probe Redirect',
+                        NL.join(['before', '[[module Redirect destination="/probe:full"]]', 'after']), None)
+described = make_article('probe:described', 'Probe Described',
+                         NL.join(['visible text', '[[module PageDescription]]custom description[[/module]]']), None)
+imaged = make_article('probe:imaged', 'Probe Imaged',
+                      '[[module PageImage src="probe:full/cover.png"]]body text', None)
+tagged = make_article('probe:tagged', 'Probe Tagged', '[[module PagesByTag tag="lang:en"]]', None)
+taggedplain = make_article('probe:taggedplain', 'Probe Tagged Plain',
+                           '[[module PagesByTag tag="zeta"]]', None)
+unknownmodule = make_article('probe:unknownmodule', 'Probe Unknown Module',
+                             '[[module NoSuchModule]]', None)
+# pwikit resolves a display name here and Django does not, so this page is the
+# one the corpus carries the exemption for.
+bydisplay = make_article('probe:bydisplay', 'Probe By Display Name',
+                         '[[*user Probe WD]]', None)
 
 full.parent = parent
 full.save()
@@ -105,6 +141,11 @@ bare.authors.clear()
 full.tags.set([make_tag('_default', 'Zeta'), make_tag('_default', 'alpha'), make_tag('lang', 'en')])
 TagsCategory.objects.filter(slug='lang').update(priority=1)
 bare.tags.clear()
+
+thread = comment_thread(full, author, 2)
+subscribe(author, article=full)
+subscribe(author, forum_thread=thread)
+author.preferences['qol__advanced_source_editor_enabled'] = True
 
 notify(author, UserNotification.NotificationType.Welcome, False)
 notify(author, UserNotification.NotificationType.DirectMessage, True)
@@ -124,8 +165,11 @@ Settings.objects.update_or_create(
 )
 site_settings, _ = Settings.objects.get_or_create(site=Site.objects.first())
 
-for article in (parent, full, bare, rated, half, included, host):
+for article in (parent, full, bare, rated, half, included, host, redirect, described,
+                imaged, tagged, taggedplain, unknownmodule, bydisplay):
     freeze(article)
 
 print('site rating_mode =', site_settings.rating_mode)
-print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, half, included, host)))
+print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, half, included, host,
+                                                 redirect, described, imaged, tagged, taggedplain,
+                                                 unknownmodule, bydisplay)))
