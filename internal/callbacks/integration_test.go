@@ -2,6 +2,7 @@ package callbacks
 
 import (
 	"context"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"os"
 	"strings"
 	"testing"
@@ -15,7 +16,7 @@ type siteRepo struct {
 	existing map[string]bool
 }
 
-func (r siteRepo) RenderModule(name string, params map[string]string, body string) (string, error) {
+func (r siteRepo) RenderModule(_ *page.Context, name string, params map[string]string, body string) (string, error) {
 	return `<div class="module">` + name + "|" + body + `</div>`, nil
 }
 

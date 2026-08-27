@@ -76,7 +76,7 @@ func render(args []string) error {
 			return err
 		}
 		users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), roles.FileIcons(p.Files()))
-		store.data = repo.New(ctx, conn, users)
+		store.data = repo.New(ctx, conn, users, repo.Options{Loc: bundle.Localizer(i18n.DefaultLanguage)})
 		vars, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), *category, *pageName, *domain)
 		if err != nil {
 			return err
@@ -198,7 +198,7 @@ type cliRepository struct {
 
 var _ callbacks.Repository = cliRepository{}
 
-func (r cliRepository) RenderModule(name string, params map[string]string, _ string) (string, error) {
+func (r cliRepository) RenderModule(pc *page.Context, name string, params map[string]string, _ string) (string, error) {
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)

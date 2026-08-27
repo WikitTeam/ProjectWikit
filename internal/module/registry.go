@@ -1,4 +1,4 @@
-package modules
+package module
 
 import (
 	"slices"
@@ -8,7 +8,6 @@ import (
 type Info struct {
 	Name       string
 	HasContent bool
-	Ported     bool
 	Removed    bool
 }
 
@@ -48,9 +47,15 @@ func HasContent(name string) bool {
 	return ok && !info.Removed && info.HasContent
 }
 
+// Ported is derived from the renderers that registered themselves, so the list
+// cannot drift from the code that answers.
 func Ported(name string) bool {
 	info, ok := Lookup(name)
-	return ok && info.Ported
+	if !ok {
+		return false
+	}
+	_, has := renderers[info.Name]
+	return has
 }
 
 func All() []Info {

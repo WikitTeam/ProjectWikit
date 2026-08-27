@@ -14,10 +14,11 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
-	"github.com/WikitTeam/ProjectWikit/internal/modules"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/respheader"
@@ -29,6 +30,9 @@ import (
 const (
 	envDatabase     = "DATABASE_URL"
 	envUpstream     = "PWIKIT_UPSTREAM"
+	envSecretKey    = "SECRET_KEY"
+	envTimeZone     = "PWIKIT_TIMEZONE"
+	envGoogleTag    = "GOOGLE_TAG_ID"
 	defaultUpstream = "http://127.0.0.1:8000"
 	defaultListen   = "127.0.0.1:8080"
 )
@@ -83,6 +87,10 @@ func serve(args []string) error {
 	trusted := fs.String("trusted-proxies", "", "trusted reverse proxy addresses or CIDRs, comma separated; empty trusts no X-Forwarded-* header")
 	staticDir := fs.String("static-dir", "", "directory holding the frontend asset bundle; without it every asset request goes upstream")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string; without it every request needing the database goes upstream")
+	secret := fs.String("secret-key", os.Getenv(envSecretKey), "key the session cookie is signed with; without it every visitor is anonymous")
+	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
+	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
+	articles := fs.Bool("articles-from-go", false, "answer article pages here instead of passing them upstream")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -129,12 +137,28 @@ func serve(args []string) error {
 		mediaHandler = site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), proxy)
 	}
 
-	mux, err := routing.New(routing.Table, proxy, map[string]http.Handler{
+	table := routing.Table
+	goHandlers := map[string]http.Handler{
 		// The bundle is the one route answered above the session layer, so it
 		// is also the one that does not vary on the cookie.
 		static.Prefix: static.New(assets, proxy),
 		media.Prefix:  respheader.VaryCookie(mediaHandler),
-	})
+	}
+
+	if *articles {
+		if conn == nil {
+			return errors.New("-articles-from-go needs a database")
+		}
+		pages, closeEngine, err := articleHandler(conn, p, assets, *sidecar, *secret, *timezone, log)
+		if err != nil {
+			return err
+		}
+		defer closeEngine()
+		table = routing.WithOwner(table, "/", routing.OwnerGo)
+		goHandlers["/"] = compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), pages, proxy)))
+	}
+
+	mux, err := routing.New(table, proxy, goHandlers)
 	if err != nil {
 		return err
 	}
@@ -199,12 +223,12 @@ func printRoutes() error {
 func printModules() error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "MODULE\tBODY\tSTATUS")
-	for _, info := range modules.All() {
+	for _, info := range module.All() {
 		status := "pending"
 		switch {
 		case info.Removed:
 			status = "removed"
-		case info.Ported:
+		case module.Ported(info.Name):
 			status = "ported"
 		}
 		fmt.Fprintf(w, "%s\t%t\t%s\n", info.Name, info.HasContent, status)

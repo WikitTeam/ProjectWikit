@@ -31,7 +31,7 @@ func newTestRepo(t *testing.T) *Repository {
 		t.Fatalf("i18n.Load() err = %v, want nil", err)
 	}
 	users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), nil)
-	return New(context.Background(), d, users)
+	return New(context.Background(), d, users, Options{})
 }
 
 func TestPageInfoDropsMissingPages(t *testing.T) {
@@ -152,5 +152,32 @@ func TestRenderUserFromTheDatabase(t *testing.T) {
 	}
 	if !strings.Contains(got, `<a href="/-/users/seeduser">seeduser</a>`) {
 		t.Errorf("RenderUser() = %q, want it to contain %q", got, `<a href="/-/users/seeduser">seeduser</a>`)
+	}
+}
+
+func TestRenderUserFallsBackToTheDisplayName(t *testing.T) {
+	r := newTestRepo(t)
+
+	html, err := r.RenderUser("Probe WD", true)
+	if err != nil {
+		t.Fatalf("RenderUser(Probe WD) err = %v, want nil", err)
+	}
+	if !strings.Contains(html, "wd:Probe WD") {
+		t.Errorf("RenderUser(Probe WD) = %q, want it to carry %q", html, "wd:Probe WD")
+	}
+	if !strings.Contains(html, "wikidot_avatar.png") {
+		t.Errorf("RenderUser(Probe WD) = %q, want the wikidot avatar", html)
+	}
+}
+
+func TestRenderUserPrefersTheIdentityName(t *testing.T) {
+	r := newTestRepo(t)
+
+	html, err := r.RenderUser("probe-author", true)
+	if err != nil {
+		t.Fatalf("RenderUser(probe-author) err = %v, want nil", err)
+	}
+	if strings.Contains(html, "wd:") {
+		t.Errorf("RenderUser(probe-author) = %q, want the local account", html)
 	}
 }

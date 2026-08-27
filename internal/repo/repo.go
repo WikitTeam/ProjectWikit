@@ -9,6 +9,13 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
+
+	// The modules register themselves; without this nothing answers a
+	// [[module]] and every one of them reads as not ported.
+	_ "github.com/WikitTeam/ProjectWikit/internal/modules"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
@@ -20,12 +27,20 @@ type Repository struct {
 	ctx   context.Context
 	db    *db.DB
 	users *printuser.Renderer
+	opts  Options
+}
+
+// Options is what the modules read besides the database.
+type Options struct {
+	Loc  *i18n.Localizer
+	Site *db.Site
+	User *db.User
 }
 
 var _ callbacks.Repository = (*Repository)(nil)
 
-func New(ctx context.Context, d *db.DB, users *printuser.Renderer) *Repository {
-	return &Repository{ctx: ctx, db: d, users: users}
+func New(ctx context.Context, d *db.DB, users *printuser.Renderer, opts Options) *Repository {
+	return &Repository{ctx: ctx, db: d, users: users, opts: opts}
 }
 
 func (r *Repository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error) {
@@ -66,8 +81,22 @@ func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetc
 	return out, nil
 }
 
-func (r *Repository) RenderModule(name string, params map[string]string, body string) (string, error) {
-	return "", ErrNotPorted
+func (r *Repository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {
+	html, err := module.Render(module.Env{
+		Page: pc,
+		Loc:  r.opts.Loc,
+		Site: r.opts.Site,
+		User: r.opts.User,
+		Data: moduleData{repo: r},
+	}, name, params, body)
+	var moduleErr *module.Error
+	if errors.As(err, &moduleErr) {
+		return "", &callbacks.ModuleError{Message: moduleErr.Message}
+	}
+	if errors.Is(err, module.ErrNotPorted) {
+		return "", ErrNotPorted
+	}
+	return html, err
 }
 
 // RenderUser mirrors the prefix handling in renderer/__init__.py: external:
@@ -88,6 +117,11 @@ func (r *Repository) RenderUser(username string, avatar bool) (string, error) {
 		user, err = r.db.UserByWikidotName(r.ctx, wikidot.CanonicalizeUsername(wd))
 	} else {
 		user, err = r.db.UserByName(r.ctx, wikidot.CanonicalizeUsername(username))
+		// An imported account keeps the name it had on the other site, which
+		// need not fold into the name it is shown under here.
+		if errors.Is(err, db.ErrNotFound) {
+			user, err = r.db.UserByDisplayName(r.ctx, username)
+		}
 	}
 	if errors.Is(err, db.ErrNotFound) {
 		return "", callbacks.ErrUserNotFound

@@ -9,7 +9,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/expr"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
-	"github.com/WikitTeam/ProjectWikit/internal/modules"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
@@ -30,7 +30,7 @@ type ModuleError struct{ Message string }
 func (e *ModuleError) Error() string { return e.Message }
 
 type Repository interface {
-	RenderModule(name string, params map[string]string, body string) (string, error)
+	RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error)
 	RenderUser(username string, avatar bool) (string, error)
 	PageInfo(refs []string) ([]renderer.PartialPageInfo, error)
 	IncludeSources(refs []renderer.IncludeRef) ([]renderer.FetchedPage, error)
@@ -40,6 +40,7 @@ type Callbacks struct {
 	loc           *i18n.Localizer
 	repo          Repository
 	vars          *page.Vars
+	pageCtx       *page.Context
 	level         int
 	includeErrors map[string]bool
 }
@@ -51,6 +52,10 @@ var _ renderer.Callbacks = (*Callbacks)(nil)
 // of its own gets in Django too.
 func (c *Callbacks) SetPageVars(vars *page.Vars) { c.vars = vars }
 
+// SetContext hands the modules the page they are rendering into, which is what
+// lets one of them redirect the whole request or set the description.
+func (c *Callbacks) SetContext(pc *page.Context) { c.pageCtx = pc }
+
 func New(loc *i18n.Localizer, repo Repository) *Callbacks {
 	return &Callbacks{
 		loc:           loc,
@@ -61,7 +66,7 @@ func New(loc *i18n.Localizer, repo Repository) *Callbacks {
 }
 
 func (c *Callbacks) ModuleHasBody(name string) (bool, error) {
-	return modules.HasContent(name), nil
+	return module.HasContent(name), nil
 }
 
 func (c *Callbacks) RenderModule(name string, params map[string]string, body string) (string, error) {
@@ -72,7 +77,7 @@ func (c *Callbacks) RenderModule(name string, params map[string]string, body str
 	for key, value := range params {
 		lowered[strings.ToLower(key)] = value
 	}
-	html, err := c.repo.RenderModule(name, lowered, body)
+	html, err := c.repo.RenderModule(c.pageCtx, name, lowered, body)
 	var moduleErr *ModuleError
 	if errors.As(err, &moduleErr) {
 		return `<div class="error-block"><p>` + escape.HTML(moduleErr.Message) + `</p></div>`, nil

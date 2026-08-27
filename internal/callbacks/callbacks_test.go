@@ -21,7 +21,7 @@ type fakeRepo struct {
 	includeBody string
 }
 
-func (r *fakeRepo) RenderModule(name string, params map[string]string, body string) (string, error) {
+func (r *fakeRepo) RenderModule(_ *page.Context, name string, params map[string]string, body string) (string, error) {
 	r.moduleName = name
 	r.moduleParam = params
 	if r.moduleErr != nil {
