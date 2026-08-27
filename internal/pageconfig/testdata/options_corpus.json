@@ -1,0 +1,857 @@
+[
+  {
+    "name": "anonymous reader",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": [
+        1,
+        1,
+        -1
+      ]
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "signed in member",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "registered",
+        "permissions": [
+          "comment_articles",
+          "rate_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": [
+        1,
+        1,
+        -1
+      ]
+    },
+    "path": "",
+    "comment_count": 4,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "editor",
+    "page_id": "scp-173",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "registered",
+        "permissions": [
+          "comment_articles",
+          "rate_articles"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "editor",
+        "permissions": [
+          "edit_articles",
+          "tag_articles",
+          "move_articles",
+          "delete_articles",
+          "lock_articles",
+          "manage_article_files",
+          "manage_article_authors",
+          "reset_article_votes",
+          "create_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": [
+        1,
+        1,
+        1,
+        -1
+      ]
+    },
+    "path": "",
+    "comment_count": 1,
+    "can_create_tags": true,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "superuser on a locked page",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": true,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": true,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "author of a page",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "registered",
+        "permissions": [
+          "comment_articles",
+          "rate_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": true,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "inactive user",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": true,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "registered",
+        "permissions": [
+          "comment_articles",
+          "rate_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "missing page",
+    "page_id": "no-such-page",
+    "has_article": false,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "disabled",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "stars",
+    "page_id": "probestars:rated",
+    "has_article": true,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "stars",
+    "votes": {
+      "rates": [
+        4,
+        5
+      ]
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "stars without votes",
+    "page_id": "probestars:rated",
+    "has_article": true,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "stars",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "stars rounding to a whole number",
+    "page_id": "probestars:rated",
+    "has_article": true,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "stars",
+    "votes": {
+      "rates": [
+        4,
+        4
+      ]
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "rating disabled",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "disabled",
+    "votes": {
+      "rates": [
+        1,
+        1
+      ]
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "path params",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": true,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "main/offset/20/tag/中文/bare",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "watching",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "registered",
+        "permissions": [
+          "comment_articles",
+          "rate_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": true,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "advanced source editor",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles",
+          "view_article_comments"
+        ],
+        "restrictions": null
+      },
+      {
+        "slug": "registered",
+        "permissions": [
+          "comment_articles",
+          "rate_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": true
+  },
+  {
+    "name": "only view_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only rate_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "rate_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only create_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "create_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only edit_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "edit_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only tag_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "tag_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only move_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "move_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only lock_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "lock_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only manage_article_files",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "manage_article_files"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only delete_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "delete_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only reset_article_votes",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "reset_article_votes"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only comment_articles",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "comment_articles"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only view_article_comments",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "view_article_comments"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  },
+  {
+    "name": "only manage_article_authors",
+    "page_id": "main",
+    "has_article": true,
+    "anonymous": false,
+    "superuser": false,
+    "inactive": false,
+    "roles": [
+      {
+        "slug": "everyone",
+        "permissions": [
+          "manage_article_authors"
+        ],
+        "restrictions": null
+      }
+    ],
+    "locked": false,
+    "author": false,
+    "rating_mode": "updown",
+    "votes": {
+      "rates": null
+    },
+    "path": "",
+    "comment_count": 0,
+    "can_create_tags": false,
+    "is_watching": false,
+    "advanced_source_editor": false
+  }
+]
