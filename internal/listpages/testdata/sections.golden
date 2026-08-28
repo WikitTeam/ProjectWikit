@@ -1,0 +1,48 @@
+=== empty
+head=""
+body=""
+foot=""
+=== plain
+head=""
+body=""
+foot=""
+=== head-only
+head="efore"
+body=""
+foot=""
+=== body-only
+head=""
+body="%title%%"
+foot=""
+=== foot-only
+head=""
+body=""
+foot="fter"
+=== all-three
+head="efore"
+body="%title%%"
+foot="fter"
+=== no-newline-after-open
+head="efor"
+body=""
+foot=""
+=== uppercase-tags
+head="efore"
+body=""
+foot=""
+=== multiline-body
+head=""
+body="ne\ntwo\nthree"
+foot=""
+=== leading-text
+head=""
+body="ow"
+foot=""
+=== empty-body
+head=""
+body=""
+foot=""
+=== body-before-head
+head="op"
+body=""
+foot=""

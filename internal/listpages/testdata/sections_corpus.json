@@ -1,0 +1,50 @@
+[
+  {
+    "name": "empty",
+    "content": ""
+  },
+  {
+    "name": "plain",
+    "content": "%%title%%"
+  },
+  {
+    "name": "head-only",
+    "content": "[[head]]\nbefore\n[[/head]]"
+  },
+  {
+    "name": "body-only",
+    "content": "[[body]]\n%%title%%\n[[/body]]"
+  },
+  {
+    "name": "foot-only",
+    "content": "[[foot]]\nafter\n[[/foot]]"
+  },
+  {
+    "name": "all-three",
+    "content": "[[head]]\nbefore\n[[/head]]\n[[body]]\n%%title%%\n[[/body]]\n[[foot]]\nafter\n[[/foot]]"
+  },
+  {
+    "name": "no-newline-after-open",
+    "content": "[[head]]before[[/head]]"
+  },
+  {
+    "name": "uppercase-tags",
+    "content": "[[HEAD]]\nbefore\n[[/HEAD]]"
+  },
+  {
+    "name": "multiline-body",
+    "content": "[[body]]\none\ntwo\nthree\n[[/body]]"
+  },
+  {
+    "name": "leading-text",
+    "content": "junk\n[[body]]\nrow\n[[/body]]"
+  },
+  {
+    "name": "empty-body",
+    "content": "[[body]]\n[[/body]]"
+  },
+  {
+    "name": "body-before-head",
+    "content": "[[body]]\nrow\n[[/body]]\n[[head]]\ntop\n[[/head]]"
+  }
+]
