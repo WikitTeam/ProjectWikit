@@ -10,6 +10,7 @@ import (
 func init() { module.Register("redirect", renderRedirect) }
 
 func renderRedirect(env module.Env, params map[string]string, _ string) (string, error) {
+	params = pathUnder(env, params)
 	if module.BoolParam(params, "noredirect", false) {
 		return "", nil
 	}

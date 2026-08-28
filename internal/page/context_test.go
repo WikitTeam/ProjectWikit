@@ -20,9 +20,6 @@ func TestNewContextDefaults(t *testing.T) {
 	if c.Title != "Main Page" {
 		t.Errorf("NewContext(...).Title = %q, want %q", c.Title, "Main Page")
 	}
-	if c.PathParams == nil {
-		t.Error("NewContext(..., nil, ...).PathParams = nil, want an empty map")
-	}
 	if c.RedirectTo != "" {
 		t.Errorf("NewContext(...).RedirectTo = %q, want %q", c.RedirectTo, "")
 	}

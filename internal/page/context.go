@@ -12,12 +12,14 @@ import (
 type Context struct {
 	Article       *db.Article
 	SourceArticle *db.Article
-	PathParams    map[string]string
+	PathParams    PathParams
 	User          *db.User
 
 	Title      string
 	Status     int
 	RedirectTo string
+
+	Depth int
 
 	AddCSS        string
 	ComputedStyle string
@@ -25,16 +27,13 @@ type Context struct {
 	OGImage       string
 }
 
-func NewContext(article, sourceArticle *db.Article, pathParams map[string]string, user *db.User) *Context {
+func NewContext(article, sourceArticle *db.Article, pathParams PathParams, user *db.User) *Context {
 	c := &Context{
 		Article:       article,
 		SourceArticle: sourceArticle,
 		PathParams:    pathParams,
 		User:          user,
 		Status:        http.StatusOK,
-	}
-	if pathParams == nil {
-		c.PathParams = map[string]string{}
 	}
 	if article != nil {
 		c.Title = article.Title
@@ -45,8 +44,9 @@ func NewContext(article, sourceArticle *db.Article, pathParams map[string]string
 // CloneWith starts a nested render. Only the three fields listed carry over:
 // the styles and the Open Graph fields belong to the page that produced them,
 // and Merge is what brings the styles back.
-func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams map[string]string, user *db.User) *Context {
+func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams PathParams, user *db.User) *Context {
 	clone := NewContext(article, sourceArticle, pathParams, user)
+	clone.Depth = c.Depth + 1
 	clone.Status = c.Status
 	clone.RedirectTo = c.RedirectTo
 	clone.Title = c.Title

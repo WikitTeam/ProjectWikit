@@ -42,3 +42,46 @@ func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
 	}
 	return hidden, nil
 }
+
+func (m moduleData) TagIDsByName(categorySlug, name string) ([]int64, error) {
+	return m.repo.db.TagIDsByName(m.repo.ctx, categorySlug, name)
+}
+
+func (m moduleData) ArticleTagIDs(articleID int64) ([]int64, error) {
+	return m.repo.db.ArticleTagIDs(m.repo.ctx, articleID)
+}
+
+func (m moduleData) ArticleByRef(ref string) (*db.Article, error) {
+	return m.repo.db.ArticleByName(m.repo.ctx, ref)
+}
+
+func (m moduleData) UserByUsername(name string) (*db.User, error) {
+	return m.repo.db.UserByUsername(m.repo.ctx, name)
+}
+
+func (m moduleData) UserByWikidotName(name string) (*db.User, error) {
+	return m.repo.db.UserByWikidotName(m.repo.ctx, name)
+}
+
+func (m moduleData) SiteRatingMode() (string, error) {
+	if m.repo.opts.Site == nil {
+		return "", db.ErrNotFound
+	}
+	return m.repo.db.SiteRatingMode(m.repo.ctx, m.repo.opts.Site.ID)
+}
+
+func (m moduleData) CategoryRatingMode(category string) (string, error) {
+	return m.repo.db.CategoryRatingMode(m.repo.ctx, category)
+}
+
+func (m moduleData) VoteStats(articleID int64) (db.VoteStats, error) {
+	return m.repo.db.VoteStats(m.repo.ctx, articleID)
+}
+
+func (m moduleData) ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error) {
+	return m.repo.db.ListArticles(m.repo.ctx, f, offset, limit)
+}
+
+func (m moduleData) CountArticles(f db.ListFilter, offset int, limit *int) (int, error) {
+	return m.repo.db.CountArticles(m.repo.ctx, f, offset, limit)
+}

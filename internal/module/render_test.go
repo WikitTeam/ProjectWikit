@@ -26,8 +26,32 @@ func (f fakeData) TagArticles(string, string, []string) ([]db.Article, error) {
 
 func (f fakeData) HiddenCategories(*db.User) ([]string, error) { return f.hidden, f.err }
 
+func (f fakeData) TagIDsByName(string, string) ([]int64, error) { return nil, f.err }
+
+func (f fakeData) ArticleTagIDs(int64) ([]int64, error) { return nil, f.err }
+
+func (f fakeData) ArticleByRef(string) (*db.Article, error) { return nil, db.ErrNotFound }
+
+func (f fakeData) UserByUsername(string) (*db.User, error) { return nil, db.ErrNotFound }
+
+func (f fakeData) UserByWikidotName(string) (*db.User, error) { return nil, db.ErrNotFound }
+
+func (f fakeData) SiteRatingMode() (string, error) { return "", db.ErrNotFound }
+
+func (f fakeData) CategoryRatingMode(string) (string, error) { return "", db.ErrNotFound }
+
+func (f fakeData) VoteStats(int64) (db.VoteStats, error) { return db.VoteStats{}, f.err }
+
+func (f fakeData) ListArticles(db.ListFilter, int, *int) ([]db.Article, error) {
+	return f.articles, f.err
+}
+
+func (f fakeData) CountArticles(db.ListFilter, int, *int) (int, error) {
+	return len(f.articles), f.err
+}
+
 func TestEveryPortedModuleAnswers(t *testing.T) {
-	ported := []string{"pagedescription", "pageimage", "pagesbytag", "redirect"}
+	ported := []string{"listpages", "pagedescription", "pageimage", "pagesbytag", "redirect"}
 	for _, name := range ported {
 		if !module.Ported(name) {
 			t.Errorf("Ported(%q) = false, want true", name)
@@ -47,7 +71,7 @@ func TestEveryPortedModuleAnswers(t *testing.T) {
 }
 
 func TestRenderRefusesWhenTheUrlSaysSo(t *testing.T) {
-	ctx := page.NewContext(nil, nil, map[string]string{"nomodule": "true"}, nil)
+	ctx := page.NewContext(nil, nil, page.PathParams{{Key: "nomodule", Value: "true"}}, nil)
 	_, err := module.Render(module.Env{Page: ctx}, "redirect", nil, "")
 
 	var moduleErr *module.Error
@@ -74,13 +98,13 @@ func TestRenderOfARemovedModule(t *testing.T) {
 }
 
 func TestRenderOfAModuleNobodyWroteYet(t *testing.T) {
-	if _, err := module.Render(module.Env{}, "listpages", nil, ""); !errors.Is(err, module.ErrNotPorted) {
-		t.Errorf("Render(listpages) err = %v, want ErrNotPorted", err)
+	if _, err := module.Render(module.Env{}, "rate", nil, ""); !errors.Is(err, module.ErrNotPorted) {
+		t.Errorf("Render(rate) err = %v, want ErrNotPorted", err)
 	}
 }
 
 func TestPathParametersGoUnderTheModulesOwn(t *testing.T) {
-	ctx := page.NewContext(nil, nil, map[string]string{"destination": "/from-path"}, nil)
+	ctx := page.NewContext(nil, nil, page.PathParams{{Key: "destination", Value: "/from-path"}}, nil)
 	if _, err := module.Render(module.Env{Page: ctx}, "redirect", map[string]string{"destination": "/from-module"}, ""); err != nil {
 		t.Fatalf("Render(redirect) err = %v, want nil", err)
 	}
@@ -90,7 +114,7 @@ func TestPathParametersGoUnderTheModulesOwn(t *testing.T) {
 }
 
 func TestPathParametersReachAModuleThatAskedForNothing(t *testing.T) {
-	ctx := page.NewContext(nil, nil, map[string]string{"destination": "/from-path"}, nil)
+	ctx := page.NewContext(nil, nil, page.PathParams{{Key: "destination", Value: "/from-path"}}, nil)
 	if _, err := module.Render(module.Env{Page: ctx}, "redirect", nil, ""); err != nil {
 		t.Fatalf("Render(redirect) err = %v, want nil", err)
 	}

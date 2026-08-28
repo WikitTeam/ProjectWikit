@@ -25,6 +25,16 @@ type Data interface {
 	TagArticles(categorySlug, name string, hiddenCategories []string) ([]db.Article, error)
 	TagCategory(slug string) (db.TagCategory, error)
 	HiddenCategories(user *db.User) ([]string, error)
+	TagIDsByName(categorySlug, name string) ([]int64, error)
+	ArticleTagIDs(articleID int64) ([]int64, error)
+	ArticleByRef(ref string) (*db.Article, error)
+	UserByUsername(name string) (*db.User, error)
+	UserByWikidotName(name string) (*db.User, error)
+	SiteRatingMode() (string, error)
+	CategoryRatingMode(category string) (string, error)
+	VoteStats(articleID int64) (db.VoteStats, error)
+	ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error)
+	CountArticles(f db.ListFilter, offset int, limit *int) (int, error)
 }
 
 type Env struct {
@@ -33,6 +43,11 @@ type Env struct {
 	Site *db.Site
 	User *db.User
 	Data Data
+
+	// Render runs the wikitext a module produced through ftml. A module that
+	// lists pages has to, since what it writes is source and not markup.
+	Render func(source string, pc *page.Context) (string, error)
+	Vars   page.VarSource
 }
 
 func (e Env) Text(id string, args ...any) string {
@@ -62,10 +77,10 @@ func Register(name string, r Renderer) {
 	renderers[name] = r
 }
 
-// Render answers one [[module]]. The page's own parameters go underneath the
-// module's own, which is what lets a URL override what the page asked for.
+// The path parameters are not folded in here, since the modules that want
+// them disagree on which side wins.
 func Render(env Env, name string, params map[string]string, body string) (string, error) {
-	if env.Page != nil && env.Page.PathParams["nomodule"] == "true" {
+	if env.Page != nil && env.Page.PathParams.Get("nomodule") == "true" {
 		return "", &Error{Message: env.Text("module-disabled")}
 	}
 	info, ok := Lookup(name)
@@ -76,20 +91,7 @@ func Render(env Env, name string, params map[string]string, body string) (string
 	if !ok {
 		return "", ErrNotPorted
 	}
-	return render(env, merge(env.Page, params), body)
-}
-
-func merge(ctx *page.Context, params map[string]string) map[string]string {
-	out := make(map[string]string, len(params))
-	if ctx != nil {
-		for key, value := range ctx.PathParams {
-			out[key] = value
-		}
-	}
-	for key, value := range params {
-		out[key] = value
-	}
-	return out
+	return render(env, params, body)
 }
 
 // BoolParam is get_boolean_param, where anything the list does not name reads

@@ -85,7 +85,7 @@ func TestParamsGetAnswersEmptyForMissingKey(t *testing.T) {
 
 func TestParamsEncodeKeepsOnlyOneBareKey(t *testing.T) {
 	params := Params{{Key: "z", Value: "1"}, {Key: "first", Bare: true}, {Key: "a", Value: "2"}, {Key: "second", Bare: true}}
-	if got, want := params.Encode(), "/a/2/z/1/first"; got != want {
+	if got, want := Encode(params), "/a/2/z/1/first"; got != want {
 		t.Errorf("Encode() = %q, want %q", got, want)
 	}
 }

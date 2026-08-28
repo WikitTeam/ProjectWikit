@@ -14,18 +14,9 @@ import (
 
 const defaultHomePage = "main"
 
-// Param is one key/value pair out of the path. A trailing key with nothing
-// after it arrives Bare, which the substitutions answer differently from a key
-// whose value is the empty string.
-type Param struct {
-	Key   string
-	Value string
-	Bare  bool
-}
+type Param = page.PathParam
 
-// Params keeps the order the path gave, which decides which bare key the
-// redirect target carries.
-type Params []Param
+type Params = page.PathParams
 
 var (
 	forumStart    = regexp.MustCompile(`^forum/start(.*)$`)
@@ -58,7 +49,7 @@ func ParsePath(raw, homePage string) (string, Params) {
 		if key == "" && value == "" {
 			continue
 		}
-		params = params.put(Param{Key: key, Value: value, Bare: bare})
+		params = params.Put(Param{Key: key, Value: value, Bare: bare})
 	}
 	return name, params
 }
@@ -84,35 +75,9 @@ func rewriteForum(path string) string {
 
 // put keeps the position of the first occurrence, the way assigning to a
 // Python dict does.
-func (p Params) put(param Param) Params {
-	for i := range p {
-		if p[i].Key == param.Key {
-			p[i] = param
-			return p
-		}
-	}
-	return append(p, param)
-}
-
-func (p Params) Lookup(key string) (Param, bool) {
-	for _, param := range p {
-		if param.Key == key {
-			return param, true
-		}
-	}
-	return Param{}, false
-}
-
-// Get answers the empty string for a key that is missing and for one that
-// carries no value, which is what reading a Python dict of these gives.
-func (p Params) Get(key string) string {
-	param, _ := p.Lookup(key)
-	return param.Value
-}
-
 // Encode writes the parameters back as a path, sorted by key. Only the values
 // are escaped, and only the first bare key survives.
-func (p Params) Encode() string {
+func Encode(p Params) string {
 	var named []Param
 	bare := ""
 	hasBare := false
@@ -147,7 +112,7 @@ func RedirectTarget(name string, params Params) (target string, ok bool) {
 	}
 	// Escaped once more on the way out because Encode leaves the keys alone,
 	// and a key may hold anything the path did.
-	return iriToURI("/" + normalized + params.Encode()), true
+	return iriToURI("/" + normalized + Encode(params)), true
 }
 
 // iriSafe is what Django leaves alone when it writes a Location, on top of the

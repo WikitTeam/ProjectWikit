@@ -12,7 +12,7 @@ func init() { module.Register("pagesbytag", renderPagesByTag) }
 const defaultTagCategory = "_default"
 
 func renderPagesByTag(env module.Env, params map[string]string, _ string) (string, error) {
-	name, ok := params["tag"]
+	name, ok := pathOver(env, params)["tag"]
 	if !ok {
 		return "", nil
 	}

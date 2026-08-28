@@ -134,15 +134,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 }
 
 func (h *Handler) context(req *request, source *db.Article) *page.Context {
-	return page.NewContext(req.article, source, paramsMap(req.params), req.user)
-}
-
-func paramsMap(params article.Params) map[string]string {
-	out := make(map[string]string, len(params))
-	for _, param := range params {
-		out[param.Key] = param.Value
-	}
-	return out
+	return page.NewContext(req.article, source, req.params, req.user)
 }
 
 // A page named _template is its own content, which is what keeps the template
@@ -231,14 +223,32 @@ func (h *Handler) nav(req *request, name string) (string, string, error) {
 func (h *Handler) callbacks(req *request, vars *page.Vars, pc *page.Context) *callbacks.Callbacks {
 	users := printuser.New(req.loc, h.deps.Icons)
 	store := repo.New(req.ctx, h.deps.DB, users, repo.Options{
-		Loc:  req.loc,
-		Site: req.site,
-		User: req.user,
+		Loc:    req.loc,
+		Site:   req.site,
+		User:   req.user,
+		Render: func(source string, into *page.Context) (string, error) { return h.nested(req, source, into) },
+		Vars:   repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID),
 	})
 	cb := callbacks.New(req.loc, store)
 	cb.SetPageVars(vars)
 	cb.SetContext(pc)
 	return cb
+}
+
+// The page it renders against is the one the module put in the context, which
+// for a listing is the row and not the page the listing sits on.
+func (h *Handler) nested(req *request, source string, pc *page.Context) (string, error) {
+	vars := h.vars(req, pc.Article)
+	info, err := h.pageInfo(req, pc.SourceArticle)
+	if err != nil {
+		return "", err
+	}
+	html, err := h.deps.Engine.RenderHTML(req.ctx, page.ThisVars(source, vars), info,
+		h.callbacks(req, vars, pc), renderer.ModeArticle)
+	if err != nil {
+		return "", err
+	}
+	return html.Body, nil
 }
 
 func (h *Handler) vars(req *request, of *db.Article) *page.Vars {

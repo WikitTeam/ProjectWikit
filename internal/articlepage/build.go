@@ -52,7 +52,7 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 		user: auth.FromContext(ctx),
 	}
 	req.name, req.params = article.ParsePath(strings.TrimPrefix(r.URL.EscapedPath(), "/"), found.HomePage)
-	req.encoded = req.params.Encode()
+	req.encoded = article.Encode(req.params)
 
 	if target, ok := article.RedirectTarget(req.name, req.params); ok {
 		return &result{Status: http.StatusFound, Location: target}, nil
