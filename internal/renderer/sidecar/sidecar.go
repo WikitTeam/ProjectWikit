@@ -18,18 +18,38 @@ const EnvBinary = "PWIKIT_FTML_SIDECAR"
 
 const maxMessageBytes = 64 << 20
 
+// Renderer keeps a pool rather than one process because a module may render
+// again while the render that called it is still waiting for an answer.
 type Renderer struct {
-	mu   sync.Mutex
+	binary string
+
+	mu    sync.Mutex
+	idle  []*session
+	fixed bool
+}
+
+type session struct {
 	in   io.Writer
 	out  *bufio.Reader
-	cmd  *exec.Cmd
 	stop func() error
 }
 
 var _ renderer.Renderer = (*Renderer)(nil)
 
+// New starts one process straight away so a wrong path is reported here rather
+// than on the first page that needs it.
 func New(binary string) (*Renderer, error) {
-	cmd := exec.Command(binary)
+	r := &Renderer{binary: binary}
+	first, err := r.start()
+	if err != nil {
+		return nil, err
+	}
+	r.idle = append(r.idle, first)
+	return r, nil
+}
+
+func (r *Renderer) start() (*session, error) {
+	cmd := exec.Command(r.binary)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("open sidecar stdin: %w", err)
@@ -39,13 +59,11 @@ func New(binary string) (*Renderer, error) {
 		return nil, fmt.Errorf("open sidecar stdout: %w", err)
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("start sidecar %q: %w", binary, err)
+		return nil, fmt.Errorf("start sidecar %q: %w", r.binary, err)
 	}
-
-	return &Renderer{
+	return &session{
 		in:  stdin,
 		out: bufio.NewReader(stdout),
-		cmd: cmd,
 		stop: func() error {
 			stdin.Close()
 			return cmd.Wait()
@@ -53,19 +71,59 @@ func New(binary string) (*Renderer, error) {
 	}, nil
 }
 
-func newOver(w io.Writer, r io.Reader) *Renderer {
-	return &Renderer{in: w, out: bufio.NewReader(r), stop: func() error { return nil }}
+// The caller owns the pipes, so a render that nests inside another one has to
+// wait its turn.
+func newOver(w io.Writer, rd io.Reader) *Renderer {
+	return &Renderer{
+		fixed: true,
+		idle:  []*session{{in: w, out: bufio.NewReader(rd), stop: func() error { return nil }}},
+	}
+}
+
+func (r *Renderer) acquire() (*session, error) {
+	r.mu.Lock()
+	if n := len(r.idle); n > 0 {
+		s := r.idle[n-1]
+		r.idle = r.idle[:n-1]
+		r.mu.Unlock()
+		return s, nil
+	}
+	r.mu.Unlock()
+	if r.fixed {
+		return nil, fmt.Errorf("sidecar: nested render has no second process")
+	}
+	return r.start()
+}
+
+func (r *Renderer) release(s *session) {
+	r.mu.Lock()
+	r.idle = append(r.idle, s)
+	r.mu.Unlock()
+}
+
+// Retired rather than reused, since the protocol is no longer at a message
+// boundary.
+func (r *Renderer) drop(s *session) {
+	if r.fixed {
+		r.release(s)
+		return
+	}
+	s.stop()
 }
 
 func (r *Renderer) Close() error {
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.stop == nil {
-		return nil
+	idle := r.idle
+	r.idle = nil
+	r.mu.Unlock()
+
+	var err error
+	for _, s := range idle {
+		if stopErr := s.stop(); stopErr != nil && err == nil {
+			err = stopErr
+		}
 	}
-	stop := r.stop
-	r.stop = nil
-	return stop()
+	return err
 }
 
 func (r *Renderer) RenderHTML(ctx context.Context, source string, info renderer.PageInfo, cb renderer.Callbacks, mode renderer.Mode) (renderer.Result, error) {
@@ -108,8 +166,18 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 		return renderer.Result{}, fmt.Errorf("callbacks is nil")
 	}
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	s, err := r.acquire()
+	if err != nil {
+		return renderer.Result{}, err
+	}
+	done := false
+	defer func() {
+		if done {
+			r.release(s)
+			return
+		}
+		r.drop(s)
+	}()
 
 	req := map[string]any{
 		"type":      "render",
@@ -118,7 +186,7 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 		"source":    source,
 		"page_info": encodePageInfo(info),
 	}
-	if err := r.send(req); err != nil {
+	if err := s.send(req); err != nil {
 		return renderer.Result{}, err
 	}
 
@@ -128,7 +196,7 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 		}
 
 		var msg wireResult
-		if err := r.recv(&msg); err != nil {
+		if err := s.recv(&msg); err != nil {
 			return renderer.Result{}, err
 		}
 
@@ -138,6 +206,7 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 			for _, c := range msg.Code {
 				code = append(code, renderer.CodeBlock{Language: c[0], Source: c[1]})
 			}
+			done = true
 			return renderer.Result{
 				Body:          msg.Body,
 				IncludedPages: msg.IncludedPages,
@@ -154,7 +223,7 @@ func (r *Renderer) render(ctx context.Context, op, source string, info renderer.
 			if err != nil {
 				return renderer.Result{}, err
 			}
-			if err := r.send(map[string]any{"type": "callback_result", "value": value}); err != nil {
+			if err := s.send(map[string]any{"type": "callback_result", "value": value}); err != nil {
 				return renderer.Result{}, err
 			}
 
@@ -178,7 +247,7 @@ func marshal(v any) ([]byte, error) {
 	return buf, nil
 }
 
-func (r *Renderer) send(v any) error {
+func (s *session) send(v any) error {
 	buf, err := marshal(v)
 	if err != nil {
 		return fmt.Errorf("encode outbound message: %w", err)
@@ -186,18 +255,18 @@ func (r *Renderer) send(v any) error {
 
 	var head [4]byte
 	binary.BigEndian.PutUint32(head[:], uint32(len(buf)))
-	if _, err := r.in.Write(head[:]); err != nil {
+	if _, err := s.in.Write(head[:]); err != nil {
 		return fmt.Errorf("write message length: %w", err)
 	}
-	if _, err := r.in.Write(buf); err != nil {
+	if _, err := s.in.Write(buf); err != nil {
 		return fmt.Errorf("write message body: %w", err)
 	}
 	return nil
 }
 
-func (r *Renderer) recv(v any) error {
+func (s *session) recv(v any) error {
 	var head [4]byte
-	if _, err := io.ReadFull(r.out, head[:]); err != nil {
+	if _, err := io.ReadFull(s.out, head[:]); err != nil {
 		return fmt.Errorf("read message length: %w", err)
 	}
 	n := binary.BigEndian.Uint32(head[:])
@@ -205,7 +274,7 @@ func (r *Renderer) recv(v any) error {
 		return fmt.Errorf("message length %d exceeds limit %d", n, maxMessageBytes)
 	}
 	buf := make([]byte, n)
-	if _, err := io.ReadFull(r.out, buf); err != nil {
+	if _, err := io.ReadFull(s.out, buf); err != nil {
 		return fmt.Errorf("read message body: %w", err)
 	}
 	if err := json.Unmarshal(buf, v); err != nil {
