@@ -85,6 +85,19 @@ func (d *DB) UserByName(ctx context.Context, canonical string) (*User, error) {
 	return d.scanUser(ctx, qUserByName, canonical)
 }
 
+var qUserByUsername = register("UserByUsername", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE username = $1
+ORDER BY id
+LIMIT 1`)
+
+// A page list that filters by author names the account as it is spelled here,
+// never as it was on the site an imported account came from.
+func (d *DB) UserByUsername(ctx context.Context, name string) (*User, error) {
+	return d.scanUser(ctx, qUserByUsername, name)
+}
+
 var qUserByDisplayName = register("UserByDisplayName", `
 SELECT `+userColumns+`
 FROM web_user
