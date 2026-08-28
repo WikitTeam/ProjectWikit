@@ -41,6 +41,7 @@ type Scrubber struct {
 	Name    string
 	Pattern *regexp.Regexp
 	Repl    string
+	Rewrite func(match []byte) []byte
 }
 
 var DefaultScrubbers = []Scrubber{
@@ -48,6 +49,11 @@ var DefaultScrubbers = []Scrubber{
 		Name:    "csrfmiddlewaretoken",
 		Pattern: regexp.MustCompile(`(name="csrfmiddlewaretoken"\s+value=")[^"]*(")`),
 		Repl:    "${1}SCRUBBED${2}",
+	},
+	{
+		Name:    "listpages-params",
+		Pattern: regexp.MustCompile(`data-list-pages-params="[^"]*"`),
+		Rewrite: sortListPagesParams,
 	},
 	{
 		Name:    "html-lang",
@@ -124,6 +130,10 @@ func (c *Comparer) scrub(body []byte, hits map[string]int) []byte {
 			continue
 		}
 		hits[s.Name] += n
+		if s.Rewrite != nil {
+			out = s.Pattern.ReplaceAllFunc(out, s.Rewrite)
+			continue
+		}
 		out = s.Pattern.ReplaceAll(out, []byte(s.Repl))
 	}
 	return out

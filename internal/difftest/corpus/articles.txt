@@ -27,7 +27,22 @@
 !/probe:bydisplay
 # pwikit resolves [[user <display name>]] and Django does not. deliberate.
 
-!/main
+/main
+
 !/scp-173
-# both carry a module, and modules are not ported yet, so pwikit leaves a gap
-# where the widget goes. drop the ! once the modules land.
+# carries [[module Rate]], which nobody has ported. an unported module fails the
+# whole render, so this is a 500 and not a gap. drop the ! once rate lands.
+
+/probe:listed
+/probe:listed/p/2
+/probe:listed/p/9
+/probe:listjoined
+/probe:listnowrap
+/probe:listsections
+/probe:listsections/p/2
+/probe:listtags
+/probe:listempty
+/probe:listurl
+/probe:listurl/name/probe:listed
+/probe:listbyvotes
+/probe:listed/p/2/tag/euclid

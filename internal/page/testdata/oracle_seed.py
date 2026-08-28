@@ -134,6 +134,70 @@ unknownmodule = make_article('probe:unknownmodule', 'Probe Unknown Module',
 bydisplay = make_article('probe:bydisplay', 'Probe By Display Name',
                          '[[*user Probe WD]]', None)
 
+listrow = NL.join([
+    '[[module ListPages category="probe" order="name" perPage="3" separate="yes"]]',
+    '%%index%%/%%total%% [[[%%fullname%%|%%title%%]]] %%rating%%',
+    '[[/module]]',
+])
+listed = make_article('probe:listed', 'Probe Listed', listrow, None)
+listjoined = make_article(
+    'probe:listjoined', 'Probe List Joined',
+    NL.join([
+        '[[module ListPages category="probe" order="name" separate="no" prependline="||~ page||" appendline="end"]]',
+        '||%%name%%||',
+        '[[/module]]',
+    ]), None)
+listnowrap = make_article(
+    'probe:listnowrap', 'Probe List No Wrapper',
+    NL.join([
+        '[[module ListPages category="probe" order="name" wrapper="no" limit="2"]]',
+        '%%name%%',
+        '[[/module]]',
+    ]), None)
+listsections = make_article(
+    'probe:listsections', 'Probe List Sections',
+    NL.join([
+        '[[module ListPages category="probe" order="name" perPage="2"]]',
+        '[[head]]',
+        'top',
+        '[[/head]]',
+        '[[body]]',
+        '%%name%%',
+        '[[/body]]',
+        '[[foot]]',
+        'bottom',
+        '[[/foot]]',
+        '[[/module]]',
+    ]), None)
+listtags = make_article(
+    'probe:listtags', 'Probe List Tags',
+    NL.join([
+        '[[module ListPages category="*" tags="+lang:en -zeta" order="fullname"]]',
+        '%%fullname%%',
+        '[[/module]]',
+    ]), None)
+listempty = make_article(
+    'probe:listempty', 'Probe List Empty',
+    NL.join([
+        '[[module ListPages category="probe" name="no-such-name-at-all"]]',
+        '%%name%%',
+        '[[/module]]',
+    ]), None)
+listurl = make_article(
+    'probe:listurl', 'Probe List Url',
+    NL.join([
+        '[[module ListPages category="probe" order="name" name="@url|probe*"]]',
+        '%%name%%',
+        '[[/module]]',
+    ]), None)
+listbyvotes = make_article(
+    'probe:listbyvotes', 'Probe List By Votes',
+    NL.join([
+        '[[module ListPages category="*" order="votes desc" perPage="5" rating=">-10"]]',
+        '%%fullname%% %%rating%% %%rating_votes%% %%popularity%%',
+        '[[/module]]',
+    ]), None)
+
 full.parent = parent
 full.save()
 full.authors.set([author, coauthor])
@@ -166,10 +230,13 @@ Settings.objects.update_or_create(
 site_settings, _ = Settings.objects.get_or_create(site=Site.objects.first())
 
 for article in (parent, full, bare, rated, half, included, host, redirect, described,
-                imaged, tagged, taggedplain, unknownmodule, bydisplay):
+                imaged, tagged, taggedplain, unknownmodule, bydisplay, listed, listjoined,
+                listnowrap, listsections, listtags, listempty, listurl, listbyvotes):
     freeze(article)
 
 print('site rating_mode =', site_settings.rating_mode)
 print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, half, included, host,
                                                  redirect, described, imaged, tagged, taggedplain,
-                                                 unknownmodule, bydisplay)))
+                                                 unknownmodule, bydisplay, listed, listjoined,
+                                                 listnowrap, listsections, listtags, listempty,
+                                                 listurl, listbyvotes)))
