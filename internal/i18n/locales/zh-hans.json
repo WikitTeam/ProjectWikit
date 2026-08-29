@@ -22,6 +22,7 @@
   "module-rate-popularity": "人气值（3.0分及以上评分占比）",
   "module-rate-up": "喜欢",
   "module-rate-votes": "评分数",
+  "module-search-placeholder": "搜索文章标题或内容…",
   "module-unknown": "模块 '{name}' 不存在",
   "page.date-format": "{month}月{day}日, {year}年 {hour}:{minute}",
   "page.date-format-js": "%b%e日, %Y年 %H:%M (%O)",
