@@ -29,9 +29,8 @@
 
 /main
 
-!/scp-173
-# carries [[module Rate]], which nobody has ported. an unported module fails the
-# whole render, so this is a 500 and not a gap. drop the ! once rate lands.
+/scp-173
+/probestars:third
 
 /probe:listed
 /probe:listed/p/2

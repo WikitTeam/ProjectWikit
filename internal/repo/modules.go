@@ -78,6 +78,10 @@ func (m moduleData) VoteStats(articleID int64) (db.VoteStats, error) {
 	return m.repo.db.VoteStats(m.repo.ctx, articleID)
 }
 
+func (m moduleData) HasVoted(articleID int64, userID *int64) (bool, error) {
+	return m.repo.db.HasVoted(m.repo.ctx, articleID, userID)
+}
+
 func (m moduleData) ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error) {
 	return m.repo.db.ListArticles(m.repo.ctx, f, offset, limit)
 }

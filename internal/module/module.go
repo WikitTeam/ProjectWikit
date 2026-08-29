@@ -33,6 +33,7 @@ type Data interface {
 	SiteRatingMode() (string, error)
 	CategoryRatingMode(category string) (string, error)
 	VoteStats(articleID int64) (db.VoteStats, error)
+	HasVoted(articleID int64, userID *int64) (bool, error)
 	ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error)
 	CountArticles(f db.ListFilter, offset int, limit *int) (int, error)
 }

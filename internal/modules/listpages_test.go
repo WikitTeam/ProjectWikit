@@ -42,6 +42,8 @@ func (d *listData) CategoryRatingMode(string) (string, error) { return "", db.Er
 
 func (d *listData) VoteStats(int64) (db.VoteStats, error) { return db.VoteStats{}, nil }
 
+func (d *listData) HasVoted(int64, *int64) (bool, error) { return false, nil }
+
 func (d *listData) ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error) {
 	d.filter, d.offset, d.limit = f, offset, limit
 	return d.listed, nil

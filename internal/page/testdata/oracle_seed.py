@@ -113,6 +113,10 @@ parent = make_article('probe:parent', 'Probe Parent', 'parent source', author)
 full = make_article('probe:full', 'Probe Full', 'full source\nsecond line', author)
 bare = make_article('probe:bare', 'Probe Bare', 'bare source', None)
 rated = make_article('probestars:rated', 'Probe Rated', 'rated source', author)
+unrated = make_article('probestars:unrated', 'Probe Unrated', 'unrated source', author)
+third = make_article('probestars:third', 'Probe Third', '[[module Rate]]', author)
+quarter = make_article('probestars:quarter', 'Probe Quarter', 'quarter source', author)
+unratable = make_article('probeoff:unratable', 'Probe Unratable', 'unratable source', author)
 half = make_article('probe:half', 'Probe Half', 'half source', author)
 included = make_article(
     'probe:included', 'Included Page',
@@ -219,6 +223,11 @@ vote(full, coauthor, 1)
 vote(full, voter, -1)
 vote(rated, author, 4)
 vote(rated, voter, 5)
+vote(third, author, 3)
+vote(third, voter, 3)
+vote(third, coauthor, 4)
+vote(quarter, author, 0.5)
+vote(quarter, voter, 1)
 for index, member in enumerate(crowd):
     vote(half, member, 1 if index == 0 else -1)
 
@@ -227,15 +236,22 @@ Settings.objects.update_or_create(
     category=stars_category,
     defaults=dict(rating_mode=Settings.RatingMode.Stars),
 )
+off_category, _ = Category.objects.get_or_create(name='probeoff')
+Settings.objects.update_or_create(
+    category=off_category,
+    defaults=dict(rating_mode=Settings.RatingMode.Disabled),
+)
 site_settings, _ = Settings.objects.get_or_create(site=Site.objects.first())
 
-for article in (parent, full, bare, rated, half, included, host, redirect, described,
+for article in (parent, full, bare, rated, unrated, third, quarter, unratable, half,
+                included, host, redirect, described,
                 imaged, tagged, taggedplain, unknownmodule, bydisplay, listed, listjoined,
                 listnowrap, listsections, listtags, listempty, listurl, listbyvotes):
     freeze(article)
 
 print('site rating_mode =', site_settings.rating_mode)
-print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, half, included, host,
+print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, unrated, third,
+                                                 quarter, unratable, half, included, host,
                                                  redirect, described, imaged, tagged, taggedplain,
                                                  unknownmodule, bydisplay, listed, listjoined,
                                                  listnowrap, listsections, listtags, listempty,

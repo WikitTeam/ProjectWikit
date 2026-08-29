@@ -42,6 +42,8 @@ func (f fakeData) CategoryRatingMode(string) (string, error) { return "", db.Err
 
 func (f fakeData) VoteStats(int64) (db.VoteStats, error) { return db.VoteStats{}, f.err }
 
+func (f fakeData) HasVoted(int64, *int64) (bool, error) { return false, f.err }
+
 func (f fakeData) ListArticles(db.ListFilter, int, *int) ([]db.Article, error) {
 	return f.articles, f.err
 }
@@ -51,7 +53,7 @@ func (f fakeData) CountArticles(db.ListFilter, int, *int) (int, error) {
 }
 
 func TestEveryPortedModuleAnswers(t *testing.T) {
-	ported := []string{"listpages", "pagedescription", "pageimage", "pagesbytag", "redirect"}
+	ported := []string{"listpages", "pagedescription", "pageimage", "pagesbytag", "rate", "redirect"}
 	for _, name := range ported {
 		if !module.Ported(name) {
 			t.Errorf("Ported(%q) = false, want true", name)
