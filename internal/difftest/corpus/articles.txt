@@ -1,5 +1,5 @@
 # The corpus for a pwikit that answers article pages itself.
-# Run it with serve -articles-from-go; the default corpus is for the forwarding shape.
+# The default corpus covers one request per prefix; this one goes deep on articles.
 # ! = known to differ; still run and reported, just not failed.
 
 /probe:bare
@@ -26,6 +26,11 @@
 
 !/probe:bydisplay
 # pwikit resolves [[user <display name>]] and Django does not. deliberate.
+
+OPTIONS /probe:full
+!POST /probe:full
+# django answers POST with the CSRF middleware's 403 before the view runs. pwikit
+# has no CSRF yet and says 405. drop the ! when phase 4 lands it.
 
 /main
 

@@ -33,6 +33,8 @@ type Handler struct {
 	shell func(loc *i18n.Localizer) *shell.Renderer
 }
 
+const allowedMethods = "GET, HEAD, OPTIONS"
+
 var _ http.Handler = (*Handler)(nil)
 
 func New(d Deps) *Handler {
@@ -53,8 +55,15 @@ func New(d Deps) *Handler {
 func (h *Handler) now() time.Time { return h.deps.Now() }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Allow", allowedMethods)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Length", "0")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		w.Header().Set("Allow", "GET, HEAD")
+		w.Header().Set("Allow", allowedMethods)
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}

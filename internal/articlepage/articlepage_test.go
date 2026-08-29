@@ -70,8 +70,26 @@ func TestPostIsNotAllowed(t *testing.T) {
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Errorf("POST /main = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
 	}
-	if got := rec.Header().Get("Allow"); got != "GET, HEAD" {
-		t.Errorf("Allow = %q, want %q", got, "GET, HEAD")
+	if got := rec.Header().Get("Allow"); got != allowedMethods {
+		t.Errorf("Allow = %q, want %q", got, allowedMethods)
+	}
+}
+
+func TestOptionsIsAnswered(t *testing.T) {
+	rec := httptest.NewRecorder()
+	New(Deps{}).ServeHTTP(rec, httptest.NewRequest(http.MethodOptions, "/main", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("OPTIONS /main = %d, want %d", rec.Code, http.StatusOK)
+	}
+	if got := rec.Header().Get("Allow"); got != allowedMethods {
+		t.Errorf("Allow = %q, want %q", got, allowedMethods)
+	}
+	if got := rec.Header().Get("Content-Length"); got != "0" {
+		t.Errorf("Content-Length = %q, want %q", got, "0")
+	}
+	if got := rec.Body.String(); got != "" {
+		t.Errorf("OPTIONS /main body = %q, want %q", got, "")
 	}
 }
 

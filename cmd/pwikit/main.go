@@ -90,7 +90,6 @@ func serve(args []string) error {
 	secret := fs.String("secret-key", os.Getenv(envSecretKey), "key the session cookie is signed with; without it every visitor is anonymous")
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
-	articles := fs.Bool("articles-from-go", false, "answer article pages here instead of passing them upstream")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -131,34 +130,30 @@ func serve(args []string) error {
 		defer conn.Close()
 	}
 
-	// Without a database the whole prefix goes upstream, host rules included.
 	var mediaHandler http.Handler = proxy
 	if conn != nil {
 		mediaHandler = site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), proxy)
 	}
 
-	table := routing.Table
-	goHandlers := map[string]http.Handler{
-		// The bundle is the one route answered above the session layer, so it
-		// is also the one that does not vary on the cookie.
-		static.Prefix: static.New(assets, proxy),
-		media.Prefix:  respheader.VaryCookie(mediaHandler),
-	}
-
-	if *articles {
-		if conn == nil {
-			return errors.New("-articles-from-go needs a database")
-		}
+	var articles http.Handler = proxy
+	if conn != nil {
 		pages, closeEngine, err := articleHandler(conn, p, assets, *sidecar, *secret, *timezone, log)
 		if err != nil {
 			return err
 		}
 		defer closeEngine()
-		table = routing.WithOwner(table, "/", routing.OwnerGo)
-		goHandlers["/"] = compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), pages, proxy)))
+		articles = compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), pages, proxy)))
 	}
 
-	mux, err := routing.New(table, proxy, goHandlers)
+	goHandlers := map[string]http.Handler{
+		// The bundle is the one route answered above the session layer, so it
+		// is also the one that does not vary on the cookie.
+		static.Prefix: static.New(assets, proxy),
+		media.Prefix:  respheader.VaryCookie(mediaHandler),
+		"/":           articles,
+	}
+
+	mux, err := routing.New(routing.Table, proxy, goHandlers)
 	if err != nil {
 		return err
 	}
@@ -184,8 +179,7 @@ func listenPort(addr string) string {
 	return port
 }
 
-// assetFS is the development shape of the bundle, which ends up inside the
-// binary. Until the build produces it, an empty path means every asset request
+// Until the build produces a bundle, an empty path means every asset request
 // falls through to the upstream.
 func assetFS(dir string) (iofs.FS, error) {
 	if dir == "" {

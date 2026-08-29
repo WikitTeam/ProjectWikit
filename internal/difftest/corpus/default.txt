@@ -2,11 +2,9 @@
 # ! = known to differ; still run and reported, just not failed.
 # PWIKIT_DIFF_CORPUS points at another file instead of this one.
 
-!/
-!/main
-!/main/norender/true
-# these three render main, which has [[module ListPages]] -- its params come out of a
-# Rust HashMap so the JSON key order moves around. drop the ! once sort_keys lands.
+/
+/main
+/main/norender/true
 
 /scp-173
 /scp-173/edit/true

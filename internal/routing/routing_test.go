@@ -136,20 +136,3 @@ func TestMuxServeHTTPDispatches(t *testing.T) {
 		})
 	}
 }
-
-func TestWithOwnerLeavesTheOriginalAlone(t *testing.T) {
-	got := WithOwner(Table, "/", OwnerGo)
-	if got[0].Owner != OwnerGo {
-		t.Errorf("WithOwner(Table, %q, go)[0].Owner = %q, want %q", "/", got[0].Owner, OwnerGo)
-	}
-	if Table[0].Owner != OwnerDjango {
-		t.Errorf("Table[0].Owner = %q, want %q", Table[0].Owner, OwnerDjango)
-	}
-}
-
-func TestWithOwnerOfUnknownPrefix(t *testing.T) {
-	got := WithOwner(Table, "/no-such-prefix/", OwnerGo)
-	if len(got) != len(Table) {
-		t.Errorf("len(WithOwner(Table, unknown, go)) = %d, want %d", len(got), len(Table))
-	}
-}
