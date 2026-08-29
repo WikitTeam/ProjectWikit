@@ -15,6 +15,7 @@ from django.contrib.auth.models import Permission
 from django.db import transaction
 
 from web.models.articles import Article, Category
+from web.models.forum import ForumCategory, ForumPost, ForumSection, ForumThread
 from web.models.roles import Role, RolePermissionsOverride
 from web.models.users import ExtendedAnonymousUser, User
 from web.permissions import get_role_permissions_content_type
@@ -49,14 +50,43 @@ def build_user(spec, roles, index):
         type='normal',
         is_active=spec['kind'] not in ('inactive', 'inactive_superuser'),
         is_superuser=spec['kind'] in ('superuser', 'inactive_superuser'),
+        is_forum_active=not spec.get('forum_barred'),
     )
     user.roles.set([roles[slug] for slug in (spec.get('roles') or [])])
     return user
 
 
+def build_forum_object(spec, user, index):
+    section = ForumSection.objects.create(
+        name='permprobe%d' % index,
+        is_hidden_for_users=bool(spec.get('hidden_for_users')),
+    )
+    if spec['kind'] == 'forum_section':
+        return ForumSection.objects.get(pk=section.pk)
+    category = ForumCategory.objects.create(name='permprobe%d' % index, section=section)
+    author = None if user.is_anonymous else user
+    thread_author = spec.get('author') if spec['kind'] == 'forum_thread' else spec.get('thread_author')
+    thread = ForumThread.objects.create(
+        name='permprobe%d' % index,
+        category=category,
+        author=author if thread_author else None,
+        is_locked=bool(spec.get('locked')),
+    )
+    if spec['kind'] == 'forum_thread':
+        return ForumThread.objects.get(pk=thread.pk)
+    post = ForumPost.objects.create(
+        name='permprobe%d' % index,
+        thread=thread,
+        author=author if spec.get('author') else None,
+    )
+    return ForumPost.objects.get(pk=post.pk)
+
+
 def build_object(spec, roles, user, index):
     if spec is None:
         return None
+    if spec['kind'].startswith('forum_'):
+        return build_forum_object(spec, user, index)
     category = Category.objects.create(name='permprobe%d' % index)
     for override_spec in spec.get('overrides') or []:
         override = RolePermissionsOverride.objects.create(role=roles[override_spec['role']])

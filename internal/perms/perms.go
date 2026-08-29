@@ -1,4 +1,4 @@
-// Package perms answers what one user may do to one page.
+// Package perms answers what one user may do to one page or forum object.
 package perms
 
 import "sort"
@@ -17,10 +17,28 @@ const (
 	CommentArticles      = "comment_articles"
 	ViewArticleComments  = "view_article_comments"
 	ManageArticleAuthors = "manage_article_authors"
+
+	ViewForumPosts          = "view_forum_posts"
+	CreateForumPosts        = "create_forum_posts"
+	EditForumPosts          = "edit_forum_posts"
+	DeleteForumPosts        = "delete_forum_posts"
+	ViewForumThreads        = "view_forum_threads"
+	CreateForumThreads      = "create_forum_threads"
+	EditForumThreads        = "edit_forum_threads"
+	PinForumThreads         = "pin_forum_threads"
+	LockForumThreads        = "lock_forum_threads"
+	MoveForumThreads        = "move_forum_threads"
+	ViewForumSections       = "view_forum_sections"
+	ViewHiddenForumSections = "view_hidden_forum_sections"
+	ViewForumCategories     = "view_forum_categories"
 )
 
 // lockable is what a locked page takes away from anyone who cannot unlock it.
 var lockable = []string{EditArticles, ManageArticleAuthors, ManageArticleFiles, TagArticles, MoveArticles, DeleteArticles}
+
+// Commenting on an article is in this list because an article's comments are
+// forum posts underneath.
+var silenced = []string{CommentArticles, CreateForumPosts, EditForumPosts, DeleteForumPosts, EditForumThreads, PinForumThreads, MoveForumThreads}
 
 // Set answers one question at a time. A superuser gets a set that says yes to
 // every name, which is the shortcut Django takes before any backend runs.
@@ -60,18 +78,36 @@ type Override struct {
 // Subject is the user asking. Roles arrive already assembled: the default role
 // first, then the registered one and the user's own.
 type Subject struct {
-	Anonymous bool
-	Active    bool
-	Superuser bool
-	Roles     []Role
+	Anonymous   bool
+	Active      bool
+	ForumActive bool
+	Superuser   bool
+	Roles       []Role
 }
 
-// Object is the page being asked about. A category fills in Overrides alone,
-// since the two remaining fields describe an article.
+type Kind int
+
+const (
+	KindArticle Kind = iota
+	KindForumSection
+	KindForumThread
+	KindForumPost
+)
+
+// Object is the thing being asked about. A category fills in Overrides alone,
+// which is why the article kind is the zero value.
 type Object struct {
 	Overrides []Override
-	Locked    bool
-	Author    bool
+	Kind      Kind
+
+	Locked bool
+	Author bool
+
+	HiddenForUsers bool
+
+	// Django reaches this through the post's override pipeline, so a thread's
+	// rules run after the post's own.
+	Thread *Object
 }
 
 // Resolve answers for one user against one object. A nil object is the
@@ -102,7 +138,7 @@ func Resolve(s Subject, o *Object) Set {
 		}
 	}
 	if o != nil {
-		applyObject(granted, o)
+		applyObject(granted, o, s)
 	}
 	return Set{named: granted}
 }
@@ -122,7 +158,27 @@ func applyOverride(final map[string]bool, overrides []Override, roleID int64) {
 	}
 }
 
-func applyObject(granted map[string]bool, o *Object) {
+func applyObject(granted map[string]bool, o *Object, s Subject) {
+	switch o.Kind {
+	case KindForumSection:
+		if o.HiddenForUsers && granted[ViewForumSections] && !granted[ViewHiddenForumSections] {
+			delete(granted, ViewForumSections)
+		}
+		return
+	case KindForumThread:
+		applyThread(granted, o, s)
+		return
+	case KindForumPost:
+		// The grant reads the site-wide answer rather than what this thread
+		// has left, so a locked thread still lets its author keep the post.
+		if o.Author && Resolve(s, nil).Has(CreateForumPosts) {
+			granted[EditForumPosts] = true
+		}
+		if o.Thread != nil {
+			applyThread(granted, o.Thread, s)
+		}
+		return
+	}
 	if o.Locked {
 		if !granted[LockArticles] {
 			for _, name := range lockable {
@@ -133,5 +189,19 @@ func applyObject(granted map[string]bool, o *Object) {
 	}
 	if o.Author {
 		granted[ManageArticleAuthors] = true
+	}
+}
+
+func applyThread(granted map[string]bool, o *Object, s Subject) {
+	if o.Author {
+		granted[EditForumThreads] = true
+	}
+	barred := !s.Anonymous && !s.ForumActive
+	locked := o.Locked && !granted[LockForumThreads]
+	if !barred && !locked {
+		return
+	}
+	for _, name := range silenced {
+		delete(granted, name)
 	}
 }

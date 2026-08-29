@@ -12,7 +12,20 @@
     "reset_article_votes",
     "comment_articles",
     "view_article_comments",
-    "manage_article_authors"
+    "manage_article_authors",
+    "view_forum_posts",
+    "create_forum_posts",
+    "edit_forum_posts",
+    "delete_forum_posts",
+    "view_forum_threads",
+    "create_forum_threads",
+    "edit_forum_threads",
+    "pin_forum_threads",
+    "lock_forum_threads",
+    "move_forum_threads",
+    "view_forum_sections",
+    "view_hidden_forum_sections",
+    "view_forum_categories"
   ],
   "scenarios": [
     {
@@ -22,7 +35,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -30,7 +47,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -46,7 +65,8 @@
       ],
       "user": {
         "kind": "anonymous",
-        "roles": null
+        "roles": null,
+        "forum_barred": false
       },
       "object": null
     },
@@ -57,7 +77,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -65,7 +89,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -81,13 +107,16 @@
       ],
       "user": {
         "kind": "anonymous",
-        "roles": null
+        "roles": null,
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -97,7 +126,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -105,7 +138,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -123,13 +158,16 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -139,7 +177,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -147,7 +189,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -175,13 +219,16 @@
         "kind": "normal",
         "roles": [
           "half"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -191,7 +238,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -199,7 +250,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -224,13 +277,16 @@
         "kind": "normal",
         "roles": [
           "half"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -240,7 +296,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -248,7 +308,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -266,7 +328,8 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
@@ -280,7 +343,9 @@
           }
         ],
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -290,7 +355,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -298,7 +367,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -316,7 +387,8 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
@@ -330,7 +402,9 @@
           }
         ],
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -340,7 +414,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -348,7 +426,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -373,7 +453,8 @@
         "kind": "normal",
         "roles": [
           "viewer"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
@@ -387,7 +468,9 @@
           }
         ],
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -397,7 +480,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -405,7 +492,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -423,7 +512,8 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "category",
@@ -437,7 +527,9 @@
           }
         ],
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -447,7 +539,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -455,7 +551,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -473,13 +571,16 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": true,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -489,7 +590,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -497,7 +602,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -523,13 +630,16 @@
         "roles": [
           "editor",
           "locker"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": true,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -539,7 +649,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -547,7 +661,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -565,13 +681,16 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": true
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -581,7 +700,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -589,7 +712,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -607,13 +732,16 @@
         "kind": "normal",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": true,
-        "author": true
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -623,7 +751,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -631,7 +763,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -649,13 +783,16 @@
         "kind": "inactive",
         "roles": [
           "editor"
-        ]
+        ],
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -665,7 +802,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -673,7 +814,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -689,13 +832,16 @@
       ],
       "user": {
         "kind": "superuser",
-        "roles": null
+        "roles": null,
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": true,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     },
     {
@@ -705,7 +851,11 @@
           "slug": "everyone",
           "permissions": [
             "view_articles",
-            "view_article_comments"
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
           ],
           "restrictions": null
         },
@@ -713,7 +863,9 @@
           "slug": "registered",
           "permissions": [
             "comment_articles",
-            "rate_articles"
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
           ],
           "restrictions": null
         },
@@ -729,13 +881,859 @@
       ],
       "user": {
         "kind": "inactive_superuser",
-        "roles": null
+        "roles": null,
+        "forum_barred": false
       },
       "object": {
         "kind": "article",
         "overrides": null,
         "locked": false,
-        "author": false
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a plain forum section",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_section",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a section hidden for users takes browsing away",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_section",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": true,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a hidden section keeps browsing for whoever may see hidden ones",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "moderator",
+          "permissions": [
+            "view_hidden_forum_sections"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "moderator"
+        ],
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_section",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": true,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a hidden section takes nothing from someone who could not browse anyway",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": null,
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": null,
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_section",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": true,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a plain thread",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "the author of a thread may edit it",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": false,
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a locked thread silences whoever cannot unlock",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": true,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a locked thread silences its own author too",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": true,
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a locked thread leaves everything to whoever may unlock",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "moderator",
+          "permissions": [
+            "lock_forum_threads"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "moderator"
+        ],
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": true,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a user barred from the forum is silenced on an open thread",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": true
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "an anonymous visitor is never barred from the forum",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "anonymous",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "an anonymous visitor keeps what everyone grants on a thread",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_forum_threads",
+            "comment_articles",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": null,
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "anonymous",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a plain post",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_post",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "the author of a post may edit it",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_post",
+        "overrides": null,
+        "locked": false,
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "the author of a post who may not write posts gains nothing",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": null,
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_post",
+        "overrides": null,
+        "locked": false,
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a locked thread silences the author of a post under it",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_post",
+        "overrides": null,
+        "locked": true,
+        "author": true,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "the author of a thread keeps editing it while reading a post under it",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_post",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": true
+      }
+    },
+    {
+      "name": "a superuser is not silenced by a locked thread",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "superuser",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_thread",
+        "overrides": null,
+        "locked": true,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
       }
     }
   ]

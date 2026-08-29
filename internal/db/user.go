@@ -26,6 +26,9 @@ type User struct {
 	IsActive        bool
 	InactiveUntil   *time.Time
 	IsSuperuser     bool
+
+	IsForumActive      bool
+	ForumInactiveUntil *time.Time
 }
 
 // ActiveAt reproduces User.__init__, where a deadline in the future overrides
@@ -36,6 +39,13 @@ func (u *User) ActiveAt(now time.Time) bool {
 		return u.IsActive
 	}
 	return now.After(*u.InactiveUntil)
+}
+
+func (u *User) ForumActiveAt(now time.Time) bool {
+	if u.ForumInactiveUntil == nil {
+		return u.IsForumActive
+	}
+	return now.After(*u.ForumInactiveUntil)
 }
 
 func (u *User) DisplayLabel() string {
@@ -61,7 +71,7 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser`
+const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until`
 
 // Django's QuerySet.first() falls back to ordering by primary key when the
 // queryset carries no ordering of its own, so these two are not stray sorts.
@@ -138,6 +148,7 @@ func userDest(u *User) (dest []any, finish func()) {
 	dest = []any{
 		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
 		&u.IsActive, &u.InactiveUntil, &u.IsSuperuser,
+		&u.IsForumActive, &u.ForumInactiveUntil,
 	}
 	return dest, func() {
 		u.WikidotUsername = deref(wikidotUsername)

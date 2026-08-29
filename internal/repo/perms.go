@@ -58,6 +58,7 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 	subject := perms.Subject{Anonymous: u == nil, Roles: roles}
 	if u != nil {
 		subject.Active = u.ActiveAt(now)
+		subject.ForumActive = u.ForumActiveAt(now)
 		subject.Superuser = u.IsSuperuser
 	}
 	return subject, nil

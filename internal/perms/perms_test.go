@@ -25,15 +25,18 @@ type overrideSpec struct {
 }
 
 type objectSpec struct {
-	Kind      string         `json:"kind"`
-	Overrides []overrideSpec `json:"overrides"`
-	Locked    bool           `json:"locked"`
-	Author    bool           `json:"author"`
+	Kind           string         `json:"kind"`
+	Overrides      []overrideSpec `json:"overrides"`
+	Locked         bool           `json:"locked"`
+	Author         bool           `json:"author"`
+	HiddenForUsers bool           `json:"hidden_for_users"`
+	ThreadAuthor   bool           `json:"thread_author"`
 }
 
 type userSpec struct {
-	Kind  string   `json:"kind"`
-	Roles []string `json:"roles"`
+	Kind        string   `json:"kind"`
+	Roles       []string `json:"roles"`
+	ForumBarred bool     `json:"forum_barred"`
 }
 
 type scenario struct {
@@ -47,11 +50,15 @@ var queried = []string{
 	ViewArticles, RateArticles, CreateArticles, EditArticles, TagArticles,
 	MoveArticles, LockArticles, ManageArticleFiles, DeleteArticles,
 	ResetArticleVotes, CommentArticles, ViewArticleComments, ManageArticleAuthors,
+	ViewForumPosts, CreateForumPosts, EditForumPosts, DeleteForumPosts,
+	ViewForumThreads, CreateForumThreads, EditForumThreads, PinForumThreads,
+	LockForumThreads, MoveForumThreads, ViewForumSections,
+	ViewHiddenForumSections, ViewForumCategories,
 }
 
 var baseRoles = []roleSpec{
-	{Slug: "everyone", Permissions: []string{ViewArticles, ViewArticleComments}},
-	{Slug: "registered", Permissions: []string{CommentArticles, RateArticles}},
+	{Slug: "everyone", Permissions: []string{ViewArticles, ViewArticleComments, ViewForumSections, ViewForumCategories, ViewForumThreads, ViewForumPosts}},
+	{Slug: "registered", Permissions: []string{CommentArticles, RateArticles, CreateForumThreads, CreateForumPosts}},
 	{Slug: "editor", Permissions: []string{EditArticles, TagArticles, MoveArticles}},
 }
 
@@ -156,6 +163,114 @@ var scenarios = []scenario{
 		User:   userSpec{Kind: "inactive_superuser"},
 		Object: &objectSpec{Kind: "article"},
 	},
+	{
+		Name:   "a plain forum section",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_section"},
+	},
+	{
+		Name:   "a section hidden for users takes browsing away",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
+	},
+	{
+		Name:   "a hidden section keeps browsing for whoever may see hidden ones",
+		Roles:  withRoles(roleSpec{Slug: "moderator", Permissions: []string{ViewHiddenForumSections}}),
+		User:   userSpec{Kind: "normal", Roles: []string{"moderator"}},
+		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
+	},
+	{
+		Name:   "a hidden section takes nothing from someone who could not browse anyway",
+		Roles:  []roleSpec{{Slug: "everyone"}, {Slug: "registered"}},
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
+	},
+	{
+		Name:   "a plain thread",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_thread"},
+	},
+	{
+		Name:   "the author of a thread may edit it",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_thread", Author: true},
+	},
+	{
+		Name:   "a locked thread silences whoever cannot unlock",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_thread", Locked: true},
+	},
+	{
+		Name:   "a locked thread silences its own author too",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_thread", Locked: true, Author: true},
+	},
+	{
+		Name:   "a locked thread leaves everything to whoever may unlock",
+		Roles:  withRoles(roleSpec{Slug: "moderator", Permissions: []string{LockForumThreads}}),
+		User:   userSpec{Kind: "normal", Roles: []string{"moderator"}},
+		Object: &objectSpec{Kind: "forum_thread", Locked: true},
+	},
+	{
+		Name:   "a user barred from the forum is silenced on an open thread",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal", ForumBarred: true},
+		Object: &objectSpec{Kind: "forum_thread"},
+	},
+	{
+		Name:   "an anonymous visitor is never barred from the forum",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "anonymous"},
+		Object: &objectSpec{Kind: "forum_thread"},
+	},
+	{
+		Name:   "an anonymous visitor keeps what everyone grants on a thread",
+		Roles:  []roleSpec{{Slug: "everyone", Permissions: []string{ViewForumThreads, CommentArticles, CreateForumPosts}}, {Slug: "registered"}},
+		User:   userSpec{Kind: "anonymous"},
+		Object: &objectSpec{Kind: "forum_thread"},
+	},
+	{
+		Name:   "a plain post",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_post"},
+	},
+	{
+		Name:   "the author of a post may edit it",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_post", Author: true},
+	},
+	{
+		Name:   "the author of a post who may not write posts gains nothing",
+		Roles:  []roleSpec{{Slug: "everyone", Permissions: []string{ViewForumPosts}}, {Slug: "registered"}},
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_post", Author: true},
+	},
+	{
+		Name:   "a locked thread silences the author of a post under it",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_post", Author: true, Locked: true},
+	},
+	{
+		Name:   "the author of a thread keeps editing it while reading a post under it",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_post", ThreadAuthor: true},
+	},
+	{
+		Name:   "a superuser is not silenced by a locked thread",
+		Roles:  baseRoles,
+		User:   userSpec{Kind: "superuser"},
+		Object: &objectSpec{Kind: "forum_thread", Locked: true},
+	},
 }
 
 func (s scenario) roleID(slug string) int64 {
@@ -178,9 +293,10 @@ func (s scenario) role(slug string) Role {
 
 func (s scenario) subject() Subject {
 	sub := Subject{
-		Anonymous: s.User.Kind == "anonymous",
-		Active:    s.User.Kind != "inactive" && s.User.Kind != "inactive_superuser",
-		Superuser: s.User.Kind == "superuser" || s.User.Kind == "inactive_superuser",
+		Anonymous:   s.User.Kind == "anonymous",
+		Active:      s.User.Kind != "inactive" && s.User.Kind != "inactive_superuser",
+		ForumActive: s.User.Kind != "anonymous" && !s.User.ForumBarred,
+		Superuser:   s.User.Kind == "superuser" || s.User.Kind == "inactive_superuser",
 	}
 	sub.Roles = append(sub.Roles, s.role("everyone"))
 	if !sub.Anonymous {
@@ -197,13 +313,26 @@ func (s scenario) object() *Object {
 		return nil
 	}
 	o := &Object{
-		Locked: s.Object.Kind == "article" && s.Object.Locked,
-		Author: s.Object.Kind == "article" && s.Object.Author,
+		Kind:           objectKinds[s.Object.Kind],
+		Locked:         s.Object.Kind != "category" && s.Object.Locked,
+		Author:         s.Object.Kind != "category" && s.Object.Author,
+		HiddenForUsers: s.Object.HiddenForUsers,
+	}
+	if o.Kind == KindForumPost {
+		o.Thread = &Object{Kind: KindForumThread, Locked: s.Object.Locked, Author: s.Object.ThreadAuthor}
 	}
 	for _, spec := range s.Object.Overrides {
 		o.Overrides = append(o.Overrides, Override{RoleID: s.roleID(spec.Role), Permissions: spec.Permissions, Restrictions: spec.Restrictions})
 	}
 	return o
+}
+
+var objectKinds = map[string]Kind{
+	"article":       KindArticle,
+	"category":      KindArticle,
+	"forum_section": KindForumSection,
+	"forum_thread":  KindForumThread,
+	"forum_post":    KindForumPost,
 }
 
 func TestResolveMatchesGolden(t *testing.T) {
