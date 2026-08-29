@@ -100,8 +100,12 @@ func TestRenderOfARemovedModule(t *testing.T) {
 }
 
 func TestRenderOfAModuleNobodyWroteYet(t *testing.T) {
-	if _, err := module.Render(module.Env{}, "rate", nil, ""); !errors.Is(err, module.ErrNotPorted) {
-		t.Errorf("Render(rate) err = %v, want ErrNotPorted", err)
+	var moduleErr *module.Error
+	if _, err := module.Render(module.Env{}, "tagcloud", nil, ""); !errors.As(err, &moduleErr) {
+		t.Fatalf("Render(tagcloud) err = %v, want a module error", err)
+	}
+	if moduleErr.Message != "module-unknown" {
+		t.Errorf("Render(tagcloud) message = %q, want %q", moduleErr.Message, "module-unknown")
 	}
 }
 

@@ -3,7 +3,6 @@
 package module
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -16,10 +15,6 @@ import (
 type Error struct{ Message string }
 
 func (e *Error) Error() string { return e.Message }
-
-// ErrNotPorted is not an Error on purpose. A module nobody has written yet is
-// a hole in pwikit, not something to tell the reader about.
-var ErrNotPorted = errors.New("module: not ported yet")
 
 type Data interface {
 	TagArticles(categorySlug, name string, hiddenCategories []string) ([]db.Article, error)
@@ -85,14 +80,12 @@ func Render(env Env, name string, params map[string]string, body string) (string
 		return "", &Error{Message: env.Text("module-disabled")}
 	}
 	info, ok := Lookup(name)
-	if !ok || info.Removed {
-		return "", &Error{Message: env.Text("module-unknown", "name", name)}
+	if ok && !info.Removed {
+		if render, ok := renderers[info.Name]; ok {
+			return render(env, params, body)
+		}
 	}
-	render, ok := renderers[info.Name]
-	if !ok {
-		return "", ErrNotPorted
-	}
-	return render(env, params, body)
+	return "", &Error{Message: env.Text("module-unknown", "name", name)}
 }
 
 // BoolParam is get_boolean_param, where anything the list does not name reads

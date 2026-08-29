@@ -50,3 +50,13 @@ OPTIONS /probe:full
 /probe:listurl/name/probe:listed
 /probe:listbyvotes
 /probe:listed/p/2/tag/euclid
+
+!/forum:start
+!/forum:recent-posts
+!/forum:category
+!/forum:thread
+!/forum:new-thread
+!/search:site
+# the pages the wiki ships with. each is one unported module, so pwikit draws the
+# error block where django draws the module. the three that django 404s do it from
+# inside the module, which pwikit cannot reach yet. drop each ! as its module lands.

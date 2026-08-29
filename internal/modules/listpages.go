@@ -22,7 +22,7 @@ const maxNesting = 10
 
 func renderListPages(env module.Env, params map[string]string, body string) (string, error) {
 	if env.Render == nil || env.Data == nil {
-		return "", module.ErrNotPorted
+		return "", &module.Error{Message: env.Text("module-failed", "name", "listpages")}
 	}
 	pc := env.Page
 	if pc == nil {

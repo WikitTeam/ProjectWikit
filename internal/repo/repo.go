@@ -13,15 +13,13 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 
 	// The modules register themselves; without this nothing answers a
-	// [[module]] and every one of them reads as not ported.
+	// [[module]] and every page carrying one draws an error block instead.
 	_ "github.com/WikitTeam/ProjectWikit/internal/modules"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
-
-var ErrNotPorted = errors.New("repo: not ported yet")
 
 type Repository struct {
 	ctx   context.Context
@@ -99,9 +97,6 @@ func (r *Repository) RenderModule(pc *page.Context, name string, params map[stri
 	var moduleErr *module.Error
 	if errors.As(err, &moduleErr) {
 		return "", &callbacks.ModuleError{Message: moduleErr.Message}
-	}
-	if errors.Is(err, module.ErrNotPorted) {
-		return "", ErrNotPorted
 	}
 	return html, err
 }
