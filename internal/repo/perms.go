@@ -91,3 +91,9 @@ func (p *Perms) Category(name string) (*perms.Object, error) {
 	}
 	return &perms.Object{Overrides: overrides}, nil
 }
+
+// The forum models sit outside the per-role override table, so nothing but the
+// hidden flag reaches the answer.
+func (p *Perms) ForumSection(s *db.ForumSection) *perms.Object {
+	return &perms.Object{Kind: perms.KindForumSection, HiddenForUsers: s.IsHiddenForUsers}
+}

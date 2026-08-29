@@ -12,12 +12,13 @@ pass is checked on, by loading /probe:host from Django and rendering the same
 source with pwikit render -page host -category probe.
 """
 import datetime
+import itertools
 
 from django.utils import timezone
 
 from web.controllers import articles
 from web.models.articles import Article, Category, Tag, TagsCategory, Vote
-from web.models.forum import ForumPost, ForumThread
+from web.models.forum import ForumCategory, ForumPost, ForumPostVersion, ForumSection, ForumThread
 from web.models.notifications import UserNotification, UserNotificationMapping, UserNotificationSubscription
 from web.models.settings import Settings
 from web.models.site import Site
@@ -27,6 +28,8 @@ NL = chr(10)
 
 CREATED_AT = datetime.datetime(2021, 3, 4, 5, 6, 7, tzinfo=datetime.timezone.utc)
 UPDATED_AT = datetime.datetime(2022, 7, 8, 9, 10, 11, tzinfo=datetime.timezone.utc)
+POSTED_AT = datetime.datetime(2023, 9, 10, 11, 12, 13, tzinfo=datetime.timezone.utc)
+POSTED_MINUTES = itertools.count()
 
 
 def make_user(username, **kwargs):
@@ -71,6 +74,41 @@ def comment_thread(article, user, posts):
         ForumPost.objects.get_or_create(
             thread=thread, name='probe post %d' % i, defaults=dict(author=user),
         )
+    return thread
+
+
+def forum_section(name, order, **kwargs):
+    section, _ = ForumSection.objects.get_or_create(name=name)
+    section.order = order
+    for key, value in kwargs.items():
+        setattr(section, key, value)
+    section.save()
+    return section
+
+
+def forum_category(section, name, order, **kwargs):
+    category, _ = ForumCategory.objects.get_or_create(section=section, name=name)
+    category.order = order
+    for key, value in kwargs.items():
+        setattr(category, key, value)
+    category.save()
+    return category
+
+
+def forum_thread(category, name, user, posts):
+    thread, _ = ForumThread.objects.get_or_create(
+        category=category, name=name, defaults=dict(author=user, description='%s description' % name))
+    made = []
+    for i in range(posts):
+        post, created = ForumPost.objects.get_or_create(
+            thread=thread, name='%s post %d' % (name, i), defaults=dict(author=user))
+        if created:
+            ForumPostVersion.objects.create(post=post, source='%s body %d' % (name, i), author=user)
+        made.append(post)
+    ForumThread.objects.filter(pk=thread.pk).update(created_at=CREATED_AT, updated_at=UPDATED_AT)
+    for post in made:
+        at = POSTED_AT + datetime.timedelta(minutes=next(POSTED_MINUTES))
+        ForumPost.objects.filter(pk=post.pk).update(created_at=at, updated_at=at)
     return thread
 
 
@@ -210,6 +248,20 @@ full.tags.set([make_tag('_default', 'Zeta'), make_tag('_default', 'alpha'), make
 TagsCategory.objects.filter(slug='lang').update(priority=1)
 bare.tags.clear()
 
+open_section = forum_section('Probe Open', 0, description='an open section')
+hidden_section = forum_section('Probe Hidden', 1, description='hidden from the listing', is_hidden=True)
+staff_section = forum_section('Probe Staff', 2, description='only staff may browse', is_hidden_for_users=True)
+
+chat = forum_category(open_section, 'Probe Chat', 0, description='ordinary threads')
+comments = forum_category(open_section, 'Probe Comments', 1, description='article comments', is_for_comments=True)
+quiet = forum_category(open_section, 'Probe Quiet', 2, description='nobody has posted here')
+forum_category(hidden_section, 'Probe Hidden Chat', 0, description='inside the hidden section')
+forum_category(staff_section, 'Probe Staff Chat', 0, description='inside the staff section')
+
+forum_thread(chat, 'Probe Thread', author, 3)
+forum_thread(chat, 'Probe Locked Thread', voter, 1).is_locked = True
+ForumThread.objects.filter(category=chat, name='Probe Locked Thread').update(is_locked=True)
+
 thread = comment_thread(full, author, 2)
 subscribe(author, article=full)
 subscribe(author, forum_thread=thread)
@@ -250,6 +302,7 @@ for article in (parent, full, bare, rated, unrated, third, quarter, unratable, h
     freeze(article)
 
 print('site rating_mode =', site_settings.rating_mode)
+print('forum sections =', ForumSection.objects.count(), 'categories =', ForumCategory.objects.count())
 print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, unrated, third,
                                                  quarter, unratable, half, included, host,
                                                  redirect, described, imaged, tagged, taggedplain,

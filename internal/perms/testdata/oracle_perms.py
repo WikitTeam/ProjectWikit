@@ -64,6 +64,8 @@ def build_forum_object(spec, user, index):
     if spec['kind'] == 'forum_section':
         return ForumSection.objects.get(pk=section.pk)
     category = ForumCategory.objects.create(name='permprobe%d' % index, section=section)
+    if spec['kind'] == 'forum_category':
+        return ForumCategory.objects.get(pk=category.pk)
     author = None if user.is_anonymous else user
     thread_author = spec.get('author') if spec['kind'] == 'forum_thread' else spec.get('thread_author')
     thread = ForumThread.objects.create(

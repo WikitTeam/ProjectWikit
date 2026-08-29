@@ -1078,6 +1078,64 @@
       }
     },
     {
+      "name": "a forum category answers as if there were no object",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "moderator",
+          "permissions": [
+            "view_hidden_forum_sections"
+          ],
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "moderator"
+        ],
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "forum_category",
+        "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
       "name": "a plain thread",
       "roles": [
         {

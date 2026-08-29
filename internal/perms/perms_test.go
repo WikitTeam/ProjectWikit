@@ -188,6 +188,12 @@ var scenarios = []scenario{
 		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
 	},
 	{
+		Name:   "a forum category answers as if there were no object",
+		Roles:  withRoles(roleSpec{Slug: "moderator", Permissions: []string{ViewHiddenForumSections}}),
+		User:   userSpec{Kind: "normal", Roles: []string{"moderator"}},
+		Object: &objectSpec{Kind: "forum_category"},
+	},
+	{
 		Name:   "a plain thread",
 		Roles:  baseRoles,
 		User:   userSpec{Kind: "normal"},
@@ -309,7 +315,7 @@ func (s scenario) subject() Subject {
 }
 
 func (s scenario) object() *Object {
-	if s.Object == nil {
+	if s.Object == nil || s.Object.Kind == "forum_category" {
 		return nil
 	}
 	o := &Object{

@@ -108,6 +108,25 @@ func (d *DB) UserByUsername(ctx context.Context, name string) (*User, error) {
 	return d.scanUser(ctx, qUserByUsername, name)
 }
 
+var qUserByID = register("UserByID", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE id = $1`)
+
+func (d *DB) UserByID(ctx context.Context, id int64) (*User, error) {
+	var u User
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserByID, id).Scan(dest...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("lookup user %d: %w", id, err)
+	}
+	finish()
+	return &u, nil
+}
+
 var qUserByDisplayName = register("UserByDisplayName", `
 SELECT `+userColumns+`
 FROM web_user
