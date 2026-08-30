@@ -234,9 +234,9 @@ func forumCategoryHTML(env module.Env, view forumCategoryView) string {
 		"\n" + ind12 + `</div>` +
 		"\n" + ind12 + `<div class="description-block well">` +
 		"\n" + ind16 + `<div class="statistics">` +
-		"\n" + ind20 + env.Text("module-forumcategory-threads") + strconv.Itoa(view.counts.Threads) +
+		"\n" + ind20 + env.Text("module-forum-threads") + strconv.Itoa(view.counts.Threads) +
 		"\n" + ind20 + `<br>` +
-		"\n" + ind20 + env.Text("module-forumcategory-posts") + strconv.Itoa(view.counts.Posts) +
+		"\n" + ind20 + env.Text("module-forum-posts") + strconv.Itoa(view.counts.Posts) +
 		"\n" + ind16 + `</div>` +
 		"\n" + ind16 + escape.HTML(category.Description) +
 		"\n" + ind12 + `</div>` +
@@ -259,7 +259,7 @@ func forumCategoryHTML(env module.Env, view forumCategoryView) string {
 	if !category.IsForComments && view.canCreate {
 		b.WriteString("\n" + ind16 + `<div class="new-post">` +
 			"\n" + ind20 + `<a href="/forum:new-thread/c/` + strconv.FormatInt(category.ID, 10) + `">` +
-			env.Text("module-forumcategory-new-thread") + `</a>` +
+			env.Text("module-forum-new-thread") + `</a>` +
 			"\n" + ind16 + `</div>` +
 			"\n" + ind12)
 	}
