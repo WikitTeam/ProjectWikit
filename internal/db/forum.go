@@ -28,12 +28,13 @@ type ForumCategory struct {
 // ForumLastPost carries ids rather than rows so the caller can reach for the
 // article and the author through the lookups it already has.
 type ForumLastPost struct {
-	ID              int64
-	CreatedAt       time.Time
-	ThreadID        int64
-	ThreadName      string
-	ThreadArticleID *int64
-	AuthorID        *int64
+	ID               int64
+	CreatedAt        time.Time
+	ThreadID         int64
+	ThreadName       string
+	ThreadCategoryID *int64
+	ThreadArticleID  *int64
+	AuthorID         *int64
 }
 
 type ForumCounts struct {
@@ -137,7 +138,7 @@ func (d *DB) ForumCommentCounts(ctx context.Context) (ForumCounts, error) {
 	return c, nil
 }
 
-const forumLastPostColumns = `p.id, p.created_at, t.id, t.name, t.article_id, p.author_id`
+const forumLastPostColumns = `p.id, p.created_at, t.id, t.name, t.category_id, t.article_id, p.author_id`
 
 // Ties are left to the database because Django orders on the timestamp alone.
 var qForumCategoryLastPost = register("ForumCategoryLastPost", `
@@ -167,7 +168,7 @@ func (d *DB) ForumCommentLastPost(ctx context.Context) (*ForumLastPost, error) {
 func (d *DB) scanLastPost(ctx context.Context, sql string, args ...any) (*ForumLastPost, error) {
 	var p ForumLastPost
 	err := d.pool.QueryRow(ctx, sql, args...).Scan(
-		&p.ID, &p.CreatedAt, &p.ThreadID, &p.ThreadName, &p.ThreadArticleID, &p.AuthorID)
+		&p.ID, &p.CreatedAt, &p.ThreadID, &p.ThreadName, &p.ThreadCategoryID, &p.ThreadArticleID, &p.AuthorID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
