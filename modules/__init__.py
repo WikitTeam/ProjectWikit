@@ -71,6 +71,16 @@ def module_allows_api(name_or_module):
     return m.__dict__['allow_api']()
 
 
+def module_api_is_csrf_safe(name_or_module, method):
+    m = get_module(name_or_module)
+    if m is None or not module_allows_api(m):
+        return False
+    api_method = m.__dict__.get('api_%s' % method, None)
+    if not callable(api_method):
+        return False
+    return getattr(api_method, 'is_csrf_safe', False)
+
+
 @transaction.atomic
 def render_module(name, context, params, content=None):
     if context and context.path_params.get('nomodule', 'false') == 'true':
