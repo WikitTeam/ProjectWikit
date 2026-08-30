@@ -15,7 +15,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/renderer/sidecar"
 )
 
-func newTestRepo(t *testing.T) *Repository {
+func testDB(t *testing.T) *db.DB {
 	t.Helper()
 	dsn := os.Getenv(db.EnvDSN)
 	if dsn == "" {
@@ -26,11 +26,23 @@ func newTestRepo(t *testing.T) *Repository {
 		t.Fatalf("db.Open() err = %v, want nil", err)
 	}
 	t.Cleanup(d.Close)
+	return d
+}
+
+func testUsers(t *testing.T) (*printuser.Renderer, *i18n.Localizer) {
+	t.Helper()
 	bundle, err := i18n.Load("")
 	if err != nil {
 		t.Fatalf("i18n.Load() err = %v, want nil", err)
 	}
-	users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), nil)
+	loc := bundle.Localizer(i18n.DefaultLanguage)
+	return printuser.New(loc, nil), loc
+}
+
+func newTestRepo(t *testing.T) *Repository {
+	t.Helper()
+	d := testDB(t)
+	users, _ := testUsers(t)
 	return New(context.Background(), d, users, Options{})
 }
 

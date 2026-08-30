@@ -142,6 +142,13 @@ coauthor = make_user(
     api_key='probe-key-wd',
 )
 voter = make_user('probevoter', type=User.UserType.Normal, api_key='probe-key-voter')
+make_user(
+    'probe-staff',
+    display_name='Probe Staff',
+    type=User.UserType.Normal,
+    api_key='probe-key-staff',
+    is_superuser=True,
+)
 crowd = [
     make_user('probecrowd%d' % i, type=User.UserType.Normal, api_key='probe-key-crowd%d' % i)
     for i in range(8)

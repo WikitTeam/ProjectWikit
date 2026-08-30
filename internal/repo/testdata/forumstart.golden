@@ -1,0 +1,1086 @@
+=== anonymous
+title: 论坛版块
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== anonymous-hidden-shown
+title: 论坛版块
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-72/probe-hidden">Probe Hidden</a></div>
+                        <div class="description">hidden from the listing</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-58/probe-hidden-chat">Probe Hidden Chat</a></div>
+                                    <div class="description">inside the hidden section</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/start">隐藏隐藏版块</a>
+            
+        </p>
+=== anonymous-hidden-junk
+title: 论坛版块
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== anonymous-open-section
+title: 论坛 — Probe Open
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/s-71/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== anonymous-hidden-section
+title: 论坛 — Probe Hidden
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Hidden
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-72/probe-hidden">Probe Hidden</a></div>
+                        <div class="description">hidden from the listing</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-58/probe-hidden-chat">Probe Hidden Chat</a></div>
+                                    <div class="description">inside the hidden section</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/s-72/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== anonymous-staff-section
+title: 论坛 — Probe Staff
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Staff
+                </div>
+            
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/s-73/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== anonymous-section-and-hidden
+title: 论坛 — Probe Open
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/s-71/probe-open">隐藏隐藏版块</a>
+            
+        </p>
+=== anonymous-missing-section
+title: 论坛版块
+status: 404
+!error: 未找到版块 "999999"
+=== anonymous-unparsable-section
+title: 论坛版块
+status: 200
+!error: 处理模块 'ForumStart' 时出错
+=== registered
+title: 论坛版块
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== superuser
+title: 论坛版块
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-73/probe-staff">Probe Staff</a></div>
+                        <div class="description">only staff may browse</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-59/probe-staff-chat">Probe Staff Chat</a></div>
+                                    <div class="description">inside the staff section</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+            
+        </p>
+=== superuser-hidden-shown
+title: 论坛版块
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Open
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-71/probe-open">Probe Open</a></div>
+                        <div class="description">an open section</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-55/probe-chat">Probe Chat</a></div>
+                                    <div class="description">ordinary threads</div>
+                                </td>
+                                <td class="threads">2</td>
+                                <td class="posts">4</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+            
+                <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
+            
+            <a href="/-/users/probevoter">probevoter</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344513000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:15</span>
+                                        <br>
+                                        <a href="/forum/t-98/probe-locked-thread#post-25">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-56/probe-comments">Probe Comments</a></div>
+                                    <div class="description">article comments</div>
+                                </td>
+                                <td class="threads">39</td>
+                                <td class="posts">2</td>
+                                <td class="last">
+                                    
+                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span>
+                                        <br>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1787749266606" data-format="%m.%d.%Y %H:%M">08.26.2026 13:01</span>
+                                        <br>
+                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                    
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-57/probe-quiet">Probe Quiet</a></div>
+                                    <div class="description">nobody has posted here</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-72/probe-hidden">Probe Hidden</a></div>
+                        <div class="description">hidden from the listing</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-58/probe-hidden-chat">Probe Hidden Chat</a></div>
+                                    <div class="description">inside the hidden section</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-73/probe-staff">Probe Staff</a></div>
+                        <div class="description">only staff may browse</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-59/probe-staff-chat">Probe Staff Chat</a></div>
+                                    <div class="description">inside the staff section</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/start">隐藏隐藏版块</a>
+            
+        </p>
+=== superuser-staff-section
+title: 论坛 — Probe Staff
+status: 200
+<div class="forum-start-box">
+            
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">论坛</a>
+                    &raquo;
+                    Probe Staff
+                </div>
+            
+            
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="/forum/s-73/probe-staff">Probe Staff</a></div>
+                        <div class="description">only staff may browse</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>版块名称</td>
+                            <td>主题数</td>
+                            <td>帖子数</td>
+                            <td>最后回复</td>
+                        </tr>
+                        
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="/forum/c-59/probe-staff-chat">Probe Staff Chat</a></div>
+                                    <div class="description">inside the staff section</div>
+                                </td>
+                                <td class="threads">0</td>
+                                <td class="posts">0</td>
+                                <td class="last">
+                                    
+                                </td>
+                            </tr>
+                        
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        </div>
+        <p style="text-align: right">
+            
+                <a href="/forum/s-73/hidden/show">显示隐藏版块</a>
+            
+        </p>
