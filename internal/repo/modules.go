@@ -143,3 +143,23 @@ func (m moduleData) Subject(user *db.User) (perms.Subject, error) {
 func (m moduleData) ForumSectionObject(s *db.ForumSection) *perms.Object {
 	return NewPerms(m.repo.ctx, m.repo.db).ForumSection(s)
 }
+
+func (m moduleData) ForumCategory(id int64) (*db.ForumCategory, error) {
+	return m.repo.db.ForumCategory(m.repo.ctx, id)
+}
+
+func (m moduleData) ForumThreads(categoryID int64, sort db.ForumThreadSort, offset, limit int) ([]db.ForumThread, error) {
+	return m.repo.db.ForumThreads(m.repo.ctx, categoryID, sort, offset, limit)
+}
+
+func (m moduleData) ForumCommentThreads(sort db.ForumThreadSort, offset, limit int) ([]db.ForumThread, error) {
+	return m.repo.db.ForumCommentThreads(m.repo.ctx, sort, offset, limit)
+}
+
+func (m moduleData) ForumThreadPostCount(threadID int64) (int, error) {
+	return m.repo.db.ForumThreadPostCount(m.repo.ctx, threadID)
+}
+
+func (m moduleData) ForumThreadLastPost(threadID int64, count int) (*db.ForumPost, error) {
+	return m.repo.db.ForumThreadLastPost(m.repo.ctx, threadID, count)
+}

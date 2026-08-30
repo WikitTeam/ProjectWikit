@@ -29,9 +29,12 @@ func forumCategoryURL(id int64, name string) string {
 	return "/forum/c-" + strconv.FormatInt(id, 10) + "/" + wikidot.Normalize(name)
 }
 
+func forumThreadURL(id int64, name string) string {
+	return "/forum/t-" + strconv.FormatInt(id, 10) + "/" + wikidot.Normalize(name)
+}
+
 func forumPostURL(threadID int64, threadName string, postID int64) string {
-	return "/forum/t-" + strconv.FormatInt(threadID, 10) + "/" + wikidot.Normalize(threadName) +
-		"#post-" + strconv.FormatInt(postID, 10)
+	return forumThreadURL(threadID, threadName) + "#post-" + strconv.FormatInt(postID, 10)
 }
 
 func renderDate(env module.Env, at time.Time) string {
@@ -57,4 +60,20 @@ func serverDate(env module.Env, at time.Time) string {
 		"day", pad(at.Day()),
 		"hour", pad(at.Hour()),
 		"minute", pad(at.Minute()))
+}
+
+func forumFailed(env module.Env) error {
+	return &module.Error{Message: env.Text("module-failed", "name", env.Name)}
+}
+
+func setTitle(env module.Env, title string) {
+	if env.Page != nil {
+		env.Page.Title = title
+	}
+}
+
+func setStatus(env module.Env, code int) {
+	if env.Page != nil {
+		env.Page.Status = code
+	}
 }

@@ -36,7 +36,7 @@ type forumStartSection struct {
 
 func renderForumStart(env module.Env, _ map[string]string, _ string) (string, error) {
 	if env.Data == nil {
-		return "", forumStartFailed(env)
+		return "", forumFailed(env)
 	}
 	setTitle(env, env.Text("module-forumstart-title"))
 
@@ -95,19 +95,17 @@ func forumStartSections(env module.Env, path page.PathParams) ([]db.ForumSection
 
 	id, err := pynum.Int(param.Value)
 	if err != nil {
-		return nil, nil, forumStartFailed(env)
+		return nil, nil, forumFailed(env)
 	}
 	section, err := env.Data.ForumSection(int64(id))
 	if errors.Is(err, db.ErrNotFound) {
-		if env.Page != nil {
-			env.Page.Status = http.StatusNotFound
-		}
-		return nil, nil, &module.Error{Message: env.Text("module-forumstart-no-section", "name", param.Value)}
+		setStatus(env, http.StatusNotFound)
+		return nil, nil, &module.Error{Message: env.Text("module-forum-not-found", "name", param.Value)}
 	}
 	if err != nil {
 		return nil, nil, err
 	}
-	setTitle(env, env.Text("module-forumstart-section-title", "name", section.Name))
+	setTitle(env, env.Text("module-forum-title-named", "name", section.Name))
 	return []db.ForumSection{*section}, section, nil
 }
 
@@ -180,8 +178,6 @@ func forumStartRow(env module.Env, category db.ForumCategory) (forumStartCategor
 	}
 
 	name := last.ThreadName
-	// An imported thread can carry both a category and an article, and Django
-	// reads the category first.
 	if last.ThreadCategoryID == nil && last.ThreadArticleID != nil {
 		article, err := env.Data.ArticleByID(*last.ThreadArticleID)
 		if err != nil {
@@ -203,7 +199,7 @@ func forumStartHTML(env module.Env, sections []forumStartSection, crumb *db.Foru
 	b.WriteString(`<div class="forum-start-box">` + "\n" + ind12)
 	if crumb != nil {
 		b.WriteString("\n" + ind16 + `<div class="forum-breadcrumbs">` +
-			"\n" + ind20 + `<a href="/forum/start">` + env.Text("module-forum-breadcrumb") + `</a>` +
+			"\n" + ind20 + `<a href="/forum/start">` + env.Text("module-forum-title") + `</a>` +
 			"\n" + ind20 + `&raquo;` +
 			"\n" + ind20 + escape.HTML(crumb.Name) +
 			"\n" + ind16 + `</div>` +
@@ -225,7 +221,7 @@ func forumStartHTML(env module.Env, sections []forumStartSection, crumb *db.Foru
 			"\n" + ind28 + `<td>` + env.Text("module-forumstart-section") + `</td>` +
 			"\n" + ind28 + `<td>` + env.Text("module-forumstart-threads") + `</td>` +
 			"\n" + ind28 + `<td>` + env.Text("module-forumstart-posts") + `</td>` +
-			"\n" + ind28 + `<td>` + env.Text("module-forumstart-last-post") + `</td>` +
+			"\n" + ind28 + `<td>` + env.Text("module-forum-last-post") + `</td>` +
 			"\n" + ind24 + `</tr>` +
 			"\n" + ind24)
 		for _, category := range section.categories {
@@ -270,14 +266,4 @@ func forumStartHTML(env module.Env, sections []forumStartSection, crumb *db.Foru
 		"\n" + ind12)
 	b.WriteString("\n" + ind8 + `</p>`)
 	return b.String()
-}
-
-func forumStartFailed(env module.Env) error {
-	return &module.Error{Message: env.Text("module-failed", "name", env.Name)}
-}
-
-func setTitle(env module.Env, title string) {
-	if env.Page != nil {
-		env.Page.Title = title
-	}
 }
