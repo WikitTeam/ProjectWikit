@@ -89,20 +89,12 @@ func TestForumStartMatchesGolden(t *testing.T) {
 		}
 		fmt.Fprintf(&b, "=== %s\ntitle: %s\nstatus: %d\n%s\n", c.Name, pc.Title, pc.Status, body)
 	}
-	compareForumStartGolden(t, b.String(), cases)
+	compareGolden(t, b.String(), cases, forumStartGolden, forumStartCorpus)
 }
 
 func forumStartPath(t *testing.T, c forumStartCase, sections []db.ForumSection) page.PathParams {
 	t.Helper()
-	var path page.PathParams
-	keys := make([]string, 0, len(c.Path))
-	for key := range c.Path {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		path = path.Put(page.PathParam{Key: key, Value: c.Path[key]})
-	}
+	path := sortedPath(c.Path)
 	if c.Section == "" {
 		return path
 	}
@@ -115,32 +107,46 @@ func forumStartPath(t *testing.T, c forumStartCase, sections []db.ForumSection) 
 	return nil
 }
 
-func compareForumStartGolden(t *testing.T, got string, corpus any) {
+func sortedPath(params map[string]string) page.PathParams {
+	keys := make([]string, 0, len(params))
+	for key := range params {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	var path page.PathParams
+	for _, key := range keys {
+		path = path.Put(page.PathParam{Key: key, Value: params[key]})
+	}
+	return path
+}
+
+func compareGolden(t *testing.T, got string, corpus any, goldenPath, corpusPath string) {
 	t.Helper()
 	if *update {
 		data, err := json.MarshalIndent(corpus, "", "  ")
 		if err != nil {
-			t.Fatalf("Marshal(%s) err = %v, want nil", forumStartCorpus, err)
+			t.Fatalf("Marshal(%s) err = %v, want nil", corpusPath, err)
 		}
-		if err := os.WriteFile(filepath.FromSlash(forumStartCorpus), append(data, '\n'), 0o644); err != nil {
-			t.Fatalf("WriteFile(%s) err = %v, want nil", forumStartCorpus, err)
+		if err := os.WriteFile(filepath.FromSlash(corpusPath), append(data, '\n'), 0o644); err != nil {
+			t.Fatalf("WriteFile(%s) err = %v, want nil", corpusPath, err)
 		}
-		if err := os.WriteFile(filepath.FromSlash(forumStartGolden), []byte(got), 0o644); err != nil {
-			t.Fatalf("WriteFile(%s) err = %v, want nil", forumStartGolden, err)
+		if err := os.WriteFile(filepath.FromSlash(goldenPath), []byte(got), 0o644); err != nil {
+			t.Fatalf("WriteFile(%s) err = %v, want nil", goldenPath, err)
 		}
 		return
 	}
-	want, err := os.ReadFile(filepath.FromSlash(forumStartGolden))
+	want, err := os.ReadFile(filepath.FromSlash(goldenPath))
 	if err != nil {
-		t.Fatalf("ReadFile(%s) err = %v, want nil", forumStartGolden, err)
+		t.Fatalf("ReadFile(%s) err = %v, want nil", goldenPath, err)
 	}
 	if got != string(want) {
-		gotAt, wantAt := firstForumStartDiff(got, string(want))
-		t.Errorf("RenderModule(ForumStart) = %q, want %q", gotAt, wantAt)
+		gotAt, wantAt := firstDiff(got, string(want))
+		t.Errorf("%s = %q, want %q", goldenPath, gotAt, wantAt)
 	}
 }
 
-func firstForumStartDiff(got, want string) (string, string) {
+func firstDiff(got, want string) (string, string) {
 	at := 0
 	for at < len(got) && at < len(want) && got[at] == want[at] {
 		at++
