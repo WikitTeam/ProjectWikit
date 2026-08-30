@@ -1,0 +1,66 @@
+[
+  {
+    "name": "plain",
+    "body": "#page-content { color : red ; }"
+  },
+  {
+    "name": "head",
+    "body": "#page-content { color : red ; }",
+    "params": {
+      "head": "true"
+    }
+  },
+  {
+    "name": "head-from-path",
+    "body": "a { color : red }",
+    "path": {
+      "head": "yes"
+    }
+  },
+  {
+    "name": "head-false",
+    "body": "a { color : red }",
+    "params": {
+      "head": "no"
+    }
+  },
+  {
+    "name": "head-junk",
+    "body": "a { color : red }",
+    "params": {
+      "head": "maybe"
+    }
+  },
+  {
+    "name": "empty",
+    "body": ""
+  },
+  {
+    "name": "comment-only",
+    "body": "/* nothing but a comment */"
+  },
+  {
+    "name": "nbsp",
+    "body": "a { color:red }"
+  },
+  {
+    "name": "angle-bracket",
+    "body": "a \u003e b { content: \"\u003c/style\u003e\" }"
+  },
+  {
+    "name": "at-import",
+    "body": "@import url(\"x.css\");\na { color: red }"
+  },
+  {
+    "name": "media",
+    "body": "@media (max-width: 767px) {\n  #main { padding : 0 ; }\n}"
+  },
+  {
+    "name": "two-rules",
+    "body": ".a { color: #ff0000 }\n.b { margin: 0.50em }"
+  },
+  {
+    "name": "malformed",
+    "body": "a { color: red"
+  }
+]
