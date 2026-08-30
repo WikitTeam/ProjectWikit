@@ -9,6 +9,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/roles"
 )
 
 // Error is the failure that reaches the reader as a block on the page rather
@@ -49,8 +50,23 @@ type Data interface {
 	ForumCategoryLastPost(categoryID int64) (*db.ForumLastPost, error)
 	ForumCommentLastPost() (*db.ForumLastPost, error)
 
+	ForumThread(id int64) (*db.ForumThread, error)
+	ForumRootPostCount(threadID int64) (int, error)
+	ForumRootPosts(threadID int64, offset, limit int) ([]db.ForumThreadPost, error)
+	ForumRootPostIDs(threadID int64) ([]int64, error)
+	ForumPostReplies(postID int64) ([]db.ForumThreadPost, error)
+	ForumPost(id int64) (*db.ForumThreadPost, error)
+	ForumPostContents(postIDs []int64) (map[int64]db.ForumPostContent, error)
+	UsernamesLower() (map[string]bool, error)
+	VoteByUser(articleID int64, userID *int64) (float64, bool, error)
+	UserByID(id int64) (*db.User, error)
+	ArticleHasAuthor(articleID, userID int64) (bool, error)
+	RolesByUser(id int64) ([]roles.Role, error)
+
 	Subject(user *db.User) (perms.Subject, error)
 	ForumSectionObject(s *db.ForumSection) *perms.Object
+	ForumThreadObject(t *db.ForumThread, u *db.User) (*perms.Object, error)
+	ForumPostObject(p *db.ForumThreadPost, thread *perms.Object, u *db.User) *perms.Object
 }
 
 type Env struct {
@@ -67,7 +83,10 @@ type Env struct {
 	// Render runs the wikitext a module produced through ftml. A module that
 	// lists pages has to, since what it writes is source and not markup.
 	Render func(source string, pc *page.Context) (string, error)
-	Vars   page.VarSource
+
+	RenderMessage func(source string) (string, error)
+
+	Vars page.VarSource
 }
 
 func (e Env) Text(id string, args ...any) string {

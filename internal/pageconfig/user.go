@@ -27,7 +27,7 @@ type UserJSON struct {
 	Roles      any
 }
 
-func (u UserJSON) object() pyjson.Object {
+func (u UserJSON) Object() pyjson.Object {
 	return pyjson.Object{
 		{Key: "type", Value: u.Type},
 		{Key: "id", Value: u.ID},
@@ -44,7 +44,7 @@ func (u UserJSON) object() pyjson.Object {
 	}
 }
 
-func (u UserJSON) JSON() (string, error) { return pyjson.Marshal(u.object()) }
+func (u UserJSON) JSON() (string, error) { return pyjson.Marshal(u.Object()) }
 
 func SystemUserJSON() UserJSON {
 	return UserJSON{Type: typeSystem, IsActive: true, Editor: false}
@@ -115,7 +115,7 @@ func (l LoginStatus) JSON(loc *i18n.Localizer) (string, error) {
 		user = SignedInUserJSON(l.User, l.Roles, true, l.CanEditArticles)
 	}
 	return pyjson.Marshal(pyjson.Object{
-		{Key: "user", Value: user.object()},
+		{Key: "user", Value: user.Object()},
 		{Key: "notificationCount", Value: l.NotificationCount},
 	})
 }

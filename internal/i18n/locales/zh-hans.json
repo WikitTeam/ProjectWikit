@@ -36,6 +36,14 @@
   "module-forumstart-show-hidden": "显示隐藏版块",
   "module-forumstart-threads": "主题数",
   "module-forumstart-title": "论坛版块",
+  "module-forumthread-article": "这是页面 {link} 的讨论",
+  "module-forumthread-comments-forbidden": "权限不足，无法查看讨论",
+  "module-forumthread-created-by": "创建者：",
+  "module-forumthread-date": "日期：",
+  "module-forumthread-description": "简短描述：",
+  "module-forumthread-forbidden": "权限不足，无法查看主题",
+  "module-forumthread-not-found": "未找到主题 \"{name}\"",
+  "module-forumthread-posts": "帖子数：",
   "module-listpages-pager-count": "第&nbsp;{page}&nbsp页; 共&nbsp;{total}&nbsp;页",
   "module-listpages-pager-next": "下一页&nbsp;&raquo;",
   "module-listpages-pager-prev": "&laquo;&nbsp;上一页",
@@ -67,5 +75,7 @@
   "user-bot": "机器人",
   "user-bot-tooltip": "机器账户",
   "user-not-found": "用户 '{name}' 不存在",
-  "user-system": "系统"
+  "user-system": "系统",
+  "vote-tooltip": "讨论文章的评分",
+  "vote-unrated": "未评分"
 }

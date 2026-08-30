@@ -6,6 +6,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
+	"github.com/WikitTeam/ProjectWikit/internal/roles"
 )
 
 type moduleData struct{ repo *Repository }
@@ -162,4 +163,60 @@ func (m moduleData) ForumThreadPostCount(threadID int64) (int, error) {
 
 func (m moduleData) ForumThreadLastPost(threadID int64, count int) (*db.ForumPost, error) {
 	return m.repo.db.ForumThreadLastPost(m.repo.ctx, threadID, count)
+}
+
+func (m moduleData) ForumThread(id int64) (*db.ForumThread, error) {
+	return m.repo.db.ForumThread(m.repo.ctx, id)
+}
+
+func (m moduleData) ForumRootPostCount(threadID int64) (int, error) {
+	return m.repo.db.ForumRootPostCount(m.repo.ctx, threadID)
+}
+
+func (m moduleData) ForumRootPosts(threadID int64, offset, limit int) ([]db.ForumThreadPost, error) {
+	return m.repo.db.ForumRootPosts(m.repo.ctx, threadID, offset, limit)
+}
+
+func (m moduleData) ForumRootPostIDs(threadID int64) ([]int64, error) {
+	return m.repo.db.ForumRootPostIDs(m.repo.ctx, threadID)
+}
+
+func (m moduleData) ForumPostReplies(postID int64) ([]db.ForumThreadPost, error) {
+	return m.repo.db.ForumPostReplies(m.repo.ctx, postID)
+}
+
+func (m moduleData) ForumPost(id int64) (*db.ForumThreadPost, error) {
+	return m.repo.db.ForumPost(m.repo.ctx, id)
+}
+
+func (m moduleData) ForumPostContents(postIDs []int64) (map[int64]db.ForumPostContent, error) {
+	return m.repo.db.ForumPostContents(m.repo.ctx, postIDs)
+}
+
+func (m moduleData) UsernamesLower() (map[string]bool, error) {
+	return m.repo.db.UsernamesLower(m.repo.ctx)
+}
+
+func (m moduleData) VoteByUser(articleID int64, userID *int64) (float64, bool, error) {
+	return m.repo.db.VoteByUser(m.repo.ctx, articleID, userID)
+}
+
+func (m moduleData) UserByID(id int64) (*db.User, error) {
+	return m.repo.db.UserByID(m.repo.ctx, id)
+}
+
+func (m moduleData) ArticleHasAuthor(articleID, userID int64) (bool, error) {
+	return m.repo.db.ArticleHasAuthor(m.repo.ctx, articleID, userID)
+}
+
+func (m moduleData) RolesByUser(id int64) ([]roles.Role, error) {
+	return m.repo.db.RolesByUser(m.repo.ctx, id)
+}
+
+func (m moduleData) ForumThreadObject(t *db.ForumThread, u *db.User) (*perms.Object, error) {
+	return NewPerms(m.repo.ctx, m.repo.db).ForumThread(t, u)
+}
+
+func (m moduleData) ForumPostObject(p *db.ForumThreadPost, thread *perms.Object, u *db.User) *perms.Object {
+	return NewPerms(m.repo.ctx, m.repo.db).ForumPost(p, thread, u)
 }

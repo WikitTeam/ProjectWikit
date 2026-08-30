@@ -104,13 +104,19 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	if err != nil {
 		return body{}, err
 	}
+	// Django hands every pass the one dict it built the request from, so a
+	// module that writes a path parameter is read back by the page options.
+	req.params = pc.PathParams
+
 	// The text pass gets a context of its own. Sharing one would let a module
 	// that writes to it do so twice.
+	textPC := h.context(req, req.article)
 	text, err := h.deps.Engine.RenderText(req.ctx, source, info,
-		h.callbacks(req, vars, h.context(req, req.article)), renderer.ModeArticle)
+		h.callbacks(req, vars, textPC), renderer.ModeArticle)
 	if err != nil {
 		return body{}, err
 	}
+	req.params = textPC.PathParams
 
 	rev, err := h.deps.DB.LatestRevNumber(req.ctx, req.article.ID)
 	if err != nil {
@@ -223,11 +229,12 @@ func (h *Handler) nav(req *request, name string) (string, string, error) {
 func (h *Handler) callbacks(req *request, vars *page.Vars, pc *page.Context) *callbacks.Callbacks {
 	users := printuser.New(req.loc, h.deps.Icons)
 	store := repo.New(req.ctx, h.deps.DB, users, repo.Options{
-		Loc:    req.loc,
-		Site:   req.site,
-		User:   req.user,
-		Render: func(source string, into *page.Context) (string, error) { return h.nested(req, source, into) },
-		Vars:   repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID),
+		Loc:           req.loc,
+		Site:          req.site,
+		User:          req.user,
+		Render:        func(source string, into *page.Context) (string, error) { return h.nested(req, source, into) },
+		RenderMessage: func(source string) (string, error) { return h.message(req, source) },
+		Vars:          repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID),
 	})
 	cb := callbacks.New(req.loc, store)
 	cb.SetPageVars(vars)
@@ -245,6 +252,20 @@ func (h *Handler) nested(req *request, source string, pc *page.Context) (string,
 	}
 	html, err := h.deps.Engine.RenderHTML(req.ctx, page.ThisVars(source, vars), info,
 		h.callbacks(req, vars, pc), renderer.ModeArticle)
+	if err != nil {
+		return "", err
+	}
+	return html.Body, nil
+}
+
+func (h *Handler) message(req *request, source string) (string, error) {
+	pc := page.NewContext(nil, nil, nil, req.user)
+	info, err := h.pageInfo(req, nil)
+	if err != nil {
+		return "", err
+	}
+	html, err := h.deps.Engine.RenderHTML(req.ctx, page.ThisVars(source, nil), info,
+		h.callbacks(req, nil, pc), renderer.ModeMessage)
 	if err != nil {
 		return "", err
 	}

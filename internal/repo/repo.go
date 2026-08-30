@@ -37,7 +37,10 @@ type Options struct {
 	// Render is how a module runs the wikitext it produced. The engine is not
 	// reachable from here, so the caller that owns it supplies this.
 	Render func(source string, pc *page.Context) (string, error)
-	Vars   page.VarSource
+
+	RenderMessage func(source string) (string, error)
+
+	Vars page.VarSource
 }
 
 var _ callbacks.Repository = (*Repository)(nil)
@@ -86,13 +89,14 @@ func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetc
 
 func (r *Repository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {
 	html, err := module.Render(module.Env{
-		Page:   pc,
-		Loc:    r.opts.Loc,
-		Site:   r.opts.Site,
-		User:   r.opts.User,
-		Data:   moduleData{repo: r},
-		Render: r.opts.Render,
-		Vars:   r.opts.Vars,
+		Page:          pc,
+		Loc:           r.opts.Loc,
+		Site:          r.opts.Site,
+		User:          r.opts.User,
+		Data:          moduleData{repo: r},
+		Render:        r.opts.Render,
+		RenderMessage: r.opts.RenderMessage,
+		Vars:          r.opts.Vars,
 	}, name, params, body)
 	var moduleErr *module.Error
 	if errors.As(err, &moduleErr) {
