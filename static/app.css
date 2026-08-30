@@ -387,22 +387,6 @@
   content: '★ ';
 }
 
-.w-search-footer {
-  margin-top: 14px;
-  text-align: right;
-  font-size: 11px;
-  color: var(--s-muted);
-}
-
-.w-search-footer-icon {
-  height: 14px;
-  width: 14px;
-  vertical-align: -3px;
-  margin: 0 2px;
-  border-radius: 3px;
-  object-fit: cover;
-}
-
 .w-search .highlight {
   background: rgba(0, 0, 0, 0.12);
   color: inherit;

@@ -1,6 +1,5 @@
 import { t } from '~util/i18n'
 import * as React from 'react'
-import Trans from '~util/trans'
 import { useEffect, useRef, useState } from 'react'
 import { searchModule, SearchResultItem } from '../api/search-module'
 import { highlightWords } from '../reactive/pages/search/Search.utils'
@@ -194,13 +193,6 @@ const SearchModule: React.FC<Props> = ({
           )}
         </>
       )}
-
-      <div className="w-search-footer">
-        <Trans
-          id="search.powered-by"
-          children={{ icon: <img className="w-search-footer-icon" src="/-/static/images/wikitHana.png" alt="Wikit" /> }}
-        />
-      </div>
     </div>
   )
 }
