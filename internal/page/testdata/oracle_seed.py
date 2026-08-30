@@ -309,6 +309,7 @@ reply = forum_reply(deep_roots[0], 'Probe Deep reply 0', voter,
                     'reply naming @probe-author and @nobody-at-all')
 forum_reply(reply, 'Probe Deep reply 0 0', author, 'a reply to a reply')
 forum_reply(deep_roots[0], 'Probe Deep reply 1', None, 'a reply the site itself made')
+forum_reply(deep_roots[0], '   ', voter, 'a reply whose title is only spaces')
 
 edited = deep_roots[1]
 ForumPost.objects.filter(pk=edited.pk).update(
