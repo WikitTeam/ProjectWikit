@@ -69,13 +69,30 @@ def notify(user, kind, viewed):
     )
 
 
-def comment_thread(article, user, posts):
+def comment_thread(article, authors):
     thread, _ = ForumThread.objects.get_or_create(article=article, defaults=dict(name=article.title))
-    for i in range(posts):
-        ForumPost.objects.get_or_create(
+    for i, user in enumerate(authors):
+        post, _ = ForumPost.objects.get_or_create(
             thread=thread, name='probe post %d' % i, defaults=dict(author=user),
         )
+        ForumPostVersion.objects.get_or_create(
+            post=post, defaults=dict(source='probe comment %d' % i, author=user))
+        at = POSTED_AT + datetime.timedelta(minutes=next(POSTED_MINUTES))
+        ForumPost.objects.filter(pk=post.pk).update(created_at=at, updated_at=at)
     return thread
+
+
+def forum_reply(parent, name, user, source):
+    post, _ = ForumPost.objects.get_or_create(
+        thread=parent.thread, reply_to=parent, name=name, defaults=dict(author=user))
+    ForumPostVersion.objects.get_or_create(post=post, defaults=dict(source=source, author=user))
+    at = POSTED_AT + datetime.timedelta(minutes=next(POSTED_MINUTES))
+    ForumPost.objects.filter(pk=post.pk).update(created_at=at, updated_at=at)
+    return post
+
+
+def root_posts(thread):
+    return list(ForumPost.objects.filter(thread=thread, reply_to__isnull=True).order_by('created_at'))
 
 
 def forum_section(name, order, **kwargs):
@@ -279,9 +296,28 @@ busy = forum_category(open_section, 'Probe Busy', 3, description='enough threads
 for index in range(21):
     forum_thread(busy, 'Probe Busy %02d' % index, author, 1)
 
-thread = comment_thread(full, author, 2)
+comment_thread(rated, [author, voter])
+thread = comment_thread(full, [author, author])
 subscribe(author, article=full)
 subscribe(author, forum_thread=thread)
+
+talk = forum_category(open_section, 'Probe Talk', 4, description='threads that carry replies')
+
+deep = forum_thread(talk, 'Probe Deep Thread', author, 2)
+deep_roots = root_posts(deep)
+reply = forum_reply(deep_roots[0], 'Probe Deep reply 0', voter,
+                    'reply naming @probe-author and @nobody-at-all')
+forum_reply(reply, 'Probe Deep reply 0 0', author, 'a reply to a reply')
+forum_reply(deep_roots[0], 'Probe Deep reply 1', None, 'a reply the site itself made')
+
+edited = deep_roots[1]
+ForumPost.objects.filter(pk=edited.pk).update(
+    updated_at=edited.created_at + datetime.timedelta(minutes=5))
+ForumPostVersion.objects.get_or_create(
+    post=edited, source='Probe Deep Thread body 1 edited', defaults=dict(author=voter))
+
+forum_thread(talk, 'Probe Long Thread', voter, 12)
+
 author.preferences['qol__advanced_source_editor_enabled'] = True
 
 notify(author, UserNotification.NotificationType.Welcome, False)

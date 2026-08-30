@@ -84,7 +84,7 @@ func TestForumCategoriesComeBackInOrder(t *testing.T) {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}
 
-	want := []string{"Probe Chat", "Probe Hidden Chat", "Probe Staff Chat", "Probe Comments", "Probe Quiet", "Probe Busy"}
+	want := []string{"Probe Chat", "Probe Hidden Chat", "Probe Staff Chat", "Probe Comments", "Probe Quiet", "Probe Busy", "Probe Talk"}
 	if len(categories) != len(want) {
 		t.Fatalf("len(ForumCategories()) = %d, want %d", len(categories), len(want))
 	}
@@ -185,8 +185,8 @@ func TestForumCommentCountsReachEveryArticle(t *testing.T) {
 	if got.Threads < 1 {
 		t.Errorf("ForumCommentCounts().Threads = %d, want at least 1", got.Threads)
 	}
-	if got.Posts != 2 {
-		t.Errorf("ForumCommentCounts().Posts = %d, want %d", got.Posts, 2)
+	if got.Posts != 4 {
+		t.Errorf("ForumCommentCounts().Posts = %d, want %d", got.Posts, 4)
 	}
 }
 
