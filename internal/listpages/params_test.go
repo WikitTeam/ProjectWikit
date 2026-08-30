@@ -553,29 +553,3 @@ func TestParseWindowFallsBackOnJunk(t *testing.T) {
 		t.Errorf("Page = %d, want 1", q.Page)
 	}
 }
-
-func TestPyInt(t *testing.T) {
-	good := map[string]int{"5": 5, " 5 ": 5, "+5": 5, "-5": -5, "1_000": 1000, "0": 0}
-	for in, want := range good {
-		got, err := pyInt(in)
-		if err != nil || got != want {
-			t.Errorf("pyInt(%q) = %d, %v, want %d, nil", in, got, err, want)
-		}
-	}
-	for _, in := range []string{"", " ", "_5", "5_", "1__0", "5.0", "0x10", "５", "+"} {
-		if got, err := pyInt(in); err == nil {
-			t.Errorf("pyInt(%q) = %d, nil, want an error", in, got)
-		}
-	}
-}
-
-func TestPyFloatRejectsWhatPythonRejects(t *testing.T) {
-	for _, in := range []string{"0x1p-2", "", "abc"} {
-		if got, err := pyFloat(in); err == nil {
-			t.Errorf("pyFloat(%q) = %v, nil, want an error", in, got)
-		}
-	}
-	if got, err := pyFloat("3.5"); err != nil || got != 3.5 {
-		t.Errorf("pyFloat(3.5) = %v, %v, want 3.5, nil", got, err)
-	}
-}

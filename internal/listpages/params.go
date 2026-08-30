@@ -3,12 +3,12 @@ package listpages
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
+	"github.com/WikitTeam/ProjectWikit/internal/pynum"
 )
 
 type Source interface {
@@ -384,7 +384,7 @@ func timeOp(op string) string {
 // day of 2020-12.
 func parseDateBounds(text string) (first, last time.Time, ok bool) {
 	parts := strings.Split(text, "-")
-	year, err := pyInt(parts[0])
+	year, err := pynum.Int(parts[0])
 	if err != nil || year < 1 || year > 9999 {
 		return time.Time{}, time.Time{}, false
 	}
@@ -392,7 +392,7 @@ func parseDateBounds(text string) (first, last time.Time, ok bool) {
 	lastMonth, lastDay := 12, 31
 
 	if len(parts) >= 2 {
-		m, err := pyInt(parts[1])
+		m, err := pynum.Int(parts[1])
 		if err != nil {
 			return time.Time{}, time.Time{}, false
 		}
@@ -401,7 +401,7 @@ func parseDateBounds(text string) (first, last time.Time, ok bool) {
 		lastDay = daysIn(year, month)
 	}
 	if len(parts) >= 3 {
-		d, err := pyInt(parts[2])
+		d, err := pynum.Int(parts[2])
 		if err != nil {
 			return time.Time{}, time.Time{}, false
 		}
@@ -441,7 +441,7 @@ func (p *parser) parseRating() {
 		return
 	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	value, err := pyFloat(strings.TrimSpace(rest))
+	value, err := pynum.Float(strings.TrimSpace(rest))
 	if err != nil {
 		p.invalid()
 		return
@@ -463,7 +463,7 @@ func (p *parser) parseVotes() {
 		return
 	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	value, err := pyInt(strings.TrimSpace(rest))
+	value, err := pynum.Int(strings.TrimSpace(rest))
 	if err != nil {
 		p.invalid()
 		return
@@ -485,7 +485,7 @@ func (p *parser) parsePopularity() {
 		return
 	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	value, err := pyInt(strings.TrimSpace(rest))
+	value, err := pynum.Int(strings.TrimSpace(rest))
 	if err != nil {
 		p.invalid()
 		return
@@ -567,19 +567,19 @@ func (p *parser) parseSort() {
 }
 
 func (p *parser) parseWindow() {
-	if offset, err := pyInt(p.getOr("offset", "0")); err == nil {
+	if offset, err := pynum.Int(p.getOr("offset", "0")); err == nil {
 		p.out.Offset = offset
 	}
 	if raw, ok := p.params["limit"]; ok {
-		if limit, err := pyInt(raw); err == nil {
+		if limit, err := pynum.Int(raw); err == nil {
 			p.out.Limit = &limit
 		}
 	}
-	perPage, err := pyInt(p.getOr("perpage", "20"))
+	perPage, err := pynum.Int(p.getOr("perpage", "20"))
 	if err != nil {
 		perPage = defaultPerPage
 	}
-	pageNum, err := pyInt(p.pathOr("p", "1"))
+	pageNum, err := pynum.Int(p.pathOr("p", "1"))
 	if err != nil || pageNum < 1 {
 		pageNum = 1
 	}
@@ -643,47 +643,4 @@ func splitArgOperator(arg string, allowed []string, def string) (op, rest string
 		}
 	}
 	return def, arg
-}
-
-var errNotANumber = errors.New("listpages: not a number")
-
-// Python's int() tolerates surrounding space, a sign and underscores between
-// digits. Non-ASCII digits are the one thing it takes that this does not.
-func pyInt(s string) (int, error) {
-	s = strings.TrimSpace(s)
-	body := strings.TrimPrefix(strings.TrimPrefix(s, "+"), "-")
-	if body == "" || strings.HasPrefix(body, "_") || strings.HasSuffix(body, "_") {
-		return 0, errNotANumber
-	}
-	if strings.Contains(body, "__") {
-		return 0, errNotANumber
-	}
-	for _, r := range body {
-		if r != '_' && (r < '0' || r > '9') {
-			return 0, errNotANumber
-		}
-	}
-	n, err := strconv.Atoi(strings.ReplaceAll(s, "_", ""))
-	if err != nil {
-		return 0, errNotANumber
-	}
-	return n, nil
-}
-
-// Go would take a hexadecimal float that Python rejects, so the digits are
-// checked first.
-func pyFloat(s string) (float64, error) {
-	if n, err := pyInt(s); err == nil {
-		return float64(n), nil
-	}
-	s = strings.TrimSpace(s)
-	lowered := strings.ToLower(s)
-	if strings.Contains(lowered, "x") || strings.Contains(lowered, "p") {
-		return 0, errNotANumber
-	}
-	f, err := strconv.ParseFloat(strings.ReplaceAll(s, "_", ""), 64)
-	if err != nil {
-		return 0, errNotANumber
-	}
-	return f, nil
 }
