@@ -51,7 +51,9 @@ OPTIONS /probe:full
 /probe:listbyvotes
 /probe:listed/p/2/tag/euclid
 
-!/forum:start
+/forum:start
+/forum/start/hidden/show
+/forum/start/s/999999
 !/forum:recent-posts
 !/forum:category
 !/forum:thread
