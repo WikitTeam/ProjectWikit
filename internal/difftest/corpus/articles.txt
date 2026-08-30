@@ -61,7 +61,8 @@ OPTIONS /probe:full
 /forum:thread
 /forum/t-999999
 /forum/t-999999/p/2
-!/forum:new-thread
+/forum:new-thread
+/forum:new-thread/c/999999
 /search:site
 /search:site/q/scp
 /search:site/q/%20spaced%20/author/probe-author
