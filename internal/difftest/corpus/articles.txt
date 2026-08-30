@@ -21,6 +21,8 @@
 /probe:tagged
 /probe:taggedplain
 /probe:unknownmodule
+!/probecss:styled
+!/probecss:styledhead
 /probe:full/nomodule/true
 /probe:redirect
 

@@ -198,6 +198,17 @@ imaged = make_article('probe:imaged', 'Probe Imaged',
 tagged = make_article('probe:tagged', 'Probe Tagged', '[[module PagesByTag tag="lang:en"]]', None)
 taggedplain = make_article('probe:taggedplain', 'Probe Tagged Plain',
                            '[[module PagesByTag tag="zeta"]]', None)
+styled = make_article('probecss:styled', 'Probe Styled',
+                      NL.join(['[[module CSS]]',
+                               '#page-content { color : red ; }',
+                               '@media (max-width: 767px) { #main { padding : 0 ; } }',
+                               '[[/module]]',
+                               'styled body']), None)
+styledhead = make_article('probecss:styledhead', 'Probe Styled Head',
+                          NL.join(['[[module CSS head="true"]]',
+                                   '.a { color: #ff0000 }',
+                                   '[[/module]]',
+                                   'head styled body']), None)
 unknownmodule = make_article('probe:unknownmodule', 'Probe Unknown Module',
                              '[[module NoSuchModule]]', None)
 # pwikit resolves a display name here and Django does not, so this page is the
@@ -351,7 +362,7 @@ site_settings, _ = Settings.objects.get_or_create(site=Site.objects.first())
 
 for article in (parent, full, bare, rated, unrated, third, quarter, unratable, half,
                 included, host, redirect, described,
-                imaged, tagged, taggedplain, unknownmodule, bydisplay, listed, listjoined,
+                imaged, tagged, taggedplain, unknownmodule, bydisplay, styled, styledhead, listed, listjoined,
                 listnowrap, listsections, listtags, listempty, listurl, listbyvotes):
     freeze(article)
 
@@ -360,6 +371,6 @@ print('forum sections =', ForumSection.objects.count(), 'categories =', ForumCat
 print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, unrated, third,
                                                  quarter, unratable, half, included, host,
                                                  redirect, described, imaged, tagged, taggedplain,
-                                                 unknownmodule, bydisplay, listed, listjoined,
+                                                 unknownmodule, bydisplay, styled, styledhead, listed, listjoined,
                                                  listnowrap, listsections, listtags, listempty,
                                                  listurl, listbyvotes)))
