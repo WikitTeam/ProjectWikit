@@ -1,5 +1,2 @@
-# Golden files are compared byte for byte, so line endings must survive checkout.
 *.golden -text
-
-# gofmt writes LF, so a checkout that hands back CRLF makes every file look unformatted.
 *.go text eol=lf
