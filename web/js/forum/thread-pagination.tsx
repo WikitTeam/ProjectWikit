@@ -36,8 +36,7 @@ export function makeForumThread(node: HTMLElement) {
     top: '0px',
     bottom: '-1px',
     display: 'none',
-    background: '#7777777f',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     boxSizing: 'border-box',
   })
@@ -62,7 +61,7 @@ export function makeForumThread(node: HTMLElement) {
     }
     loaderInto.style.display = 'flex'
     // because our loader is React, we should display it like this.
-    renderTo(loaderInto, <Loader size={80} borderSize={8} />)
+    renderTo(loaderInto, <Loader />)
     //
     try {
       const pathParams = Object.assign({}, fBasePathParams)

@@ -40,20 +40,11 @@ const Styles = styled.div<{ loading?: boolean }>`
   .w-files-area.loading {
     position: relative;
     min-height: calc(32px + 16px + 16px);
-    &::after {
-      content: ' ';
+    .loader {
       position: absolute;
-      background: #0000003f;
-      z-index: 0;
       left: 0;
       right: 0;
       top: 0;
-      bottom: 0;
-    }
-    .loader {
-      position: absolute;
-      left: 16px;
-      top: 16px;
       z-index: 1;
     }
   }

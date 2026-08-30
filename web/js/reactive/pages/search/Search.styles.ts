@@ -81,10 +81,11 @@ export const LoaderContainer = styled.div`
   position: relative;
 `
 
-export const Loader = styled(BaseLoader).attrs({ size: 24 })`
+export const Loader = styled(BaseLoader)`
   position: absolute;
-  left: calc(50% - 12px);
-  top: calc(50% - 12px);
+  left: 0;
+  right: 0;
+  top: 0;
   pointer-events: none;
 `
 
