@@ -1,0 +1,102 @@
+=== chat
+title: 创建主题
+status: 200
+!error: 权限不足，无法创建主题
+=== chat-signed-in
+title: 创建主题
+status: 200
+!error: 权限不足，无法创建主题
+=== chat-superuser
+title: 创建主题
+status: 200
+<div class="forum-new-thread-box">
+            <div class="forum-breadcrumbs">
+                <a href="/forum/start">论坛</a>
+                &raquo;
+                <a href="/forum/c-55/probe-chat">Probe Open / Probe Chat</a>
+                &raquo;
+                创建主题
+            </div>
+            <div class="description well">
+                <div class="statistics">
+                    主题数：3
+                    <br>
+                    帖子数：6
+                </div>
+                ordinary threads
+            </div>
+        </div>
+        <!-- 希望没人试图给论坛页面加样式 -->
+        <div class="w-forum-new-thread" data-config="{&quot;categoryId&quot;: 55, &quot;user&quot;: {&quot;type&quot;: &quot;normal&quot;, &quot;id&quot;: 188, &quot;name&quot;: &quot;Probe Staff&quot;, &quot;username&quot;: &quot;probe-staff&quot;, &quot;urlName&quot;: &quot;probe-staff&quot;, &quot;isActive&quot;: true, &quot;avatar&quot;: null, &quot;showAvatar&quot;: true, &quot;admin&quot;: true, &quot;staff&quot;: true, &quot;editor&quot;: true, &quot;roles&quot;: []}, &quot;cancelUrl&quot;: &quot;/forum/c-55/probe-chat&quot;}"></div>
+=== empty
+title: 创建主题
+status: 200
+!error: 权限不足，无法创建主题
+=== comments
+title: 创建主题
+status: 200
+!error: 权限不足，无法创建主题
+=== hidden-section-category
+title: 创建主题
+status: 200
+!error: 权限不足，无法创建主题
+=== hidden-section-superuser
+title: 创建主题
+status: 200
+<div class="forum-new-thread-box">
+            <div class="forum-breadcrumbs">
+                <a href="/forum/start">论坛</a>
+                &raquo;
+                <a href="/forum/c-58/probe-hidden-chat">Probe Hidden / Probe Hidden Chat</a>
+                &raquo;
+                创建主题
+            </div>
+            <div class="description well">
+                <div class="statistics">
+                    主题数：0
+                    <br>
+                    帖子数：0
+                </div>
+                inside the hidden section
+            </div>
+        </div>
+        <!-- 希望没人试图给论坛页面加样式 -->
+        <div class="w-forum-new-thread" data-config="{&quot;categoryId&quot;: 58, &quot;user&quot;: {&quot;type&quot;: &quot;normal&quot;, &quot;id&quot;: 188, &quot;name&quot;: &quot;Probe Staff&quot;, &quot;username&quot;: &quot;probe-staff&quot;, &quot;urlName&quot;: &quot;probe-staff&quot;, &quot;isActive&quot;: true, &quot;avatar&quot;: null, &quot;showAvatar&quot;: true, &quot;admin&quot;: true, &quot;staff&quot;: true, &quot;editor&quot;: true, &quot;roles&quot;: []}, &quot;cancelUrl&quot;: &quot;/forum/c-58/probe-hidden-chat&quot;}"></div>
+=== comments-superuser
+title: 创建主题
+status: 200
+<div class="forum-new-thread-box">
+            <div class="forum-breadcrumbs">
+                <a href="/forum/start">论坛</a>
+                &raquo;
+                <a href="/forum/c-56/probe-comments">Probe Open / Probe Comments</a>
+                &raquo;
+                创建主题
+            </div>
+            <div class="description well">
+                <div class="statistics">
+                    主题数：0
+                    <br>
+                    帖子数：0
+                </div>
+                article comments
+            </div>
+        </div>
+        <!-- 希望没人试图给论坛页面加样式 -->
+        <div class="w-forum-new-thread" data-config="{&quot;categoryId&quot;: 56, &quot;user&quot;: {&quot;type&quot;: &quot;normal&quot;, &quot;id&quot;: 188, &quot;name&quot;: &quot;Probe Staff&quot;, &quot;username&quot;: &quot;probe-staff&quot;, &quot;urlName&quot;: &quot;probe-staff&quot;, &quot;isActive&quot;: true, &quot;avatar&quot;: null, &quot;showAvatar&quot;: true, &quot;admin&quot;: true, &quot;staff&quot;: true, &quot;editor&quot;: true, &quot;roles&quot;: []}, &quot;cancelUrl&quot;: &quot;/forum/c-56/probe-comments&quot;}"></div>
+=== missing
+title: 创建主题
+status: 404
+!error: 未找到版块 "999999"
+=== unparsable
+title: 创建主题
+status: 404
+!error: 未找到版块 "not-a-number"
+=== padded-id
+title: 创建主题
+status: 404
+!error: 未找到版块 "999999"
+=== no-parameter
+title: 创建主题
+status: 404
+!error: 未找到版块 "None"

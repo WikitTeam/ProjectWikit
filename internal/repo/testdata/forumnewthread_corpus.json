@@ -1,0 +1,67 @@
+[
+  {
+    "name": "chat",
+    "viewer": "",
+    "category": "Probe Chat"
+  },
+  {
+    "name": "chat-signed-in",
+    "viewer": "probe-author",
+    "category": "Probe Chat"
+  },
+  {
+    "name": "chat-superuser",
+    "viewer": "probe-staff",
+    "category": "Probe Chat"
+  },
+  {
+    "name": "empty",
+    "viewer": "",
+    "category": "Probe Quiet"
+  },
+  {
+    "name": "comments",
+    "viewer": "",
+    "category": "Probe Comments"
+  },
+  {
+    "name": "hidden-section-category",
+    "viewer": "",
+    "category": "Probe Hidden Chat"
+  },
+  {
+    "name": "hidden-section-superuser",
+    "viewer": "probe-staff",
+    "category": "Probe Hidden Chat"
+  },
+  {
+    "name": "comments-superuser",
+    "viewer": "probe-staff",
+    "category": "Probe Comments"
+  },
+  {
+    "name": "missing",
+    "viewer": "",
+    "path": {
+      "c": "999999"
+    }
+  },
+  {
+    "name": "unparsable",
+    "viewer": "",
+    "path": {
+      "c": "not-a-number"
+    }
+  },
+  {
+    "name": "padded-id",
+    "viewer": "",
+    "path": {
+      "c": "0999999"
+    }
+  },
+  {
+    "name": "no-parameter",
+    "viewer": ""
+  }
+]
