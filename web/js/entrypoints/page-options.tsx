@@ -114,27 +114,18 @@ const PageOptions: React.FC<Props> = ({
     e.preventDefault()
     e.stopPropagation()
     setSubView('edit')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    }, 1)
   })
 
   const onRate = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('rating')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    }, 1)
   })
 
   const onTags = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('tags')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    }, 1)
   })
 
   const onCancelSubView = useConstCallback(() => {
@@ -149,90 +140,60 @@ const PageOptions: React.FC<Props> = ({
     e.preventDefault()
     e.stopPropagation()
     setSubView('history')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onFiles = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('files')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onSource = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('source')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onParent = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('parent')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onChild = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('child')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onLock = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('lock')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onRename = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('rename')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onDelete = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('delete')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onBacklinks = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('backlinks')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onAuthorship = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
     setSubView('authorship')
-    setTimeout(() => {
-      window.scrollTo(window.scrollX, document.body.scrollHeight)
-    })
   })
 
   const onWatch = useConstCallback(e => {
