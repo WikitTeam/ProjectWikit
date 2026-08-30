@@ -177,3 +177,142 @@ func (d *DB) scanLastPost(ctx context.Context, sql string, args ...any) (*ForumL
 	}
 	return &p, nil
 }
+
+type ForumThread struct {
+	ID          int64
+	Name        string
+	Description string
+	CategoryID  *int64
+	ArticleID   *int64
+	AuthorID    *int64
+	IsPinned    bool
+	CreatedAt   time.Time
+}
+
+type ForumThreadSort int
+
+const (
+	ForumThreadsByReply ForumThreadSort = iota
+	ForumThreadsByStart
+)
+
+const forumThreadColumns = `id, name, description, category_id, article_id, author_id, is_pinned, created_at`
+
+var qForumThreadsByReply = register("ForumThreadsByReply", `
+SELECT `+forumThreadColumns+`
+FROM web_forumthread
+WHERE category_id = $1
+ORDER BY is_pinned DESC, updated_at DESC
+OFFSET $2 LIMIT $3`)
+
+var qForumThreadsByStart = register("ForumThreadsByStart", `
+SELECT `+forumThreadColumns+`
+FROM web_forumthread
+WHERE category_id = $1
+ORDER BY is_pinned DESC, created_at DESC
+OFFSET $2 LIMIT $3`)
+
+var qForumCommentThreadsByReply = register("ForumCommentThreadsByReply", `
+SELECT `+forumThreadColumns+`
+FROM web_forumthread
+WHERE article_id IS NOT NULL
+ORDER BY is_pinned DESC, updated_at DESC
+OFFSET $1 LIMIT $2`)
+
+var qForumCommentThreadsByStart = register("ForumCommentThreadsByStart", `
+SELECT `+forumThreadColumns+`
+FROM web_forumthread
+WHERE article_id IS NOT NULL
+ORDER BY is_pinned DESC, created_at DESC
+OFFSET $1 LIMIT $2`)
+
+func (d *DB) ForumThreads(ctx context.Context, categoryID int64, sort ForumThreadSort, offset, limit int) ([]ForumThread, error) {
+	sql, args := qForumThreadsByReply, []any{categoryID, offset, limit}
+	if sort == ForumThreadsByStart {
+		sql = qForumThreadsByStart
+	}
+	return d.scanThreads(ctx, sql, args...)
+}
+
+func (d *DB) ForumCommentThreads(ctx context.Context, sort ForumThreadSort, offset, limit int) ([]ForumThread, error) {
+	sql := qForumCommentThreadsByReply
+	if sort == ForumThreadsByStart {
+		sql = qForumCommentThreadsByStart
+	}
+	return d.scanThreads(ctx, sql, offset, limit)
+}
+
+func (d *DB) scanThreads(ctx context.Context, sql string, args ...any) ([]ForumThread, error) {
+	rows, err := d.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query forum threads: %w", err)
+	}
+	defer rows.Close()
+
+	var out []ForumThread
+	for rows.Next() {
+		var t ForumThread
+		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.CategoryID, &t.ArticleID,
+			&t.AuthorID, &t.IsPinned, &t.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan forum thread: %w", err)
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
+
+var qForumThreadPostCount = register("ForumThreadPostCount", `
+SELECT count(*) FROM web_forumpost WHERE thread_id = $1`)
+
+func (d *DB) ForumThreadPostCount(ctx context.Context, threadID int64) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qForumThreadPostCount, threadID).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count posts in thread %d: %w", threadID, err)
+	}
+	return n, nil
+}
+
+// Django indexes to the end of an ascending list rather than taking the first
+// of a descending one, which decides differently when two posts share a stamp.
+var qForumThreadLastPost = register("ForumThreadLastPost", `
+SELECT id, created_at, author_id
+FROM web_forumpost
+WHERE thread_id = $1
+ORDER BY created_at
+OFFSET $2 LIMIT 1`)
+
+type ForumPost struct {
+	ID        int64
+	CreatedAt time.Time
+	AuthorID  *int64
+}
+
+func (d *DB) ForumThreadLastPost(ctx context.Context, threadID int64, count int) (*ForumPost, error) {
+	var p ForumPost
+	err := d.pool.QueryRow(ctx, qForumThreadLastPost, threadID, count-1).Scan(&p.ID, &p.CreatedAt, &p.AuthorID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query last post in thread %d: %w", threadID, err)
+	}
+	return &p, nil
+}
+
+var qForumCategory = register("ForumCategory", `
+SELECT id, section_id, name, description, is_for_comments
+FROM web_forumcategory
+WHERE id = $1`)
+
+func (d *DB) ForumCategory(ctx context.Context, id int64) (*ForumCategory, error) {
+	var c ForumCategory
+	err := d.pool.QueryRow(ctx, qForumCategory, id).Scan(
+		&c.ID, &c.SectionID, &c.Name, &c.Description, &c.IsForComments)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query forum category %d: %w", id, err)
+	}
+	return &c, nil
+}
