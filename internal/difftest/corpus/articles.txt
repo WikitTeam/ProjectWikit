@@ -55,7 +55,9 @@ OPTIONS /probe:full
 /forum/start/hidden/show
 /forum/start/s/999999
 !/forum:recent-posts
-!/forum:category
+/forum:category
+/forum/c-999999
+/forum/c-999999/sort/start
 !/forum:thread
 !/forum:new-thread
 /search:site
