@@ -104,12 +104,9 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	if err != nil {
 		return body{}, err
 	}
-	// Django hands every pass the one dict it built the request from, so a
-	// module that writes a path parameter is read back by the page options.
+
 	req.params = pc.PathParams
 
-	// The text pass gets a context of its own. Sharing one would let a module
-	// that writes to it do so twice.
 	textPC := h.context(req, req.article)
 	text, err := h.deps.Engine.RenderText(req.ctx, source, info,
 		h.callbacks(req, vars, textPC), renderer.ModeArticle)
