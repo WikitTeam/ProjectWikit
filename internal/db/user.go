@@ -207,3 +207,23 @@ func (d *DB) UserForSession(ctx context.Context, id int64) (*User, string, error
 	finish()
 	return &u, password, nil
 }
+
+var qUsernamesLower = register("UsernamesLower", `SELECT lower(username) FROM web_user`)
+
+func (d *DB) UsernamesLower(ctx context.Context) (map[string]bool, error) {
+	rows, err := d.pool.Query(ctx, qUsernamesLower)
+	if err != nil {
+		return nil, fmt.Errorf("query usernames: %w", err)
+	}
+	defer rows.Close()
+
+	out := make(map[string]bool)
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("scan username: %w", err)
+		}
+		out[name] = true
+	}
+	return out, rows.Err()
+}

@@ -186,6 +186,7 @@ type ForumThread struct {
 	ArticleID   *int64
 	AuthorID    *int64
 	IsPinned    bool
+	IsLocked    bool
 	CreatedAt   time.Time
 }
 
@@ -196,7 +197,7 @@ const (
 	ForumThreadsByStart
 )
 
-const forumThreadColumns = `id, name, description, category_id, article_id, author_id, is_pinned, created_at`
+const forumThreadColumns = `id, name, description, category_id, article_id, author_id, is_pinned, is_locked, created_at`
 
 var qForumThreadsByReply = register("ForumThreadsByReply", `
 SELECT `+forumThreadColumns+`
@@ -253,7 +254,7 @@ func (d *DB) scanThreads(ctx context.Context, sql string, args ...any) ([]ForumT
 	for rows.Next() {
 		var t ForumThread
 		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.CategoryID, &t.ArticleID,
-			&t.AuthorID, &t.IsPinned, &t.CreatedAt); err != nil {
+			&t.AuthorID, &t.IsPinned, &t.IsLocked, &t.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan forum thread: %w", err)
 		}
 		out = append(out, t)
@@ -315,4 +316,157 @@ func (d *DB) ForumCategory(ctx context.Context, id int64) (*ForumCategory, error
 		return nil, fmt.Errorf("query forum category %d: %w", id, err)
 	}
 	return &c, nil
+}
+
+var qForumThread = register("ForumThread", `
+SELECT `+forumThreadColumns+`
+FROM web_forumthread
+WHERE id = $1`)
+
+func (d *DB) ForumThread(ctx context.Context, id int64) (*ForumThread, error) {
+	var t ForumThread
+	err := d.pool.QueryRow(ctx, qForumThread, id).Scan(&t.ID, &t.Name, &t.Description,
+		&t.CategoryID, &t.ArticleID, &t.AuthorID, &t.IsPinned, &t.IsLocked, &t.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query forum thread %d: %w", id, err)
+	}
+	return &t, nil
+}
+
+type ForumThreadPost struct {
+	ID        int64
+	ThreadID  int64
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	AuthorID  *int64
+	ReplyToID *int64
+}
+
+const forumPostColumns = `id, thread_id, name, created_at, updated_at, author_id, reply_to_id`
+
+var qForumRootPostCount = register("ForumRootPostCount", `
+SELECT count(*) FROM web_forumpost WHERE thread_id = $1 AND reply_to_id IS NULL`)
+
+func (d *DB) ForumRootPostCount(ctx context.Context, threadID int64) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qForumRootPostCount, threadID).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count root posts in thread %d: %w", threadID, err)
+	}
+	return n, nil
+}
+
+var qForumRootPosts = register("ForumRootPosts", `
+SELECT `+forumPostColumns+`
+FROM web_forumpost
+WHERE thread_id = $1 AND reply_to_id IS NULL
+ORDER BY created_at
+OFFSET $2 LIMIT $3`)
+
+func (d *DB) ForumRootPosts(ctx context.Context, threadID int64, offset, limit int) ([]ForumThreadPost, error) {
+	return d.scanPosts(ctx, qForumRootPosts, threadID, offset, limit)
+}
+
+var qForumRootPostIDs = register("ForumRootPostIDs", `
+SELECT id
+FROM web_forumpost
+WHERE thread_id = $1 AND reply_to_id IS NULL
+ORDER BY created_at`)
+
+func (d *DB) ForumRootPostIDs(ctx context.Context, threadID int64) ([]int64, error) {
+	rows, err := d.pool.Query(ctx, qForumRootPostIDs, threadID)
+	if err != nil {
+		return nil, fmt.Errorf("query root post ids of thread %d: %w", threadID, err)
+	}
+	defer rows.Close()
+
+	var out []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan root post id: %w", err)
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
+
+var qForumPostReplies = register("ForumPostReplies", `
+SELECT `+forumPostColumns+`
+FROM web_forumpost
+WHERE reply_to_id = $1
+ORDER BY created_at`)
+
+func (d *DB) ForumPostReplies(ctx context.Context, postID int64) ([]ForumThreadPost, error) {
+	return d.scanPosts(ctx, qForumPostReplies, postID)
+}
+
+var qForumPost = register("ForumPost", `
+SELECT `+forumPostColumns+`
+FROM web_forumpost
+WHERE id = $1`)
+
+func (d *DB) ForumPost(ctx context.Context, id int64) (*ForumThreadPost, error) {
+	var p ForumThreadPost
+	err := d.pool.QueryRow(ctx, qForumPost, id).Scan(&p.ID, &p.ThreadID, &p.Name,
+		&p.CreatedAt, &p.UpdatedAt, &p.AuthorID, &p.ReplyToID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query forum post %d: %w", id, err)
+	}
+	return &p, nil
+}
+
+func (d *DB) scanPosts(ctx context.Context, sql string, args ...any) ([]ForumThreadPost, error) {
+	rows, err := d.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query forum posts: %w", err)
+	}
+	defer rows.Close()
+
+	var out []ForumThreadPost
+	for rows.Next() {
+		var p ForumThreadPost
+		if err := rows.Scan(&p.ID, &p.ThreadID, &p.Name, &p.CreatedAt, &p.UpdatedAt,
+			&p.AuthorID, &p.ReplyToID); err != nil {
+			return nil, fmt.Errorf("scan forum post: %w", err)
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+type ForumPostContent struct {
+	Source   string
+	AuthorID *int64
+}
+
+var qForumPostContents = register("ForumPostContents", `
+SELECT DISTINCT ON (post_id) post_id, source, author_id
+FROM web_forumpostversion
+WHERE post_id = ANY($1)
+ORDER BY post_id, created_at DESC`)
+
+func (d *DB) ForumPostContents(ctx context.Context, postIDs []int64) (map[int64]ForumPostContent, error) {
+	rows, err := d.pool.Query(ctx, qForumPostContents, postIDs)
+	if err != nil {
+		return nil, fmt.Errorf("query forum post contents: %w", err)
+	}
+	defer rows.Close()
+
+	out := make(map[int64]ForumPostContent, len(postIDs))
+	for rows.Next() {
+		var id int64
+		var content ForumPostContent
+		if err := rows.Scan(&id, &content.Source, &content.AuthorID); err != nil {
+			return nil, fmt.Errorf("scan forum post content: %w", err)
+		}
+		out[id] = content
+	}
+	return out, rows.Err()
 }

@@ -90,3 +90,24 @@ func (d *DB) HasVoted(ctx context.Context, articleID int64, userID *int64) (bool
 	}
 	return voted, nil
 }
+
+// Django reaches for the last row of an unordered set, which it spells as the
+// first row of one ordered by descending key.
+var qVoteByUser = register("VoteByUser", `
+SELECT rate
+FROM web_vote
+WHERE article_id = $1 AND user_id IS NOT DISTINCT FROM $2
+ORDER BY id DESC
+LIMIT 1`)
+
+func (d *DB) VoteByUser(ctx context.Context, articleID int64, userID *int64) (float64, bool, error) {
+	var rate float64
+	err := d.pool.QueryRow(ctx, qVoteByUser, articleID, userID).Scan(&rate)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, fmt.Errorf("query vote on article %d: %w", articleID, err)
+	}
+	return rate, true, nil
+}

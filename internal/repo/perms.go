@@ -97,3 +97,32 @@ func (p *Perms) Category(name string) (*perms.Object, error) {
 func (p *Perms) ForumSection(s *db.ForumSection) *perms.Object {
 	return &perms.Object{Kind: perms.KindForumSection, HiddenForUsers: s.IsHiddenForUsers}
 }
+
+// A thread reads its role overrides through the article it comments on, so a
+// thread of its own carries none.
+func (p *Perms) ForumThread(t *db.ForumThread, u *db.User) (*perms.Object, error) {
+	object := &perms.Object{Kind: perms.KindForumThread, Locked: t.IsLocked}
+	if t.ArticleID != nil {
+		article, err := p.db.ArticleByID(p.ctx, *t.ArticleID)
+		if err != nil {
+			return nil, err
+		}
+		overrides, err := p.db.CategoryOverrides(p.ctx, article.Category)
+		if err != nil {
+			return nil, err
+		}
+		object.Overrides = overrides
+	}
+	if u != nil && t.AuthorID != nil {
+		object.Author = *t.AuthorID == u.ID
+	}
+	return object, nil
+}
+
+func (p *Perms) ForumPost(post *db.ForumThreadPost, thread *perms.Object, u *db.User) *perms.Object {
+	object := &perms.Object{Kind: perms.KindForumPost, Thread: thread}
+	if u != nil && post.AuthorID != nil {
+		object.Author = *post.AuthorID == u.ID
+	}
+	return object
+}
