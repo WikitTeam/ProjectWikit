@@ -12,6 +12,7 @@ import (
 )
 
 type fakeData struct {
+	module.Data
 	category db.TagCategory
 	articles []db.Article
 	hidden   []string
@@ -53,7 +54,7 @@ func (f fakeData) CountArticles(db.ListFilter, int, *int) (int, error) {
 }
 
 func TestEveryPortedModuleAnswers(t *testing.T) {
-	ported := []string{"listpages", "pagedescription", "pageimage", "pagesbytag", "rate", "redirect", "search"}
+	ported := []string{"forumstart", "listpages", "pagedescription", "pageimage", "pagesbytag", "rate", "redirect", "search"}
 	for _, name := range ported {
 		if !module.Ported(name) {
 			t.Errorf("Ported(%q) = false, want true", name)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 )
 
 type moduleData struct{ repo *Repository }
@@ -88,4 +89,57 @@ func (m moduleData) ListArticles(f db.ListFilter, offset int, limit *int) ([]db.
 
 func (m moduleData) CountArticles(f db.ListFilter, offset int, limit *int) (int, error) {
 	return m.repo.db.CountArticles(m.repo.ctx, f, offset, limit)
+}
+
+func (m moduleData) ArticleByID(id int64) (*db.Article, error) {
+	return m.repo.db.ArticleByID(m.repo.ctx, id)
+}
+
+// A post with no author is one the site itself made, which is what the system
+// chip stands for.
+func (m moduleData) RenderUserByID(id *int64) (string, error) {
+	if id == nil {
+		return m.repo.users.System(printuser.Options{Hover: true}), nil
+	}
+	user, err := m.repo.db.UserByID(m.repo.ctx, *id)
+	if err != nil {
+		return "", err
+	}
+	return m.repo.renderUser(user, printuser.Options{Avatar: true, Hover: true})
+}
+
+func (m moduleData) ForumSections() ([]db.ForumSection, error) {
+	return m.repo.db.ForumSections(m.repo.ctx)
+}
+
+func (m moduleData) ForumSection(id int64) (*db.ForumSection, error) {
+	return m.repo.db.ForumSection(m.repo.ctx, id)
+}
+
+func (m moduleData) ForumCategories() ([]db.ForumCategory, error) {
+	return m.repo.db.ForumCategories(m.repo.ctx)
+}
+
+func (m moduleData) ForumCategoryCounts(categoryID int64) (db.ForumCounts, error) {
+	return m.repo.db.ForumCategoryCounts(m.repo.ctx, categoryID)
+}
+
+func (m moduleData) ForumCommentCounts() (db.ForumCounts, error) {
+	return m.repo.db.ForumCommentCounts(m.repo.ctx)
+}
+
+func (m moduleData) ForumCategoryLastPost(categoryID int64) (*db.ForumLastPost, error) {
+	return m.repo.db.ForumCategoryLastPost(m.repo.ctx, categoryID)
+}
+
+func (m moduleData) ForumCommentLastPost() (*db.ForumLastPost, error) {
+	return m.repo.db.ForumCommentLastPost(m.repo.ctx)
+}
+
+func (m moduleData) Subject(user *db.User) (perms.Subject, error) {
+	return NewPerms(m.repo.ctx, m.repo.db).Subject(user, time.Now())
+}
+
+func (m moduleData) ForumSectionObject(s *db.ForumSection) *perms.Object {
+	return NewPerms(m.repo.ctx, m.repo.db).ForumSection(s)
 }

@@ -11,6 +11,7 @@ import (
 )
 
 type listData struct {
+	module.Data
 	listed []db.Article
 	total  int
 	filter db.ListFilter

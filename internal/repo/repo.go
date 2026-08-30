@@ -132,6 +132,10 @@ func (r *Repository) RenderUser(username string, avatar bool) (string, error) {
 		return "", err
 	}
 
+	return r.renderUser(user, opts)
+}
+
+func (r *Repository) renderUser(user *db.User, opts printuser.Options) (string, error) {
 	roleList, err := r.db.RolesByUser(r.ctx, user.ID)
 	if err != nil {
 		return "", err

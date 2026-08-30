@@ -21,7 +21,7 @@ const (
 
 func renderRate(env module.Env, _ map[string]string, _ string) (string, error) {
 	if env.Data == nil {
-		return "", &module.Error{Message: env.Text("module-failed", "name", "rate")}
+		return "", &module.Error{Message: env.Text("module-failed", "name", env.Name)}
 	}
 	var article *db.Article
 	if env.Page != nil {

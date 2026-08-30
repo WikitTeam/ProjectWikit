@@ -8,6 +8,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 )
 
 // Error is the failure that reaches the reader as a block on the page rather
@@ -31,9 +32,27 @@ type Data interface {
 	HasVoted(articleID int64, userID *int64) (bool, error)
 	ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error)
 	CountArticles(f db.ListFilter, offset int, limit *int) (int, error)
+
+	ArticleByID(id int64) (*db.Article, error)
+	RenderUserByID(id *int64) (string, error)
+
+	ForumSections() ([]db.ForumSection, error)
+	ForumSection(id int64) (*db.ForumSection, error)
+	ForumCategories() ([]db.ForumCategory, error)
+	ForumCategoryCounts(categoryID int64) (db.ForumCounts, error)
+	ForumCommentCounts() (db.ForumCounts, error)
+	ForumCategoryLastPost(categoryID int64) (*db.ForumLastPost, error)
+	ForumCommentLastPost() (*db.ForumLastPost, error)
+
+	Subject(user *db.User) (perms.Subject, error)
+	ForumSectionObject(s *db.ForumSection) *perms.Object
 }
 
 type Env struct {
+	// Name is what the wikitext spelled, which is what an error block about
+	// this module has to quote back.
+	Name string
+
 	Page *page.Context
 	Loc  *i18n.Localizer
 	Site *db.Site
@@ -82,6 +101,7 @@ func Render(env Env, name string, params map[string]string, body string) (string
 	info, ok := Lookup(name)
 	if ok && !info.Removed {
 		if render, ok := renderers[info.Name]; ok {
+			env.Name = name
 			return render(env, params, body)
 		}
 	}
