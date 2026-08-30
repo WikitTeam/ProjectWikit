@@ -58,7 +58,9 @@ OPTIONS /probe:full
 /forum:category
 /forum/c-999999
 /forum/c-999999/sort/start
-!/forum:thread
+/forum:thread
+/forum/t-999999
+/forum/t-999999/p/2
 !/forum:new-thread
 /search:site
 /search:site/q/scp
