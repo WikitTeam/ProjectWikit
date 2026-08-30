@@ -84,7 +84,7 @@ func TestForumCategoriesComeBackInOrder(t *testing.T) {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}
 
-	want := []string{"Probe Chat", "Probe Hidden Chat", "Probe Staff Chat", "Probe Comments", "Probe Quiet"}
+	want := []string{"Probe Chat", "Probe Hidden Chat", "Probe Staff Chat", "Probe Comments", "Probe Quiet", "Probe Busy"}
 	if len(categories) != len(want) {
 		t.Fatalf("len(ForumCategories()) = %d, want %d", len(categories), len(want))
 	}
@@ -117,11 +117,11 @@ func TestForumCategoryCounts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ForumCategoryCounts(chat) err = %v, want nil", err)
 	}
-	if got.Threads != 2 {
-		t.Errorf("ForumCategoryCounts(chat).Threads = %d, want %d", got.Threads, 2)
+	if got.Threads != 3 {
+		t.Errorf("ForumCategoryCounts(chat).Threads = %d, want %d", got.Threads, 3)
 	}
-	if got.Posts != 4 {
-		t.Errorf("ForumCategoryCounts(chat).Posts = %d, want %d", got.Posts, 4)
+	if got.Posts != 6 {
+		t.Errorf("ForumCategoryCounts(chat).Posts = %d, want %d", got.Posts, 6)
 	}
 }
 
@@ -144,10 +144,10 @@ func TestForumCategoryLastPost(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ForumCategoryLastPost(chat) err = %v, want nil", err)
 	}
-	if got.ThreadName != "Probe Locked Thread" {
-		t.Errorf("ForumCategoryLastPost(chat).ThreadName = %q, want %q", got.ThreadName, "Probe Locked Thread")
+	if got.ThreadName != "Probe Pinned Thread" {
+		t.Errorf("ForumCategoryLastPost(chat).ThreadName = %q, want %q", got.ThreadName, "Probe Pinned Thread")
 	}
-	want := time.Date(2023, 9, 10, 11, 15, 13, 0, time.UTC)
+	want := time.Date(2023, 9, 10, 11, 17, 13, 0, time.UTC)
 	if !got.CreatedAt.Equal(want) {
 		t.Errorf("ForumCategoryLastPost(chat).CreatedAt = %v, want %v", got.CreatedAt.UTC(), want)
 	}

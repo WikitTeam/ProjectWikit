@@ -30,6 +30,7 @@ CREATED_AT = datetime.datetime(2021, 3, 4, 5, 6, 7, tzinfo=datetime.timezone.utc
 UPDATED_AT = datetime.datetime(2022, 7, 8, 9, 10, 11, tzinfo=datetime.timezone.utc)
 POSTED_AT = datetime.datetime(2023, 9, 10, 11, 12, 13, tzinfo=datetime.timezone.utc)
 POSTED_MINUTES = itertools.count()
+THREAD_MINUTES = itertools.count()
 
 
 def make_user(username, **kwargs):
@@ -95,7 +96,7 @@ def forum_category(section, name, order, **kwargs):
     return category
 
 
-def forum_thread(category, name, user, posts):
+def forum_thread(category, name, user, posts, pinned=False):
     thread, _ = ForumThread.objects.get_or_create(
         category=category, name=name, defaults=dict(author=user, description='%s description' % name))
     made = []
@@ -105,7 +106,11 @@ def forum_thread(category, name, user, posts):
         if created:
             ForumPostVersion.objects.create(post=post, source='%s body %d' % (name, i), author=user)
         made.append(post)
-    ForumThread.objects.filter(pk=thread.pk).update(created_at=CREATED_AT, updated_at=UPDATED_AT)
+    minutes = next(THREAD_MINUTES)
+    ForumThread.objects.filter(pk=thread.pk).update(
+        created_at=CREATED_AT + datetime.timedelta(minutes=minutes),
+        updated_at=UPDATED_AT - datetime.timedelta(minutes=minutes),
+        is_pinned=pinned)
     for post in made:
         at = POSTED_AT + datetime.timedelta(minutes=next(POSTED_MINUTES))
         ForumPost.objects.filter(pk=post.pk).update(created_at=at, updated_at=at)
@@ -268,6 +273,11 @@ forum_category(staff_section, 'Probe Staff Chat', 0, description='inside the sta
 forum_thread(chat, 'Probe Thread', author, 3)
 forum_thread(chat, 'Probe Locked Thread', voter, 1).is_locked = True
 ForumThread.objects.filter(category=chat, name='Probe Locked Thread').update(is_locked=True)
+forum_thread(chat, 'Probe Pinned Thread', voter, 2, pinned=True)
+
+busy = forum_category(open_section, 'Probe Busy', 3, description='enough threads for a second page')
+for index in range(21):
+    forum_thread(busy, 'Probe Busy %02d' % index, author, 1)
 
 thread = comment_thread(full, author, 2)
 subscribe(author, article=full)
