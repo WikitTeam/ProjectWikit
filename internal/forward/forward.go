@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	headerFor   = "X-Forwarded-For"
-	headerHost  = "X-Forwarded-Host"
-	headerProto = "X-Forwarded-Proto"
+	headerFor    = "X-Forwarded-For"
+	headerHost   = "X-Forwarded-Host"
+	headerProto  = "X-Forwarded-Proto"
+	headerOrigin = "Origin"
 )
 
 type Proxy struct {
@@ -23,6 +24,8 @@ type Proxy struct {
 	trust  *proxyheader.Trust
 	rp     *httputil.ReverseProxy
 	log    *slog.Logger
+
+	BareOrigin bool
 }
 
 var _ http.Handler = (*Proxy)(nil)
@@ -72,8 +75,22 @@ func (p *Proxy) rewrite(pr *httputil.ProxyRequest) {
 	pr.Out.Header.Set(headerHost, pr.In.Host)
 	pr.Out.Header.Set(headerProto, scheme)
 
+	if p.BareOrigin {
+		if origin := bareOrigin(pr.In.Header.Get(headerOrigin)); origin != "" {
+			pr.Out.Header.Set(headerOrigin, origin)
+		}
+	}
+
 	pr.SetURL(p.target)
 	pr.Out.Host = pr.In.Host
+}
+
+func bareOrigin(origin string) string {
+	u, err := url.Parse(origin)
+	if err != nil || u.Scheme == "" || u.Hostname() == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Hostname()
 }
 
 func (p *Proxy) handleError(w http.ResponseWriter, r *http.Request, err error) {

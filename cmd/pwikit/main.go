@@ -90,6 +90,7 @@ func serve(args []string) error {
 	secret := fs.String("secret-key", os.Getenv(envSecretKey), "key the session cookie is signed with; without it every visitor is anonymous")
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
+	bareOrigin := fs.Bool("bare-origin", false, "drop the port from the Origin header before forwarding")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -116,6 +117,7 @@ func serve(args []string) error {
 	if err != nil {
 		return err
 	}
+	proxy.BareOrigin = *bareOrigin
 	assets, err := assetFS(*staticDir)
 	if err != nil {
 		return err

@@ -225,3 +225,90 @@ func TestProxySetsForwardedHostToInboundHost(t *testing.T) {
 		t.Errorf("upstream got X-Forwarded-Host = %q, want %q", got, "media.example")
 	}
 }
+
+func TestProxyKeepsOriginByDefault(t *testing.T) {
+	var got string
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("Origin")
+	}))
+	defer up.Close()
+
+	front := httptest.NewServer(newProxy(t, up))
+	defer front.Close()
+
+	req, _ := http.NewRequest(http.MethodPost, front.URL+"/api/modules", nil)
+	req.Header.Set("Origin", "http://localhost:8080")
+	resp, err := front.Client().Do(req)
+	if err != nil {
+		t.Fatalf("Do() err = %v, want nil", err)
+	}
+	resp.Body.Close()
+
+	if got != "http://localhost:8080" {
+		t.Errorf("upstream got Origin = %q, want %q", got, "http://localhost:8080")
+	}
+}
+
+func TestProxyDropsOriginPortWhenAsked(t *testing.T) {
+	var got string
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("Origin")
+	}))
+	defer up.Close()
+
+	proxy := newProxy(t, up)
+	proxy.BareOrigin = true
+	front := httptest.NewServer(proxy)
+	defer front.Close()
+
+	req, _ := http.NewRequest(http.MethodPost, front.URL+"/api/modules", nil)
+	req.Header.Set("Origin", "http://localhost:8080")
+	resp, err := front.Client().Do(req)
+	if err != nil {
+		t.Fatalf("Do() err = %v, want nil", err)
+	}
+	resp.Body.Close()
+
+	if got != "http://localhost" {
+		t.Errorf("upstream got Origin = %q, want %q", got, "http://localhost")
+	}
+}
+
+func TestProxyLeavesAMissingOriginAlone(t *testing.T) {
+	sent := true
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, sent = r.Header["Origin"]
+	}))
+	defer up.Close()
+
+	proxy := newProxy(t, up)
+	proxy.BareOrigin = true
+	front := httptest.NewServer(proxy)
+	defer front.Close()
+
+	resp, err := front.Client().Post(front.URL+"/api/modules", "application/json", nil)
+	if err != nil {
+		t.Fatalf("Post() err = %v, want nil", err)
+	}
+	resp.Body.Close()
+
+	if sent {
+		t.Error("upstream got an Origin header, want none")
+	}
+}
+
+func TestBareOrigin(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"http://localhost:8080", "http://localhost"},
+		{"http://localhost", "http://localhost"},
+		{"https://wiki.example:8443", "https://wiki.example"},
+		{"null", ""},
+		{"", ""},
+		{"://broken", ""},
+	}
+	for _, c := range cases {
+		if got := bareOrigin(c.in); got != c.want {
+			t.Errorf("bareOrigin(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
