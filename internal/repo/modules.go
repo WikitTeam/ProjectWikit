@@ -193,6 +193,14 @@ func (m moduleData) ForumPostContents(postIDs []int64) (map[int64]db.ForumPostCo
 	return m.repo.db.ForumPostContents(m.repo.ctx, postIDs)
 }
 
+func (m moduleData) RecentPostCount(categoryIDs []int64, comments bool) (int, error) {
+	return m.repo.db.RecentPostCount(m.repo.ctx, categoryIDs, comments)
+}
+
+func (m moduleData) RecentPosts(categoryIDs []int64, comments bool, offset, limit int) ([]db.RecentPost, error) {
+	return m.repo.db.RecentPosts(m.repo.ctx, categoryIDs, comments, offset, limit)
+}
+
 func (m moduleData) UsernamesLower() (map[string]bool, error) {
 	return m.repo.db.UsernamesLower(m.repo.ctx)
 }

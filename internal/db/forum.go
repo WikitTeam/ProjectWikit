@@ -470,3 +470,59 @@ func (d *DB) ForumPostContents(ctx context.Context, postIDs []int64) (map[int64]
 	}
 	return out, rows.Err()
 }
+
+type RecentPost struct {
+	ID        int64
+	Name      string
+	CreatedAt time.Time
+	AuthorID  *int64
+
+	ThreadID         int64
+	ThreadName       string
+	ThreadCategoryID *int64
+	ThreadArticleID  *int64
+	ThreadAuthorID   *int64
+}
+
+// An empty category list with comments switched off matches nothing, which is
+// what a reader who may see no category is meant to get.
+const recentPostFilter = `
+FROM web_forumpost p
+JOIN web_forumthread t ON t.id = p.thread_id
+WHERE t.category_id = ANY($1) OR ($2::boolean AND t.article_id IS NOT NULL)`
+
+var qRecentPostCount = register("RecentPostCount", `SELECT count(*)`+recentPostFilter)
+
+func (d *DB) RecentPostCount(ctx context.Context, categoryIDs []int64, comments bool) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qRecentPostCount, categoryIDs, comments).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count recent posts: %w", err)
+	}
+	return n, nil
+}
+
+var qRecentPosts = register("RecentPosts", `
+SELECT p.id, p.name, p.created_at, p.author_id,
+       t.id, t.name, t.category_id, t.article_id, t.author_id`+recentPostFilter+`
+ORDER BY p.created_at DESC
+OFFSET $3 LIMIT $4`)
+
+func (d *DB) RecentPosts(ctx context.Context, categoryIDs []int64, comments bool, offset, limit int) ([]RecentPost, error) {
+	rows, err := d.pool.Query(ctx, qRecentPosts, categoryIDs, comments, offset, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query recent posts: %w", err)
+	}
+	defer rows.Close()
+
+	var out []RecentPost
+	for rows.Next() {
+		var p RecentPost
+		if err := rows.Scan(&p.ID, &p.Name, &p.CreatedAt, &p.AuthorID,
+			&p.ThreadID, &p.ThreadName, &p.ThreadCategoryID, &p.ThreadArticleID,
+			&p.ThreadAuthorID); err != nil {
+			return nil, fmt.Errorf("scan recent post: %w", err)
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}

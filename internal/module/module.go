@@ -57,6 +57,8 @@ type Data interface {
 	ForumPostReplies(postID int64) ([]db.ForumThreadPost, error)
 	ForumPost(id int64) (*db.ForumThreadPost, error)
 	ForumPostContents(postIDs []int64) (map[int64]db.ForumPostContent, error)
+	RecentPostCount(categoryIDs []int64, comments bool) (int, error)
+	RecentPosts(categoryIDs []int64, comments bool, offset, limit int) ([]db.RecentPost, error)
 	UsernamesLower() (map[string]bool, error)
 	VoteByUser(articleID int64, userID *int64) (float64, bool, error)
 	UserByID(id int64) (*db.User, error)
