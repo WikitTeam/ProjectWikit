@@ -201,6 +201,12 @@ func (h *Handler) missingBody(req *request) (body, error) {
 }
 
 func (h *Handler) notFoundPage(req *request) (*body, error) {
+	perm := repo.NewPerms(req.ctx, h.deps.DB)
+	subject, err := h.subject(req)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, name := range notFoundNames(req.name) {
 		found, err := h.deps.DB.ArticleByName(req.ctx, name)
 		if errors.Is(err, db.ErrNotFound) {
@@ -208,6 +214,15 @@ func (h *Handler) notFoundPage(req *request) (*body, error) {
 		}
 		if err != nil {
 			return nil, err
+		}
+		// A template the reader may not read is not a template for them, and
+		// showing it anyway would hand out a page they were refused.
+		object, err := perm.Article(found, req.user)
+		if err != nil {
+			return nil, err
+		}
+		if !perms.Resolve(subject, object).Has(perms.ViewArticles) {
+			continue
 		}
 		source, err := h.deps.DB.LatestSource(req.ctx, found.ID)
 		if errors.Is(err, db.ErrNotFound) {
@@ -261,10 +276,11 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 		status = pc.Status
 	}
 	return body{
-		html:   html.Body,
-		status: status,
-		title:  pc.Title,
-		style:  pc.ComputedStyle,
+		html:     html.Body,
+		status:   status,
+		title:    pc.Title,
+		style:    pc.ComputedStyle,
+		redirect: pc.RedirectTo,
 	}, nil
 }
 
