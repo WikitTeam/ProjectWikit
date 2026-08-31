@@ -13,7 +13,7 @@
       {% csrf_token %}
 
       <div class="auth-mark">
-        <img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">
+        {% if site_auth_icon %}<img src="{{ site_auth_icon }}" alt="{{ site_title|default:"ProjectWikit" }}">{% else %}<img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">{% endif %}
       </div>
 
       <div class="auth-heading">

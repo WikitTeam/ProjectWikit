@@ -13,7 +13,7 @@
       {% csrf_token %}
 
       <div class="auth-mark">
-        <img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">
+        {% if site_auth_icon %}<img src="{{ site_auth_icon }}" alt="{{ site_title|default:"ProjectWikit" }}">{% else %}<img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">{% endif %}
       </div>
 
       <div class="auth-heading">
@@ -60,7 +60,7 @@
       <button type="submit" class="btn-primary" id="submit-btn">立 即 注 册</button>
 
       <div class="action-row">
-        <span class="meta">普通注册默认分配「读者」权限</span>
+        <span class="meta">{{ site_signup_notice|default:"普通注册默认分配「读者」权限" }}</span>
         <a class="link-muted" href="{% url 'login' %}">已有账号 → 登录</a>
       </div>
 

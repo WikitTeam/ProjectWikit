@@ -12,7 +12,7 @@
 
     <header class="app-header">
       <a href="/" class="brand">
-        <img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">
+        {% if site_auth_icon %}<img src="{{ site_auth_icon }}" alt="{{ site_title|default:"ProjectWikit" }}">{% else %}<img src="{% md5url "images/wikitHana.png" %}" alt="ProjectWikit">{% endif %}
         <span class="wordmark">ProjectWikit</span>
       </a>
       <span class="divider"></span>

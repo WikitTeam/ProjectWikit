@@ -3,6 +3,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
 from django.contrib.auth import login
@@ -28,7 +29,9 @@ from web.models.users import (
 from .invite import account_activation_token
 from web.events import EventBase
 from django.shortcuts import redirect
+from web.models.invites import InviteLink
 from web.models.roles import Role
+from web.models.site import get_current_site
 
 
 User = get_user_model()
@@ -126,6 +129,7 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         user.is_active = True
         user.save()
         UsedToken.mark_used(self.kwargs['token'], is_case_sensitive=True)
+        InviteLink.mark_activated(self.kwargs['token'], user, timezone.now())
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         OnUserSignUp(request, user).emit()
         return HttpResponseRedirect(redirect_to=settings.LOGIN_REDIRECT_URL)
@@ -277,6 +281,10 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
             request.session.pop(WD_VERIFY_NAME_KEY, None)
             request.session.pop(WD_VERIFY_FOR_KEY, None)
 
+            verified_role = _signup_role('verified_role')
+            if verified_role:
+                wikidot_user.roles.add(verified_role)
+
             login(request, wikidot_user, backend='django.contrib.auth.backends.ModelBackend')
             OnUserSignUp(request, wikidot_user).emit()
             return redirect('/')
@@ -298,8 +306,9 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
                     user.username = allocate_fallback_username(user.pk)
                 if display:
                     user.display_name = display
-                reader_role = Role.objects.get(slug='reader')
-                user.roles.add(reader_role)
+                default_role = _signup_role('default_role')
+                if default_role:
+                    user.roles.add(default_role)
                 user.set_password(password)
                 user.is_active = True
                 user.save()
@@ -307,3 +316,12 @@ class SignupView(TemplateResponseMixin, ContextMixin, View):
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             OnUserSignUp(request, user).emit()
             return redirect('/')
+
+
+# 站点没配就回落到 reader，而 reader 也可能不存在（全新站点），所以两层都不能硬取。
+def _signup_role(field):
+    site = get_current_site()
+    role = getattr(site, field, None) if site else None
+    if role is not None:
+        return role
+    return Role.objects.filter(slug='reader').first()
