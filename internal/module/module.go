@@ -37,6 +37,12 @@ type Data interface {
 	ArticleByID(id int64) (*db.Article, error)
 	RenderUserByID(id *int64) (string, error)
 
+	SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error)
+	SiteChangeCount(f db.SiteChangeFilter) (int, error)
+	ArticleCategories(hidden []string) ([]string, error)
+	UserIDsByName(name string, partial bool) ([]int64, error)
+	UsersByIDs(ids []int64) ([]db.User, error)
+
 	ForumSections() ([]db.ForumSection, error)
 	ForumSection(id int64) (*db.ForumSection, error)
 	ForumCategories() ([]db.ForumCategory, error)

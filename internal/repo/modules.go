@@ -228,3 +228,23 @@ func (m moduleData) ForumThreadObject(t *db.ForumThread, u *db.User) (*perms.Obj
 func (m moduleData) ForumPostObject(p *db.ForumThreadPost, thread *perms.Object, u *db.User) *perms.Object {
 	return NewPerms(m.repo.ctx, m.repo.db).ForumPost(p, thread, u)
 }
+
+func (m moduleData) SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error) {
+	return m.repo.db.SiteChanges(m.repo.ctx, f, offset, limit)
+}
+
+func (m moduleData) SiteChangeCount(f db.SiteChangeFilter) (int, error) {
+	return m.repo.db.SiteChangeCount(m.repo.ctx, f)
+}
+
+func (m moduleData) ArticleCategories(hidden []string) ([]string, error) {
+	return m.repo.db.ArticleCategories(m.repo.ctx, hidden)
+}
+
+func (m moduleData) UserIDsByName(name string, partial bool) ([]int64, error) {
+	return m.repo.db.UserIDsByName(m.repo.ctx, name, partial)
+}
+
+func (m moduleData) UsersByIDs(ids []int64) ([]db.User, error) {
+	return m.repo.db.UsersByIDs(m.repo.ctx, ids)
+}
