@@ -159,7 +159,7 @@ func (c *Callbacks) IncludePages(refs []renderer.IncludeRef) ([]renderer.Fetched
 		if fetched[i].Content == nil {
 			continue
 		}
-		substituted := page.ThisVars(*fetched[i].Content, c.vars)
+		substituted := page.PreRender(*fetched[i].Content, c.vars)
 		fetched[i].Content = &substituted
 	}
 	return fetched, nil

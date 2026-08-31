@@ -12,6 +12,7 @@ type Info struct {
 }
 
 var registry = map[string]Info{
+	"button":          {Name: "button"},
 	"countpages":      {Name: "countpages", HasContent: true},
 	"css":             {Name: "css", HasContent: true},
 	"forumcategory":   {Name: "forumcategory"},

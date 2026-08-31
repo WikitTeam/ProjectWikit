@@ -8,6 +8,8 @@
   "include-create": "立刻创建",
   "include-loop": "插入的页面 \"{name}\" 导致了无限包含循环",
   "include-missing": "插入的页面 \"{name}\" 不存在",
+  "module-button-edit": "编辑",
+  "module-button-unknown": "不支持的按钮类型：{type}",
   "module-date-format": "{month}.{day}.{year} {hour}:{minute}",
   "module-date-format-js": "%m.%d.%Y %H:%M",
   "module-date-missing": "n/a",

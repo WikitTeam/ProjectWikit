@@ -101,3 +101,30 @@ func TestRequestWithoutASiteFails(t *testing.T) {
 		t.Errorf("GET /main without a site = %d, want %d", rec.Code, http.StatusInternalServerError)
 	}
 }
+
+func TestNotFoundNamesAskTheCategoryFirst(t *testing.T) {
+	got := notFoundNames("scp:9999")
+	want := []string{"scp:_404", "_404"}
+	if len(got) != len(want) {
+		t.Fatalf("notFoundNames(%q) = %v, want %v", "scp:9999", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("notFoundNames(%q)[%d] = %q, want %q", "scp:9999", i, got[i], want[i])
+		}
+	}
+}
+
+func TestNotFoundNamesOfTheDefaultCategory(t *testing.T) {
+	got := notFoundNames("no-such-page")
+	if len(got) != 1 || got[0] != "_404" {
+		t.Errorf("notFoundNames(%q) = %v, want [_404]", "no-such-page", got)
+	}
+}
+
+func TestNotFoundNamesOfAnExplicitDefaultCategory(t *testing.T) {
+	got := notFoundNames("_default:no-such-page")
+	if len(got) != 1 || got[0] != "_404" {
+		t.Errorf("notFoundNames(%q) = %v, want [_404]", "_default:no-such-page", got)
+	}
+}

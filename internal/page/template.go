@@ -30,6 +30,12 @@ func ThisVars(source string, vars *Vars) string {
 	return ApplyTemplate(source, vars.This)
 }
 
+// PreRender is everything the source goes through on its way to the renderer.
+// Both passes are blind to code blocks, the way a %% pair in prose already is.
+func PreRender(source string, vars *Vars) string {
+	return Buttons(ThisVars(source, vars))
+}
+
 // PageVars is the pass the category template goes through, where a variable
 // carries no prefix. index and total exist nowhere else.
 func PageVars(template string, vars *Vars, index, total int) string {

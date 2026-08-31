@@ -25,6 +25,7 @@ import (
 
 const (
 	templateName = "_template"
+	notFoundName = "_404"
 	excerptLimit = 384
 )
 
@@ -92,7 +93,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	vars := h.vars(req, req.article)
 	source = page.PageVars(source, vars, 1, 1)
 	source = page.ApplyTemplate(source, article.ThisPage(req.params, canonical))
-	source = page.ThisVars(source, vars)
+	source = page.PreRender(source, vars)
 
 	info, err := h.pageInfo(req, req.article)
 	if err != nil {
@@ -182,6 +183,14 @@ func (h *Handler) missingBody(req *request) (body, error) {
 	}
 	allow := wikidot.NameAllowed(req.name) && perms.Resolve(subject, object).Has(perms.CreateArticles)
 
+	written, err := h.notFoundPage(req)
+	if err != nil {
+		return body{}, err
+	}
+	if written != nil {
+		return *written, nil
+	}
+
 	// The name is left out because the view never puts it in this template's
 	// context, so the message it renders has an empty slot where it goes.
 	html, err := h.shell(req.loc).NotFound(shell.NotFound{
@@ -189,6 +198,74 @@ func (h *Handler) missingBody(req *request) (body, error) {
 		Options:     options,
 	})
 	return body{html: html, status: http.StatusNotFound}, err
+}
+
+func (h *Handler) notFoundPage(req *request) (*body, error) {
+	for _, name := range notFoundNames(req.name) {
+		found, err := h.deps.DB.ArticleByName(req.ctx, name)
+		if errors.Is(err, db.ErrNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		source, err := h.deps.DB.LatestSource(req.ctx, found.ID)
+		if errors.Is(err, db.ErrNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		out, err := h.renderNotFound(req, found, source)
+		return &out, err
+	}
+	return nil, nil
+}
+
+// The category's own page comes first so a category can answer differently. A
+// page in the default category would ask for the same row twice.
+func notFoundNames(fullName string) []string {
+	category, _ := wikidot.Split(fullName)
+	if category == wikidot.DefaultCategory {
+		return []string{notFoundName}
+	}
+	return []string{category + ":" + notFoundName, notFoundName}
+}
+
+// The page the reader asked for has no row, so it is stood up from the name
+// alone. What the template names has to be that page, not the template.
+func (h *Handler) renderNotFound(req *request, template *db.Article, source string) (body, error) {
+	category, name := wikidot.Split(req.name)
+	asked := &db.Article{Category: category, Name: name}
+
+	// The variables answer for the page that was asked for rather than for the
+	// template, so a template can name what is missing.
+	vars := h.vars(req, asked)
+	source = page.PageVars(source, vars, 1, 1)
+	source = page.PreRender(source, vars)
+	info, err := h.pageInfo(req, template)
+	if err != nil {
+		return body{}, err
+	}
+
+	pc := page.NewContext(asked, template, req.params, req.user)
+	html, err := h.deps.Engine.RenderHTML(req.ctx, source, info,
+		h.callbacks(req, vars, pc), renderer.ModeArticle)
+	if err != nil {
+		return body{}, err
+	}
+	req.params = pc.PathParams
+
+	status := http.StatusNotFound
+	if pc.Status != 0 && pc.Status != http.StatusOK {
+		status = pc.Status
+	}
+	return body{
+		html:   html.Body,
+		status: status,
+		title:  pc.Title,
+		style:  pc.ComputedStyle,
+	}, nil
 }
 
 // nav renders one of the two navigation pages. It gets its own callbacks and
@@ -215,7 +292,7 @@ func (h *Handler) nav(req *request, name string) (string, string, error) {
 		return "", "", err
 	}
 	pc := h.context(req, found)
-	html, err := h.deps.Engine.RenderHTML(req.ctx, page.ThisVars(source, vars), info,
+	html, err := h.deps.Engine.RenderHTML(req.ctx, page.PreRender(source, vars), info,
 		h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
 		return "", "", err
@@ -247,7 +324,7 @@ func (h *Handler) nested(req *request, source string, pc *page.Context) (string,
 	if err != nil {
 		return "", err
 	}
-	html, err := h.deps.Engine.RenderHTML(req.ctx, page.ThisVars(source, vars), info,
+	html, err := h.deps.Engine.RenderHTML(req.ctx, page.PreRender(source, vars), info,
 		h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
 		return "", err
@@ -261,7 +338,7 @@ func (h *Handler) message(req *request, source string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	html, err := h.deps.Engine.RenderHTML(req.ctx, page.ThisVars(source, nil), info,
+	html, err := h.deps.Engine.RenderHTML(req.ctx, page.PreRender(source, nil), info,
 		h.callbacks(req, nil, pc), renderer.ModeMessage)
 	if err != nil {
 		return "", err
