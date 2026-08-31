@@ -129,11 +129,11 @@ func (r Role) NameTail(load IconLoader) (*Badge, *Icon, error) {
 		}
 		svg, err := load(r.Icon)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil
 		}
 		colored, err := ColorizeIcon(svg, r.Color)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil
 		}
 		return nil, &Icon{Icon: colored, Color: r.Color, Tooltip: r.Name}, nil
 	}

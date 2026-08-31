@@ -195,13 +195,19 @@ func TestTailsPrefersBannedOverBot(t *testing.T) {
 	}
 }
 
-func TestUserReportsIconLoadFailure(t *testing.T) {
-	want := errors.New("no such icon")
-	r := New(nil, func(string) (string, error) { return "", want })
+func TestUserRendersWithoutAnIconThatWillNotLoad(t *testing.T) {
+	r := New(nil, func(string) (string, error) { return "", errors.New("no such icon") })
 	role := roles.Role{Slug: "icon", InlineVisualMode: roles.InlineIcon, Icon: "-/roles/gone.svg"}
-	_, err := r.User(User{ID: 1, Type: TypeNormal, Username: "u", IsActive: true}, []roles.Role{role}, Options{Avatar: true})
-	if !errors.Is(err, want) {
-		t.Errorf("User() err = %v, want %v", err, want)
+
+	got, err := r.User(User{ID: 1, Type: TypeNormal, Username: "u", IsActive: true}, []roles.Role{role}, Options{Avatar: true})
+	if err != nil {
+		t.Fatalf("User() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `data-user-name="u"`) {
+		t.Errorf("User() = %q, want the chip anyway", got)
+	}
+	if strings.Contains(got, "role-icon") {
+		t.Errorf("User() = %q, want no icon in it", got)
 	}
 }
 

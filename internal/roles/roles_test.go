@@ -95,12 +95,15 @@ func TestNameTailsSkipsIconRoleWithoutFile(t *testing.T) {
 	}
 }
 
-func TestNameTailsReportsLoaderFailure(t *testing.T) {
-	want := errors.New("gone")
+func TestNameTailsDropsAnIconThatWillNotLoad(t *testing.T) {
 	rs := []Role{{Slug: "icon", InlineVisualMode: InlineIcon, Icon: "i.svg"}}
-	_, err := NameTails(rs, func(string) (string, error) { return "", want })
-	if !errors.Is(err, want) {
-		t.Errorf("NameTails() err = %v, want %v", err, want)
+
+	got, err := NameTails(rs, func(string) (string, error) { return "", errors.New("gone") })
+	if err != nil {
+		t.Fatalf("NameTails() err = %v, want nil", err)
+	}
+	if len(got.Icons) != 0 {
+		t.Errorf("len(NameTails().Icons) = %d, want 0", len(got.Icons))
 	}
 }
 
