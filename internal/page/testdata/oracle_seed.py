@@ -17,7 +17,7 @@ import itertools
 from django.utils import timezone
 
 from web.controllers import articles
-from web.models.articles import Article, Category, Tag, TagsCategory, Vote
+from web.models.articles import Article, ArticleLogEntry, Category, Tag, TagsCategory, Vote
 from web.models.forum import ForumCategory, ForumPost, ForumPostVersion, ForumSection, ForumThread
 from web.models.notifications import UserNotification, UserNotificationMapping, UserNotificationSubscription
 from web.models.settings import Settings
@@ -29,6 +29,7 @@ NL = chr(10)
 CREATED_AT = datetime.datetime(2021, 3, 4, 5, 6, 7, tzinfo=datetime.timezone.utc)
 UPDATED_AT = datetime.datetime(2022, 7, 8, 9, 10, 11, tzinfo=datetime.timezone.utc)
 POSTED_AT = datetime.datetime(2023, 9, 10, 11, 12, 13, tzinfo=datetime.timezone.utc)
+LOGGED_AT = datetime.datetime(2024, 11, 12, 13, 14, 15, tzinfo=datetime.timezone.utc)
 POSTED_MINUTES = itertools.count()
 THREAD_MINUTES = itertools.count()
 
@@ -209,6 +210,8 @@ styledhead = make_article('probecss:styledhead', 'Probe Styled Head',
                                    '.a { color: #ff0000 }',
                                    '[[/module]]',
                                    'head styled body']), None)
+changes = make_article('probe:changes', 'Probe Changes',
+                       '[[module SiteChanges]]', author)
 unknownmodule = make_article('probe:unknownmodule', 'Probe Unknown Module',
                              '[[module NoSuchModule]]', None)
 # pwikit resolves a display name here and Django does not, so this page is the
@@ -348,6 +351,59 @@ vote(quarter, voter, 1)
 for index, member in enumerate(crowd):
     vote(half, member, 1 if index == 0 else -1)
 
+changes_comments, _ = ForumThread.objects.get_or_create(article=changes)
+ForumThread.objects.filter(pk=changes_comments.pk).update(
+    created_at=CREATED_AT, updated_at=UPDATED_AT)
+
+LOG_TYPE = ArticleLogEntry.LogEntryType
+LOG_REVS = itertools.count(1)
+
+ArticleLogEntry.objects.filter(article=changes).exclude(type=LOG_TYPE.New).delete()
+
+
+def log_entry(kind, meta, user=author, comment=''):
+    ArticleLogEntry.objects.create(
+        article=changes, user=user, type=kind, meta=meta,
+        comment=comment, rev_number=next(LOG_REVS))
+
+
+log_entry(LOG_TYPE.Source, {'version_id': 0}, comment='a source edit')
+log_entry(LOG_TYPE.Source, {'version_id': 0}, comment='   ')
+log_entry(LOG_TYPE.Source, {'version_id': 0}, user=None)
+log_entry(LOG_TYPE.Source, {'version_id': 0}, user=coauthor)
+log_entry(LOG_TYPE.Source, {'version_id': 0}, user=voter)
+log_entry(LOG_TYPE.Title, {'prev_title': 'Probe "Old" <b>', 'title': 'Probe Changes'})
+log_entry(LOG_TYPE.Name, {'prev_name': 'probe:was-here', 'name': 'probe:changes'})
+log_entry(LOG_TYPE.Tags, {'added_tags': [{'id': 1, 'name': 'alpha'}], 'removed_tags': []})
+log_entry(LOG_TYPE.Tags, {'added_tags': [], 'removed_tags': [{'id': 2, 'name': 'lang:en'}]})
+log_entry(LOG_TYPE.Tags, {'added_tags': [{'id': 1, 'name': 'alpha'}, {'id': 3, 'name': 'Zeta'}],
+                          'removed_tags': [{'id': 2, 'name': 'lang:en'}]})
+log_entry(LOG_TYPE.Tags, {})
+log_entry(LOG_TYPE.Parent, {'prev_parent': None, 'parent': 'probe:parent'})
+log_entry(LOG_TYPE.Parent, {'prev_parent': 'probe:parent', 'parent': None})
+log_entry(LOG_TYPE.Parent, {'prev_parent': 'probe:parent', 'parent': 'probe:full'})
+log_entry(LOG_TYPE.Parent, {'prev_parent': None, 'parent': None})
+log_entry(LOG_TYPE.FileAdded, {'name': 'cover.png', 'id': 1})
+log_entry(LOG_TYPE.FileDeleted, {'name': 'cover.png', 'id': 1})
+log_entry(LOG_TYPE.FileRenamed, {'prev_name': 'cover.png', 'name': 'banner.png'})
+log_entry(LOG_TYPE.VotesDeleted,
+          {'rating_mode': 'updown', 'rating': 3, 'votes_count': 5, 'popularity': 60})
+log_entry(LOG_TYPE.VotesDeleted,
+          {'rating_mode': 'updown', 'rating': -3.7, 'votes_count': 9, 'popularity': 11})
+log_entry(LOG_TYPE.VotesDeleted,
+          {'rating_mode': 'stars', 'rating': 4.25, 'votes_count': 4, 'popularity': 75})
+log_entry(LOG_TYPE.VotesDeleted,
+          {'rating_mode': 'disabled', 'rating': 0, 'votes_count': 0, 'popularity': 0})
+log_entry(LOG_TYPE.Authorship, {'added_authors': [author.id], 'removed_authors': []})
+log_entry(LOG_TYPE.Authorship, {'added_authors': [author.id, voter.id], 'removed_authors': []})
+log_entry(LOG_TYPE.Authorship, {'added_authors': [], 'removed_authors': [coauthor.id]})
+log_entry(LOG_TYPE.Authorship, {'added_authors': [voter.id], 'removed_authors': [coauthor.id]})
+log_entry(LOG_TYPE.Authorship, {})
+log_entry(LOG_TYPE.Wikidot, {}, comment='imported from wikidot')
+log_entry(LOG_TYPE.Revert, {'rev_number': 2, 'subtypes': ['source', 'title']})
+log_entry(LOG_TYPE.Revert, {'rev_number': 0, 'subtypes': []})
+log_entry(LOG_TYPE.Revert, {'rev_number': 1})
+
 stars_category, _ = Category.objects.get_or_create(name='probestars')
 Settings.objects.update_or_create(
     category=stars_category,
@@ -362,15 +418,21 @@ site_settings, _ = Settings.objects.get_or_create(site=Site.objects.first())
 
 for article in (parent, full, bare, rated, unrated, third, quarter, unratable, half,
                 included, host, redirect, described,
-                imaged, tagged, taggedplain, unknownmodule, bydisplay, styled, styledhead, listed, listjoined,
+                imaged, tagged, taggedplain, unknownmodule, bydisplay, styled, styledhead, changes, listed, listjoined,
                 listnowrap, listsections, listtags, listempty, listurl, listbyvotes):
     freeze(article)
 
+for offset, entry_id in enumerate(ArticleLogEntry.objects.order_by('id').values_list('id', flat=True)):
+    ArticleLogEntry.objects.filter(pk=entry_id).update(
+        created_at=LOGGED_AT + datetime.timedelta(minutes=offset))
+
 print('site rating_mode =', site_settings.rating_mode)
 print('forum sections =', ForumSection.objects.count(), 'categories =', ForumCategory.objects.count())
+print('log entries =', ArticleLogEntry.objects.count())
 print('seeded', ', '.join(a.full_name for a in (parent, full, bare, rated, unrated, third,
                                                  quarter, unratable, half, included, host,
                                                  redirect, described, imaged, tagged, taggedplain,
-                                                 unknownmodule, bydisplay, styled, styledhead, listed, listjoined,
+                                                 unknownmodule, bydisplay, styled, styledhead, changes,
+                                                 listed, listjoined,
                                                  listnowrap, listsections, listtags, listempty,
                                                  listurl, listbyvotes)))
