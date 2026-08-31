@@ -11,6 +11,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -21,6 +22,8 @@ type result struct {
 	Status   int
 	Location string
 	Body     string
+
+	SetCSRF string
 }
 
 type request struct {
@@ -36,6 +39,9 @@ type request struct {
 	article   *db.Article
 	forbidden bool
 	perms     perms.Set
+
+	csrf    string
+	csrfNew bool
 }
 
 func (h *Handler) build(r *http.Request) (*result, error) {
@@ -51,6 +57,7 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 		site: found,
 		user: auth.FromContext(ctx),
 	}
+	req.csrf, req.csrfNew = page.CSRFToken(r)
 	req.name, req.params = article.ParsePath(strings.TrimPrefix(r.URL.EscapedPath(), "/"), found.HomePage)
 	req.encoded = article.Encode(req.params)
 

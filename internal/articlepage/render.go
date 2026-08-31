@@ -70,7 +70,14 @@ func (h *Handler) render(req *request) (*result, error) {
 	if err := h.shell(req.loc).Page(&page, data); err != nil {
 		return nil, err
 	}
-	return &result{Status: out.status, Body: page.String()}, nil
+	body := page.String()
+	res := &result{Status: out.status, Body: body}
+	// Only a page that actually put the token in a form gets the cookie, so a
+	// plain reader is never handed one they have no use for.
+	if req.csrfNew && strings.Contains(body, req.csrf) {
+		res.SetCSRF = req.csrf
+	}
+	return res, nil
 }
 
 func (h *Handler) body(req *request, canonical string) (body, error) {
@@ -138,7 +145,8 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 }
 
 func (h *Handler) context(req *request, source *db.Article) *page.Context {
-	return page.NewContext(req.article, source, req.params, req.user)
+	pc := page.NewContext(req.article, source, req.params, req.user)
+	return pc
 }
 
 // A page named _template is its own content, which is what keeps the template

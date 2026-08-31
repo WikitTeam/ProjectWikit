@@ -10,6 +10,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
@@ -34,6 +35,8 @@ type Handler struct {
 	deps  Deps
 	shell func(loc *i18n.Localizer) *shell.Renderer
 }
+
+const csrfCookieMaxAge = 60 * 60 * 24 * 365
 
 const allowedMethods = "GET, HEAD, OPTIONS"
 
@@ -91,6 +94,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if out.SetCSRF != "" {
+		http.SetCookie(w, &http.Cookie{
+			Name:     page.CSRFCookie,
+			Value:    out.SetCSRF,
+			Path:     "/",
+			MaxAge:   csrfCookieMaxAge,
+			SameSite: http.SameSiteLaxMode,
+		})
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(out.Status)
 	if r.Method == http.MethodHead {
