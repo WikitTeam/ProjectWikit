@@ -9,7 +9,7 @@ class ManageUsersPermission(BaseRolePermission):
     name = '管理用户'
     codename = 'manage_users'
     description = '允许创建和编辑用户'
-    represent_django_perms = ['web.view_user', 'web.add_user', 'web.change_user']
+    represent_django_perms = ['web.view_user', 'web.add_user', 'web.change_user', 'web.view_invitelink', 'web.delete_invitelink']
     group = '管理后台'
     admin_only = True
 
@@ -88,5 +88,13 @@ class ManageUpdatesPermission(BaseRolePermission):
     name = '管理系统更新'
     codename = 'manage_updates'
     description = '允许查看 GitHub 版本更新并从后台执行更新'
+    group = '管理后台'
+    admin_only = True
+
+
+class ManagePermissionsPermission(BaseRolePermission):
+    name = '访问权限表'
+    codename = 'manage_permissions'
+    description = '允许修改角色的权限勾选，以及给用户分配角色。没有这一项的人即使能编辑用户，也改不了权限'
     group = '管理后台'
     admin_only = True

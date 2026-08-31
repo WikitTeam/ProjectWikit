@@ -2,11 +2,13 @@ from .users import *
 from .articles import *
 from .files import *
 from .forum import *
+from .invites import *
 from .logs import *
 from .messages import *
 from .reports import *
 from .settings import *
 from .site import *
+from .tickets import *
 from .users import *
 from .search import *
 from .roles import *

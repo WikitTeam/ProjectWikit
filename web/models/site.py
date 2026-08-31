@@ -102,6 +102,32 @@ class Site(SingletonModel):
         on_delete=models.SET_NULL, related_name='+',
     )
 
+    auth_icon = models.ImageField('登录/注册页图标', null=True, blank=True, upload_to='-/sites')
+    footer_license = models.TextField(
+        '页脚授权说明', blank=True,
+        help_text='留空使用内置文案。支持 wikitext，并且只允许 [[module time]] 这一个模块。',
+    )
+    signup_notice = models.TextField(
+        '注册页提示', blank=True,
+        help_text='留空使用内置文案。显示在注册按钮下方。',
+    )
+
+    default_role = models.ForeignKey(
+        'Role', verbose_name='普通注册获得的角色', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+    verified_role = models.ForeignKey(
+        'Role', verbose_name='认证账号获得的角色', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+
+    membership_password_enabled = models.BooleanField('启用密码入组', default=False, null=False)
+    membership_password = models.TextField('入组密码', blank=True)
+    membership_password_role = models.ForeignKey(
+        'Role', verbose_name='密码入组获得的角色', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+
     @cached_property
     def settings(self):
         return Settings.objects.filter(site=self).first() or Settings.get_default_settings()
