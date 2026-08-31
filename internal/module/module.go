@@ -24,6 +24,8 @@ type Data interface {
 	HiddenCategories(user *db.User) ([]string, error)
 	TagIDsByName(categorySlug, name string) ([]int64, error)
 	TagCloud(limit *int) ([]db.CloudTag, error)
+	WantedLinks(f db.WantedFilter, offset, limit int) ([]db.WantedLink, error)
+	WantedLinkCount(f db.WantedFilter) (int, error)
 	ArticleTagIDs(articleID int64) ([]int64, error)
 	ArticleByRef(ref string) (*db.Article, error)
 	UserByUsername(name string) (*db.User, error)

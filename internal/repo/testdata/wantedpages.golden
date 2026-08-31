@@ -1,0 +1,1104 @@
+=== bare
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== every-category
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-from
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;probestars&quot;, &quot;category_from&quot;: &quot;probestars&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-from-two
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;probestars, probeoff&quot;, &quot;category_from&quot;: &quot;probestars, probeoff&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-from-default
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;_default&quot;, &quot;category_from&quot;: &quot;_default&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-from-empty
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;nosuchcategory&quot;, &quot;category_from&quot;: &quot;nosuchcategory&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-to
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;category_to&quot;: &quot;wanted&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-to-default
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;category_to&quot;: &quot;_default&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-to-not
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;category_to&quot;: &quot;-wanted&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-to-two
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;category_to&quot;: &quot;wanted, probe&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== category-both
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;probestars&quot;, &quot;category_from&quot;: &quot;probestars&quot;, &quot;category_to&quot;: &quot;wanted&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== per-page
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;3&quot;}"
+                data-wanted-pages-page-id="main">
+                <div class="pager">
+                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;4&nbsp;页</span>
+                
+                
+                    
+                        <span class="1 target current">1</span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="2">2</a></span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                
+                
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="4">4</a></span>
+                    
+                
+                
+                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                
+            </div>
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                <div class="pager">
+                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;4&nbsp;页</span>
+                
+                
+                    
+                        <span class="1 target current">1</span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="2">2</a></span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                
+                
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="4">4</a></span>
+                    
+                
+                
+                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                
+            </div>
+                </div>
+=== per-page-second
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{&quot;p&quot;: &quot;2&quot;}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;3&quot;}"
+                data-wanted-pages-page-id="main">
+                <div class="pager">
+                <span class="pager-no">第&nbsp;2&nbsp页; 共&nbsp;4&nbsp;页</span>
+                
+                    <span class="target"><a href="#" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="1">1</a></span>
+                    
+                
+                    
+                        <span class="1 target current">2</span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                
+                
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="4">4</a></span>
+                    
+                
+                
+                    <span class="target"><a href="#" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                
+            </div>
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                <div class="pager">
+                <span class="pager-no">第&nbsp;2&nbsp页; 共&nbsp;4&nbsp;页</span>
+                
+                    <span class="target"><a href="#" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="1">1</a></span>
+                    
+                
+                    
+                        <span class="1 target current">2</span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                
+                
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="4">4</a></span>
+                    
+                
+                
+                    <span class="target"><a href="#" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                
+            </div>
+                </div>
+=== per-page-past-the-end
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{&quot;p&quot;: &quot;99&quot;}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;3&quot;}"
+                data-wanted-pages-page-id="main">
+                <div class="pager">
+                <span class="pager-no">第&nbsp;99&nbsp页; 共&nbsp;4&nbsp;页</span>
+                
+                    <span class="target"><a href="#" data-pagination-target="98">&laquo;&nbsp;上一页</a></span>
+                
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="1">1</a></span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="2">2</a></span>
+                    
+                
+                
+                    <span class="dots">...</span>
+                
+                
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="4">4</a></span>
+                    
+                
+                
+            </div>
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                    </tbody>
+                </table>
+                <div class="pager">
+                <span class="pager-no">第&nbsp;99&nbsp页; 共&nbsp;4&nbsp;页</span>
+                
+                    <span class="target"><a href="#" data-pagination-target="98">&laquo;&nbsp;上一页</a></span>
+                
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="1">1</a></span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="2">2</a></span>
+                    
+                
+                
+                    <span class="dots">...</span>
+                
+                
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="4">4</a></span>
+                    
+                
+                
+            </div>
+                </div>
+=== per-page-one
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;1&quot;}"
+                data-wanted-pages-page-id="main">
+                <div class="pager">
+                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;11&nbsp;页</span>
+                
+                
+                    
+                        <span class="1 target current">1</span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="2">2</a></span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                
+                
+                
+                    <span class="dots">...</span>
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="10">10</a></span>
+                    
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="11">11</a></span>
+                    
+                
+                
+                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                
+            </div>
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                <div class="pager">
+                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;11&nbsp;页</span>
+                
+                
+                    
+                        <span class="1 target current">1</span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="2">2</a></span>
+                    
+                
+                    
+                        <span class="1 target"><a href="#" data-pagination-target="3">3</a></span>
+                    
+                
+                
+                
+                
+                    <span class="dots">...</span>
+                
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="10">10</a></span>
+                    
+                
+                    
+                        <span class="3 target"><a href="#" data-pagination-target="11">11</a></span>
+                    
+                
+                
+                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                
+            </div>
+                </div>
+=== per-page-junk
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;many&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== limit-is-dropped
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;limit&quot;: null}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== offset-is-dropped
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;offset&quot;: null}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/scp-173">scp-173</a></td>
+                            <td><a href="/another-missing" class="newpage">another-missing</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probeoff:unratable">Probe Unratable</a></td>
+                            <td><a href="/wanted:gamma" class="newpage">wanted:gamma</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/component:_template" class="newpage">component:_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/_template" class="newpage">_template</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:page-tags" class="newpage">system:page-tags</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/wiki-syntax-guide">wiki-syntax-guide</a></td>
+                            <td><a href="/system:recent-changes" class="newpage">system:recent-changes</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== tags-on-the-source
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;tags&quot;: &quot;alpha&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/wanted:beta" class="newpage">wanted:beta</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:quarter">Probe Quarter</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-one" class="newpage">probe:no-such-one</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/probe:no-such-two" class="newpage">probe:no-such-two</a></td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td><a href="/probestars:unrated">Probe Unrated</a></td>
+                            <td><a href="/wanted:alpha" class="newpage">wanted:alpha</a></td>
+                        </tr>
+
+                        
+                    </tbody>
+                </table>
+                
+                </div>
+=== unparsable-source-filter
+<div class="w-wanted-pages"
+                data-wanted-pages-path-params="{}"
+                data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;rating&quot;: &quot;junk&quot;}"
+                data-wanted-pages-page-id="main">
+                
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        
+                    </tbody>
+                </table>
+                
+                </div>

@@ -1,0 +1,139 @@
+[
+  {
+    "name": "bare"
+  },
+  {
+    "name": "every-category",
+    "params": {
+      "category": "*"
+    }
+  },
+  {
+    "name": "category-from",
+    "params": {
+      "category_from": "probestars"
+    }
+  },
+  {
+    "name": "category-from-two",
+    "params": {
+      "category_from": "probestars, probeoff"
+    }
+  },
+  {
+    "name": "category-from-default",
+    "params": {
+      "category_from": "_default"
+    }
+  },
+  {
+    "name": "category-from-empty",
+    "params": {
+      "category_from": "nosuchcategory"
+    }
+  },
+  {
+    "name": "category-to",
+    "params": {
+      "category": "*",
+      "category_to": "wanted"
+    }
+  },
+  {
+    "name": "category-to-default",
+    "params": {
+      "category": "*",
+      "category_to": "_default"
+    }
+  },
+  {
+    "name": "category-to-not",
+    "params": {
+      "category": "*",
+      "category_to": "-wanted"
+    }
+  },
+  {
+    "name": "category-to-two",
+    "params": {
+      "category": "*",
+      "category_to": "wanted, probe"
+    }
+  },
+  {
+    "name": "category-both",
+    "params": {
+      "category_from": "probestars",
+      "category_to": "wanted"
+    }
+  },
+  {
+    "name": "per-page",
+    "params": {
+      "category": "*",
+      "perpage": "3"
+    }
+  },
+  {
+    "name": "per-page-second",
+    "params": {
+      "category": "*",
+      "perpage": "3"
+    },
+    "path": {
+      "p": "2"
+    }
+  },
+  {
+    "name": "per-page-past-the-end",
+    "params": {
+      "category": "*",
+      "perpage": "3"
+    },
+    "path": {
+      "p": "99"
+    }
+  },
+  {
+    "name": "per-page-one",
+    "params": {
+      "category": "*",
+      "perpage": "1"
+    }
+  },
+  {
+    "name": "per-page-junk",
+    "params": {
+      "category": "*",
+      "perpage": "many"
+    }
+  },
+  {
+    "name": "limit-is-dropped",
+    "params": {
+      "category": "*",
+      "limit": "1"
+    }
+  },
+  {
+    "name": "offset-is-dropped",
+    "params": {
+      "category": "*",
+      "offset": "5"
+    }
+  },
+  {
+    "name": "tags-on-the-source",
+    "params": {
+      "category": "*",
+      "tags": "alpha"
+    }
+  },
+  {
+    "name": "unparsable-source-filter",
+    "params": {
+      "category": "*",
+      "rating": "junk"
+    }
+  }
+]

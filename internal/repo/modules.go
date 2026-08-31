@@ -104,6 +104,14 @@ func (m moduleData) TagCloud(limit *int) ([]db.CloudTag, error) {
 	return m.repo.db.TagCloud(m.repo.ctx, limit)
 }
 
+func (m moduleData) WantedLinks(f db.WantedFilter, offset, limit int) ([]db.WantedLink, error) {
+	return m.repo.db.WantedLinks(m.repo.ctx, f, offset, limit)
+}
+
+func (m moduleData) WantedLinkCount(f db.WantedFilter) (int, error) {
+	return m.repo.db.WantedLinkCount(m.repo.ctx, f)
+}
+
 func (m moduleData) RenderUser(u db.User) (string, error) {
 	return m.repo.renderUser(&u, printuser.Options{Avatar: true, Hover: true})
 }

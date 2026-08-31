@@ -107,6 +107,8 @@
   "module-tagcloud-color": "无效的颜色：{color}",
   "module-tagcloud-font-size": "无效的字体大小：{size}",
   "module-tagcloud-units": "最大和最小字体大小的单位不同：{min} 和 {max}",
+  "module-wantedpages-missing": "缺失的链接",
+  "module-wantedpages-source": "源页面",
   "module-unknown": "模块 '{name}' 不存在",
   "page.date-format": "{month}月{day}日, {year}年 {hour}:{minute}",
   "page.date-format-js": "%b%e日, %Y年 %H:%M (%O)",
