@@ -20,15 +20,6 @@
 .printuser.avatarhover img.small {
   padding: 0;
   border: 1px solid #777;
-  transition: all 0.25s ease;
-  pointer-events: none;
-}
-
-.printuser.avatarhover a:hover img.small,
-.printuser span:hover img.small {
-  transform: scale(4);
-  z-index: 100;
-  position: relative;
 }
 
 .printuser {
