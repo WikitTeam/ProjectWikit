@@ -96,6 +96,14 @@ func (m moduleData) ArticleByID(id int64) (*db.Article, error) {
 	return m.repo.db.ArticleByID(m.repo.ctx, id)
 }
 
+func (m moduleData) ArticleAuthors(articleID int64) ([]db.User, error) {
+	return m.repo.db.ArticleAuthors(m.repo.ctx, articleID)
+}
+
+func (m moduleData) RenderUser(u db.User) (string, error) {
+	return m.repo.renderUser(&u, printuser.Options{Avatar: true, Hover: true})
+}
+
 // A post with no author is one the site itself made, which is what the system
 // chip stands for.
 func (m moduleData) RenderUserByID(id *int64) (string, error) {

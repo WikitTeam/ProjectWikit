@@ -1,0 +1,133 @@
+[
+  {
+    "name": "anonymous-without-always",
+    "viewer": "",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%"
+  },
+  {
+    "name": "anonymous-always",
+    "viewer": "",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%",
+    "params": {
+      "always": "yes"
+    }
+  },
+  {
+    "name": "anonymous-named",
+    "viewer": "",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%",
+    "params": {
+      "always": "yes",
+      "anonname": "Guest"
+    }
+  },
+  {
+    "name": "anonymous-named-empty",
+    "viewer": "",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%",
+    "params": {
+      "always": "yes",
+      "anonname": ""
+    }
+  },
+  {
+    "name": "viewer-with-display-name",
+    "viewer": "probe-author",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%"
+  },
+  {
+    "name": "viewer-without-display-name",
+    "viewer": "probevoter",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%"
+  },
+  {
+    "name": "viewer-from-wikidot",
+    "viewer": "576c0df3-8a28-4468-9770-ede851d88c67",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%"
+  },
+  {
+    "name": "viewer-with-always-off",
+    "viewer": "probe-author",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%",
+    "params": {
+      "always": "no"
+    }
+  },
+  {
+    "name": "uppercase-name",
+    "viewer": "probe-author",
+    "body": "%%TITLE%%"
+  },
+  {
+    "name": "unknown-name",
+    "viewer": "probe-author",
+    "body": "%%nope%%"
+  },
+  {
+    "name": "empty-body",
+    "viewer": "probe-author",
+    "body": ""
+  },
+  {
+    "name": "authors",
+    "viewer": "",
+    "body": "%%author%%",
+    "params": {
+      "authors": "yes"
+    },
+    "article": "probe:full"
+  },
+  {
+    "name": "authors-linked",
+    "viewer": "",
+    "body": "%%author_linked%%",
+    "params": {
+      "authors": "yes"
+    },
+    "article": "probe:full"
+  },
+  {
+    "name": "authors-both",
+    "viewer": "",
+    "body": "%%author%% is %%author_linked%%",
+    "params": {
+      "authors": "yes"
+    },
+    "article": "probe:full"
+  },
+  {
+    "name": "authors-wikitext",
+    "viewer": "",
+    "body": "**%%author%%**",
+    "params": {
+      "authors": "yes"
+    },
+    "article": "probe:full"
+  },
+  {
+    "name": "authors-none",
+    "viewer": "",
+    "body": "%%author%%",
+    "params": {
+      "authors": "yes"
+    },
+    "article": "probe:bare"
+  },
+  {
+    "name": "authors-while-signed-in",
+    "viewer": "probevoter",
+    "body": "%%author%%",
+    "params": {
+      "authors": "yes"
+    },
+    "article": "probe:full"
+  },
+  {
+    "name": "authors-off",
+    "viewer": "probe-author",
+    "body": "%%number%% %%title%% %%name%% %%avatar%% %%is_authenticated%%",
+    "params": {
+      "authors": "no"
+    }
+  }
+]

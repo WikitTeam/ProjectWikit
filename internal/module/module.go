@@ -35,7 +35,9 @@ type Data interface {
 	CountArticles(f db.ListFilter, offset int, limit *int) (int, error)
 
 	ArticleByID(id int64) (*db.Article, error)
+	ArticleAuthors(articleID int64) ([]db.User, error)
 	RenderUserByID(id *int64) (string, error)
+	RenderUser(u db.User) (string, error)
 
 	SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error)
 	SiteChangeCount(f db.SiteChangeFilter) (int, error)
