@@ -268,3 +268,15 @@ func (m moduleData) UserIDsByName(name string, partial bool) ([]int64, error) {
 func (m moduleData) UsersByIDs(ids []int64) ([]db.User, error) {
 	return m.repo.db.UsersByIDs(m.repo.ctx, ids)
 }
+
+func (m moduleData) Members(roleID *int64, offset, limit int) ([]db.Member, error) {
+	return m.repo.db.Members(m.repo.ctx, roleID, offset, limit)
+}
+
+func (m moduleData) MemberCount(roleID *int64) (int, error) {
+	return m.repo.db.MemberCount(m.repo.ctx, roleID)
+}
+
+func (m moduleData) RoleByRef(ref string) (*roles.Role, error) {
+	return m.repo.db.RoleByRef(m.repo.ctx, ref)
+}

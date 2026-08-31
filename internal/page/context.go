@@ -15,6 +15,13 @@ type Context struct {
 	PathParams    PathParams
 	User          *db.User
 
+	// The handler owns this because it is the only layer that can also plant
+	// the cookie a form needs.
+	CSRF string
+
+	// An empty list means every module, which is what an article gets.
+	OnlyModules []string
+
 	Title      string
 	Status     int
 	RedirectTo string
@@ -50,6 +57,8 @@ func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams PathP
 	clone.Status = c.Status
 	clone.RedirectTo = c.RedirectTo
 	clone.Title = c.Title
+	clone.CSRF = c.CSRF
+	clone.OnlyModules = c.OnlyModules
 	return clone
 }
 

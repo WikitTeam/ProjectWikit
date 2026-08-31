@@ -3,6 +3,7 @@
 package module
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -73,6 +74,9 @@ type Data interface {
 	UsernamesLower() (map[string]bool, error)
 	VoteByUser(articleID int64, userID *int64) (float64, bool, error)
 	UserByID(id int64) (*db.User, error)
+	Members(roleID *int64, offset, limit int) ([]db.Member, error)
+	MemberCount(roleID *int64) (int, error)
+	RoleByRef(ref string) (*roles.Role, error)
 	ArticleHasAuthor(articleID, userID int64) (bool, error)
 	RolesByUser(id int64) ([]roles.Role, error)
 
@@ -136,13 +140,22 @@ func Render(env Env, name string, params map[string]string, body string) (string
 		return "", &Error{Message: env.Text("module-disabled")}
 	}
 	info, ok := Lookup(name)
-	if ok && !info.Removed {
+	if ok && !info.Removed && allowed(env.Page, info.Name) {
 		if render, ok := renderers[info.Name]; ok {
 			env.Name = name
 			return render(env, params, body)
 		}
 	}
 	return "", &Error{Message: env.Text("module-unknown", "name", name)}
+}
+
+// A render that narrowed the list answers for the rest the way it answers for
+// a name nobody knows, so a page cannot tell a blocked module from a typo.
+func allowed(pc *page.Context, name string) bool {
+	if pc == nil || len(pc.OnlyModules) == 0 {
+		return true
+	}
+	return slices.Contains(pc.OnlyModules, name)
 }
 
 // BoolParam is get_boolean_param, where anything the list does not name reads
@@ -152,11 +165,20 @@ func BoolParam(params map[string]string, key string, def bool) bool {
 	if !ok {
 		return def
 	}
-	switch strings.ToLower(value) {
-	case "true", "t", "1", "yes":
-		return true
-	case "false", "f", "0", "no":
-		return false
+	if parsed, ok := ParseBool(value); ok {
+		return parsed
 	}
 	return def
+}
+
+// Callers have to tell a switch from a string, since one parameter can carry
+// either.
+func ParseBool(value string) (parsed, ok bool) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "true", "t", "1", "yes":
+		return true, true
+	case "false", "f", "0", "no":
+		return false, true
+	}
+	return false, false
 }
