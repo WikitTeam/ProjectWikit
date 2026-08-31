@@ -1,15 +1,15 @@
 """Dump the same corpus with Python's own json.dumps.
 
-    PYJSON_CORPUS="$(cat internal/pyjson/testdata/pyjson_corpus.json)" \
-        python internal/pyjson/testdata/oracle_pyjson.py > pyjson.python.golden
+    WIKIJSON_CORPUS="$(cat internal/wikijson/testdata/wikijson_corpus.json)" \
+        python internal/wikijson/testdata/oracle_wikijson.py > wikijson.python.golden
 
 It needs no Django, so a host Python does. To check the version the server runs:
 
-    PYJSON_CORPUS="$(cat internal/pyjson/testdata/pyjson_corpus.json)" \
-        docker compose exec -T -e PYJSON_CORPUS web python \
-        < internal/pyjson/testdata/oracle_pyjson.py
+    WIKIJSON_CORPUS="$(cat internal/wikijson/testdata/wikijson_corpus.json)" \
+        docker compose exec -T -e WIKIJSON_CORPUS web python \
+        < internal/wikijson/testdata/oracle_wikijson.py
 
-Then compare with internal/pyjson/testdata/pyjson.golden. Each corpus entry is a
+Then compare with internal/wikijson/testdata/wikijson.golden. Each corpus entry is a
 JSON document; json.loads keeps the key order and tells an int from a float,
 which is what the comparison is about.
 """
@@ -19,7 +19,7 @@ import json
 import os
 import sys
 
-corpus = os.environ.get('PYJSON_CORPUS')
+corpus = os.environ.get('WIKIJSON_CORPUS')
 if not corpus:
     raise SystemExit(__doc__)
 

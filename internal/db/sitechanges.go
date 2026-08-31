@@ -150,8 +150,8 @@ SELECT id
 FROM web_user
 WHERE username = $1 OR wikidot_username = $1`)
 
-// Django uppercases both sides rather than leaning on citext, and a wiki that
-// renamed the column to text would silently start matching case-sensitively.
+// Uppercasing both sides rather than leaning on citext, so a column changed to
+// text would not silently start matching case-sensitively.
 var qUserIDsByNamePart = register("UserIDsByNamePart", `
 SELECT id
 FROM web_user

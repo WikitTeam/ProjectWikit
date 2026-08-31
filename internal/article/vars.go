@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/page"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 const (
@@ -24,19 +24,18 @@ func ThisPage(params Params, canonicalURL string) func(string) (string, bool) {
 			param, ok := params.Lookup(lookupKey(name, prefixExpr))
 			switch {
 			case !ok:
-				return pyjson.String(literal(name)), true
+				return wikijson.String(literal(name)), true
 			case param.Bare:
 				return "null", true
 			}
-			return pyjson.String(param.Value), true
+			return wikijson.String(param.Value), true
 
 		case strings.HasPrefix(name, prefixURL):
 			param, ok := params.Lookup(lookupKey(name, prefixURL))
 			if !ok {
 				return page.QuoteAll(literal(name)), true
 			}
-			// A bare key crashes Django here, and the empty string is what the
-			// rest of this family answers for one.
+			// The empty string is what the rest of this family answers for a bare key.
 			return page.QuoteAll(param.Value), true
 
 		case strings.HasPrefix(name, prefixPath):

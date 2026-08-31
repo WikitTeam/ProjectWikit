@@ -77,8 +77,6 @@ func BasePath(fullName string, path page.PathParams) string {
 	return out
 }
 
-// A key that arrived without a value is spelled the way Python spells the
-// None it stores for one.
 func pathValue(param page.PathParam) string {
 	if param.Bare {
 		return "None"

@@ -16,9 +16,8 @@ JOIN web_user_roles ur ON ur.role_id = r.id
 WHERE ur.user_id = $1
 ORDER BY r.index, r.id`)
 
-// RolesByUser returns every role of one user, ordered the way the name tail
-// and showcase queries both consume it. The tie-break on id has no counterpart
-// in Django, where index is rewritten to be unique on every role save.
+// Ordered the way the name tail and showcase queries both consume it. The tie-
+// break on id covers the rows whose index is not unique.
 func (d *DB) RolesByUser(ctx context.Context, userID int64) ([]roles.Role, error) {
 	rows, err := d.pool.Query(ctx, qRolesByUser, userID)
 	if err != nil {

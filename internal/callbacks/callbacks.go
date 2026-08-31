@@ -48,8 +48,7 @@ type Callbacks struct {
 var _ renderer.Callbacks = (*Callbacks)(nil)
 
 // SetPageVars names the page whose %%this|x%% an included page reaches. Without
-// it every such name is left standing, which is what a render with no article
-// of its own gets in Django too.
+// it every such name is left standing.
 func (c *Callbacks) SetPageVars(vars *page.Vars) { c.vars = vars }
 
 // SetContext hands the modules the page they are rendering into, which is what

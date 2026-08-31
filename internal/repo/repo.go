@@ -105,9 +105,8 @@ func (r *Repository) RenderModule(pc *page.Context, name string, params map[stri
 	return html, err
 }
 
-// RenderUser mirrors the prefix handling in renderer/__init__.py: external:
-// never touches the database, wd: may only ever match an imported account, and
-// a bare name is matched against both name columns.
+// The external: prefix never touches the database, wd: may only ever match an
+// imported account, and a bare name is matched against both name columns.
 func (r *Repository) RenderUser(username string, avatar bool) (string, error) {
 	opts := printuser.Options{Avatar: avatar, Hover: true}
 

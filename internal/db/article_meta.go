@@ -46,8 +46,8 @@ func (d *DB) LatestSource(ctx context.Context, articleID int64) (string, error) 
 	return source, nil
 }
 
-// The join table carries no ordering in Django, so the author order a page
-// shows is whatever Postgres returns; ordering by the link row freezes it.
+// The join table carries no ordering of its own, so ordering by the link row is
+// what freezes the author order a page shows.
 var qArticleAuthors = register("ArticleAuthors", `
 SELECT `+prefixed("u", userColumns)+`
 FROM web_article_authors link

@@ -48,8 +48,8 @@ func renderRate(env module.Env, _ map[string]string, _ string) (string, error) {
 		return upDownWidget(env, article.FullName(), rating), nil
 	}
 
-	// Django only reaches the vote lookup for a signed-in reader, so the
-	// anonymous votes a null user id would match are never asked about.
+	// The vote lookup is only reached for a signed-in reader, so the anonymous
+	// votes a null user id would match are never asked about.
 	voted := false
 	if env.User != nil {
 		voted, err = env.Data.HasVoted(article.ID, &env.User.ID)

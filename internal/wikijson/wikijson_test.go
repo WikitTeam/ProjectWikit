@@ -1,4 +1,4 @@
-package pyjson
+package wikijson
 
 import (
 	"encoding/json"
@@ -14,8 +14,8 @@ import (
 var update = flag.Bool("update", false, "rewrite the golden file and the corpus the oracle reads")
 
 const (
-	goldenPath = "testdata/pyjson.golden"
-	corpusPath = "testdata/pyjson_corpus.json"
+	goldenPath = "testdata/wikijson.golden"
+	corpusPath = "testdata/wikijson_corpus.json"
 )
 
 func escaped(r rune) string { return fmt.Sprintf(`\u%04x`, r) }

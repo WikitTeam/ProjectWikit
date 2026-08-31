@@ -102,8 +102,6 @@ func (h *Handler) load(req *request) error {
 	return nil
 }
 
-// permsObject reports checked=false when neither the page nor a row for its
-// category exists, where Django asks nothing and lets the response be a 404.
 func (h *Handler) permsObject(req *request, perm *repo.Perms) (*perms.Object, bool, error) {
 	if req.article != nil {
 		object, err := perm.Article(req.article, req.user)
@@ -121,8 +119,8 @@ func (h *Handler) permsObject(req *request, perm *repo.Perms) (*perms.Object, bo
 	return object, true, err
 }
 
-// Django creates the thread on the way past. This only reads, so a page nobody
-// has commented on stays where it is.
+// This only reads, so a page nobody has commented on gets no thread written for
+// it.
 func (h *Handler) commentsRedirect(req *request) (string, error) {
 	info, err := h.deps.DB.CommentInfo(req.ctx, req.article.ID)
 	if err != nil {

@@ -15,8 +15,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
-	"github.com/WikitTeam/ProjectWikit/internal/pynum"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
 func init() { module.Register("forumthread", renderForumThread) }
@@ -112,8 +112,6 @@ func renderForumThread(env module.Env, params map[string]string, _ string) (stri
 	return forumThreadHTML(env, view), nil
 }
 
-// Python rebinds t to the parsed number before the message reads it, so a
-// well-formed id is echoed back normalized and a missing one prints as None.
 func forumThreadOf(env module.Env, path page.PathParams) (*db.ForumThread, error) {
 	shown := "None"
 	if param, ok := path.Lookup("t"); ok {
@@ -124,7 +122,7 @@ func forumThreadOf(env module.Env, path page.PathParams) (*db.ForumThread, error
 		return &module.Error{Message: env.Text("module-forumthread-not-found", "name", shown)}
 	}
 
-	id, err := pynum.Int(shown)
+	id, err := wikinum.Int(shown)
 	if err != nil {
 		return nil, notFound()
 	}
@@ -205,7 +203,7 @@ func forumThreadPosts(env module.Env, view *forumThreadView, path page.PathParam
 	view.total = total
 
 	current := 1
-	if n, err := pynum.Int(path.Get("p")); err == nil {
+	if n, err := wikinum.Int(path.Get("p")); err == nil {
 		current = n
 	} else if n, err := forumThreadPageOfPost(env, view.thread.ID, path); err != nil {
 		return err
@@ -249,7 +247,7 @@ func forumThreadPageOfPost(env module.Env, threadID int64, path page.PathParams)
 	if !ok || param.Bare {
 		return 1, nil
 	}
-	id, err := pynum.Int(param.Value)
+	id, err := wikinum.Int(param.Value)
 	if err != nil {
 		return 0, forumFailed(env)
 	}
@@ -358,8 +356,6 @@ func forumThreadPostInfo(env module.Env, view *forumThreadView, posts []db.Forum
 	return out, nil
 }
 
-// Django compares two model rows, and two absent authors compare equal, so a
-// thread nobody owns marks every unowned post as its opener.
 func samePerson(a, b *int64) bool {
 	if a == nil || b == nil {
 		return a == nil && b == nil
@@ -386,13 +382,13 @@ func forumPostOptions(env module.Env, view *forumThreadView, post db.ForumThread
 		return "", err
 	}
 
-	return pyjson.Marshal(pyjson.Object{
+	return wikijson.Marshal(wikijson.Object{
 		{Key: "threadId", Value: view.thread.ID},
 		{Key: "threadName", Value: view.name},
 		{Key: "postId", Value: post.ID},
 		{Key: "postName", Value: post.Name},
 		{Key: "hasRevisions", Value: !post.CreatedAt.Equal(post.UpdatedAt)},
-		{Key: "lastRevisionDate", Value: pyISOFormat(post.UpdatedAt)},
+		{Key: "lastRevisionDate", Value: isoTimestamp(post.UpdatedAt)},
 		{Key: "lastRevisionAuthor", Value: reviser},
 		{Key: "user", Value: viewer},
 		{Key: "canReply", Value: threadGranted.Has(forumReplyPerm(view))},
@@ -417,7 +413,7 @@ func forumThreadConfigs(env module.Env, view *forumThreadView, params map[string
 	if err != nil {
 		return err
 	}
-	if view.newPost, err = pyjson.Marshal(pyjson.Object{
+	if view.newPost, err = wikijson.Marshal(wikijson.Object{
 		{Key: "threadId", Value: view.thread.ID},
 		{Key: "threadName", Value: view.name},
 		{Key: "user", Value: viewer},
@@ -434,7 +430,7 @@ func forumThreadConfigs(env module.Env, view *forumThreadView, params map[string
 	if view.thread.CategoryID != nil {
 		categoryID = *view.thread.CategoryID
 	}
-	if view.threadOptions, err = pyjson.Marshal(pyjson.Object{
+	if view.threadOptions, err = wikijson.Marshal(wikijson.Object{
 		{Key: "threadId", Value: view.thread.ID},
 		{Key: "threadName", Value: view.name},
 		{Key: "threadDescription", Value: view.thread.Description},
@@ -454,17 +450,17 @@ func forumThreadConfigs(env module.Env, view *forumThreadView, params map[string
 	if env.Page != nil {
 		path = env.Page.PathParams
 	}
-	if view.pathParams, err = pyjson.Marshal(pathParamsObject(path)); err != nil {
+	if view.pathParams, err = wikijson.Marshal(pathParamsObject(path)); err != nil {
 		return err
 	}
-	view.params, err = pyjson.Marshal(paramsObject(params, nil))
+	view.params, err = wikijson.Marshal(paramsObject(params, nil))
 	return err
 }
 
-// The section test asks about the thread rather than the section, which is what
-// Python passes, so a section hidden from users never drops out here.
-func forumThreadMoveTo(env module.Env, subject perms.Subject, granted perms.Set) (pyjson.Array, error) {
-	out := pyjson.Array{}
+// The section test asks about the thread rather than the section, so a section
+// hidden from users never drops out here.
+func forumThreadMoveTo(env module.Env, subject perms.Subject, granted perms.Set) (wikijson.Array, error) {
+	out := wikijson.Array{}
 	if !granted.Has(perms.ViewForumSections) {
 		return out, nil
 	}
@@ -481,12 +477,12 @@ func forumThreadMoveTo(env module.Env, subject perms.Subject, granted perms.Set)
 		return nil, err
 	}
 	for _, section := range sections {
-		var under pyjson.Array
+		var under wikijson.Array
 		for _, category := range categories {
 			if category.SectionID != section.ID {
 				continue
 			}
-			under = append(under, pyjson.Object{
+			under = append(under, wikijson.Object{
 				{Key: "name", Value: "  " + category.Name},
 				{Key: "canMove", Value: !category.IsForComments},
 				{Key: "id", Value: category.ID},
@@ -495,7 +491,7 @@ func forumThreadMoveTo(env module.Env, subject perms.Subject, granted perms.Set)
 		if len(under) == 0 {
 			continue
 		}
-		out = append(out, pyjson.Object{
+		out = append(out, wikijson.Object{
 			{Key: "name", Value: section.Name},
 			{Key: "canMove", Value: false},
 			{Key: "id", Value: nil},
@@ -505,14 +501,14 @@ func forumThreadMoveTo(env module.Env, subject perms.Subject, granted perms.Set)
 	return out, nil
 }
 
-func forumViewerJSON(env module.Env) (pyjson.Object, error) {
+func forumViewerJSON(env module.Env) (wikijson.Object, error) {
 	if env.User == nil {
 		return pageconfig.AnonymousUserJSON(env.Loc, true).Object(), nil
 	}
 	return forumUserJSON(env, &env.User.ID)
 }
 
-func forumUserJSON(env module.Env, id *int64) (pyjson.Object, error) {
+func forumUserJSON(env module.Env, id *int64) (wikijson.Object, error) {
 	if id == nil {
 		return pageconfig.SystemUserJSON().Object(), nil
 	}
@@ -555,18 +551,18 @@ func forumVoteHTML(env module.Env, mode string, rate float64, voted bool) string
 	var shown string
 	switch mode {
 	case page.RatingModeUpDown:
-		shown = pySignedInt(rate)
+		shown = signedInt(rate)
 	case page.RatingModeStars:
 		shown = strconv.FormatFloat(rate, 'f', 1, 64)
 	default:
 		shown = strconv.FormatInt(int64(rate), 10)
 	}
-	// Python opens two spans here and closes one. Closing the outer one would
-	// change the DOM of every post that carries a rating.
+	// Two spans open here and one closes. Closing the outer one would change
+	// the DOM of every post that carries a rating.
 	return `<span class="vote"` + title + `><span class="rate">` + escape.HTML(shown) + `</span>`
 }
 
-func pySignedInt(f float64) string {
+func signedInt(f float64) string {
 	n := int64(f)
 	if n < 0 {
 		return strconv.FormatInt(n, 10)
@@ -574,9 +570,9 @@ func pySignedInt(f float64) string {
 	return "+" + strconv.FormatInt(n, 10)
 }
 
-// Python drops the fractional part when it is zero, so the two shapes are not
+// The fractional part is dropped when it is zero, so the two shapes are not
 // interchangeable.
-func pyISOFormat(t time.Time) string {
+func isoTimestamp(t time.Time) string {
 	t = t.UTC()
 	if t.Nanosecond() == 0 {
 		return t.Format("2006-01-02T15:04:05-07:00")

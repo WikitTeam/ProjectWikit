@@ -1,11 +1,11 @@
-// Package escape reproduces the escaping Django and Python apply on their way
-// into a response.
+// Package escape holds the HTML and URL escapes these pages use, which the
+// standard library spells differently.
 package escape
 
 import "strings"
 
-// Django writes ' as &#x27; where html.EscapeString writes &#39;, and the
-// acceptance test for the whole renderer is byte-identical output.
+// These pages spell ' as &#x27; where html.EscapeString writes &#39;, and the
+// whole renderer is checked on byte-identical output.
 var replacer = strings.NewReplacer(
 	"&", "&amp;",
 	"<", "&lt;",

@@ -43,8 +43,8 @@ SELECT t.id, (SELECT count(*) FROM web_forumpost p WHERE p.thread_id = t.id)
 FROM web_forumthread t
 WHERE t.article_id = $1`)
 
-// CommentInfo reports the zero value for a page whose thread has never been
-// created. Django creates one here instead, which is a write on a read.
+// A page whose thread has never been created reports the zero value rather than
+// having one written for it on a read.
 func (d *DB) CommentInfo(ctx context.Context, articleID int64) (CommentInfo, error) {
 	var info CommentInfo
 	err := d.pool.QueryRow(ctx, qCommentInfo, articleID).Scan(&info.ThreadID, &info.Count)

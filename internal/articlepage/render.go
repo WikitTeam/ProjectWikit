@@ -15,12 +15,12 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 const (
@@ -164,7 +164,7 @@ func (h *Handler) source(req *request) (string, error) {
 }
 
 func (h *Handler) missingBody(req *request) (body, error) {
-	options, err := pyjson.Marshal(pyjson.Object{
+	options, err := wikijson.Marshal(wikijson.Object{
 		{Key: "page_id", Value: req.name},
 		{Key: "pathParams", Value: pathParams(req.params)},
 	})
@@ -316,14 +316,14 @@ func excerpt(text string) string {
 	return joined
 }
 
-func pathParams(params article.Params) pyjson.Object {
-	out := make(pyjson.Object, 0, len(params))
+func pathParams(params article.Params) wikijson.Object {
+	out := make(wikijson.Object, 0, len(params))
 	for _, param := range params {
 		var value any
 		if !param.Bare {
 			value = param.Value
 		}
-		out = append(out, pyjson.Field{Key: param.Key, Value: value})
+		out = append(out, wikijson.Field{Key: param.Key, Value: value})
 	}
 	return out
 }
@@ -534,7 +534,7 @@ func (h *Handler) rating(req *request) (page.Rating, error) {
 }
 
 // watching asks about the page and about the thread the path names. A t that is
-// not a number leaves the second question unasked, where Django raises.
+// not a number leaves the second question unasked.
 func (h *Handler) watching(req *request, threadID int64) (bool, error) {
 	if req.user == nil {
 		return false, nil

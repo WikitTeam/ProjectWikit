@@ -171,8 +171,6 @@ func serve(args []string) error {
 	return srv.ListenAndServe()
 }
 
-// listenPort feeds the host lookup its second candidate, the way Django reads
-// SERVER_PORT.
 func listenPort(addr string) string {
 	_, port, err := net.SplitHostPort(addr)
 	if err != nil {

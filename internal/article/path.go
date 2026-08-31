@@ -73,8 +73,6 @@ func rewriteForum(path string) string {
 	return path
 }
 
-// put keeps the position of the first occurrence, the way assigning to a
-// Python dict does.
 // Encode writes the parameters back as a path, sorted by key. Only the values
 // are escaped, and only the first bare key survives.
 func Encode(p Params) string {
@@ -115,9 +113,8 @@ func RedirectTarget(name string, params Params) (target string, ok bool) {
 	return iriToURI("/" + normalized + Encode(params)), true
 }
 
-// iriSafe is what Django leaves alone when it writes a Location, on top of the
-// unreserved characters every escaper keeps. It spares the percent sign, so
-// text escaped once does not grow a second time.
+// iriSafe spares the percent sign on top of the unreserved characters, so text
+// escaped once does not grow a second time.
 const iriSafe = "/#%[]=:;$&()+,!*?@'"
 
 func iriToURI(s string) string {

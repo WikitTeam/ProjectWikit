@@ -4,7 +4,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/article"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 type Options struct {
@@ -23,8 +23,8 @@ type Options struct {
 	Preferences   Preferences
 }
 
-// Preferences is every preference the registry carries, which today is one.
-// The frontend reads them under the section__name key Django writes.
+// Preferences is every preference the registry carries, which today is one. The
+// frontend reads them under the section__name key.
 type Preferences struct {
 	AdvancedSourceEditor bool
 }
@@ -35,12 +35,10 @@ const (
 	preferenceKey                  = PreferenceSection + "__" + PreferenceAdvancedSourceEditor
 )
 
-// PreferenceEnabled reads the value Django stores, which is the Python repr of
-// the boolean rather than a JSON one.
 func PreferenceEnabled(raw string) bool { return raw == "True" }
 
 func (o Options) JSON() (string, error) {
-	return pyjson.Marshal(pyjson.Object{
+	return wikijson.Marshal(wikijson.Object{
 		{Key: "optionsEnabled", Value: o.HasArticle},
 		{Key: "editable", Value: o.Perms.Has(perms.EditArticles)},
 		{Key: "lockable", Value: o.Perms.Has(perms.LockArticles)},
@@ -76,21 +74,21 @@ func (o Options) commentThread() any {
 	return "/" + o.NormalizedName + "/comments/show"
 }
 
-func (o Options) preferences() pyjson.Object {
+func (o Options) preferences() wikijson.Object {
 	if o.Anonymous {
-		return pyjson.Object{}
+		return wikijson.Object{}
 	}
-	return pyjson.Object{{Key: preferenceKey, Value: o.Preferences.AdvancedSourceEditor}}
+	return wikijson.Object{{Key: preferenceKey, Value: o.Preferences.AdvancedSourceEditor}}
 }
 
-func pathParams(params article.Params) pyjson.Object {
-	out := make(pyjson.Object, 0, len(params))
+func pathParams(params article.Params) wikijson.Object {
+	out := make(wikijson.Object, 0, len(params))
 	for _, param := range params {
 		var value any
 		if !param.Bare {
 			value = param.Value
 		}
-		out = append(out, pyjson.Field{Key: param.Key, Value: value})
+		out = append(out, wikijson.Field{Key: param.Key, Value: value})
 	}
 	return out
 }

@@ -24,7 +24,8 @@ const (
 var files embed.FS
 
 // text/template rather than html/template because Go's escaper picks and spells
-// different characters than Django's, and this output is compared byte for byte.
+// different characters than these pages do, and the output is compared byte for
+// byte.
 var tmpl = template.Must(template.New("shell").Funcs(template.FuncMap{
 	"esc":   escape.HTML,
 	"escjs": escape.JS,

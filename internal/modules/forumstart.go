@@ -11,7 +11,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/pynum"
+	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
 func init() { module.Register("forumstart", renderForumStart) }
@@ -60,8 +60,6 @@ func renderForumStart(env module.Env, _ map[string]string, _ string) (string, er
 		showURL = "/forum/s-" + strconv.FormatInt(only.ID, 10) + "/hidden/show"
 	}
 
-	// Python's loop variable overwrites the section the URL named, so the
-	// breadcrumbs turn up on any listing that has a section in it at all.
 	var crumb *db.ForumSection
 	if len(rows) != 0 {
 		crumb = &rows[0]
@@ -93,7 +91,7 @@ func forumStartSections(env module.Env, path page.PathParams) ([]db.ForumSection
 		return rows, nil, nil
 	}
 
-	id, err := pynum.Int(param.Value)
+	id, err := wikinum.Int(param.Value)
 	if err != nil {
 		return nil, nil, forumFailed(env)
 	}
@@ -118,8 +116,8 @@ func forumStartItems(env module.Env, rows []db.ForumSection) ([]forumStartSectio
 	if err != nil {
 		return nil, err
 	}
-	// Django asks this once per category, but a forum category carries no
-	// overrides of its own, so the answer cannot differ between them.
+	// A forum category carries no overrides of its own, so the answer cannot
+	// differ between them.
 	viewCategories := perms.Resolve(subject, nil).Has(perms.ViewForumCategories)
 
 	var out []forumStartSection

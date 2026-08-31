@@ -64,8 +64,8 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 	return subject, nil
 }
 
-// Article is the object side for a page that exists. The overrides come from
-// its category, which is the only step Django takes before the page's own.
+// Article is the object side for a page that exists. Its category is the only
+// step taken before the page's own overrides.
 func (p *Perms) Article(a *db.Article, u *db.User) (*perms.Object, error) {
 	overrides, err := p.db.CategoryOverrides(p.ctx, a.Category)
 	if err != nil {

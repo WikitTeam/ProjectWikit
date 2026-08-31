@@ -10,8 +10,8 @@ import (
 type Owner string
 
 const (
-	OwnerGo     Owner = "go"
-	OwnerDjango Owner = "django"
+	OwnerGo       Owner = "go"
+	OwnerUpstream Owner = "upstream"
 )
 
 type Route struct {
@@ -24,13 +24,13 @@ const root = "/"
 
 var Table = []Route{
 	{Prefix: "/", Owner: OwnerGo, Label: "articles"},
-	{Prefix: "/-/", Owner: OwnerDjango, Label: "system pages"},
+	{Prefix: "/-/", Owner: OwnerUpstream, Label: "system pages"},
 	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
-	{Prefix: "/api/", Owner: OwnerDjango, Label: "API"},
+	{Prefix: "/api/", Owner: OwnerUpstream, Label: "API"},
 	{Prefix: "/local--files/", Owner: OwnerGo, Label: "site files"},
-	{Prefix: "/local--code/", Owner: OwnerDjango, Label: "code blocks"},
-	{Prefix: "/local--html/", Owner: OwnerDjango, Label: "embedded HTML"},
-	{Prefix: "/local--theme/", Owner: OwnerDjango, Label: "page theme"},
+	{Prefix: "/local--code/", Owner: OwnerUpstream, Label: "code blocks"},
+	{Prefix: "/local--html/", Owner: OwnerUpstream, Label: "embedded HTML"},
+	{Prefix: "/local--theme/", Owner: OwnerUpstream, Label: "page theme"},
 }
 
 func Validate(table []Route) error {
@@ -47,8 +47,8 @@ func Validate(table []Route) error {
 			return fmt.Errorf("duplicate route prefix %q", r.Prefix)
 		}
 		seen[r.Prefix] = true
-		if r.Owner != OwnerGo && r.Owner != OwnerDjango {
-			return fmt.Errorf("route %q owner = %q, want go or django", r.Prefix, r.Owner)
+		if r.Owner != OwnerGo && r.Owner != OwnerUpstream {
+			return fmt.Errorf("route %q owner = %q, want go or upstream", r.Prefix, r.Owner)
 		}
 		if r.Prefix == root {
 			hasRoot = true
@@ -68,23 +68,23 @@ type Mux struct {
 
 var _ http.Handler = (*Mux)(nil)
 
-func New(table []Route, django http.Handler, goHandlers map[string]http.Handler) (*Mux, error) {
+func New(table []Route, upstream http.Handler, goHandlers map[string]http.Handler) (*Mux, error) {
 	if err := Validate(table); err != nil {
 		return nil, err
 	}
-	if django == nil {
-		return nil, fmt.Errorf("django handler is nil")
+	if upstream == nil {
+		return nil, fmt.Errorf("upstream handler is nil")
 	}
 
 	handlers := make(map[string]http.Handler, len(table))
 	var fallback Route
 	for _, r := range table {
 		switch r.Owner {
-		case OwnerDjango:
+		case OwnerUpstream:
 			if _, ok := goHandlers[r.Prefix]; ok {
-				return nil, fmt.Errorf("route %q is owned by django but a Go handler is registered", r.Prefix)
+				return nil, fmt.Errorf("route %q is owned by upstream but a Go handler is registered", r.Prefix)
 			}
-			handlers[r.Prefix] = django
+			handlers[r.Prefix] = upstream
 		case OwnerGo:
 			h, ok := goHandlers[r.Prefix]
 			if !ok {

@@ -108,8 +108,8 @@ func (b *listBuilder) arg(v any) string {
 	return "$" + strconv.Itoa(len(b.args))
 }
 
-// A site that rates nothing still has to sort by something, and Django picks
-// the id.
+// A site that rates nothing still has to sort by something, so the id stands
+// in.
 func ratingExpr(mode string) string {
 	switch mode {
 	case "updown":

@@ -12,7 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/pynum"
+	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
 func init() { module.Register("forumcategory", renderForumCategory) }
@@ -90,8 +90,6 @@ func renderForumCategory(env module.Env, _ map[string]string, _ string) (string,
 	return forumCategoryHTML(env, view), nil
 }
 
-// Python rebinds c to the parsed number before the message reads it, so a
-// well-formed id is echoed back normalized and a missing one prints as None.
 func forumCategoryOf(env module.Env, path page.PathParams) (*db.ForumCategory, error) {
 	shown := "None"
 	if param, ok := path.Lookup("c"); ok {
@@ -102,7 +100,7 @@ func forumCategoryOf(env module.Env, path page.PathParams) (*db.ForumCategory, e
 		return &module.Error{Message: env.Text("module-forum-not-found", "name", shown)}
 	}
 
-	id, err := pynum.Int(shown)
+	id, err := wikinum.Int(shown)
 	if err != nil {
 		return nil, notFound()
 	}
@@ -134,7 +132,7 @@ func forumCategoryThreads(env module.Env, view *forumCategoryView, path page.Pat
 	}
 
 	page := 1
-	if n, err := pynum.Int(path.Get("p")); err == nil {
+	if n, err := wikinum.Int(path.Get("p")); err == nil {
 		page = n
 	}
 	if page < 1 {

@@ -31,9 +31,8 @@ type User struct {
 	ForumInactiveUntil *time.Time
 }
 
-// ActiveAt reproduces User.__init__, where a deadline in the future overrides
-// the stored flag in both directions: is_active is ignored whenever
-// inactive_until is set.
+// A deadline in the future overrides the stored flag in both directions, so
+// is_active is ignored whenever inactive_until is set.
 func (u *User) ActiveAt(now time.Time) bool {
 	if u.InactiveUntil == nil {
 		return u.IsActive
@@ -73,8 +72,6 @@ func firstNonEmpty(values ...string) string {
 
 const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until`
 
-// Django's QuerySet.first() falls back to ordering by primary key when the
-// queryset carries no ordering of its own, so these two are not stray sorts.
 var qUserByName = register("UserByName", `
 SELECT `+userColumns+`
 FROM web_user

@@ -8,7 +8,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 func init() { module.Register("forumnewthread", renderForumNewThread) }
@@ -51,7 +51,7 @@ func renderForumNewThread(env module.Env, _ map[string]string, _ string) (string
 	}
 
 	canonical := forumCategoryURL(category.ID, category.Name)
-	config, err := pyjson.Marshal(pyjson.Object{
+	config, err := wikijson.Marshal(wikijson.Object{
 		{Key: "categoryId", Value: category.ID},
 		{Key: "user", Value: viewer},
 		{Key: "cancelUrl", Value: canonical},
