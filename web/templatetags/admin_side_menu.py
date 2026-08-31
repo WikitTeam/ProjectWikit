@@ -24,6 +24,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': models.roles.RoleCategory},
             {'model': models.roles.Role},
             {'model': models.users.User},
+            {'model': models.invites.InviteLink},
         )),
         ('活动记录', (
             {'model': models.logs.ActionLogEntry},
@@ -46,6 +47,8 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
         )),
         ('工单管理', (
             {'model': models.reports.UserReport},
+            {'model': models.tickets.SupportTicket},
+            {'model': models.tickets.MembershipApplication},
         )),
     )
 

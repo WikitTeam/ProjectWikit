@@ -38,6 +38,25 @@ class InviteForm(forms.Form):
     roles = forms.ModelMultipleChoiceField(label='用户组权限', queryset=Role.objects.exclude(slug__in=['everyone', 'registered']), required=False)
 
 
+class ClaimLinkForm(forms.Form):
+    user = forms.ModelChoiceField(
+        label='待认领的 Wikidot 账号',
+        queryset=User.objects.none(),
+        required=True,
+    )
+    roles = forms.ModelMultipleChoiceField(
+        label='认领后获得的用户组',
+        queryset=Role.objects.exclude(slug__in=['everyone', 'registered']),
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user'].queryset = User.objects.filter(
+            type=User.UserType.Wikidot, is_active=False,
+        ).order_by('wikidot_username')
+
+
 class CreateAccountForm(forms.Form):
     username = forms.CharField(label='用户名', required=True, validators=[RegexValidator(r'^[A-Za-z0-9_-]+$', '用户名格式无效')])
     password = forms.CharField(label='密码', widget=forms.PasswordInput(), required=True)

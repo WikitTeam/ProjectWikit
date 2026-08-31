@@ -8,7 +8,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, resolve
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django import forms
@@ -19,7 +19,9 @@ from web.views.sus_users import AdminSusActivityView
 from .models import *
 from .fields import CITextField
 from .views.invite import InviteView
+from .views.invite import GenerateClaimLinkView
 from .views.invite import GenerateInviteLinkView
+from .views.invite import invite_url
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
 from .controllers import logging
@@ -202,7 +204,28 @@ class SiteForm(forms.ModelForm):
 class SiteAdmin(SingletonModelAdmin):
     form = SiteForm
     inlines = [SettingsAdmin]
-    fields = ['slug', 'title', 'headline', 'domain', 'media_domain', 'home_page', 'active_theme']
+    fieldsets = (
+        (None, {
+            'fields': ('slug', 'title', 'headline', 'domain', 'media_domain', 'home_page', 'active_theme')
+        }),
+        ('外观', {
+            'fields': ('icon', 'auth_icon', 'footer_license')
+        }),
+        ('注册与入组', {
+            'fields': ('signup_notice', 'default_role', 'verified_role',
+                       'membership_password_enabled', 'membership_password', 'membership_password_role')
+        }),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        # 这几项决定谁能自动拿到哪个角色，等同于发权限，所以跟着权限表那道门走。
+        if not request.user.has_perm('roles.manage_permissions'):
+            readonly_fields = list(readonly_fields) + [
+                'default_role', 'verified_role',
+                'membership_password_enabled', 'membership_password', 'membership_password_role',
+            ]
+        return readonly_fields
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -304,6 +327,7 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
         new_urls = [
             path('invite/', InviteView.as_view()),
             path('generate-link/', GenerateInviteLinkView.as_view()),
+            path('claim-link/', GenerateClaimLinkView.as_view()),
             path('newbot/', CreateBotView.as_view()),
             path('<id>/activate/', InviteView.as_view()),
             path('<id>/reset_votes/', ResetUserVotesView.as_view()),
@@ -338,9 +362,25 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
             ).order_by('username_or_wd')
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'roles' and not request.user.has_perm('roles.manage_roles'):
+        if db_field.name == 'roles' and not self._may_set_roles(request, self._editing(request)):
             kwargs['disabled'] = True
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    # 发角色就是发权限，所以这道门是「访问权限表」而不是「管理用户」——
+    # 否则一个只被勾了「管理用户」的人可以给自己加任意角色。
+    def _may_set_roles(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if obj is not None and obj.is_superuser:
+            return False
+        return request.user.has_perm('roles.manage_permissions')
+
+    # formfield_for_manytomany 拿不到正在编辑的对象，只能从 URL 里认。
+    def _editing(self, request):
+        object_id = resolve(request.path_info).kwargs.get('object_id')
+        if not object_id:
+            return None
+        return self.get_object(request, object_id)
     
     def has_change_permission(self, request, obj=None):
         if obj and not request.user.is_superuser and obj.operation_index <= request.user.operation_index:
@@ -353,7 +393,7 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
             if change:
                 if not request.user.is_superuser:
                     obj.is_superuser = target.is_superuser
-                if not request.user.has_perm('roles.manage_roles'):
+                if not self._may_set_roles(request, target):
                     obj.roles.set(target.roles.all())
         super().save_model(request, obj, form, change)
 
@@ -516,9 +556,12 @@ class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
         return super().has_change_permission(request, obj)
         
     def get_readonly_fields(self, request, obj=None):
-        if obj and obj.slug  in ['everyone', 'registered']:
-            return self.readonly_fields + ("slug",)
-        return self.readonly_fields
+        readonly_fields = self.readonly_fields
+        if obj and obj.slug in ['everyone', 'registered']:
+            readonly_fields = readonly_fields + ("slug",)
+        if not request.user.is_superuser and not request.user.has_perm('roles.manage_permissions'):
+            readonly_fields = readonly_fields + ("_perms_",)
+        return readonly_fields
 
 
 class UserReportForm(forms.ModelForm):
@@ -611,3 +654,167 @@ class UserReportAdmin(admin.ModelAdmin):
             obj.reviewed_at = timezone.now()
             obj.reviewed_by = request.user
         super().save_model(request, obj, form, change)
+
+
+class UserTicketAdmin(admin.ModelAdmin):
+    kind = None
+    review_permission = None
+
+    list_display = ['id', 'author_display', 'subject_display', 'status', 'source_page', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['subject', 'body', 'author__username', 'admin_notes']
+    readonly_fields = ['author_display', 'subject_display', 'body_preview', 'source_page', 'created_at', 'reviewed_at', 'reviewed_by']
+
+    @admin.display(description='提交人')
+    def author_display(self, obj):
+        if obj.author is None:
+            return '(已删除)'
+        return obj.author
+
+    # 表单可以关掉标题栏，所以列表要有个不空的东西可显示。
+    @admin.display(description='标题', ordering='subject')
+    def subject_display(self, obj):
+        if obj.subject:
+            return obj.subject
+        body = (obj.body or '').strip().splitlines()
+        first = body[0] if body else ''
+        return (first[:40] + '…') if len(first) > 40 else (first or '(无标题)')
+
+    @admin.display(description='正文')
+    def body_preview(self, obj):
+        return format_html(
+            '<div style="max-width:720px;white-space:pre-wrap;word-break:break-word;'
+            'border:1px solid #ddd;border-radius:4px;padding:8px;background:#fafafa;">{}</div>',
+            obj.body,
+        )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(kind=self.kind)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm('roles.view_user_tickets')
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm(self.review_permission)
+
+    def save_model(self, request, obj, form, change):
+        if change and 'status' in form.changed_data:
+            obj.reviewed_at = timezone.now()
+            obj.reviewed_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+class SupportTicketForm(forms.ModelForm):
+    class Meta:
+        model = SupportTicket
+        fields = ['status', 'admin_notes']
+
+
+@admin.register(SupportTicket)
+class SupportTicketAdmin(UserTicketAdmin):
+    form = SupportTicketForm
+    kind = UserTicket.Kind.Ticket
+    review_permission = 'roles.view_user_tickets'
+    fieldsets = (
+        ('工单内容', {
+            'fields': ('author_display', 'subject_display', 'created_at', 'source_page', 'body_preview'),
+        }),
+        ('管理员操作', {
+            'fields': ('status', 'admin_notes', 'reviewed_at', 'reviewed_by'),
+        }),
+    )
+
+
+class MembershipApplicationForm(forms.ModelForm):
+    class Meta:
+        model = MembershipApplication
+        fields = ['status', 'granted_role', 'admin_notes']
+
+
+@admin.register(MembershipApplication)
+class MembershipApplicationAdmin(UserTicketAdmin):
+    form = MembershipApplicationForm
+    kind = UserTicket.Kind.MembershipApply
+    review_permission = 'roles.review_membership_applications'
+    list_display = ['id', 'author_display', 'subject_display', 'status', 'granted_role', 'created_at']
+    list_filter = ['status', 'granted_role', 'created_at']
+    fieldsets = (
+        ('申请内容', {
+            'fields': ('author_display', 'subject_display', 'created_at', 'source_page', 'body_preview'),
+        }),
+        ('管理员操作', {
+            'fields': ('status', 'granted_role', 'admin_notes', 'reviewed_at', 'reviewed_by'),
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # 通过就当场把角色发下去，否则管理员还得再去用户页点一次，两处状态就会对不上。
+        if obj.status == UserTicket.Status.Approved and obj.granted_role and obj.author:
+            obj.author.roles.add(obj.granted_role)
+
+
+@admin.register(InviteLink)
+class InviteLinkAdmin(admin.ModelAdmin):
+    list_display = ['id', 'kind', 'delivery', 'recipient', 'state', 'activated_username', 'created_by', 'created_at', 'activated_at']
+    list_filter = ['kind', 'delivery', 'created_at']
+    search_fields = ['email', 'wikidot_username', 'activated_username', 'token']
+    readonly_fields = [
+        'kind', 'delivery', 'recipient', 'state', 'link', 'target',
+        'created_by', 'created_at', 'activated_username', 'activated_at',
+    ]
+    fieldsets = (
+        ('链接', {
+            'fields': ('kind', 'delivery', 'recipient', 'link'),
+        }),
+        ('状态', {
+            'fields': ('state', 'activated_username', 'activated_at'),
+        }),
+        ('来源', {
+            'fields': ('target', 'created_by', 'created_at'),
+        }),
+    )
+
+    @admin.display(description='发给谁')
+    def recipient(self, obj):
+        return obj.email or obj.wikidot_username or obj.target or '(已删除)'
+
+    @admin.display(description='是否激活', boolean=True, ordering='activated_at')
+    def state(self, obj):
+        return obj.is_activated
+
+    # 链接只有完整可复制才有用，所以这里给出带域名的那一份而不是路径。
+    @admin.display(description='链接')
+    def link(self, obj):
+        url = invite_url(self.request, obj) if getattr(self, 'request', None) else obj.path
+        return format_html('<input class="vTextField" style="width: 100%;" readonly value="{}">', url)
+
+    def get_queryset(self, request):
+        self.request = request
+        return super().get_queryset(request)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm('roles.manage_users')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm('roles.manage_users')
