@@ -356,6 +356,34 @@ func (h *Handler) nested(req *request, source string, pc *page.Context) (string,
 	return html.Body, nil
 }
 
+func (h *Handler) license(req *request) (string, error) {
+	source := strings.TrimSpace(req.site.FooterLicense)
+	if source == "" {
+		return "", nil
+	}
+	pc := page.NewContext(nil, nil, nil, req.user)
+	// This text is site configuration rather than an article, so it does not get
+	// to reach the whole module set.
+	pc.OnlyModules = []string{"time"}
+	info, err := h.pageInfo(req, nil)
+	if err != nil {
+		return "", err
+	}
+	html, err := h.deps.Engine.RenderHTML(req.ctx, source, info,
+		h.callbacks(req, nil, pc), renderer.ModeSystemWithModules)
+	if err != nil {
+		return "", err
+	}
+	// The licence area holds a single line, so the paragraphs come back off.
+	return unwrapParagraphs(html.Body), nil
+}
+
+func unwrapParagraphs(html string) string {
+	out := strings.ReplaceAll(html, "<p>", "")
+	out = strings.ReplaceAll(out, "</p>", "")
+	return strings.TrimSpace(out)
+}
+
 func (h *Handler) message(req *request, source string) (string, error) {
 	pc := page.NewContext(nil, nil, nil, req.user)
 	info, err := h.pageInfo(req, nil)
@@ -464,12 +492,18 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 		return shell.Data{}, err
 	}
 
+	license, err := h.license(req)
+	if err != nil {
+		return shell.Data{}, err
+	}
+
 	title := firstNonEmpty(out.title, req.site.Title)
 	return shell.Data{
 		SiteName:          req.site.Title,
 		SiteHeadline:      req.site.Headline,
 		SiteTitle:         title,
 		SiteIcon:          req.site.Icon,
+		License:           license,
 		OGTitle:           title,
 		OGDescription:     out.excerpt,
 		OGImage:           out.image,

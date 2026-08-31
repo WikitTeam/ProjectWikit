@@ -58,6 +58,9 @@ type Data struct {
 	SiteTitle    string
 	SiteIcon     string
 
+	// An empty one falls back to the built-in line.
+	License string
+
 	OGTitle       string
 	OGDescription string
 	OGImage       string
@@ -143,7 +146,10 @@ func (v view) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
 
 func (v view) Asset(name string) string { return v.r.assets.URL(name) }
 
-func (v view) License() string {
+func (v view) LicenseHTML() string {
+	if v.Data.License != "" {
+		return v.Data.License
+	}
 	return v.T("page.license", "link",
 		`<a href="`+licenseURL+`" target="_blank">`+licenseName+`</a>`)
 }
