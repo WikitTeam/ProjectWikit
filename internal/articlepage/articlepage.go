@@ -4,6 +4,7 @@ package articlepage
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -23,6 +24,7 @@ type Deps struct {
 	Assets      *static.Assets
 	TimeZone    *time.Location
 	GoogleTagID string
+	Log         *slog.Logger
 
 	// Now exists so a test can pin the moment an inactive account comes back.
 	Now func() time.Time
@@ -36,6 +38,13 @@ type Handler struct {
 const allowedMethods = "GET, HEAD, OPTIONS"
 
 var _ http.Handler = (*Handler)(nil)
+
+func (h *Handler) log() *slog.Logger {
+	if h.deps.Log == nil {
+		return slog.Default()
+	}
+	return h.deps.Log
+}
 
 func New(d Deps) *Handler {
 	if d.Now == nil {
@@ -70,6 +79,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	out, err := h.build(r)
 	if err != nil {
+		h.log().Error("render article", "path", r.URL.Path, "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
