@@ -206,26 +206,6 @@
   border-radius: 3px;
 }
 
-.new-page-form {
-  border: 1px solid #ccc;
-  background: #eee;
-  padding: 8px;
-  text-align: center;
-}
-
-.new-page-form form {
-  display: flex;
-  flex-direction: column;
-}
-
-.new-page-form p {
-  margin: 4px 0;
-}
-
-.new-page-form p div {
-  margin: 4px 0;
-}
-
 .w-search {
   --s-bg: var(--wk-surface, #ffffff);
   --s-alt: var(--wk-surface-alt, #f6f8fc);

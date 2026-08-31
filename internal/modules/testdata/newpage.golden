@@ -1,0 +1,84 @@
+=== bare
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== example
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="scp-1000" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== example-empty
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== category
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;scp&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== category-empty
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== submit
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="开始写" type="submit">
+  </form>
+</div>
+=== submit-empty
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="" type="submit">
+  </form>
+</div>
+=== all
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;scp&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="scp-1000" required="true">
+    <input class="button" value="开始写" type="submit">
+  </form>
+</div>
+=== quoted-example
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="a&quot;b&#x27;c&lt;d&amp;e" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== quoted-category
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;a\&quot;b&#x27;c&lt;d&amp;e&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
+=== quoted-submit
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="a&quot;b&#x27;c&lt;d&amp;e" type="submit">
+  </form>
+</div>
+=== unknown-param
+<div class="new-page-box new-page-form w-newpage-module" data-config="{&quot;category&quot;: &quot;&quot;}">
+  <form method="get" action="">
+    <input class="text" name="new_fullname" type="text" size="30" placeholder="" required="true">
+    <input class="button" value="创建页面" type="submit">
+  </form>
+</div>
