@@ -69,3 +69,56 @@ func (d *DB) ArticleTagIDs(ctx context.Context, articleID int64) ([]int64, error
 	}
 	return out, nil
 }
+
+type CloudTag struct {
+	Name         string
+	FullName     string
+	Articles     int
+	CategoryID   int64
+	CategoryName string
+	CategorySlug string
+	CategoryText string
+	Priority     *int
+}
+
+var qTagCloud = register("TagCloud", `
+SELECT t.name,
+       CASE WHEN c.slug = '_default' THEN t.name ELSE c.slug || ':' || t.name END,
+       count(link.article_id),
+       c.id, c.name, c.slug, c.description, c.priority
+FROM web_tag t
+JOIN web_tagscategory c ON c.id = t.category_id
+LEFT JOIN web_article_tags link ON link.tag_id = t.id
+WHERE t.name NOT LIKE '\_%'
+GROUP BY t.id, t.name, c.id, c.name, c.slug, c.description, c.priority
+ORDER BY count(link.article_id) DESC`)
+
+// The limit lands after the busiest tags come first, so it decides which tags
+// are in the cloud and not just how many.
+func (d *DB) TagCloud(ctx context.Context, limit *int) ([]CloudTag, error) {
+	sql := qTagCloud
+	args := []any{}
+	if limit != nil {
+		sql += "\nLIMIT $1"
+		args = append(args, *limit)
+	}
+	rows, err := d.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query tag cloud: %w", err)
+	}
+	defer rows.Close()
+
+	var out []CloudTag
+	for rows.Next() {
+		var t CloudTag
+		if err := rows.Scan(&t.Name, &t.FullName, &t.Articles,
+			&t.CategoryID, &t.CategoryName, &t.CategorySlug, &t.CategoryText, &t.Priority); err != nil {
+			return nil, fmt.Errorf("scan tag cloud: %w", err)
+		}
+		out = append(out, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read tag cloud: %w", err)
+	}
+	return out, nil
+}

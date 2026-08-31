@@ -14,10 +14,13 @@ source with pwikit render -page host -category probe.
 import datetime
 import itertools
 
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
+from web import threadvars
 from web.controllers import articles
-from web.models.articles import Article, ArticleLogEntry, Category, Tag, TagsCategory, Vote
+from web.models.articles import (Article, ArticleLogEntry, ArticleVersion, Category, ExternalLink,
+                                 Tag, TagsCategory, Vote)
 from web.models.forum import ForumCategory, ForumPost, ForumPostVersion, ForumSection, ForumThread
 from web.models.notifications import UserNotification, UserNotificationMapping, UserNotificationSubscription
 from web.models.settings import Settings
@@ -291,6 +294,19 @@ full.tags.set([make_tag('_default', 'Zeta'), make_tag('_default', 'alpha'), make
 TagsCategory.objects.filter(slug='lang').update(priority=1)
 bare.tags.clear()
 
+# The tag cloud sizes every tag against the busiest one, so the counts here have
+# to differ. A tag whose name starts with _ never reaches the cloud, and the
+# topic category is the one whose name is not its slug.
+rated.tags.set([make_tag('_default', 'alpha'), make_tag('topic', 'scp')])
+unrated.tags.set([make_tag('_default', 'alpha'), make_tag('_default', '_staff')])
+quarter.tags.set([make_tag('_default', 'alpha'), make_tag('topic', 'scp')])
+third.tags.set([make_tag('_default', 'Zeta'), make_tag('_default', '_staff')])
+# aaa sorts before alpha by bare name and after it by full name, which is what
+# tells apart the two orders the cloud could be using.
+unratable.tags.set([make_tag('topic', 'scp'), make_tag('lang', 'aaa')])
+TagsCategory.objects.filter(slug='topic').update(
+    priority=2, name='Probe Topic', description='what a page is about')
+
 open_section = forum_section('Probe Open', 0, description='an open section')
 hidden_section = forum_section('Probe Hidden', 1, description='hidden from the listing', is_hidden=True)
 staff_section = forum_section('Probe Staff', 2, description='only staff may browse', is_hidden_for_users=True)
@@ -426,6 +442,36 @@ for offset, entry_id in enumerate(ArticleLogEntry.objects.order_by('id').values_
     ArticleLogEntry.objects.filter(pk=entry_id).update(
         created_at=LOGGED_AT + datetime.timedelta(minutes=offset))
 
+def relink(article, source):
+    version = articles.get_latest_version(article)
+    ArticleVersion.objects.filter(pk=version.pk).update(source=source)
+
+
+# The wanted-pages list reads the link table, and nothing rebuilds that table on
+# save, so the seed points a few pages at names that do not exist and then
+# rebuilds it by hand.
+relink(unrated, NL.join([
+    'unrated source',
+    '[[[probe:no-such-one|first]]] [[[probe:no-such-two]]] [[[wanted:alpha|alpha]]]',
+]))
+relink(quarter, NL.join([
+    'quarter source',
+    '[[[wanted:beta]]] [[[probe:no-such-one]]]',
+]))
+relink(unratable, NL.join([
+    'unratable source',
+    '[[[wanted:gamma]]] [[[probe:full|a page that exists]]]',
+]))
+
+with threadvars.context():
+    threadvars.put('current_site', Site.objects.first())
+    threadvars.put('current_user', AnonymousUser())
+    for one in Article.objects.all():
+        latest = articles.get_latest_version(one)
+        if latest:
+            articles.refresh_article_links(latest)
+
+print('external links =', ExternalLink.objects.count())
 print('site rating_mode =', site_settings.rating_mode)
 print('forum sections =', ForumSection.objects.count(), 'categories =', ForumCategory.objects.count())
 print('log entries =', ArticleLogEntry.objects.count())

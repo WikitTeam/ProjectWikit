@@ -100,6 +100,10 @@ func (m moduleData) ArticleAuthors(articleID int64) ([]db.User, error) {
 	return m.repo.db.ArticleAuthors(m.repo.ctx, articleID)
 }
 
+func (m moduleData) TagCloud(limit *int) ([]db.CloudTag, error) {
+	return m.repo.db.TagCloud(m.repo.ctx, limit)
+}
+
 func (m moduleData) RenderUser(u db.User) (string, error) {
 	return m.repo.renderUser(&u, printuser.Options{Avatar: true, Hover: true})
 }

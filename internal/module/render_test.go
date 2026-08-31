@@ -54,7 +54,7 @@ func (f fakeData) CountArticles(db.ListFilter, int, *int) (int, error) {
 }
 
 func TestEveryPortedModuleAnswers(t *testing.T) {
-	ported := []string{"countpages", "css", "forumcategory", "forumnewthread", "forumstart", "forumthread", "listpages", "listusers", "newpage", "pagedescription", "pageimage", "pagesbytag", "rate", "recentposts", "redirect", "search", "sitechanges"}
+	ported := []string{"countpages", "css", "forumcategory", "forumnewthread", "forumstart", "forumthread", "listpages", "listusers", "newpage", "pagedescription", "pageimage", "pagesbytag", "rate", "recentposts", "redirect", "search", "sitechanges", "tagcloud"}
 	for _, name := range ported {
 		if !module.Ported(name) {
 			t.Errorf("Ported(%q) = false, want true", name)
@@ -102,11 +102,11 @@ func TestRenderOfARemovedModule(t *testing.T) {
 
 func TestRenderOfAModuleNobodyWroteYet(t *testing.T) {
 	var moduleErr *module.Error
-	if _, err := module.Render(module.Env{}, "tagcloud", nil, ""); !errors.As(err, &moduleErr) {
-		t.Fatalf("Render(tagcloud) err = %v, want a module error", err)
+	if _, err := module.Render(module.Env{}, "forumpost", nil, ""); !errors.As(err, &moduleErr) {
+		t.Fatalf("Render(forumpost) err = %v, want a module error", err)
 	}
 	if moduleErr.Message != "module-unknown" {
-		t.Errorf("Render(tagcloud) message = %q, want %q", moduleErr.Message, "module-unknown")
+		t.Errorf("Render(forumpost) message = %q, want %q", moduleErr.Message, "module-unknown")
 	}
 }
 

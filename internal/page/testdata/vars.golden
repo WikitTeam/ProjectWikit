@@ -345,9 +345,9 @@ Probe Author
 === probestars:rated authors_count
 1
 === probestars:rated tags
-
+alpha, topic:scp
 === probestars:rated tags_linked
-
+[/system:page-tags/tag/alpha alpha], [/system:page-tags/tag/topic%3Ascp topic:scp]
 === probestars:rated created_at
 [[date 1614834367]]
 === probestars:rated updated_at

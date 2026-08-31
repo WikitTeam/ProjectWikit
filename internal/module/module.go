@@ -23,6 +23,7 @@ type Data interface {
 	TagCategory(slug string) (db.TagCategory, error)
 	HiddenCategories(user *db.User) ([]string, error)
 	TagIDsByName(categorySlug, name string) ([]int64, error)
+	TagCloud(limit *int) ([]db.CloudTag, error)
 	ArticleTagIDs(articleID int64) ([]int64, error)
 	ArticleByRef(ref string) (*db.Article, error)
 	UserByUsername(name string) (*db.User, error)
