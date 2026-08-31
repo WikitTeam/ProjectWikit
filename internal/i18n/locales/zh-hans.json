@@ -52,6 +52,7 @@
   "module-listpages-pager-next": "下一页&nbsp;&raquo;",
   "module-listpages-pager-prev": "&laquo;&nbsp;上一页",
   "module-listusers-anonymous": "@@[匿名]@@",
+  "module-members-no-role": "身分组 \"{name}\" 不存在",
   "module-newpage-submit": "创建页面",
   "module-pagesbytag-category": " 来自分类 {category}",
   "module-pagesbytag-heading": "标记为 {tag} 的页面列表{category}：",

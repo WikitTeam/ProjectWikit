@@ -24,6 +24,7 @@ var registry = map[string]Info{
 	"interwiki":       {Name: "interwiki", HasContent: true, Removed: true},
 	"listpages":       {Name: "listpages", HasContent: true},
 	"listusers":       {Name: "listusers", HasContent: true},
+	"members":         {Name: "members", HasContent: true},
 	"newpage":         {Name: "newpage"},
 	"pagedescription": {Name: "pagedescription", HasContent: true},
 	"pageimage":       {Name: "pageimage"},
@@ -35,6 +36,7 @@ var registry = map[string]Info{
 	"search":          {Name: "search"},
 	"sitechanges":     {Name: "sitechanges"},
 	"tagcloud":        {Name: "tagcloud"},
+	"time":            {Name: "time", HasContent: true},
 	"wantedpages":     {Name: "wantedpages"},
 }
 

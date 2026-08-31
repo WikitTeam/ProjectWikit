@@ -54,7 +54,7 @@ func (f fakeData) CountArticles(db.ListFilter, int, *int) (int, error) {
 }
 
 func TestEveryPortedModuleAnswers(t *testing.T) {
-	ported := []string{"button", "countpages", "css", "forumcategory", "forumnewthread", "forumstart", "forumthread", "listpages", "listusers", "newpage", "pagedescription", "pageimage", "pagesbytag", "rate", "recentposts", "redirect", "search", "sitechanges", "tagcloud", "wantedpages"}
+	ported := []string{"button", "countpages", "css", "forumcategory", "forumnewthread", "forumstart", "forumthread", "listpages", "listusers", "members", "newpage", "pagedescription", "pageimage", "pagesbytag", "rate", "recentposts", "redirect", "search", "sitechanges", "tagcloud", "time", "wantedpages"}
 	for _, name := range ported {
 		if !module.Ported(name) {
 			t.Errorf("Ported(%q) = false, want true", name)
