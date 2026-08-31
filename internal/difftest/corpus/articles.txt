@@ -71,6 +71,9 @@ OPTIONS /probe:full
 /search:site/q/scp
 /search:site/q/%20spaced%20/author/probe-author
 /search:site/datefrom/2021-01-01/dateto/2021-12-31
-# the pages the wiki ships with. each is one unported module, so pwikit draws the
-# error block where django draws the module. the three that django 404s do it from
-# inside the module, which pwikit cannot reach yet. drop each ! as its module lands.
+# the pages the wiki ships with, one module each.
+
+/probe:changes
+/probe:changes/p/2
+/probe:changes/perpage/10/category/probe
+/probe:changes/username/~probe/source/true
