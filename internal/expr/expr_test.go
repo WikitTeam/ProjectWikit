@@ -266,7 +266,7 @@ func TestEvaluateRandomStaysInRange(t *testing.T) {
 	check(t, "random(3, 1)", None())
 }
 
-func TestPyStr(t *testing.T) {
+func TestText(t *testing.T) {
 	tests := []struct {
 		in   Value
 		want string
@@ -281,8 +281,8 @@ func TestPyStr(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.want, func(t *testing.T) {
-			if got := tt.in.PyStr(); got != tt.want {
-				t.Errorf("PyStr(%+v) = %q, want %q", tt.in, got, tt.want)
+			if got := tt.in.Text(); got != tt.want {
+				t.Errorf("Text(%+v) = %q, want %q", tt.in, got, tt.want)
 			}
 		})
 	}
@@ -302,7 +302,7 @@ func TestTruthy(t *testing.T) {
 		{StrOf("0"), true},
 	}
 	for _, tt := range tests {
-		t.Run(tt.in.PyStr(), func(t *testing.T) {
+		t.Run(tt.in.Text(), func(t *testing.T) {
 			if got := tt.in.Truthy(); got != tt.want {
 				t.Errorf("Truthy(%+v) = %v, want %v", tt.in, got, tt.want)
 			}

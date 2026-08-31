@@ -41,7 +41,7 @@ var lockable = []string{EditArticles, ManageArticleAuthors, ManageArticleFiles, 
 var silenced = []string{CommentArticles, CreateForumPosts, EditForumPosts, DeleteForumPosts, EditForumThreads, PinForumThreads, MoveForumThreads}
 
 // Set answers one question at a time. A superuser gets a set that says yes to
-// every name, which is the shortcut Django takes before any backend runs.
+// every name before any rule runs.
 type Set struct {
 	all   bool
 	named map[string]bool
@@ -105,8 +105,6 @@ type Object struct {
 
 	HiddenForUsers bool
 
-	// Django reaches this through the post's override pipeline, so a thread's
-	// rules run after the post's own.
 	Thread *Object
 }
 

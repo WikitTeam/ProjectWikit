@@ -1,5 +1,7 @@
-// Package pyjson spells values the way Python's json.dumps does.
-package pyjson
+// Package wikijson writes the JSON dialect the wiki's stored data and frontend
+// both expect, which separates with a space and keeps the fraction of a whole
+// number.
+package wikijson
 
 import (
 	"fmt"
@@ -8,8 +10,8 @@ import (
 	"strings"
 )
 
-// Field is one key of an object. Objects are slices rather than maps because
-// Python writes a dict in insertion order and these are compared byte for byte.
+// Objects are slices rather than maps because the output keeps insertion order
+// and is compared byte for byte.
 type Field struct {
 	Key   string
 	Value any
@@ -19,8 +21,6 @@ type Object []Field
 
 type Array []any
 
-// Marshal writes v with Python's separators, which carry a space that
-// encoding/json never writes.
 func Marshal(v any) (string, error) {
 	var b strings.Builder
 	if err := write(&b, v); err != nil {
@@ -62,7 +62,7 @@ func write(b *strings.Builder, v any) error {
 		}
 		return writeArray(b, items)
 	default:
-		return fmt.Errorf("pyjson: cannot write %T", v)
+		return fmt.Errorf("wikijson: cannot write %T", v)
 	}
 	return nil
 }
@@ -97,11 +97,11 @@ func writeArray(b *strings.Builder, a Array) error {
 	return nil
 }
 
-// Float writes what Python's repr gives. Go drops the fraction of a whole
-// number and Python keeps it, so 4.0 must not come out as 4.
+// Go drops the fraction of a whole number where this dialect keeps it, so 4.0
+// must not come out as 4.
 func Float(f float64) (string, error) {
 	if math.IsInf(f, 0) || math.IsNaN(f) {
-		return "", fmt.Errorf("pyjson: cannot write %v", f)
+		return "", fmt.Errorf("wikijson: cannot write %v", f)
 	}
 	s := strconv.FormatFloat(f, 'g', -1, 64)
 	if !strings.ContainsAny(s, ".e") {

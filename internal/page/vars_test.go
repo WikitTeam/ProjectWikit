@@ -587,8 +587,8 @@ func TestPyRound(t *testing.T) {
 		{12.6, 13},
 	}
 	for _, tt := range tests {
-		if got := pyRound(tt.in); got != tt.want {
-			t.Errorf("pyRound(%v) = %d, want %d", tt.in, got, tt.want)
+		if got := roundHalfEven(tt.in); got != tt.want {
+			t.Errorf("roundHalfEven(%v) = %d, want %d", tt.in, got, tt.want)
 		}
 	}
 }

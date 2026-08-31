@@ -10,8 +10,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
-	"github.com/WikitTeam/ProjectWikit/internal/pynum"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
 func init() { module.Register("recentposts", renderRecentPosts) }
@@ -106,7 +106,7 @@ func renderRecentPosts(env module.Env, params map[string]string, _ string) (stri
 	}
 
 	current := 1
-	if n, err := pynum.Int(path.Get("p")); err == nil {
+	if n, err := wikinum.Int(path.Get("p")); err == nil {
 		current = n
 	}
 	if current < 1 {
@@ -128,10 +128,10 @@ func renderRecentPosts(env module.Env, params map[string]string, _ string) (stri
 	}
 
 	view.pagination = listpages.Pagination(env.Loc, "", current, maxPage)
-	if view.pathParams, err = pyjson.Marshal(pathParamsObject(path)); err != nil {
+	if view.pathParams, err = wikijson.Marshal(pathParamsObject(path)); err != nil {
 		return "", err
 	}
-	if view.params, err = pyjson.Marshal(paramsObject(params, nil)); err != nil {
+	if view.params, err = wikijson.Marshal(paramsObject(params, nil)); err != nil {
 		return "", err
 	}
 	return recentPostsHTML(env, view), nil
@@ -157,7 +157,7 @@ func recentPostsCategories(env module.Env, path page.PathParams, subject perms.S
 		return visible, nil, nil
 	}
 
-	id, err := pynum.Int(asked)
+	id, err := wikinum.Int(asked)
 	if err != nil {
 		return nil, nil, nil
 	}

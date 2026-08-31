@@ -8,7 +8,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
-	"github.com/WikitTeam/ProjectWikit/internal/pynum"
+	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
 type Source interface {
@@ -384,7 +384,7 @@ func timeOp(op string) string {
 // day of 2020-12.
 func parseDateBounds(text string) (first, last time.Time, ok bool) {
 	parts := strings.Split(text, "-")
-	year, err := pynum.Int(parts[0])
+	year, err := wikinum.Int(parts[0])
 	if err != nil || year < 1 || year > 9999 {
 		return time.Time{}, time.Time{}, false
 	}
@@ -392,7 +392,7 @@ func parseDateBounds(text string) (first, last time.Time, ok bool) {
 	lastMonth, lastDay := 12, 31
 
 	if len(parts) >= 2 {
-		m, err := pynum.Int(parts[1])
+		m, err := wikinum.Int(parts[1])
 		if err != nil {
 			return time.Time{}, time.Time{}, false
 		}
@@ -401,7 +401,7 @@ func parseDateBounds(text string) (first, last time.Time, ok bool) {
 		lastDay = daysIn(year, month)
 	}
 	if len(parts) >= 3 {
-		d, err := pynum.Int(parts[2])
+		d, err := wikinum.Int(parts[2])
 		if err != nil {
 			return time.Time{}, time.Time{}, false
 		}
@@ -441,7 +441,7 @@ func (p *parser) parseRating() {
 		return
 	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	value, err := pynum.Float(strings.TrimSpace(rest))
+	value, err := wikinum.Float(strings.TrimSpace(rest))
 	if err != nil {
 		p.invalid()
 		return
@@ -463,7 +463,7 @@ func (p *parser) parseVotes() {
 		return
 	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	value, err := pynum.Int(strings.TrimSpace(rest))
+	value, err := wikinum.Int(strings.TrimSpace(rest))
 	if err != nil {
 		p.invalid()
 		return
@@ -485,7 +485,7 @@ func (p *parser) parsePopularity() {
 		return
 	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	value, err := pynum.Int(strings.TrimSpace(rest))
+	value, err := wikinum.Int(strings.TrimSpace(rest))
 	if err != nil {
 		p.invalid()
 		return
@@ -524,8 +524,8 @@ func ratingValue(r page.Rating) float64 {
 	return 0
 }
 
-// Python splits on a single space and strips each piece, which keeps a tab
-// inside a tag name rather than breaking on it.
+// Splitting on a single space and stripping each piece keeps a tab inside a tag
+// name rather than breaking on it.
 func splitFields(s string) []string {
 	var out []string
 	for _, part := range strings.Split(s, " ") {
@@ -567,19 +567,19 @@ func (p *parser) parseSort() {
 }
 
 func (p *parser) parseWindow() {
-	if offset, err := pynum.Int(p.getOr("offset", "0")); err == nil {
+	if offset, err := wikinum.Int(p.getOr("offset", "0")); err == nil {
 		p.out.Offset = offset
 	}
 	if raw, ok := p.params["limit"]; ok {
-		if limit, err := pynum.Int(raw); err == nil {
+		if limit, err := wikinum.Int(raw); err == nil {
 			p.out.Limit = &limit
 		}
 	}
-	perPage, err := pynum.Int(p.getOr("perpage", "20"))
+	perPage, err := wikinum.Int(p.getOr("perpage", "20"))
 	if err != nil {
 		perPage = defaultPerPage
 	}
-	pageNum, err := pynum.Int(p.pathOr("p", "1"))
+	pageNum, err := wikinum.Int(p.pathOr("p", "1"))
 	if err != nil || pageNum < 1 {
 		pageNum = 1
 	}

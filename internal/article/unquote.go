@@ -5,8 +5,8 @@ import (
 	"unicode/utf8"
 )
 
-// unquote decodes %XX the way Python's urllib does. An escape it cannot read
-// stays in the text, and bytes that are not UTF-8 turn into U+FFFD.
+// An escape unquote cannot read stays in the text, and bytes that are not UTF-8
+// turn into U+FFFD.
 func unquote(s string) string {
 	if !strings.Contains(s, "%") {
 		return s
@@ -67,9 +67,8 @@ func replaceInvalid(b []byte) string {
 	return out.String()
 }
 
-// subpartLen answers how many bytes one U+FFFD stands for. Python spends one
-// per maximal subpart, so a truncated sequence costs one rather than one per
-// byte.
+// One U+FFFD stands for a whole maximal subpart, so a truncated sequence costs
+// one replacement rather than one per byte.
 func subpartLen(b []byte) int {
 	var want int
 	var lo, hi byte

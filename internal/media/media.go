@@ -19,10 +19,9 @@ import (
 )
 
 const (
-	Prefix       = "/local--files/"
-	notFoundBody = "Not found"
-	defaultMime  = "application/octet-stream"
-	// What Django gives a response built without an explicit type.
+	Prefix          = "/local--files/"
+	notFoundBody    = "Not found"
+	defaultMime     = "application/octet-stream"
 	defaultHTMLMime = "text/html; charset=utf-8"
 )
 
@@ -74,8 +73,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Django never writes the guessed type back onto the response, so anything
-	// the database did not name goes out labelled text/html.
 	responseMime := mimeType
 	if mimeType == "" {
 		responseMime = defaultHTMLMime
@@ -87,8 +84,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	chunk := chunkSizeFor(mimeType)
 	if chunk == 0 {
-		// Django's FileResponse sets its own headers and ignores
-		// If-Modified-Since.
 		w.Header().Set("Content-Type", mimeType)
 		w.Header().Set("Content-Disposition", disposition(filepath.Base(full)))
 		w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10))
@@ -121,8 +116,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 
 	if begin >= end || end == 0 {
-		// Django keeps the full Content-Length here and sends no body, which
-		// breaks the framing.
+		// The length has to be zero here, since no body follows and a full one would
+		// break the framing.
 		w.Header().Set("Content-Range", fmt.Sprintf("bytes */%d", size))
 		w.Header().Set("Content-Length", "0")
 		w.WriteHeader(http.StatusRequestedRangeNotSatisfiable)
@@ -130,7 +125,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// end is exclusive here and inclusive in the header, so this is a byte
-	// short of what the client asked for. Django does the same.
+	// short of what the client asked for.
 	w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", begin, end-1, size))
 	w.Header().Set("Content-Length", strconv.FormatInt(end-begin, 10))
 	w.WriteHeader(http.StatusPartialContent)
@@ -180,8 +175,8 @@ func exists(name string) bool {
 	return err == nil
 }
 
-// rangeBounds returns a half-open [begin, end). A false third value is a 416;
-// Django raises on the malformed cases instead.
+// rangeBounds returns a half-open [begin, end), and a false third value is a
+// 416 rather than a raised error.
 func rangeBounds(header string, chunk, size int64) (begin, end int64, ok bool) {
 	if header == "" {
 		return 0, min(chunk, size), true

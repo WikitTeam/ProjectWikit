@@ -73,9 +73,8 @@ type Tails struct {
 // relative to the media root.
 type IconLoader func(path string) (string, error)
 
-// NameTails builds the decorations shown next to a user name. Roles must
-// arrive ordered by index; the first role of a given (mode, category) pair
-// wins, which is what Django's DISTINCT ON over that pair resolves to.
+// Roles must arrive ordered by index, since the first role of a given mode and
+// category pair is the one that wins.
 func NameTails(rs []Role, load IconLoader) (Tails, error) {
 	type key struct {
 		mode     InlineVisualMode

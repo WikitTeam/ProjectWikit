@@ -11,7 +11,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files and the corpora the oracles read")
@@ -100,7 +100,7 @@ func TestSplitMatchesGolden(t *testing.T) {
 	for _, c := range cases {
 		s := Split(c.Content)
 		fmt.Fprintf(&b, "=== %s\nhead=%s\nbody=%s\nfoot=%s\n", c.Name,
-			pyjson.String(s.Head), pyjson.String(s.Body), pyjson.String(s.Foot))
+			wikijson.String(s.Head), wikijson.String(s.Body), wikijson.String(s.Foot))
 	}
 	compareGolden(t, sectionsGolden, b.String(), sectionsCorpus, cases)
 }

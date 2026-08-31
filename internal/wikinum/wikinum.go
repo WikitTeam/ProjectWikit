@@ -1,6 +1,6 @@
-// Package pynum is Python's int() and float() over the strings a wikitext
-// author typed.
-package pynum
+// Package wikinum parses the numbers a wikitext author typed, which tolerate
+// surrounding space, a sign and underscores between digits.
+package wikinum
 
 import (
 	"errors"
@@ -8,10 +8,8 @@ import (
 	"strings"
 )
 
-var ErrNotANumber = errors.New("pynum: not a number")
+var ErrNotANumber = errors.New("wikinum: not a number")
 
-// Python's int() tolerates surrounding space, a sign and underscores between
-// digits. Non-ASCII digits are the one thing it takes that this does not.
 func Int(s string) (int, error) {
 	s = strings.TrimSpace(s)
 	body := strings.TrimPrefix(strings.TrimPrefix(s, "+"), "-")
@@ -33,7 +31,7 @@ func Int(s string) (int, error) {
 	return n, nil
 }
 
-// Go would take a hexadecimal float that Python rejects, so the digits are
+// Go would take a hexadecimal float that this must not, so the digits are
 // checked first.
 func Float(s string) (float64, error) {
 	if n, err := Int(s); err == nil {

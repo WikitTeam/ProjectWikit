@@ -7,8 +7,7 @@ import (
 	"strconv"
 )
 
-// Go's dot excludes newlines by default, the same as Python's without DOTALL,
-// so a %% pair may not span lines.
+// Go's dot excludes newlines by default, so a %% pair may not span lines.
 var variablePattern = regexp.MustCompile(`%%(.*?)%%`)
 
 // ApplyTemplate replaces every %%name%% the resolver knows. An unresolved name

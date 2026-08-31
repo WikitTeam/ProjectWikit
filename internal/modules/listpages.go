@@ -8,7 +8,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 func init() { module.Register("listpages", renderListPages) }
@@ -16,8 +16,8 @@ func init() { module.Register("listpages", renderListPages) }
 // The two interfaces are kept apart, and this is what stops them drifting.
 var _ listpages.Source = (module.Data)(nil)
 
-// Python runs out of stack and loses one request, while Go would lose the
-// whole process.
+// Without a depth cap a page that includes itself would take the whole process
+// down rather than the one request.
 const maxNesting = 10
 
 func renderListPages(env module.Env, params map[string]string, body string) (string, error) {
@@ -148,47 +148,47 @@ func wrap(env module.Env, pc *page.Context, out string, result listpages.Result,
 		basePath = listpages.BasePath(pageID, pc.PathParams)
 	}
 
-	pathJSON, err := pyjson.Marshal(pathParamsObject(pc.PathParams))
+	pathJSON, err := wikijson.Marshal(pathParamsObject(pc.PathParams))
 	if err != nil {
 		return "", err
 	}
-	paramsJSON, err := pyjson.Marshal(paramsObject(params, nullParams))
+	paramsJSON, err := wikijson.Marshal(paramsObject(params, nullParams))
 	if err != nil {
 		return "", err
 	}
 
 	pagination := listpages.Pagination(env.Loc, basePath, result.Page, result.TotalPages)
-	return listpages.Wrap(out, pagination, pathJSON, paramsJSON, pyjson.String(body), pageID), nil
+	return listpages.Wrap(out, pagination, pathJSON, paramsJSON, wikijson.String(body), pageID), nil
 }
 
-func pathParamsObject(params page.PathParams) pyjson.Object {
-	out := make(pyjson.Object, 0, len(params))
+func pathParamsObject(params page.PathParams) wikijson.Object {
+	out := make(wikijson.Object, 0, len(params))
 	for _, param := range params {
 		var value any
 		if !param.Bare {
 			value = param.Value
 		}
-		out = append(out, pyjson.Field{Key: param.Key, Value: value})
+		out = append(out, wikijson.Field{Key: param.Key, Value: value})
 	}
 	return out
 }
 
 // The keys are sorted because the order ftml hands them over in is not stable,
 // and an attribute that changes between two renders cannot be compared.
-func paramsObject(params map[string]string, null map[string]bool) pyjson.Object {
+func paramsObject(params map[string]string, null map[string]bool) wikijson.Object {
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)
 	}
 	slices.Sort(keys)
 
-	out := make(pyjson.Object, 0, len(keys))
+	out := make(wikijson.Object, 0, len(keys))
 	for _, key := range keys {
 		var value any
 		if !null[key] {
 			value = params[key]
 		}
-		out = append(out, pyjson.Field{Key: key, Value: value})
+		out = append(out, wikijson.Field{Key: key, Value: value})
 	}
 	return out
 }

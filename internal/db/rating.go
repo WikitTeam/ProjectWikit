@@ -76,8 +76,6 @@ func (d *DB) VoteStats(ctx context.Context, articleID int64) (VoteStats, error) 
 	return s, nil
 }
 
-// A null user matches the votes cast without one, because Django filters on
-// user=None the same way.
 var qHasVoted = register("HasVoted", `
 SELECT EXISTS(
 	SELECT 1 FROM web_vote
@@ -91,8 +89,6 @@ func (d *DB) HasVoted(ctx context.Context, articleID int64, userID *int64) (bool
 	return voted, nil
 }
 
-// Django reaches for the last row of an unordered set, which it spells as the
-// first row of one ordered by descending key.
 var qVoteByUser = register("VoteByUser", `
 SELECT rate
 FROM web_vote

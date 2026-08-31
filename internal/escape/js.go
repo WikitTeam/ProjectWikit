@@ -11,8 +11,8 @@ const (
 	paragraphSep = '\u2029'
 )
 
-// JS is Django's escapejs. Go's template.JSEscapeString covers a different set
-// of characters and spells them differently, so it cannot stand in here.
+// Go's template.JSEscapeString covers a different set of characters and spells
+// them differently, so it cannot stand in here.
 func JS(s string) string {
 	var b strings.Builder
 	for _, r := range s {

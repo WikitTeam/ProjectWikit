@@ -2,8 +2,7 @@ package media
 
 import "strings"
 
-// guessType mirrors Python's mimetypes.guess_type. An empty type means
-// unknown; the caller supplies the fallback.
+// An empty type means unknown, and the caller supplies the fallback.
 func guessType(name string) (mimeType, encoding string) {
 	base, ext := splitExt(name)
 	for {

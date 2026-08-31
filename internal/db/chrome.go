@@ -62,8 +62,6 @@ type TagCategory struct {
 	Tags     []Tag
 }
 
-// The tie-break is the category id because the order Django gets there falls out
-// of iterating a set of model objects, which for small ids is ascending.
 var qArticleTagCategories = register("ArticleTagCategories", `
 SELECT c.id, c.name, c.priority, t.name,
        CASE WHEN c.slug = '_default' THEN t.name ELSE c.slug || ':' || t.name END
@@ -73,8 +71,8 @@ JOIN web_tagscategory c ON c.id = t.category_id
 WHERE link.article_id = $1 AND t.name NOT LIKE '\_%'
 ORDER BY c.id, link.id`)
 
-// ArticleTagCategories returns the tag block in display order. A category with no
-// priority sorts under the page's tag count, the number Django compares it with.
+// A category with no priority sorts under the page's tag count, which is the
+// number it is compared with.
 func (d *DB) ArticleTagCategories(ctx context.Context, articleID int64) ([]TagCategory, error) {
 	rows, err := d.pool.Query(ctx, qArticleTagCategories, articleID)
 	if err != nil {

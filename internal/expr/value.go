@@ -74,7 +74,7 @@ func (v Value) Truthy() bool {
 	return false
 }
 
-func (v Value) PyStr() string {
+func (v Value) Text() string {
 	switch v.Kind {
 	case KindBool:
 		if v.Bool {

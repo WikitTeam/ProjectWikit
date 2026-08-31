@@ -140,7 +140,6 @@ func (d *DB) ForumCommentCounts(ctx context.Context) (ForumCounts, error) {
 
 const forumLastPostColumns = `p.id, p.created_at, t.id, t.name, t.category_id, t.article_id, p.author_id`
 
-// Ties are left to the database because Django orders on the timestamp alone.
 var qForumCategoryLastPost = register("ForumCategoryLastPost", `
 SELECT `+forumLastPostColumns+`
 FROM web_forumpost p
@@ -273,8 +272,6 @@ func (d *DB) ForumThreadPostCount(ctx context.Context, threadID int64) (int, err
 	return n, nil
 }
 
-// Django indexes to the end of an ascending list rather than taking the first
-// of a descending one, which decides differently when two posts share a stamp.
 var qForumThreadLastPost = register("ForumThreadLastPost", `
 SELECT id, created_at, author_id
 FROM web_forumpost

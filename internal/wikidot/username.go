@@ -7,12 +7,9 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// CanonicalizeUsername mirrors canonicalize_username in web/models/users.py.
-// Unlike Normalize it keeps non-Latin letters, so a Chinese name canonicalizes
-// to itself rather than to an empty string.
-//
-// Python's [\W_]+ is every run that is neither a letter nor a number, because
-// \W excludes the underscore that the class then adds back.
+// Unlike Normalize this keeps non-Latin letters, so a Chinese name
+// canonicalizes to itself rather than to an empty string. Every run that is
+// neither a letter nor a number collapses, the underscore included.
 func CanonicalizeUsername(name string) string {
 	var b strings.Builder
 	pending := false

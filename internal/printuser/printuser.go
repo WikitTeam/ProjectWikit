@@ -71,8 +71,8 @@ func (r *Renderer) Anonymous(opts Options) string {
 	return b.String()
 }
 
-// External is the wd: user that was never imported: the name is normalized as
-// a page name, not as a user name, and the displayed form keeps the original.
+// External is the wd: user nobody imported. The name is normalized as a page
+// name rather than a user name, and the displayed form keeps the original.
 func (r *Renderer) External(username string, opts Options) string {
 	display := escape.HTML(username)
 	name := escape.HTML(wikidot.Normalize(username))
@@ -173,8 +173,8 @@ func classAdd(opts Options) string {
 	return ""
 }
 
-// The tooltip is dropped rather than emitted empty, which leaves the two
-// spaces Django's {% if %} leaves behind.
+// The tooltip is dropped rather than emitted empty, which leaves two spaces
+// behind.
 func title(tooltip string) string {
 	if tooltip == "" {
 		return ""

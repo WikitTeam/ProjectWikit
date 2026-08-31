@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 var attrUnescape = strings.NewReplacer(
@@ -35,11 +35,11 @@ func sortListPagesParams(match []byte) []byte {
 	}
 	sort.Strings(keys)
 
-	out := make(pyjson.Object, 0, len(keys))
+	out := make(wikijson.Object, 0, len(keys))
 	for _, key := range keys {
-		out = append(out, pyjson.Field{Key: key, Value: decoded[key]})
+		out = append(out, wikijson.Field{Key: key, Value: decoded[key]})
 	}
-	sorted, err := pyjson.Marshal(out)
+	sorted, err := wikijson.Marshal(out)
 	if err != nil {
 		return match
 	}

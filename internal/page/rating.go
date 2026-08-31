@@ -32,13 +32,13 @@ func RatingOf(mode string, stats db.VoteStats) Rating {
 	return Rating{
 		Value:      value,
 		Votes:      stats.Count,
-		Popularity: pyRound(float64(good) / float64(count) * 100),
+		Popularity: roundHalfEven(float64(good) / float64(count) * 100),
 		Mode:       mode,
 	}
 }
 
-// round1 is Python's round(x, 1). Both languages round the exact binary value
-// to nearest with ties going to the even digit, so the text round trip agrees.
+// The exact binary value rounds to nearest with ties going to the even digit,
+// so a number written as text and read back agrees.
 func round1(x float64) float64 {
 	rounded, err := strconv.ParseFloat(strconv.FormatFloat(x, 'f', 1, 64), 64)
 	if err != nil {

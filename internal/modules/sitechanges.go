@@ -13,14 +13,14 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
-	"github.com/WikitTeam/ProjectWikit/internal/pynum"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
 func init() { module.Register("sitechanges", renderSiteChanges) }
 
-// Every path parameter Python chokes on raises out of the module and reaches
-// the reader as one block, so nothing here records which one it was.
+// Every path parameter this rejects reaches the reader as the same block, so
+// nothing here records which one it was.
 var errSiteChange = errors.New("modules: site change is not renderable")
 
 // Sorting this list would reorder the type checkboxes on the page.
@@ -130,14 +130,12 @@ func siteChangesBuild(env module.Env, path page.PathParams, params map[string]st
 	if err != nil {
 		return siteChangesView{}, err
 	}
-	// Django divides by the page size and then slices with it, so zero and
-	// negative both raise before anything reaches the reader.
 	if perPage <= 0 {
 		return siteChangesView{}, errSiteChange
 	}
 
 	current := 1
-	if n, err := pynum.Int(path.Get("p")); err == nil {
+	if n, err := wikinum.Int(path.Get("p")); err == nil {
 		current = n
 	}
 	if current < 1 {
@@ -182,10 +180,10 @@ func siteChangesBuild(env module.Env, path page.PathParams, params map[string]st
 		})
 	}
 
-	if view.pathParams, err = pyjson.Marshal(pathParamsObject(path)); err != nil {
+	if view.pathParams, err = wikijson.Marshal(pathParamsObject(path)); err != nil {
 		return siteChangesView{}, err
 	}
-	if view.params, err = pyjson.Marshal(paramsObject(params, nil)); err != nil {
+	if view.params, err = wikijson.Marshal(paramsObject(params, nil)); err != nil {
 		return siteChangesView{}, err
 	}
 	return view, nil
@@ -223,7 +221,7 @@ func siteChangePerPage(path page.PathParams) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	n, err := pynum.Int(raw)
+	n, err := wikinum.Int(raw)
 	if err != nil {
 		return 0, errSiteChange
 	}
@@ -484,7 +482,7 @@ func (m siteChangeMeta) str(key string) (string, error) {
 	if !ok {
 		return "", errSiteChange
 	}
-	return pyStr(raw), nil
+	return metaText(raw), nil
 }
 
 func (m siteChangeMeta) two(first, second string) (string, string, error) {
@@ -522,7 +520,7 @@ func (m siteChangeMeta) names(key string) ([]string, error) {
 		if !ok {
 			return nil, errSiteChange
 		}
-		out = append(out, pyStr(name))
+		out = append(out, metaText(name))
 	}
 	return out, nil
 }
@@ -545,7 +543,7 @@ func (m siteChangeMeta) integer(key string) (int, error) {
 		return 0, errSiteChange
 	}
 	if quoted, ok := unquoteJSON(raw); ok {
-		n, err := pynum.Int(quoted)
+		n, err := wikinum.Int(quoted)
 		if err != nil {
 			return 0, errSiteChange
 		}
@@ -564,7 +562,7 @@ func (m siteChangeMeta) float(key string) (float64, error) {
 		return 0, errSiteChange
 	}
 	if quoted, ok := unquoteJSON(raw); ok {
-		f, err := pynum.Float(quoted)
+		f, err := wikinum.Float(quoted)
 		if err != nil {
 			return 0, errSiteChange
 		}
@@ -588,9 +586,9 @@ func unquoteJSON(raw json.RawMessage) (string, bool) {
 	return out, true
 }
 
-// The comment lines are f-strings over whatever the log entry stored, so a
-// value that is not a string still has to come out the way Python prints it.
-func pyStr(raw json.RawMessage) string {
+// The comment lines interpolate whatever the log entry stored, so a value that
+// is not a string still has to come out as text.
+func metaText(raw json.RawMessage) string {
 	text := strings.TrimSpace(string(raw))
 	switch text {
 	case "null":

@@ -23,11 +23,11 @@ func TestValidateRejectsBadTable(t *testing.T) {
 		name  string
 		table []Route
 	}{
-		{"prefix does not start with slash", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "api/", Owner: OwnerDjango}}},
-		{"prefix does not end with slash", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api", Owner: OwnerDjango}}},
-		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerGo}}},
+		{"prefix does not start with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "api/", Owner: OwnerUpstream}}},
+		{"prefix does not end with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api", Owner: OwnerUpstream}}},
+		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerGo}}},
 		{"invalid owner", []Route{{Prefix: "/", Owner: "rust"}}},
-		{"missing fallback prefix", []Route{{Prefix: "/api/", Owner: OwnerDjango}}},
+		{"missing fallback prefix", []Route{{Prefix: "/api/", Owner: OwnerUpstream}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,7 +51,7 @@ func goHandlers() map[string]http.Handler {
 }
 
 func TestMuxRouteLongestPrefixWins(t *testing.T) {
-	m, err := New(Table, stub("django"), goHandlers())
+	m, err := New(Table, stub("upstream"), goHandlers())
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
@@ -80,41 +80,41 @@ func TestMuxRouteLongestPrefixWins(t *testing.T) {
 	}
 }
 
-func TestNewRejectsNilDjango(t *testing.T) {
+func TestNewRejectsNilUpstream(t *testing.T) {
 	if _, err := New(Table, nil, nil); err == nil {
-		t.Error("New(django=nil) err = nil, want non-nil")
+		t.Error("New(upstream=nil) err = nil, want non-nil")
 	}
 }
 
 func TestNewRejectsGoRouteWithoutHandler(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerGo}}
-	if _, err := New(table, stub("django"), nil); err == nil {
+	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerGo}}
+	if _, err := New(table, stub("upstream"), nil); err == nil {
 		t.Error("New() err = nil, want non-nil")
 	}
 }
 
-func TestNewRejectsDjangoRouteWithHandler(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerDjango}, {Prefix: "/api/", Owner: OwnerDjango}}
+func TestNewRejectsUpstreamRouteWithHandler(t *testing.T) {
+	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerUpstream}}
 	handlers := map[string]http.Handler{"/api/": stub("go")}
-	if _, err := New(table, stub("django"), handlers); err == nil {
+	if _, err := New(table, stub("upstream"), handlers); err == nil {
 		t.Error("New() err = nil, want non-nil")
 	}
 }
 
 func TestNewRejectsHandlerOutsideTable(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerDjango}}
+	table := []Route{{Prefix: "/", Owner: OwnerUpstream}}
 	handlers := map[string]http.Handler{"/forum/": stub("go")}
-	if _, err := New(table, stub("django"), handlers); err == nil {
+	if _, err := New(table, stub("upstream"), handlers); err == nil {
 		t.Error("New() err = nil, want non-nil")
 	}
 }
 
 func TestMuxServeHTTPDispatches(t *testing.T) {
 	table := []Route{
-		{Prefix: "/", Owner: OwnerDjango},
+		{Prefix: "/", Owner: OwnerUpstream},
 		{Prefix: "/api/", Owner: OwnerGo},
 	}
-	m, err := New(table, stub("django"), map[string]http.Handler{"/api/": stub("go")})
+	m, err := New(table, stub("upstream"), map[string]http.Handler{"/api/": stub("go")})
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
@@ -124,7 +124,7 @@ func TestMuxServeHTTPDispatches(t *testing.T) {
 		want string
 	}{
 		{"/api/articles", "go"},
-		{"/scp-173", "django"},
+		{"/scp-173", "upstream"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {

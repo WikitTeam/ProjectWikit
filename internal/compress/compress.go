@@ -1,4 +1,5 @@
-// Package compress gzips a response the way Django's GZipMiddleware does.
+// Package compress gzips a response with a deterministic header, so the same
+// body twice produces the same bytes.
 package compress
 
 import (
@@ -12,8 +13,8 @@ import (
 	"strings"
 )
 
-// Below this size Django returns the response untouched, Vary included, so the
-// header is not a reliable sign that compression was considered.
+// Below this size the response goes out untouched, Vary included, so that
+// header is not a sign compression was considered.
 const minSize = 200
 
 const (
@@ -78,8 +79,6 @@ func patchVary(h http.Header) {
 	h.Set("Vary", current+", "+name)
 }
 
-// pack writes the gzip stream Django writes, down to the zero timestamp and
-// the padding it hides in the filename field.
 func pack(body []byte) ([]byte, error) {
 	var out bytes.Buffer
 	zw, err := gzip.NewWriterLevel(&out, level)

@@ -12,8 +12,8 @@ SELECT slug, id
 FROM web_role
 WHERE slug = ANY($1)`)
 
-// The roles Django reads here are ordered by index. Nothing downstream depends
-// on that: each role's permissions are settled on their own and then merged.
+// Nothing downstream depends on the order. Each role's permissions are settled
+// on their own and then merged.
 var qRoleIDsForUser = register("RoleIDsForUser", `
 SELECT ur.role_id
 FROM web_user_roles ur
@@ -56,9 +56,8 @@ SELECT EXISTS (
     SELECT 1 FROM web_article_authors WHERE article_id = $1 AND user_id = $2
 )`)
 
-// RoleIDsBySlug resolves the two roles every visitor carries. A slug with no
-// row is left out rather than created, which is where this parts ways with
-// Django's get_or_create on a read path.
+// A slug with no row is left out rather than created, because a read path must
+// not write.
 func (d *DB) RoleIDsBySlug(ctx context.Context, slugs []string) (map[string]int64, error) {
 	rows, err := d.pool.Query(ctx, qRoleIDsBySlug, slugs)
 	if err != nil {

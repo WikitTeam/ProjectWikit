@@ -6,7 +6,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 func init() { module.Register("search", renderSearch) }
@@ -18,7 +18,7 @@ func renderSearch(env module.Env, params map[string]string, _ string) (string, e
 	}
 	fromPath := func(key string) string { return strings.TrimSpace(path.Get(key)) }
 
-	config := pyjson.Object{
+	config := wikijson.Object{
 		{Key: "placeholder", Value: firstNonBlank(params["placeholder"], env.Text("module-search-placeholder"))},
 		{Key: "tags", Value: params["tags"]},
 		{Key: "category", Value: params["category"]},
@@ -27,7 +27,7 @@ func renderSearch(env module.Env, params map[string]string, _ string) (string, e
 		{Key: "datefrom", Value: fromPath("datefrom")},
 		{Key: "dateto", Value: fromPath("dateto")},
 	}
-	encoded, err := pyjson.Marshal(config)
+	encoded, err := wikijson.Marshal(config)
 	if err != nil {
 		return "", err
 	}

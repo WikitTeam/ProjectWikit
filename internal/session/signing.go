@@ -29,8 +29,6 @@ func (s Signer) signature(value, key string) string {
 	return b64Encode(saltedHMAC(s.Salt+"signer", key, value))
 }
 
-// keys puts the current secret first, the order Django tries them in while a
-// key rotation is in flight.
 func (s Signer) keys() []string {
 	return append([]string{s.Key}, s.Fallbacks...)
 }

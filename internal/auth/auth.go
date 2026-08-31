@@ -91,8 +91,8 @@ func (r *Resolver) resolve(req *http.Request) *db.User {
 
 	hash, _ := decoded[session.AuthUserHash].(string)
 	if !r.store.AuthHashMatches(password, hash) {
-		// The password changed under this session. Django drops the row here,
-		// so leaving it would let the same cookie keep costing a query.
+		// The password changed under this session. Leaving the row would let the same
+		// dead cookie keep costing a query.
 		if err := r.sessions.DeleteSession(ctx, cookie.Value); err != nil {
 			r.log.Error("drop stale session", "err", err)
 		}

@@ -16,14 +16,12 @@ type Lookup interface {
 }
 
 // HostRules is the redirect between the two domains plus the header pair that
-// follows from which one the request arrived on. The asset bundle must stay
-// outside it: whitenoise answers those before Django applies any of this.
+// follows from which one the request arrived on. The asset bundle stays outside
+// it, since it is answered before any of this runs.
 type HostRules struct {
 	sites      Lookup
 	serverPort string
 	next       http.Handler
-	// unresolved takes over when the Host matches no site; that response is
-	// still Django's to render.
 	unresolved http.Handler
 }
 
@@ -46,10 +44,9 @@ func (h *HostRules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	decision := Decide(Site{Domain: found.Domain, MediaDomain: found.MediaDomain}, r.Host, r.URL)
 	if decision.Action == Redirect {
-		// Not http.Redirect: it writes an HTML body for GET, and Django sends
-		// none.
+		// Not http.Redirect, which writes an HTML body for GET where this
+		// response has none.
 		w.Header().Set("Location", decision.Location)
-		// The type of the body Django would have sent, kept so the two agree.
 		w.Header().Set("Content-Type", redirectContentType)
 		// Written out because net/http leaves it off a HEAD it did not size.
 		w.Header().Set("Content-Length", "0")
@@ -57,8 +54,6 @@ func (h *HostRules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Django sets these after the handler runs, overwriting it. Setting them
-	// first lets the handler win; nothing writes these names today.
 	for name, value := range decision.Headers {
 		w.Header().Set(name, value)
 	}

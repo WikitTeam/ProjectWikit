@@ -104,8 +104,8 @@ func window(q Query) (offset int, limit *int, skip bool) {
 	return offset, &bounded, false
 }
 
-// A per-page of zero would divide by zero in Django, so this reports no pages
-// at all rather than failing the request.
+// A per-page of zero reports no pages at all rather than dividing by zero and
+// failing the request.
 func totalPages(total, perPage int) int {
 	if perPage <= 0 {
 		return 0

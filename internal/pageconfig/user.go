@@ -3,8 +3,8 @@ package pageconfig
 import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
-	"github.com/WikitTeam/ProjectWikit/internal/pyjson"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 const (
@@ -27,8 +27,8 @@ type UserJSON struct {
 	Roles      any
 }
 
-func (u UserJSON) Object() pyjson.Object {
-	return pyjson.Object{
+func (u UserJSON) Object() wikijson.Object {
+	return wikijson.Object{
 		{Key: "type", Value: u.Type},
 		{Key: "id", Value: u.ID},
 		{Key: "name", Value: u.Name},
@@ -44,7 +44,7 @@ func (u UserJSON) Object() pyjson.Object {
 	}
 }
 
-func (u UserJSON) JSON() (string, error) { return pyjson.Marshal(u.Object()) }
+func (u UserJSON) JSON() (string, error) { return wikijson.Marshal(u.Object()) }
 
 func SystemUserJSON() UserJSON {
 	return UserJSON{Type: typeSystem, IsActive: true, Editor: false}
@@ -114,7 +114,7 @@ func (l LoginStatus) JSON(loc *i18n.Localizer) (string, error) {
 	if l.User != nil {
 		user = SignedInUserJSON(l.User, l.Roles, true, l.CanEditArticles)
 	}
-	return pyjson.Marshal(pyjson.Object{
+	return wikijson.Marshal(wikijson.Object{
 		{Key: "user", Value: user.Object()},
 		{Key: "notificationCount", Value: l.NotificationCount},
 	})

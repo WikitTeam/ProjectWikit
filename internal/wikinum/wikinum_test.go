@@ -1,4 +1,4 @@
-package pynum
+package wikinum
 
 import "testing"
 

@@ -237,8 +237,8 @@ func (v *Vars) compute(name string) (string, bool) {
 	return "", false
 }
 
-// notFoundOrFail keeps a missing row out of Err. A page with no revision yet
-// leaves %%content%% standing, which is what Django renders too.
+// A missing row is kept out of Err, so a page with no revision yet leaves
+// %%content%% standing.
 func (v *Vars) notFoundOrFail(err error) bool {
 	if errors.Is(err, db.ErrNotFound) {
 		return false
@@ -391,12 +391,12 @@ func (v *Vars) popularity() (string, bool) {
 	if count == 0 {
 		count = 1
 	}
-	return strconv.Itoa(pyRound(float64(good) / float64(count) * 100)), true
+	return strconv.Itoa(roundHalfEven(float64(good) / float64(count) * 100)), true
 }
 
-// pyRound is Python's round, where a halfway value goes to the even neighbour,
-// so a popularity of exactly 12.5 is 12 and not 13.
-func pyRound(x float64) int {
+// A halfway value goes to the even neighbour, so a popularity of exactly 12.5
+// is 12 and not 13.
+func roundHalfEven(x float64) int {
 	return int(math.RoundToEven(x))
 }
 
@@ -446,8 +446,6 @@ func (v *Vars) userText(u *db.User) string {
 	return u.Username
 }
 
-// QuoteAll matches Python's quote(safe=”), which escapes the slash too and
-// spells a space %20 rather than a plus.
 func QuoteAll(s string) string {
 	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 }

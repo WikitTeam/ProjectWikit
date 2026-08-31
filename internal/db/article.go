@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// dumbName mirrors _page_name_to_dumb in renderer/__init__.py. complete_full_name
-// is a generated column that always carries an explicit category, so a bare page
-// name has to grow the implicit _default: prefix before it can match anything.
+// complete_full_name is a generated column that always carries an explicit
+// category, so a bare page name grows the implicit _default one before it can
+// match anything.
 func dumbName(ref string) string {
 	if strings.Contains(ref, ":") {
 		return strings.ToLower(ref)

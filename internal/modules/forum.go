@@ -44,8 +44,8 @@ func renderDate(env module.Env, at time.Time) string {
 		escape.HTML(serverDate(env, at)) + `</span>`
 }
 
-// Python calls strftime on what the ORM handed back, which is UTC and not the
-// site's zone.
+// The stamp is formatted in UTC and not the site's zone, which is what the
+// stored value carries.
 func serverDate(env module.Env, at time.Time) string {
 	at = at.UTC()
 	pad := func(n int) string {

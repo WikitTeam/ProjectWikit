@@ -205,7 +205,7 @@ func unsetOf(args []Value) (Value, error) {
 	if err := arity(args, 1); err != nil {
 		return None(), err
 	}
-	s := args[0].PyStr()
+	s := args[0].Text()
 	return BoolOf(strings.HasPrefix(s, "%%") && strings.HasSuffix(s, "%%")), nil
 }
 
