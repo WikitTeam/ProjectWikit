@@ -1,0 +1,127 @@
+[
+  {
+    "name": "category",
+    "body": "%%total%%",
+    "params": {
+      "category": "probe"
+    }
+  },
+  {
+    "name": "count-alias",
+    "body": "%%count%%",
+    "params": {
+      "category": "probe"
+    }
+  },
+  {
+    "name": "uppercase-name",
+    "body": "%%TOTAL%%",
+    "params": {
+      "category": "probe"
+    }
+  },
+  {
+    "name": "unknown-name",
+    "body": "%%nope%%",
+    "params": {
+      "category": "probe"
+    }
+  },
+  {
+    "name": "wikitext-around-it",
+    "body": "**%%total%%** pages",
+    "params": {
+      "category": "probe"
+    }
+  },
+  {
+    "name": "every-category",
+    "body": "%%total%%",
+    "params": {
+      "category": "*"
+    }
+  },
+  {
+    "name": "no-parameters",
+    "body": "%%total%%"
+  },
+  {
+    "name": "per-page-does-not-cut-it",
+    "body": "%%total%%",
+    "params": {
+      "category": "probe",
+      "perPage": "2"
+    }
+  },
+  {
+    "name": "limit",
+    "body": "%%total%%",
+    "params": {
+      "category": "probe",
+      "limit": "3"
+    }
+  },
+  {
+    "name": "offset",
+    "body": "%%total%%",
+    "params": {
+      "category": "probe",
+      "offset": "2"
+    }
+  },
+  {
+    "name": "tags",
+    "body": "%%total%%",
+    "params": {
+      "category": "*",
+      "tags": "lang:en"
+    }
+  },
+  {
+    "name": "full-name",
+    "body": "%%total%%",
+    "params": {
+      "fullname": "probe:full"
+    }
+  },
+  {
+    "name": "full-name-missing",
+    "body": "%%total%%",
+    "params": {
+      "fullname": "probe:no-such-page"
+    }
+  },
+  {
+    "name": "unparsable-parameter",
+    "body": "%%total%%",
+    "params": {
+      "category": "probe",
+      "rating": "junk"
+    }
+  },
+  {
+    "name": "url-parameter-default",
+    "body": "%%total%%",
+    "params": {
+      "category": "@url|probe"
+    }
+  },
+  {
+    "name": "url-parameter-from-path",
+    "body": "%%total%%",
+    "params": {
+      "category": "@url|probe"
+    },
+    "path": {
+      "category": "probestars"
+    }
+  },
+  {
+    "name": "empty-body",
+    "body": ""
+  },
+  {
+    "name": "body-without-a-variable",
+    "body": "no variable here"
+  }
+]

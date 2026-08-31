@@ -1,0 +1,36 @@
+=== category
+<p>22</p>
+=== count-alias
+<p>22</p>
+=== uppercase-name
+<p>22</p>
+=== unknown-name
+<p>%%nope%%</p>
+=== wikitext-around-it
+<p><strong>22</strong> pages</p>
+=== every-category
+<p>45</p>
+=== no-parameters
+<p>5</p>
+=== per-page-does-not-cut-it
+<p>22</p>
+=== limit
+<p>3</p>
+=== offset
+<p>20</p>
+=== tags
+<p>1</p>
+=== full-name
+<p>1</p>
+=== full-name-missing
+<p>0</p>
+=== unparsable-parameter
+<p>0</p>
+=== url-parameter-default
+<p>22</p>
+=== url-parameter-from-path
+<p>4</p>
+=== empty-body
+
+=== body-without-a-variable
+<p>no variable here</p>
