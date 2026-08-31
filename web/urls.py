@@ -22,7 +22,7 @@ from django.urls import path, re_path, include, URLPattern, URLResolver
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordResetView
 from django.contrib import admin
 
-from .views import profile, signup, login, updates as updates_views
+from .views import profile, signup, login, tickets, updates as updates_views
 from .views.theme import SiteThemeFileView
 
 from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages, reports as api_reports
@@ -115,6 +115,9 @@ sys_patterns = [
     re_path(r'^preferences/', include('dynamic_preferences.urls')),
 
     path("theme/<slug>.css", SiteThemeFileView.as_view(), name='site_theme_file'),
+
+    path("tickets/submit", tickets.SubmitTicketView.as_view(), name='ticket_submit'),
+    path("membership/password", tickets.MembershipByPasswordView.as_view(), name='membership_by_password'),
 
     path("admin/update/status", updates_views.UpdatesStatusView.as_view(), name='wu_update_status'),
     path("admin/update/trigger", updates_views.UpdatesTriggerView.as_view(), name='wu_update_trigger'),

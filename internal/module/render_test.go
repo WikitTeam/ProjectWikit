@@ -54,7 +54,7 @@ func (f fakeData) CountArticles(db.ListFilter, int, *int) (int, error) {
 }
 
 func TestEveryPortedModuleAnswers(t *testing.T) {
-	ported := []string{"button", "countpages", "css", "forumcategory", "forumnewthread", "forumstart", "forumthread", "listpages", "listusers", "members", "newpage", "pagedescription", "pageimage", "pagesbytag", "rate", "recentposts", "redirect", "search", "sitechanges", "tagcloud", "time", "wantedpages"}
+	ported := []string{"applicationform", "button", "countpages", "css", "forumcategory", "forumnewthread", "forumstart", "forumthread", "listpages", "listusers", "members", "membershipbypassword", "newpage", "pagedescription", "pageimage", "pagesbytag", "rate", "recentposts", "redirect", "search", "sitechanges", "tagcloud", "time", "wantedpages"}
 	for _, name := range ported {
 		if !module.Ported(name) {
 			t.Errorf("Ported(%q) = false, want true", name)
@@ -256,5 +256,30 @@ func TestPagesByTagOfTheDefaultCategory(t *testing.T) {
 	}
 	if strings.Contains(got, "module-pagesbytag-category") {
 		t.Errorf("Render(pagesbytag) = %q, want no category clause", got)
+	}
+}
+
+func TestRenderRefusesAModuleOutsideTheAllowlist(t *testing.T) {
+	ctx := page.NewContext(nil, nil, nil, nil)
+	ctx.OnlyModules = []string{"time"}
+
+	_, err := module.Render(module.Env{Page: ctx}, "listpages", nil, "")
+	var moduleErr *module.Error
+	if !errors.As(err, &moduleErr) {
+		t.Fatalf("Render(listpages) err = %v, want a module error", err)
+	}
+	if moduleErr.Message != "module-unknown" {
+		t.Errorf("Render(listpages) message = %q, want %q", moduleErr.Message, "module-unknown")
+	}
+}
+
+func TestRenderAllowsAModuleOnTheAllowlist(t *testing.T) {
+	ctx := page.NewContext(nil, nil, nil, nil)
+	ctx.OnlyModules = []string{"time"}
+
+	_, err := module.Render(module.Env{Page: ctx}, "time", nil, "")
+	var moduleErr *module.Error
+	if errors.As(err, &moduleErr) && moduleErr.Message == "module-unknown" {
+		t.Error("Render(time) = module-unknown, want the module to run")
 	}
 }

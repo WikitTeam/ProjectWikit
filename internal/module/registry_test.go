@@ -75,3 +75,37 @@ func TestRegisterRejectsAnUnknownName(t *testing.T) {
 	}()
 	Register("no-such-module", func(Env, map[string]string, string) (string, error) { return "", nil })
 }
+
+func TestParseBool(t *testing.T) {
+	cases := []struct {
+		in         string
+		want, isOk bool
+	}{
+		{"yes", true, true},
+		{"TRUE", true, true},
+		{" 1 ", true, true},
+		{"no", false, true},
+		{"f", false, true},
+		{"0", false, true},
+		{"入组申请", false, false},
+		{"", false, false},
+	}
+	for _, c := range cases {
+		got, ok := ParseBool(c.in)
+		if ok != c.isOk {
+			t.Errorf("ParseBool(%q) ok = %v, want %v", c.in, ok, c.isOk)
+			continue
+		}
+		if ok && got != c.want {
+			t.Errorf("ParseBool(%q) = %v, want %v", c.in, got, c.want)
+		}
+	}
+}
+
+func TestFormModulesTakeNoBody(t *testing.T) {
+	for _, name := range []string{"applicationform", "membershipbypassword"} {
+		if HasContent(name) {
+			t.Errorf("HasContent(%q) = true, want false", name)
+		}
+	}
+}
