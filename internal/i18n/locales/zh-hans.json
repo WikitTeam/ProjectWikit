@@ -61,6 +61,7 @@
   "module-forumthread-posts": "帖子数：",
   "module-frontforum-no-category": "[[module FrontForum]] 缺少 category 参数",
   "module-gallery-size": "不支持的图库尺寸：{size}",
+  "module-input-no-fields": "[[input]] 没有定义任何字段",
   "module-listpages-pager-count": "第&nbsp;{page}&nbsp页; 共&nbsp;{total}&nbsp;页",
   "module-listpages-pager-next": "下一页&nbsp;&raquo;",
   "module-listpages-pager-prev": "&laquo;&nbsp;上一页",

@@ -59,3 +59,26 @@ func TestApplyTemplateEmptyValue(t *testing.T) {
 		t.Errorf("ApplyTemplate(%q) = %q, want %q", "[%%a%%]", got, "[]")
 	}
 }
+
+func TestInputsRewrite(t *testing.T) {
+	got := Inputs("[[input]]\n# a\n * type: checkbox\n[[/input]]")
+	want := "[[module Input]]\n# a\n * type: checkbox\n[[/module]]"
+	if got != want {
+		t.Errorf("Inputs() = %q, want %q", got, want)
+	}
+}
+
+func TestInputsKeepsTheHead(t *testing.T) {
+	got := Inputs(`[[input class="x"]]body[[/input]]`)
+	if want := `[[module Input class="x"]]body[[/module]]`; got != want {
+		t.Errorf("Inputs() = %q, want %q", got, want)
+	}
+}
+
+func TestInputsLeavesOtherText(t *testing.T) {
+	for _, in := range []string{"[[inputs]]x[[/inputs]]", "[[input]]no closing tag", "plain"} {
+		if got := Inputs(in); got != in {
+			t.Errorf("Inputs(%q) = %q, want it unchanged", in, got)
+		}
+	}
+}
