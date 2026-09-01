@@ -187,7 +187,7 @@ func (v *Vars) compute(name string) (string, bool) {
 		}
 		parts := make([]string, len(authors))
 		for i := range authors {
-			parts[i] = "[[span]]" + v.userText(&authors[i]) + "[[/span]]"
+			parts[i] = v.userText(&authors[i])
 		}
 		return strings.Join(parts, " "), true
 	case "created_by_linked":
@@ -215,7 +215,7 @@ func (v *Vars) compute(name string) (string, bool) {
 		if !ok {
 			return "", false
 		}
-		return strings.Join(tags, ", "), true
+		return strings.Join(tags, " "), true
 	case "tags_linked":
 		tags, ok := v.getTags()
 		if !ok {

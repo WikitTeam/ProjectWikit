@@ -286,7 +286,7 @@ func TestLookupUsers(t *testing.T) {
 	v := NewVars(testArticle(), nil, src, nil)
 
 	tests := []struct{ name, want string }{
-		{"created_by", "[[span]]Alice[[/span]] [[span]]bob[[/span]] [[span]]wd:Carol WD[[/span]]"},
+		{"created_by", "Alice bob wd:Carol WD"},
 		{"created_by_linked", "[[*user alice]] [[*user bob]] [[*user carol]]"},
 		{"created_by_linked_plain", "[[user alice]] [[user bob]] [[user carol]]"},
 		{"authors_count", "3"},
@@ -343,7 +343,7 @@ func TestLookupTags(t *testing.T) {
 	v := NewVars(testArticle(), nil, src, nil)
 
 	got, _ := v.Lookup("tags")
-	if want := "alpha, lang:en, zeta"; got != want {
+	if want := "alpha lang:en zeta"; got != want {
 		t.Errorf("Lookup(\"tags\") = %q, want %q", got, want)
 	}
 }

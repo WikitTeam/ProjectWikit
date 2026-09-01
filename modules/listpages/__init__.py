@@ -110,7 +110,7 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
         'current_user_voted': lambda: 'True' if page.votes.filter(user=current_user).exists() else 'False',
         'popularity': lambda: str(get_rating('popularity')),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
-        'created_by': lambda: ' '.join([f'[[span]]{render_user_to_text(author)}[[/span]]' for author in get_authors()]),
+        'created_by': lambda: ' '.join([render_user_to_text(author) for author in get_authors()]),
         'created_by_linked': get_created_by_linked(False),
         'created_by_linked_plain': get_created_by_linked(True),
         'updated_by': lambda: render_user_to_text(get_updated_by()),
@@ -120,7 +120,7 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
-        'tags': lambda: ', '.join(articles.get_tags(page)),
+        'tags': lambda: ' '.join(articles.get_tags(page)),
         'tags_linked': lambda: ', '.join(('[/system:page-tags/tag/%s %s]' % (urllib.parse.quote(tag, safe=''), tag)) for tag in articles.get_tags(page)),
         # _tags, _tags_linked, _tags_linked|link_prefix = not yet
         # form_data{name}, form_raw{name}, form_label{name}, form_hint{name} = never ever

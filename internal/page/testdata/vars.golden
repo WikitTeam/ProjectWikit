@@ -26,7 +26,7 @@ True
 === probe:full revisions
 1
 === probe:full created_by
-[[span]]Probe Author[[/span]] [[span]]wd:Probe WD[[/span]]
+Probe Author wd:Probe WD
 === probe:full created_by_linked
 [[*user probe-author]] [[*user 576c0df3-8a28-4468-9770-ede851d88c67]]
 === probe:full created_by_linked_plain
@@ -40,7 +40,7 @@ Probe Author
 === probe:full authors_count
 2
 === probe:full tags
-alpha, lang:en, zeta
+alpha lang:en zeta
 === probe:full tags_linked
 [/system:page-tags/tag/alpha alpha], [/system:page-tags/tag/lang%3Aen lang:en], [/system:page-tags/tag/zeta zeta]
 === probe:full created_at
@@ -103,7 +103,7 @@ False
 === probe:full revisions
 1
 === probe:full created_by
-[[span]]Probe Author[[/span]] [[span]]wd:Probe WD[[/span]]
+Probe Author wd:Probe WD
 === probe:full created_by_linked
 [[*user probe-author]] [[*user 576c0df3-8a28-4468-9770-ede851d88c67]]
 === probe:full created_by_linked_plain
@@ -117,7 +117,7 @@ Probe Author
 === probe:full authors_count
 2
 === probe:full tags
-alpha, lang:en, zeta
+alpha lang:en zeta
 === probe:full tags_linked
 [/system:page-tags/tag/alpha alpha], [/system:page-tags/tag/lang%3Aen lang:en], [/system:page-tags/tag/zeta zeta]
 === probe:full created_at
@@ -255,7 +255,7 @@ False
 === probe:parent revisions
 1
 === probe:parent created_by
-[[span]]Probe Author[[/span]]
+Probe Author
 === probe:parent created_by_linked
 [[*user probe-author]]
 === probe:parent created_by_linked_plain
@@ -331,7 +331,7 @@ True
 === probestars:rated revisions
 1
 === probestars:rated created_by
-[[span]]Probe Author[[/span]]
+Probe Author
 === probestars:rated created_by_linked
 [[*user probe-author]]
 === probestars:rated created_by_linked_plain
@@ -345,7 +345,7 @@ Probe Author
 === probestars:rated authors_count
 1
 === probestars:rated tags
-alpha, topic:scp
+alpha topic:scp
 === probestars:rated tags_linked
 [/system:page-tags/tag/alpha alpha], [/system:page-tags/tag/topic%3Ascp topic:scp]
 === probestars:rated created_at
@@ -407,7 +407,7 @@ False
 === probe:half revisions
 1
 === probe:half created_by
-[[span]]Probe Author[[/span]]
+Probe Author
 === probe:half created_by_linked
 [[*user probe-author]]
 === probe:half created_by_linked_plain
