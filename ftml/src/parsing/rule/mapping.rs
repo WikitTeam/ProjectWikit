@@ -37,7 +37,7 @@ lazy_static! {
             Token::LeftBracket => vec![RULE_LINK_SINGLE, RULE_TEXT],
             Token::RightBracket => vec![RULE_TEXT],
             Token::LeftBlock => vec![RULE_BLOCK, RULE_ANCHOR],
-            Token::LeftBlockEnd => vec![],
+            Token::LeftBlockEnd => vec![RULE_BLOCK_END],
             Token::RightBlock => vec![],
             Token::LeftMath => vec![RULE_MATH],
             Token::RightMath => vec![],
