@@ -41,7 +41,7 @@
   margin-bottom: 16px;
 }
 .w-stars-rate-module .w-stars-rate-number {
-  color: #4e6b6b;
+  color: #000000;
   font-weight: bold;
 }
 .w-stars-rate-module .w-stars-rate-rating {
@@ -105,7 +105,7 @@
   content: "\f005\f005\f005\f005\f005";
   letter-spacing: 2px;
   white-space: nowrap;
-  color: var(--rated-var, #4e6b6b);
+  color: var(--rated-var, #000000);
 }
 .w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper .w-stars-rate-stars-view {
   overflow: hidden;
@@ -139,7 +139,7 @@
   text-align: center;
   margin-left: 8px;
   margin-right: 8px;
-  color: #4e6b6b;
+  color: #000000;
   font-weight: bold;
 }
 

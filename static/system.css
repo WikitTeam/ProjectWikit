@@ -51,7 +51,7 @@ html {
   background: #eee;
 }
 .system-content .heading {
-  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.062745098), transparent 4px), linear-gradient(to bottom, #000000, #446060);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.062745098), transparent 4px), linear-gradient(to bottom, #000000, #000000);
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.4980392157) inset;
   color: white;
   padding: 16px;
@@ -143,12 +143,12 @@ html {
 }
 .system-content .content button:hover,
 .system-content .content input[type=submit]:hover {
-  background: #446060;
+  background: #000000;
 }
 .system-content .content button:active,
 .system-content .content input[type=submit]:active {
   background: #0e1414;
-  color: #4e6b6b;
+  color: #000000;
 }
 
 .system-content .login-form {

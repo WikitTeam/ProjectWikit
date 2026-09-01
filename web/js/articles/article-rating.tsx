@@ -64,7 +64,7 @@ const Styles = styled.div<{ loading?: boolean }>`
   .w-bar-fill {
     height: 100%;
     border-radius: inherit;
-    background-color: #4e6b6b;
+    background-color: #000000;
   }
   .w-rate-num {
     width: 25px;

@@ -84,16 +84,8 @@ const Styles = styled.div<{ loading?: boolean }>`
     }
 
     .w-upload-btn {
-      background: #446060;
-      &:hover {
-        background: #517a7a;
-      }
-      border-radius: 4px;
-      color: white;
-      font-weight: bold;
       display: inline-block;
       padding: 4px 8px;
-      text-decoration: none;
       text-align: center;
     }
 
@@ -138,7 +130,7 @@ const Styles = styled.div<{ loading?: boolean }>`
           border-radius: 999px;
 
           & > div {
-            background: #446060;
+            background: #000000;
             border-radius: 999px;
             height: 5px;
           }
@@ -296,7 +288,7 @@ class ArticleFiles extends Component<Props, State> {
                       <span className="w-upload-type">{file.file.type}</span>
                       <span className="w-upload-size">{this.formatSize(file.file.size)}</span>
                       {!file.uploading ? (
-                        <a href="#" className="w-upload-btn" onClick={e => this.onUploadFile(e, file)}>
+                        <a href="#" className="button w-upload-btn" onClick={e => this.onUploadFile(e, file)}>
                           {t('articles.files.upload')}
                         </a>
                       ) : null}
@@ -312,7 +304,7 @@ class ArticleFiles extends Component<Props, State> {
                   </div>
                 )
               })}
-              <a href="#" className="w-upload-btn w-upload-all" onClick={this.onUploadAll}>
+              <a href="#" className="button w-upload-btn w-upload-all" onClick={this.onUploadAll}>
                 {t('articles.files.upload-all')}
               </a>
             </div>

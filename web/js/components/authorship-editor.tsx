@@ -93,7 +93,7 @@ const UserSuggestion = styled.div`
   }
   &:hover,
   &.active {
-    background: #446060;
+    background: #000000;
     color: white;
   }
 `

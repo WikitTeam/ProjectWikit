@@ -16,7 +16,7 @@ func init() { module.Register("rate", renderRate) }
 
 const (
 	starColorRated   = "#f0ac00"
-	starColorUnrated = "#4e6b6b"
+	starColorUnrated = "#000000"
 )
 
 func renderRate(env module.Env, _ map[string]string, _ string) (string, error) {
