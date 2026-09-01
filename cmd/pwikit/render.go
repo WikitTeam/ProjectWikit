@@ -35,6 +35,7 @@ func render(args []string) error {
 	pageName := fs.String("page", "page", "page name reported to ftml")
 	category := fs.String("category", "_default", "page category reported to ftml")
 	domain := fs.String("domain", "example.org", "site domain reported to ftml")
+	modules := fs.String("modules", "real", "how to answer modules: real, stub")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -44,6 +45,9 @@ func render(args []string) error {
 
 	if !renderer.Mode(*mode).Valid() {
 		return fmt.Errorf("unknown mode %q", *mode)
+	}
+	if *modules != "real" && *modules != "stub" {
+		return fmt.Errorf("unknown modules %q", *modules)
 	}
 
 	source, err := readSource(*file)
@@ -63,8 +67,11 @@ func render(args []string) error {
 		return err
 	}
 
-	store := cliRepository{}
-	var vars *page.Vars
+	store := cliRepository{stub: *modules == "stub"}
+	var (
+		vars    *page.Vars
+		article *db.Article
+	)
 	if *dsn != "" {
 		conn, err := db.Open(ctx, *dsn)
 		if err != nil {
@@ -77,7 +84,7 @@ func render(args []string) error {
 		}
 		users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), roles.FileIcons(p.Files()))
 		store.data = repo.New(ctx, conn, users, repo.Options{Loc: bundle.Localizer(i18n.DefaultLanguage)})
-		vars, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), *category, *pageName, *domain)
+		vars, article, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), *category, *pageName, *domain)
 		if err != nil {
 			return err
 		}
@@ -85,7 +92,10 @@ func render(args []string) error {
 
 	cb := callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
 	cb.SetPageVars(vars)
-	source = page.ThisVars(source, vars)
+	if article != nil {
+		cb.SetContext(page.NewContext(article, article, nil, nil))
+	}
+	source = page.PreRender(source, vars)
 	var handler renderer.Callbacks = cb
 	var recorder *tracer
 	if *trace != "" {
@@ -102,23 +112,23 @@ func render(args []string) error {
 
 // cliPageVars resolves the page being rendered to a real row when there is one,
 // so %%this|x%% answers with that page rather than staying put.
-func cliPageVars(ctx context.Context, conn *db.DB, loc *i18n.Localizer, category, name, domain string) (*page.Vars, error) {
+func cliPageVars(ctx context.Context, conn *db.DB, loc *i18n.Localizer, category, name, domain string) (*page.Vars, *db.Article, error) {
 	ref := name
 	if category != db.DefaultCategory {
 		ref = category + ":" + name
 	}
 	article, err := conn.ArticleByName(ctx, ref)
 	if errors.Is(err, db.ErrNotFound) {
-		return nil, nil
+		return nil, nil, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var siteID int64
 	if site, err := conn.SiteByHosts(ctx, []string{domain}); err == nil {
 		siteID = site.ID
 	}
-	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, siteID), loc), nil
+	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, siteID), loc), article, nil
 }
 
 func readSource(file string) (string, error) {
@@ -194,11 +204,17 @@ func writeTrace(target string, recorder *tracer) error {
 
 type cliRepository struct {
 	data *repo.Repository
+	stub bool
 }
 
 var _ callbacks.Repository = cliRepository{}
 
-func (r cliRepository) RenderModule(pc *page.Context, name string, params map[string]string, _ string) (string, error) {
+// Stubbing prints what a module was handed, which is the only way to see the
+// arguments the renderer dropped before they ever reached it.
+func (r cliRepository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {
+	if r.data != nil && !r.stub {
+		return r.data.RenderModule(pc, name, params, body)
+	}
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)
