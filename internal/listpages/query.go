@@ -56,6 +56,10 @@ func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 	filter := q.Filter
 	filter.Hidden = hidden
 
+	if q.hasFormWork() {
+		return runWithForm(src, q, filter, paginate)
+	}
+
 	total, err := src.CountArticles(filter, q.Offset, q.Limit)
 	if err != nil {
 		return Result{}, err

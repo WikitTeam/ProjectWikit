@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 )
 
@@ -116,6 +117,14 @@ type dbSource struct {
 	ctx    context.Context
 	d      *db.DB
 	siteID int64
+}
+
+func (s dbSource) LatestSource(articleID int64) (string, error) {
+	return s.d.LatestSource(s.ctx, articleID)
+}
+
+func (s dbSource) CategoryForm(category string) (*form.Definition, error) {
+	return nil, nil
 }
 
 func (s dbSource) TagIDsByName(categorySlug, name string) ([]int64, error) {

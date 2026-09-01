@@ -15,3 +15,25 @@ func TestUnwrapParagraphs(t *testing.T) {
 		}
 	}
 }
+
+func TestMissingNameResolves404PageName(t *testing.T) {
+	resolve := missingName("component:no-such-page")
+
+	got, ok := resolve("404_page_name")
+	if !ok {
+		t.Fatal("missingName(...)(\"404_page_name\") = _, false, want true")
+	}
+	if want := "component:no-such-page"; got != want {
+		t.Errorf("missingName(...)(\"404_page_name\") = %q, want %q", got, want)
+	}
+}
+
+func TestMissingNameLeavesOtherNames(t *testing.T) {
+	resolve := missingName("no-such-page")
+
+	for _, name := range []string{"fullname", "404_page_name ", "404_PAGE_NAME"} {
+		if _, ok := resolve(name); ok {
+			t.Errorf("missingName(...)(%q) = _, true, want false", name)
+		}
+	}
+}

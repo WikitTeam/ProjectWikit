@@ -5,10 +5,22 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 )
 
+func (f *fakeSource) LatestSource(articleID int64) (string, error) {
+	return f.sources[articleID], nil
+}
+
+func (f *fakeSource) CategoryForm(category string) (*form.Definition, error) {
+	return f.forms[category], nil
+}
+
 type fakeSource struct {
+	sources map[int64]string
+	forms   map[string]*form.Definition
+
 	tags         map[string][]int64
 	articleTags  map[int64][]int64
 	articles     map[string]*db.Article

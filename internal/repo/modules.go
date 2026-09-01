@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
@@ -55,6 +56,14 @@ func (m moduleData) ArticleTagIDs(articleID int64) ([]int64, error) {
 
 func (m moduleData) ArticleByRef(ref string) (*db.Article, error) {
 	return m.repo.db.ArticleByName(m.repo.ctx, ref)
+}
+
+func (m moduleData) LatestSource(articleID int64) (string, error) {
+	return m.repo.db.LatestSource(m.repo.ctx, articleID)
+}
+
+func (m moduleData) CategoryForm(category string) (*form.Definition, error) {
+	return m.repo.forms.CategoryForm(category)
 }
 
 func (m moduleData) UserByUsername(name string) (*db.User, error) {

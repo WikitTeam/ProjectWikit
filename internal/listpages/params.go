@@ -3,10 +3,12 @@ package listpages
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
@@ -23,6 +25,8 @@ type Source interface {
 	HiddenCategories(user *db.User) ([]string, error)
 	ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error)
 	CountArticles(f db.ListFilter, offset int, limit *int) (int, error)
+	LatestSource(articleID int64) (string, error)
+	CategoryForm(category string) (*form.Definition, error)
 }
 
 type Query struct {
@@ -39,6 +43,18 @@ type Query struct {
 	Limit   *int
 	Page    int
 	PerPage int
+
+	FormConds   []FormCond
+	FormSort    string
+	FormSortAsc bool
+}
+
+// The value is compared as text, which is why a form meant to be ordered
+// numerically pads its keys to a fixed width.
+type FormCond struct {
+	Field string
+	Op    string
+	Value string
 }
 
 const defaultPerPage = 20
@@ -74,6 +90,7 @@ func Parse(src Source, article *db.Article, viewer *db.User, params map[string]s
 	p.parseRating()
 	p.parseVotes()
 	p.parsePopularity()
+	p.parseFormFields()
 	p.parseSort()
 	p.parseWindow()
 	if err := p.resolveRatingMode(); err != nil {
@@ -552,6 +569,25 @@ func numOp(op string) string {
 	return db.NumEQ
 }
 
+func (p *parser) parseFormFields() {
+	keys := make([]string, 0, len(p.params))
+	for key := range p.params {
+		if len(key) > 1 && key[0] == '_' {
+			keys = append(keys, key)
+		}
+	}
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		op, rest := splitArgOperator(p.params[key], []string{">=", "<=", "<>", ">", "<", "="}, "=")
+		p.out.FormConds = append(p.out.FormConds, FormCond{
+			Field: key[1:],
+			Op:    op,
+			Value: strings.TrimSpace(rest),
+		})
+	}
+}
+
 func (p *parser) parseSort() {
 	raw, ok := p.params["order"]
 	if !ok {
@@ -562,7 +598,15 @@ func (p *parser) parseSort() {
 	if len(fields) == 2 && fields[1] == "desc" {
 		ascending = false
 	}
-	p.out.Filter.Sort = db.Sort{Column: fields[0], Ascending: ascending}
+	column := fields[0]
+	if field, ok := strings.CutPrefix(column, "_"); ok && field != "" {
+		p.out.FormSort, p.out.FormSortAsc = field, ascending
+		// No column answers this one, so the database keeps its default order
+		// and the rows are put in the asked-for one afterwards.
+		column = "created_at"
+		ascending = false
+	}
+	p.out.Filter.Sort = db.Sort{Column: column, Ascending: ascending}
 	p.out.HasSort = true
 }
 

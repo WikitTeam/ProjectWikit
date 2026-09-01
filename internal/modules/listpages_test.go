@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 )
@@ -64,6 +65,8 @@ func (nopVars) SiteRatingMode() (string, error)           { return "", db.ErrNot
 func (nopVars) CategoryRatingMode(string) (string, error) { return "", db.ErrNotFound }
 func (nopVars) HasVoted(int64, *int64) (bool, error)      { return false, nil }
 func (nopVars) ArticleByID(int64) (*db.Article, error)    { return nil, db.ErrNotFound }
+
+func (nopVars) CategoryForm(string) (*form.Definition, error) { return nil, nil }
 
 func listedArticles(names ...string) []db.Article {
 	out := make([]db.Article, len(names))

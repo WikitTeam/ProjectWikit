@@ -11,6 +11,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/article"
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
@@ -100,6 +101,9 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	vars := h.vars(req, req.article)
 	source = page.PageVars(source, vars, 1, 1)
 	source = page.ApplyTemplate(source, article.ThisPage(req.params, canonical))
+	// The field definitions are read by the variables, not by the reader, so
+	// they never reach the renderer even on the template's own page.
+	source = form.Strip(source)
 	source = page.PreRender(source, vars)
 
 	info, err := h.pageInfo(req, req.article)
@@ -265,6 +269,7 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 	// template, so a template can name what is missing.
 	vars := h.vars(req, asked)
 	source = page.PageVars(source, vars, 1, 1)
+	source = page.ApplyTemplate(source, missingName(req.name))
 	source = page.PreRender(source, vars)
 	info, err := h.pageInfo(req, template)
 	if err != nil {
@@ -290,6 +295,17 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 		style:    pc.ComputedStyle,
 		redirect: pc.RedirectTo,
 	}, nil
+}
+
+// Answered on this pass and nowhere else, so a page that exists leaves the
+// variable standing instead of naming itself.
+func missingName(fullName string) func(string) (string, bool) {
+	return func(name string) (string, bool) {
+		if name == "404_page_name" {
+			return fullName, true
+		}
+		return "", false
+	}
 }
 
 // nav renders one of the two navigation pages. It gets its own callbacks and

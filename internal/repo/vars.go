@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 )
 
@@ -14,12 +15,13 @@ type VarSource struct {
 	ctx    context.Context
 	db     *db.DB
 	siteID int64
+	forms  *formLoader
 }
 
 var _ page.VarSource = (*VarSource)(nil)
 
 func NewVarSource(ctx context.Context, d *db.DB, siteID int64) *VarSource {
-	return &VarSource{ctx: ctx, db: d, siteID: siteID}
+	return &VarSource{ctx: ctx, db: d, siteID: siteID, forms: newFormLoader(ctx, d)}
 }
 
 func (s *VarSource) LatestSource(articleID int64) (string, error) {
@@ -60,4 +62,8 @@ func (s *VarSource) HasVoted(articleID int64, userID *int64) (bool, error) {
 
 func (s *VarSource) ArticleByID(id int64) (*db.Article, error) {
 	return s.db.ArticleByID(s.ctx, id)
+}
+
+func (s *VarSource) CategoryForm(category string) (*form.Definition, error) {
+	return s.forms.CategoryForm(category)
 }

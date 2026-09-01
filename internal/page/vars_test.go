@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 )
 
 type fakeSource struct {
 	source    string
 	sourceErr error
+	formDef   *form.Definition
+	formErr   error
 	authors   []db.User
 	editor    *db.User
 	editorErr error
@@ -36,6 +39,11 @@ func newFakeSource() *fakeSource {
 }
 
 func (f *fakeSource) count(name string) { f.calls[name]++ }
+
+func (f *fakeSource) CategoryForm(category string) (*form.Definition, error) {
+	f.count("CategoryForm")
+	return f.formDef, f.formErr
+}
 
 func (f *fakeSource) LatestSource(articleID int64) (string, error) {
 	f.count("LatestSource")
@@ -590,5 +598,159 @@ func TestPyRound(t *testing.T) {
 		if got := roundHalfEven(tt.in); got != tt.want {
 			t.Errorf("roundHalfEven(%v) = %d, want %d", tt.in, got, tt.want)
 		}
+	}
+}
+
+const sectionedSource = "++ One\n\nfirst\n\n----\n====\n\n++ Two\n\nsecond\n\n----\n=====\n\n++ Three\n\nthird\n"
+
+func TestLookupContentSection(t *testing.T) {
+	src := newFakeSource()
+	src.source = sectionedSource
+	v := NewVars(testArticle(), nil, src, nil)
+
+	tests := []struct{ name, want string }{
+		{"content{1}", "++ One\n\nfirst\n\n----"},
+		{"content{2}", "++ Two\n\nsecond\n\n----"},
+		{"content{3}", "++ Three\n\nthird"},
+	}
+	for _, tt := range tests {
+		got, ok := v.Lookup(tt.name)
+		if !ok {
+			t.Errorf("Lookup(%q) = _, false, want true", tt.name)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("Lookup(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLookupContentSectionPastLastIsEmpty(t *testing.T) {
+	src := newFakeSource()
+	src.source = sectionedSource
+	v := NewVars(testArticle(), nil, src, nil)
+
+	got, ok := v.Lookup("content{4}")
+	if !ok {
+		t.Fatal("Lookup(\"content{4}\") = _, false, want true")
+	}
+	if got != "" {
+		t.Errorf("Lookup(\"content{4}\") = %q, want %q", got, "")
+	}
+}
+
+func TestLookupContentSectionWithoutBreaks(t *testing.T) {
+	src := newFakeSource()
+	src.source = "whole page"
+	v := NewVars(testArticle(), nil, src, nil)
+
+	got, ok := v.Lookup("content{1}")
+	if !ok {
+		t.Fatal("Lookup(\"content{1}\") = _, false, want true")
+	}
+	if want := "whole page"; got != want {
+		t.Errorf("Lookup(\"content{1}\") = %q, want %q", got, want)
+	}
+}
+
+func TestLookupContentSectionRejectsBadIndex(t *testing.T) {
+	src := newFakeSource()
+	src.source = sectionedSource
+	v := NewVars(testArticle(), nil, src, nil)
+
+	for _, name := range []string{"content{0}", "content{-1}", "content{x}", "content{}", "content{1"} {
+		if _, ok := v.Lookup(name); ok {
+			t.Errorf("Lookup(%q) = _, true, want false", name)
+		}
+	}
+}
+
+func TestLookupContentSectionSharesSourceWithContent(t *testing.T) {
+	src := newFakeSource()
+	src.source = sectionedSource
+	v := NewVars(testArticle(), nil, src, nil)
+
+	v.Lookup("content")
+	v.Lookup("content{1}")
+	v.Lookup("content{2}")
+
+	if got := src.calls["LatestSource"]; got != 1 {
+		t.Errorf("calls[LatestSource] = %d, want 1", got)
+	}
+}
+
+func TestLookupContentSectionMissingLeavesVariableUnresolved(t *testing.T) {
+	src := newFakeSource()
+	v := NewVars(testArticle(), nil, src, nil)
+
+	if _, ok := v.Lookup("content{1}"); ok {
+		t.Error("Lookup(\"content{1}\") = _, true, want false")
+	}
+	if err := v.Err(); err != nil {
+		t.Errorf("Err() = %v, want nil", err)
+	}
+}
+
+func formSource(t *testing.T) *fakeSource {
+	t.Helper()
+	def, _, err := form.Parse("[[form]]\nfields:\n Body:\n  type: wiki\n  label: text\n Kind:\n  type: select\n  values:\n   normal: plain\n   important: star\n  default: normal\n[[/form]]")
+	if err != nil {
+		t.Fatalf("form.Parse() err = %v, want nil", err)
+	}
+	src := newFakeSource()
+	src.formDef = def
+	src.source = "Body: \"**bold**\"\nKind: important"
+	return src
+}
+
+func TestLookupFormVars(t *testing.T) {
+	v := NewVars(testArticle(), nil, formSource(t), nil)
+
+	tests := []struct{ name, want string }{
+		{"form_data{Body}", "**bold**"},
+		{"form_raw{Kind}", "important"},
+		{"form_data{Kind}", "star"},
+		{"form_label{Body}", "text"},
+	}
+	for _, tt := range tests {
+		got, ok := v.Lookup(tt.name)
+		if !ok {
+			t.Errorf("Lookup(%q) = _, false, want true", tt.name)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("Lookup(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLookupFormVarUnknownField(t *testing.T) {
+	v := NewVars(testArticle(), nil, formSource(t), nil)
+
+	if _, ok := v.Lookup("form_data{Missing}"); ok {
+		t.Error("Lookup(\"form_data{Missing}\") = _, true, want false")
+	}
+}
+
+func TestLookupFormVarOutsideAFormCategory(t *testing.T) {
+	v := NewVars(testArticle(), nil, newFakeSource(), nil)
+
+	if _, ok := v.Lookup("form_data{Body}"); ok {
+		t.Error("Lookup(\"form_data{Body}\") = _, true, want false")
+	}
+}
+
+func TestLookupFormVarsQueryTheCategoryOnce(t *testing.T) {
+	src := formSource(t)
+	v := NewVars(testArticle(), nil, src, nil)
+
+	v.Lookup("form_data{Body}")
+	v.Lookup("form_raw{Kind}")
+
+	if got := src.calls["CategoryForm"]; got != 1 {
+		t.Errorf("calls[CategoryForm] = %d, want 1", got)
+	}
+	if got := src.calls["LatestSource"]; got != 1 {
+		t.Errorf("calls[LatestSource] = %d, want 1", got)
 	}
 }

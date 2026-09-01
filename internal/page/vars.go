@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 )
 
@@ -33,6 +35,7 @@ type VarSource interface {
 	CategoryRatingMode(category string) (string, error)
 	HasVoted(articleID int64, userID *int64) (bool, error)
 	ArticleByID(id int64) (*db.Article, error)
+	CategoryForm(category string) (*form.Definition, error)
 }
 
 // Vars resolves the page variables of one article. Every value is computed at
@@ -47,6 +50,11 @@ type Vars struct {
 	values map[string]string
 	err    error
 
+	source      string
+	sourceDone  bool
+	formDef     *form.Definition
+	formDefDone bool
+	formValues  map[string]string
 	authors     []db.User
 	authorsDone bool
 	editor      *db.User
@@ -146,11 +154,7 @@ func (v *Vars) compute(name string) (string, bool) {
 		// only lines up on pages whose title was never edited.
 		return "/" + a.Title, true
 	case "content":
-		source, err := v.src.LatestSource(a.ID)
-		if err != nil {
-			return "", v.notFoundOrFail(err)
-		}
-		return source, true
+		return v.latestSource()
 	case "rating":
 		return v.formattedRating()
 	case "rating_votes":
@@ -234,7 +238,111 @@ func (v *Vars) compute(name string) (string, bool) {
 		"parent_title_linked", "parent_linked_title":
 		return v.parentVar(name)
 	}
+	if n, ok := sectionIndex(name); ok {
+		return v.contentSection(n)
+	}
+	if kind, field, ok := form.ParseVar(name); ok {
+		return v.formVar(kind, field)
+	}
 	return "", false
+}
+
+func (v *Vars) formVar(kind, field string) (string, bool) {
+	def, ok := v.definition()
+	if !ok || def == nil {
+		return "", false
+	}
+	switch kind {
+	case form.VarLabel:
+		return def.Label(field)
+	case form.VarHint:
+		return def.Hint(field)
+	}
+	values, ok := v.storedValues()
+	if !ok {
+		return "", false
+	}
+	if kind == form.VarRaw {
+		return def.Raw(values, field)
+	}
+	return def.Data(values, field)
+}
+
+func (v *Vars) definition() (*form.Definition, bool) {
+	if v.formDefDone {
+		return v.formDef, true
+	}
+	def, err := v.src.CategoryForm(v.article.Category)
+	if err != nil {
+		return nil, v.fail(err)
+	}
+	v.formDef, v.formDefDone = def, true
+	return def, true
+}
+
+// A page of a form category stores its fields where an ordinary page stores
+// wikitext, so the values come out of the same revision.
+func (v *Vars) storedValues() (map[string]string, bool) {
+	if v.formValues != nil {
+		return v.formValues, true
+	}
+	source, ok := v.latestSource()
+	if !ok {
+		// A page with no revision yet still answers with the defaults.
+		source = ""
+	}
+	values, err := form.ParseData(source)
+	if err != nil {
+		values = map[string]string{}
+	}
+	v.formValues = values
+	return values, true
+}
+
+// Four is the marker authors write, and a longer run is taken too because a
+// line of equal signs means nothing else in wikitext.
+var sectionBreak = regexp.MustCompile(`(?m)^={4,}[ \t]*\r?$`)
+
+func sectionIndex(name string) (int, bool) {
+	arg, ok := strings.CutPrefix(name, "content{")
+	if !ok {
+		return 0, false
+	}
+	arg, ok = strings.CutSuffix(arg, "}")
+	if !ok {
+		return 0, false
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(arg))
+	if err != nil || n < 1 {
+		return 0, false
+	}
+	return n, true
+}
+
+func (v *Vars) contentSection(n int) (string, bool) {
+	source, ok := v.latestSource()
+	if !ok {
+		return "", false
+	}
+	sections := sectionBreak.Split(source, -1)
+	// An index past the last section resolves to empty rather than staying
+	// unresolved, so a section nobody has written yet renders blank.
+	if n > len(sections) {
+		return "", true
+	}
+	return strings.Trim(sections[n-1], "\r\n"), true
+}
+
+func (v *Vars) latestSource() (string, bool) {
+	if v.sourceDone {
+		return v.source, true
+	}
+	source, err := v.src.LatestSource(v.article.ID)
+	if err != nil {
+		return "", v.notFoundOrFail(err)
+	}
+	v.source, v.sourceDone = source, true
+	return source, true
 }
 
 // A missing row is kept out of Err, so a page with no revision yet leaves

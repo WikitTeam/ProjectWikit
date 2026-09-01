@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
@@ -37,6 +38,8 @@ type Data interface {
 	HasVoted(articleID int64, userID *int64) (bool, error)
 	ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error)
 	CountArticles(f db.ListFilter, offset int, limit *int) (int, error)
+	LatestSource(articleID int64) (string, error)
+	CategoryForm(category string) (*form.Definition, error)
 
 	ArticleByID(id int64) (*db.Article, error)
 	ArticleAuthors(articleID int64) ([]db.User, error)

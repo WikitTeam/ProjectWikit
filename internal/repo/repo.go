@@ -26,6 +26,7 @@ type Repository struct {
 	db    *db.DB
 	users *printuser.Renderer
 	opts  Options
+	forms *formLoader
 }
 
 // Options is what the modules read besides the database.
@@ -46,7 +47,7 @@ type Options struct {
 var _ callbacks.Repository = (*Repository)(nil)
 
 func New(ctx context.Context, d *db.DB, users *printuser.Renderer, opts Options) *Repository {
-	return &Repository{ctx: ctx, db: d, users: users, opts: opts}
+	return &Repository{ctx: ctx, db: d, users: users, opts: opts, forms: newFormLoader(ctx, d)}
 }
 
 func (r *Repository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error) {
