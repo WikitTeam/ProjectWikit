@@ -1,4 +1,5 @@
 import { t } from '~util/i18n'
+import { hovertipContainer, show, hide } from '~util/hovertip'
 export function makeFootnote(node: HTMLElement) {
   // hack: mark node as already processed because it was
   if ((node as any)._footnote) {
@@ -13,18 +14,7 @@ export function makeFootnote(node: HTMLElement) {
     return
   }
 
-  let footnoteContainer = document.getElementById('odialog-hovertips')
-  if (!footnoteContainer) {
-    footnoteContainer = document.createElement('div')
-    footnoteContainer.setAttribute('id', 'odialog-hovertips')
-    Object.assign(footnoteContainer.style, {
-      position: 'absolute',
-      zIndex: '100',
-      top: '0',
-      width: '100%',
-    })
-    document.body.appendChild(footnoteContainer)
-  }
+  const footnoteContainer = hovertipContainer()
 
   let footnoteHovertip: HTMLElement | null = footnoteContainer.querySelector('.hovertip.w-footnote-hovertip')
   if (!footnoteHovertip) {
@@ -60,7 +50,7 @@ export function makeFootnote(node: HTMLElement) {
   }
 
   const enableAndPosition = (x: number, y: number) => {
-    footnoteHovertip.style.display = 'block'
+    show(footnoteHovertip)
     footnoteHeading.textContent = shouldBeHeading
     footnoteContent.innerHTML = shouldBeContent.innerHTML
     position(x, y)
@@ -92,7 +82,7 @@ export function makeFootnote(node: HTMLElement) {
   }
 
   const disable = () => {
-    footnoteHovertip.style.display = 'none'
+    hide(footnoteHovertip)
     footnoteHeading.textContent = ''
     footnoteContent.innerHTML = ''
   }

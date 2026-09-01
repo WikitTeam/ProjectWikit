@@ -7,7 +7,7 @@ function padString(paddingValue: string, str: string) {
   return String(paddingValue + str).slice(-paddingValue.length)
 }
 
-function formatTimeAgo(diffMs: number) {
+export function formatTimeAgo(diffMs: number) {
   const minutes = Math.floor(diffMs / 1000 / 60)
   if (minutes < 1) {
     return t('util.date-format.just-now')

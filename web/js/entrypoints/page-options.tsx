@@ -1,4 +1,5 @@
 import { t } from '~util/i18n'
+import { attachHovertip } from '~util/hovertip'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { sprintf } from 'sprintf-js'
@@ -63,6 +64,24 @@ type SubViewType =
   | 'authorship'
   | null
 
+const BUTTON_HINTS: [string, string][] = [
+  ['edit-button', 'page-options.hint.edit'],
+  ['pagerate-button', 'page-options.hint.rate'],
+  ['tags-button', 'page-options.hint.tags'],
+  ['discuss-button', 'page-options.hint.discuss'],
+  ['history-button', 'page-options.hint.history'],
+  ['files-button', 'page-options.hint.files'],
+  ['more-options-button', 'page-options.hint.more'],
+  ['backlinks-button', 'page-options.hint.backlinks'],
+  ['view-source-button', 'page-options.hint.source'],
+  ['view-authorship-button', 'page-options.hint.authorship'],
+  ['parent-page-button', 'page-options.hint.parent'],
+  ['child-page-button', 'page-options.hint.new-child'],
+  ['page-block-button', 'page-options.hint.lock'],
+  ['rename-move-button', 'page-options.hint.rename'],
+  ['delete-button', 'page-options.hint.delete'],
+]
+
 const PageOptions: React.FC<Props> = ({
   pageId,
   optionsEnabled,
@@ -109,6 +128,15 @@ const PageOptions: React.FC<Props> = ({
     }
     if (pathParams?.['edit']) (window as any)._openNewEditor()
   }, [])
+
+  // Runs on every render because the second row of buttons only exists once the
+  // reader expands it.
+  useEffect(() => {
+    for (const [id, key] of BUTTON_HINTS) {
+      const button = document.getElementById(id)
+      if (button) attachHovertip(button, t(key))
+    }
+  })
 
   const onEdit = useConstCallback(e => {
     e.preventDefault()
