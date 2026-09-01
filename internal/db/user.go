@@ -137,10 +137,10 @@ func (d *DB) UserByDisplayName(ctx context.Context, name string) (*User, error) 
 	return d.scanUser(ctx, qUserByDisplayName, name)
 }
 
-// UserByWikidotName resolves the wd: prefix, which may only ever match an
-// imported Wikidot account.
-func (d *DB) UserByWikidotName(ctx context.Context, canonical string) (*User, error) {
-	return d.scanUser(ctx, qUserByWikidotName, canonical)
+// The stored name is whatever the other site displayed, so canonicalizing
+// first would compare a spaced name against a hyphenated one and never match.
+func (d *DB) UserByWikidotName(ctx context.Context, name string) (*User, error) {
+	return d.scanUser(ctx, qUserByWikidotName, name)
 }
 
 func (d *DB) scanUser(ctx context.Context, sql, canonical string) (*User, error) {

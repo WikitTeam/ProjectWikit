@@ -119,7 +119,7 @@ func (r *Repository) RenderUser(username string, avatar bool) (string, error) {
 		err  error
 	)
 	if wd, ok := cutPrefixFold(username, "wd:"); ok {
-		user, err = r.db.UserByWikidotName(r.ctx, wikidot.CanonicalizeUsername(wd))
+		user, err = r.db.UserByWikidotName(r.ctx, wd)
 	} else {
 		user, err = r.db.UserByName(r.ctx, wikidot.CanonicalizeUsername(username))
 		// An imported account keeps the name it had on the other site, which

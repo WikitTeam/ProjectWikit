@@ -46,7 +46,7 @@ def callbacks_with_context(context):
                     user = username[len('external:'):]
                     return render_external_user_to_html(user, avatar=avatar)
                 if username.lower().startswith('wd:'):
-                    user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=canonicalize_username(username[3:]))
+                    user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=username[3:])
                 else:
                     canon = canonicalize_username(username)
                     user = User.objects.filter(Q(username=canon) | Q(wikidot_username=canon)).first()
