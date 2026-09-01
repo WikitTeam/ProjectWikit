@@ -32,7 +32,7 @@
 
     <link rel="stylesheet" type="text/css" href="{{esc (.Asset "wikidot-base.css")}}">
     <link rel="stylesheet" type="text/css" href="{{esc (.Asset "app.css")}}">
-    <link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">
+    {{if .ThemeURL}}<link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">{{end}}
 
     <script src="{{esc (.Asset "app.js")}}" type="text/javascript"></script>
 

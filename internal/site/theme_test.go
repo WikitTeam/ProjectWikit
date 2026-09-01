@@ -8,8 +8,8 @@ import (
 )
 
 func TestThemeURLWithoutTheme(t *testing.T) {
-	if got := ThemeURL(nil); got != DefaultThemeURL {
-		t.Errorf("ThemeURL(nil) = %q, want %q", got, DefaultThemeURL)
+	if got := ThemeURL(nil); got != "" {
+		t.Errorf("ThemeURL(nil) = %q, want %q", got, "")
 	}
 }
 
@@ -31,7 +31,7 @@ func TestThemeURLOfExternalTheme(t *testing.T) {
 
 func TestThemeURLOfExternalThemeWithoutURL(t *testing.T) {
 	theme := &db.Theme{Slug: "dark", Mode: db.ThemeExternal, ExternalURL: "   "}
-	if got := ThemeURL(theme); got != DefaultThemeURL {
-		t.Errorf("ThemeURL(external without url) = %q, want %q", got, DefaultThemeURL)
+	if got := ThemeURL(theme); got != "" {
+		t.Errorf("ThemeURL(external without url) = %q, want %q", got, "")
 	}
 }

@@ -5,22 +5,16 @@ import (
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
-	"github.com/WikitTeam/ProjectWikit/internal/static"
 )
 
-const DefaultThemeURL = static.Prefix + "theme.css"
-
-// ThemeURL is the stylesheet a page loads after the base one. A theme that is
-// gone or points at nothing falls back rather than leaving the page unstyled.
+// A site with no usable theme loads nothing, so the base stylesheet stays the
+// only thing under the site's own CSS, which is what a wikidot theme expects.
 func ThemeURL(t *db.Theme) string {
 	if t == nil {
-		return DefaultThemeURL
+		return ""
 	}
 	if t.Mode == db.ThemeExternal {
-		if url := strings.TrimSpace(t.ExternalURL); url != "" {
-			return url
-		}
-		return DefaultThemeURL
+		return strings.TrimSpace(t.ExternalURL)
 	}
 	return "/-/theme/" + t.Slug + ".css?v=" + strconv.FormatInt(t.UpdatedAt.Unix(), 10)
 }

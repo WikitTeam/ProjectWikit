@@ -527,11 +527,11 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 
 func (h *Handler) themeURL(req *request) (string, error) {
 	if req.site.ThemeID == nil {
-		return site.DefaultThemeURL, nil
+		return "", nil
 	}
 	theme, err := h.deps.DB.ThemeByID(req.ctx, *req.site.ThemeID)
 	if errors.Is(err, db.ErrNotFound) {
-		return site.DefaultThemeURL, nil
+		return "", nil
 	}
 	if err != nil {
 		return "", err
