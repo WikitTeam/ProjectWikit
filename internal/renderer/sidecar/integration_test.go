@@ -12,6 +12,7 @@ import (
 type stubHost struct {
 	renderer.NopCallbacks
 	existing map[string]bool
+	included string
 }
 
 func (h stubHost) RenderModule(name string, _ map[string]string, _ string) (string, error) {
@@ -37,6 +38,19 @@ func (h stubHost) NoSuchInclude(fullName string) (string, error) {
 	return "[[include " + fullName + " missing]]", nil
 }
 
+func (h stubHost) IncludePages(refs []renderer.IncludeRef) ([]renderer.FetchedPage, error) {
+	out := make([]renderer.FetchedPage, 0, len(refs))
+	for _, ref := range refs {
+		page := renderer.FetchedPage{FullName: ref.FullName}
+		if h.existing[ref.FullName] {
+			body := h.included
+			page.Content = &body
+		}
+		out = append(out, page)
+	}
+	return out, nil
+}
+
 func newReal(t *testing.T) *Renderer {
 	t.Helper()
 	bin := os.Getenv(EnvBinary)
@@ -49,6 +63,34 @@ func newReal(t *testing.T) *Renderer {
 	}
 	t.Cleanup(func() { r.Close() })
 	return r
+}
+
+func TestRealSidecarTakesAFallbackArgument(t *testing.T) {
+	r := newReal(t)
+	host := stubHost{existing: map[string]bool{"probe": true}, included: "[{$a}]"}
+	info := renderer.PageInfo{Page: "173", Category: "scp", Domain: "example.org"}
+
+	tests := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{"no space", "[[include probe |a={$a}|a=fallback]]", "[fallback]"},
+		{"space before the pipe", "[[include probe |a={$a} |a=fallback]]", "[fallback]"},
+		{"caller wins", "[[include probe |a=given |a=fallback]]", "[given]"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.RenderHTML(context.Background(), tt.source, info, host, renderer.ModeArticle)
+			if err != nil {
+				t.Fatalf("RenderHTML(%q) err = %v, want nil", tt.source, err)
+			}
+			if !strings.Contains(got.Body, tt.want) {
+				t.Errorf("RenderHTML(%q) = %q, want substring %q", tt.source, got.Body, tt.want)
+			}
+		})
+	}
 }
 
 func TestRealSidecarRendersHTML(t *testing.T) {

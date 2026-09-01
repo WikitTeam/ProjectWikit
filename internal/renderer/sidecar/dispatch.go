@@ -32,6 +32,19 @@ func dispatch(cb renderer.Callbacks, method string, raw json.RawMessage) (any, e
 		}
 		return v, nil
 
+	case "module_is_inline":
+		var a struct {
+			Name string `json:"name"`
+		}
+		if err := decode(&a); err != nil {
+			return nil, err
+		}
+		v, err := cb.ModuleIsInline(a.Name)
+		if err != nil {
+			return fail(err)
+		}
+		return v, nil
+
 	case "render_module":
 		var a struct {
 			Name   string            `json:"name"`

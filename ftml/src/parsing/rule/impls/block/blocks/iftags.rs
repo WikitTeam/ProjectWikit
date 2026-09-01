@@ -66,9 +66,10 @@ fn parse_fn<'r, 't>(
         return ok!(true; Elements::None, Vec::new());
     }
 
-    // Get body content, never with paragraphs
+    // Wikidot ends the paragraph at a conditional block, so the body has to make
+    // its own rather than run together with whatever follows.
     let (elements, exceptions, paragraph_safe) =
-        parser_tx.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
+        parser_tx.get_body_elements(&BLOCK_IFTAGS, name, true)?.into();
 
     debug!(
         "IfTags conditions passed (conditions length {}, elements length {})",

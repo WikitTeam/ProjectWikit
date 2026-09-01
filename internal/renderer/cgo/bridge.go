@@ -65,6 +65,15 @@ func pwikitModuleHasBody(h C.uintptr_t, name C.FtmlStr) C.int {
 	return 1
 }
 
+//export pwikitModuleIsInline
+func pwikitModuleIsInline(h C.uintptr_t, name C.FtmlStr) C.int {
+	ok, err := host(h).ModuleIsInline(goString(name))
+	if err != nil || !ok {
+		return 0
+	}
+	return 1
+}
+
 //export pwikitRenderModule
 func pwikitRenderModule(h C.uintptr_t, name C.FtmlStr, params *C.FtmlKeyValue, count C.size_t, body C.FtmlStr, sink *C.FtmlStringSink) {
 	values := make(map[string]string, int(count))

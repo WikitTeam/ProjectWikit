@@ -32,6 +32,11 @@ func (t *tracer) ModuleHasBody(name string) (bool, error) {
 	return t.inner.ModuleHasBody(name)
 }
 
+func (t *tracer) ModuleIsInline(name string) (bool, error) {
+	t.log("module_is_inline(%s)", name)
+	return t.inner.ModuleIsInline(name)
+}
+
 func (t *tracer) RenderModule(name string, params map[string]string, body string) (string, error) {
 	keys := make([]string, 0, len(params))
 	for k := range params {

@@ -373,7 +373,9 @@ impl Element<'_> {
             Element::Anchor { .. } | Element::AnchorName(_) | Element::Link { .. } => {
                 true
             }
-            Element::Image { .. } => true,
+            // Wikidot gives an image its own block. Left in a paragraph it picks
+            // up that paragraph's margins and pulls away from its frame.
+            Element::Image { .. } => false,
             Element::List { .. } => false,
             Element::DefinitionList(_) => false,
             Element::Collapsible { .. } => false,

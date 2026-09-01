@@ -8,20 +8,24 @@ import (
 type Info struct {
 	Name       string
 	HasContent bool
+	Inline     bool
 	Removed    bool
 }
 
 var registry = map[string]Info{
 	"applicationform":      {Name: "applicationform"},
-	"button":               {Name: "button"},
+	"button":               {Name: "button", Inline: true},
+	"comments":             {Name: "comments"},
 	"countpages":           {Name: "countpages", HasContent: true},
 	"css":                  {Name: "css", HasContent: true},
+	"files":                {Name: "files"},
 	"forumcategory":        {Name: "forumcategory"},
 	"forumnewpost":         {Name: "forumnewpost"},
 	"forumnewthread":       {Name: "forumnewthread"},
 	"forumpost":            {Name: "forumpost"},
 	"forumstart":           {Name: "forumstart"},
 	"forumthread":          {Name: "forumthread"},
+	"gallery":              {Name: "gallery"},
 	"interwiki":            {Name: "interwiki", HasContent: true, Removed: true},
 	"listpages":            {Name: "listpages", HasContent: true},
 	"listusers":            {Name: "listusers", HasContent: true},
@@ -50,6 +54,13 @@ func Lookup(name string) (Info, bool) {
 func HasContent(name string) bool {
 	info, ok := Lookup(name)
 	return ok && !info.Removed && info.HasContent
+}
+
+// A module that renders a block cannot sit in a paragraph without closing
+// it, so only the ones that render a span of their own answer true.
+func IsInline(name string) bool {
+	info, ok := Lookup(name)
+	return ok && !info.Removed && info.Inline
 }
 
 // Ported is derived from the renderers that registered themselves, so the list

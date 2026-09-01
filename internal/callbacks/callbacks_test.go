@@ -92,6 +92,31 @@ func TestModuleHasBody(t *testing.T) {
 	}
 }
 
+func TestModuleIsInline(t *testing.T) {
+	c := newCallbacks(t, nil)
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{"button", true},
+		{"BUTTON", true},
+		{"css", false},
+		{"listpages", false},
+		{"nosuchmodule", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := c.ModuleIsInline(tt.name)
+			if err != nil {
+				t.Fatalf("ModuleIsInline(%q) err = %v, want nil", tt.name, err)
+			}
+			if got != tt.want {
+				t.Errorf("ModuleIsInline(%q) = %v, want %v", tt.name, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRenderModuleLowercasesParamKeys(t *testing.T) {
 	repo := &fakeRepo{}
 	c := newCallbacks(t, repo)

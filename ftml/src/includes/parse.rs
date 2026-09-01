@@ -86,7 +86,7 @@ fn process_pairs(mut pairs: Pairs<Rule>) -> Result<IncludeRef, IncludeParseError
                 .expect("Argument pairs terminated early")
                 .as_str();
 
-            (key, value)
+            (key, value.trim())
         };
 
         trace!("Adding argument for include (key '{key}', value '{value}')");
@@ -107,11 +107,10 @@ fn process_pairs(mut pairs: Pairs<Rule>) -> Result<IncludeRef, IncludeParseError
         var_reference.clear();
         str_write!(var_reference, "{{${key}}}");
 
+        // The value is trimmed before the comparison, because a fallback
+        // written with a space before the next pipe would miss it otherwise.
         if !arguments.contains_key(key) && value != var_reference {
-            let key = cow!(key);
-            let value = cow!(value.trim());
-
-            arguments.insert(key, value);
+            arguments.insert(cow!(key), cow!(value));
         }
     }
 

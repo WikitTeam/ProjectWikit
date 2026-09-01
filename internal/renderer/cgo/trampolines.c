@@ -5,6 +5,7 @@
 
 void pwikit_fill_callbacks(FtmlCallbacks *out) {
   out->module_has_body = pwikitModuleHasBody;
+  out->module_is_inline = pwikitModuleIsInline;
   out->render_module = pwikitRenderModule;
   out->render_user = pwikitRenderUser;
   out->get_i18n_message = pwikitGetI18nMessage;

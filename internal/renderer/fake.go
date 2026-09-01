@@ -58,7 +58,8 @@ type NopCallbacks struct{}
 
 var _ Callbacks = NopCallbacks{}
 
-func (NopCallbacks) ModuleHasBody(string) (bool, error) { return false, nil }
+func (NopCallbacks) ModuleHasBody(string) (bool, error)  { return false, nil }
+func (NopCallbacks) ModuleIsInline(string) (bool, error) { return false, nil }
 
 func (NopCallbacks) RenderModule(string, map[string]string, string) (string, error) {
 	return "", nil

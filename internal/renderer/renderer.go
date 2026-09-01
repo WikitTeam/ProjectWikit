@@ -91,6 +91,7 @@ func IntExpr(v int64) ExpressionResult     { return ExpressionResult{Kind: ExprI
 
 type PageCallbacks interface {
 	ModuleHasBody(name string) (bool, error)
+	ModuleIsInline(name string) (bool, error)
 	RenderModule(name string, params map[string]string, body string) (string, error)
 	RenderUser(user string, avatar bool) (string, error)
 	GetI18nMessage(id string) (string, error)

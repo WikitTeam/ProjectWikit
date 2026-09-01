@@ -47,6 +47,7 @@ void ftml_sink_fetched_page(FtmlFetchedPageSink *sink, FtmlStr full_name, FtmlSt
    Declaring it uintptr_t keeps Go's garbage collector from scanning it as one. */
 typedef struct {
   int (*module_has_body)(uintptr_t, FtmlStr);
+  int (*module_is_inline)(uintptr_t, FtmlStr);
   void (*render_module)(uintptr_t, FtmlStr, FtmlKeyValue *, size_t, FtmlStr, FtmlStringSink *);
   void (*render_user)(uintptr_t, FtmlStr, int, FtmlStringSink *);
   void (*get_i18n_message)(uintptr_t, FtmlStr, FtmlStringSink *);

@@ -150,6 +150,7 @@ pub unsafe extern "C" fn ftml_sink_fetched_page(
 #[repr(C)]
 pub struct FtmlCallbacks {
     pub module_has_body: Option<extern "C" fn(usize, FtmlStr) -> c_int>,
+    pub module_is_inline: Option<extern "C" fn(usize, FtmlStr) -> c_int>,
     pub render_module: Option<
         extern "C" fn(usize, FtmlStr, *const FtmlKeyValue, usize, FtmlStr, *mut FtmlStringSink),
     >,
@@ -248,6 +249,15 @@ impl PageCallbacks for HostBridge {
     fn module_has_body(&self, module_name: Cow<str>) -> bool {
         unsafe {
             match self.vtable().module_has_body {
+                Some(f) => f(self.host, FtmlStr::borrow(&module_name)) != 0,
+                None => false,
+            }
+        }
+    }
+
+    fn module_is_inline(&self, module_name: Cow<str>) -> bool {
+        unsafe {
+            match self.vtable().module_is_inline {
                 Some(f) => f(self.host, FtmlStr::borrow(&module_name)) != 0,
                 None => false,
             }

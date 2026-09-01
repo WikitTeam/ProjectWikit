@@ -68,6 +68,10 @@ func (c *Callbacks) ModuleHasBody(name string) (bool, error) {
 	return module.HasContent(name), nil
 }
 
+func (c *Callbacks) ModuleIsInline(name string) (bool, error) {
+	return module.IsInline(name), nil
+}
+
 func (c *Callbacks) RenderModule(name string, params map[string]string, body string) (string, error) {
 	if c.repo == nil {
 		return "", ErrNoRepository

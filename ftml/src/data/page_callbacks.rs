@@ -29,6 +29,13 @@ impl<'t> ToString for ExpressionResult<'t> {
 
 pub trait PageCallbacks: Debug {
     fn module_has_body(&self, module_name: Cow<str>) -> bool;
+
+    /// A module that stays inline does not break the paragraph around it.
+    /// Defaulting to false leaves a host that does not answer unchanged.
+    fn module_is_inline(&self, _module_name: Cow<str>) -> bool {
+        false
+    }
+
     fn render_module<'a>(&self, module_name: Cow<str>, params: HashMap<Cow<str>, Cow<str>>, body: Cow<str>) -> Cow<'static, str>;
     fn render_user<'a>(&self, user: Cow<str>, avatar: bool) -> Cow<'static, str>;
     fn get_i18n_message<'a>(&self, message_id: Cow<str>) -> Cow<'static, str>;

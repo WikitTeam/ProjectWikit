@@ -59,5 +59,7 @@ fn parse_fn<'r, 't>(
 
     parser.replace_variables(body.to_mut());
 
-    return ok!(false; Elements::Single(Element::Module(Module::new(Cow::from(subname), arguments.to_hash_map(), body))), vec![]);
+    let inline = parser.page_callbacks().module_is_inline(Cow::from(subname));
+
+    return ok!(inline; Elements::Single(Element::Module(Module::new(Cow::from(subname), arguments.to_hash_map(), body))), vec![]);
 }

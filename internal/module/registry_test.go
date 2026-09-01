@@ -16,6 +16,12 @@ func TestLookupOfAnUnknownName(t *testing.T) {
 	}
 }
 
+func TestIsInlineOfARemovedModule(t *testing.T) {
+	if IsInline("interwiki") {
+		t.Error("IsInline(\"interwiki\") = true, want false")
+	}
+}
+
 func TestHasContentOfARemovedModule(t *testing.T) {
 	info, ok := Lookup("interwiki")
 	if !ok || !info.HasContent {

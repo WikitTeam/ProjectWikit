@@ -94,6 +94,12 @@ impl PageCallbacks for Bridge {
             .unwrap_or(false)
     }
 
+    fn module_is_inline(&self, module_name: Cow<str>) -> bool {
+        self.call("module_is_inline", json!({ "name": module_name }))
+            .as_bool()
+            .unwrap_or(false)
+    }
+
     fn render_module(
         &self,
         module_name: Cow<str>,
