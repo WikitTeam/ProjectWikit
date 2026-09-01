@@ -133,8 +133,10 @@ func serve(args []string) error {
 	}
 
 	var mediaHandler http.Handler = proxy
+	var resizedHandler http.Handler = proxy
 	if conn != nil {
 		mediaHandler = site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), proxy)
+		resizedHandler = site.NewHostRules(conn, listenPort(*listen), media.NewResized(p.Files(), conn), proxy)
 	}
 
 	var articles http.Handler = proxy
@@ -150,9 +152,10 @@ func serve(args []string) error {
 	goHandlers := map[string]http.Handler{
 		// The bundle is the one route answered above the session layer, so it
 		// is also the one that does not vary on the cookie.
-		static.Prefix: static.New(assets, proxy),
-		media.Prefix:  respheader.VaryCookie(mediaHandler),
-		"/":           articles,
+		static.Prefix:       static.New(assets, proxy),
+		media.Prefix:        respheader.VaryCookie(mediaHandler),
+		media.ResizedPrefix: respheader.VaryCookie(resizedHandler),
+		"/":                 articles,
 	}
 
 	mux, err := routing.New(routing.Table, proxy, goHandlers)
