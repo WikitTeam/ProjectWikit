@@ -18,9 +18,9 @@ func newCSSMinifier() *minify.M {
 	return m
 }
 
+// Every block goes to the head, so a rule cannot lose to one that merely sits
+// higher up the page. The head argument is accepted and ignored.
 func renderCSS(env module.Env, params map[string]string, body string) (string, error) {
-	head := module.BoolParam(pathUnder(env, params), "head", false)
-
 	source := strings.ReplaceAll(body, nbsp, " ")
 	minified, err := cssMinifier.String("text/css", source)
 	if err != nil {
@@ -30,14 +30,8 @@ func renderCSS(env module.Env, params map[string]string, body string) (string, e
 
 	if env.Page != nil {
 		env.Page.AddCSS += source + "\n"
-		if head {
-			env.Page.ComputedStyle += minified
-		}
+		env.Page.ComputedStyle += minified
 	}
 
-	if head {
-		return "\n" + ind8, nil
-	}
-	return "\n" + ind12 + `<style>` + minified + `</style>` +
-		"\n" + ind8 + "\n" + ind8, nil
+	return "\n" + ind8, nil
 }

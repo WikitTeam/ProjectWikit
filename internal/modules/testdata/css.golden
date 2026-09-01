@@ -1,52 +1,52 @@
 === plain
-returned: "\n            <style>#page-content{color:red}</style>\n        \n        "
-computed: ""
-addcss: "#page-content { color : red ; }\n"
-=== head
 returned: "\n        "
 computed: "#page-content{color:red}"
 addcss: "#page-content { color : red ; }\n"
-=== head-from-path
+=== ignores-head
+returned: "\n        "
+computed: "#page-content{color:red}"
+addcss: "#page-content { color : red ; }\n"
+=== ignores-head-from-path
 returned: "\n        "
 computed: "a{color:red}"
 addcss: "a { color : red }\n"
-=== head-false
-returned: "\n            <style>a{color:red}</style>\n        \n        "
-computed: ""
+=== ignores-head-false
+returned: "\n        "
+computed: "a{color:red}"
 addcss: "a { color : red }\n"
-=== head-junk
-returned: "\n            <style>a{color:red}</style>\n        \n        "
-computed: ""
+=== ignores-head-junk
+returned: "\n        "
+computed: "a{color:red}"
 addcss: "a { color : red }\n"
 === empty
-returned: "\n            <style></style>\n        \n        "
+returned: "\n        "
 computed: ""
 addcss: "\n"
 === comment-only
-returned: "\n            <style></style>\n        \n        "
+returned: "\n        "
 computed: ""
 addcss: "/* nothing but a comment */\n"
 === nbsp
-returned: "\n            <style>a{color:red}</style>\n        \n        "
-computed: ""
+returned: "\n        "
+computed: "a{color:red}"
 addcss: "a { color:red }\n"
 === angle-bracket
-returned: "\n            <style>a>b{content:\"\\u003c/style>\"}</style>\n        \n        "
-computed: ""
+returned: "\n        "
+computed: "a>b{content:\"\\u003c/style>\"}"
 addcss: "a > b { content: \"</style>\" }\n"
 === at-import
-returned: "\n            <style>@import \"x.css\";a{color:red}</style>\n        \n        "
-computed: ""
+returned: "\n        "
+computed: "@import \"x.css\";a{color:red}"
 addcss: "@import url(\"x.css\");\na { color: red }\n"
 === media
-returned: "\n            <style>@media(max-width:767px){#main{padding:0}}</style>\n        \n        "
-computed: ""
+returned: "\n        "
+computed: "@media(max-width:767px){#main{padding:0}}"
 addcss: "@media (max-width: 767px) {\n  #main { padding : 0 ; }\n}\n"
 === two-rules
-returned: "\n            <style>.a{color:red}.b{margin:.5em}</style>\n        \n        "
-computed: ""
+returned: "\n        "
+computed: ".a{color:red}.b{margin:.5em}"
 addcss: ".a { color: #ff0000 }\n.b { margin: 0.50em }\n"
 === malformed
-returned: "\n            <style>a{color:red}</style>\n        \n        "
-computed: ""
+returned: "\n        "
+computed: "a{color:red}"
 addcss: "a { color: red\n"

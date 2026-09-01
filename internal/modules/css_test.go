@@ -29,10 +29,10 @@ type cssCase struct {
 func cssCases() []cssCase {
 	return []cssCase{
 		{Name: "plain", Body: "#page-content { color : red ; }"},
-		{Name: "head", Body: "#page-content { color : red ; }", Params: map[string]string{"head": "true"}},
-		{Name: "head-from-path", Body: "a { color : red }", Path: map[string]string{"head": "yes"}},
-		{Name: "head-false", Body: "a { color : red }", Params: map[string]string{"head": "no"}},
-		{Name: "head-junk", Body: "a { color : red }", Params: map[string]string{"head": "maybe"}},
+		{Name: "ignores-head", Body: "#page-content { color : red ; }", Params: map[string]string{"head": "true"}},
+		{Name: "ignores-head-from-path", Body: "a { color : red }", Path: map[string]string{"head": "yes"}},
+		{Name: "ignores-head-false", Body: "a { color : red }", Params: map[string]string{"head": "no"}},
+		{Name: "ignores-head-junk", Body: "a { color : red }", Params: map[string]string{"head": "maybe"}},
 		{Name: "empty", Body: ""},
 		{Name: "comment-only", Body: "/* nothing but a comment */"},
 		{Name: "nbsp", Body: "a { color:red }"},

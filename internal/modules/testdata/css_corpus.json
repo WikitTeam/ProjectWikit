@@ -4,28 +4,28 @@
     "body": "#page-content { color : red ; }"
   },
   {
-    "name": "head",
+    "name": "ignores-head",
     "body": "#page-content { color : red ; }",
     "params": {
       "head": "true"
     }
   },
   {
-    "name": "head-from-path",
+    "name": "ignores-head-from-path",
     "body": "a { color : red }",
     "path": {
       "head": "yes"
     }
   },
   {
-    "name": "head-false",
+    "name": "ignores-head-false",
     "body": "a { color : red }",
     "params": {
       "head": "no"
     }
   },
   {
-    "name": "head-junk",
+    "name": "ignores-head-junk",
     "body": "a { color : red }",
     "params": {
       "head": "maybe"
