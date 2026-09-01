@@ -2,6 +2,7 @@ package modules
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -24,9 +25,48 @@ func TestRenderButtonEdit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("renderButton() err = %v, want nil", err)
 	}
-	want := `<a class="button" href="/scp:missing/edit/true">编辑</a>`
+	want := `<a class="wiki-standalone-button" data-button-type="edit" href="javascript:;" onclick="pwikit.edit(event)">edit</a>`
 	if got != want {
 		t.Errorf("renderButton(edit) = %q, want %q", got, want)
+	}
+}
+
+func TestRenderButtonSetTags(t *testing.T) {
+	env := buttonEnv(t, &db.Article{Category: "_default", Name: "missing"})
+
+	got, err := renderButton(env, map[string]string{"type": "set-tags", "tags": "-发现 +丢失", "text": "丢失"}, "")
+	if err != nil {
+		t.Fatalf("renderButton() err = %v, want nil", err)
+	}
+	want := `<a class="wiki-standalone-button" data-button-type="set-tags" href="javascript:;" onclick="pwikit.setTags(event, &#x27;-发现 +丢失&#x27;)">丢失</a>`
+	if got != want {
+		t.Errorf("renderButton(set-tags) = %q, want %q", got, want)
+	}
+}
+
+func TestRenderButtonSetTagsWithoutTags(t *testing.T) {
+	env := buttonEnv(t, &db.Article{Category: "_default", Name: "missing"})
+
+	got, err := renderButton(env, map[string]string{"type": "set-tags"}, "")
+	if err != nil {
+		t.Fatalf("renderButton() err = %v, want nil", err)
+	}
+	want := `<a class="wiki-standalone-button" data-button-type="set-tags" href="javascript:;" onclick="pwikit.setTags(event, &#x27;&#x27;)">set-tags</a>`
+	if got != want {
+		t.Errorf("renderButton(set-tags without tags) = %q, want %q", got, want)
+	}
+}
+
+func TestRenderButtonSetTagsEscapesTheOperations(t *testing.T) {
+	env := buttonEnv(t, &db.Article{Category: "_default", Name: "missing"})
+
+	got, err := renderButton(env, map[string]string{"type": "set-tags", "tags": `+it's`, "text": "x"}, "")
+	if err != nil {
+		t.Fatalf("renderButton() err = %v, want nil", err)
+	}
+	want := `<a class="wiki-standalone-button" data-button-type="set-tags" href="javascript:;" onclick="pwikit.setTags(event, &#x27;+it\&#x27;s&#x27;)">x</a>`
+	if got != want {
+		t.Errorf("renderButton(quote in tags) = %q, want %q", got, want)
 	}
 }
 
@@ -37,9 +77,21 @@ func TestRenderButtonWithItsOwnText(t *testing.T) {
 	if err != nil {
 		t.Fatalf("renderButton() err = %v, want nil", err)
 	}
-	want := `<a class="button" href="/missing/edit/true">创建此页</a>`
+	want := `<a class="wiki-standalone-button" data-button-type="edit" href="javascript:;" onclick="pwikit.edit(event)">创建此页</a>`
 	if got != want {
 		t.Errorf("renderButton(text) = %q, want %q", got, want)
+	}
+}
+
+func TestRenderButtonTrimsTheLabel(t *testing.T) {
+	env := buttonEnv(t, &db.Article{Category: "_default", Name: "missing"})
+
+	got, err := renderButton(env, map[string]string{"type": "set-tags", "tags": "+a", "text": "丢失 "}, "")
+	if err != nil {
+		t.Fatalf("renderButton() err = %v, want nil", err)
+	}
+	if !strings.HasSuffix(got, ">丢失</a>") {
+		t.Errorf("renderButton(text=%q) = %q, want the label without its trailing space", "丢失 ", got)
 	}
 }
 
@@ -50,20 +102,33 @@ func TestRenderButtonWithEmptyText(t *testing.T) {
 	if err != nil {
 		t.Fatalf("renderButton() err = %v, want nil", err)
 	}
-	want := `<a class="button" href="/missing/edit/true"></a>`
+	want := `<a class="wiki-standalone-button" data-button-type="edit" href="javascript:;" onclick="pwikit.edit(event)"></a>`
 	if got != want {
 		t.Errorf("renderButton(text=\"\") = %q, want %q", got, want)
 	}
 }
 
-func TestRenderButtonEscapes(t *testing.T) {
-	env := buttonEnv(t, &db.Article{Category: "_default", Name: "a b&c"})
+func TestRenderButtonLabelsWithTheTypeAsWritten(t *testing.T) {
+	env := buttonEnv(t, &db.Article{Category: "_default", Name: "missing"})
+
+	got, err := renderButton(env, map[string]string{"type": "Set-Tags"}, "")
+	if err != nil {
+		t.Fatalf("renderButton() err = %v, want nil", err)
+	}
+	want := `<a class="wiki-standalone-button" data-button-type="set-tags" href="javascript:;" onclick="pwikit.setTags(event, &#x27;&#x27;)">Set-Tags</a>`
+	if got != want {
+		t.Errorf("renderButton(Set-Tags) = %q, want %q", got, want)
+	}
+}
+
+func TestRenderButtonEscapesTheLabel(t *testing.T) {
+	env := buttonEnv(t, &db.Article{Category: "_default", Name: "missing"})
 
 	got, err := renderButton(env, map[string]string{"type": "edit", "text": `<b>"x"</b>`}, "")
 	if err != nil {
 		t.Fatalf("renderButton() err = %v, want nil", err)
 	}
-	want := `<a class="button" href="/a b&amp;c/edit/true">&lt;b&gt;&quot;x&quot;&lt;/b&gt;</a>`
+	want := `<a class="wiki-standalone-button" data-button-type="edit" href="javascript:;" onclick="pwikit.edit(event)">&lt;b&gt;&quot;x&quot;&lt;/b&gt;</a>`
 	if got != want {
 		t.Errorf("renderButton(escapes) = %q, want %q", got, want)
 	}

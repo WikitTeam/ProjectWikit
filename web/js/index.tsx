@@ -1,10 +1,12 @@
 import React from 'react'
 import './articles/auto-resize-iframe'
+import { makeButtons } from './articles/buttons'
 import { makeCodeBlock } from './articles/codeblock'
 import { makeCollapsible } from './articles/collapsible'
 import { makeDate } from './articles/date'
 import { makeFootnote } from './articles/footnote'
 import { makeInterwiki } from './articles/interwiki'
+import { makeLightbox } from './articles/lightbox'
 import { makeListPages } from './articles/list-pages'
 import { makeStarsRateModule } from './articles/rate-stars'
 import { makeUpDownRateModule } from './articles/rate-updown'
@@ -33,6 +35,8 @@ import AdminSusUsers from './entrypoints/admin-sus-users'
 import { renderTo } from '~util/react-render-into'
 
 attachApiMessageListener()
+makeButtons()
+makeLightbox()
 
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#create-new-page').forEach((node: HTMLElement) => renderTo(node, <Page404 {...JSON.parse(node.dataset.config!)} />))
