@@ -55,37 +55,31 @@ fn parse_fn<'r, 't>(
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
         })?;
 
-    // Get body content, never with paragraphs
-    let (elements, mut exceptions, paragraph_safe) =
-        parser_tx.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
+    if !no_conditionals && !check_iftags(parser_tx.page_info(), &conditions) {
+        debug!("Conditions failed, skipping body");
 
-    debug!(
-        "IfTags conditions parsed (conditions length {}, elements length {})",
-        conditions.len(),
-        elements.len(),
-    );
-
-    // Return elements based on condition
-    let elements = if no_conditionals || check_iftags(parser_tx.page_info(), &conditions) {
-        debug!("Conditions passed, including elements");
-
-        // Confirm parser state modification caused by iftags content.
-        parser_tx.commit();
-
-        Elements::Multiple(elements)
-    } else {
-        debug!("Conditions failed, excluding elements");
-
-        // Filter out non-warning exceptions
-        exceptions.retain(|ex| matches!(ex, ParseException::Warning(_)));
+        parser_tx.skip_body(&BLOCK_IFTAGS, name)?;
 
         // Cancel all state modifications (forget TOC and footnotes).
         parser_tx.rollback();
 
-        Elements::None
-    };
+        return ok!(true; Elements::None, Vec::new());
+    }
 
-    ok!(paragraph_safe; elements, exceptions)
+    // Get body content, never with paragraphs
+    let (elements, exceptions, paragraph_safe) =
+        parser_tx.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
+
+    debug!(
+        "IfTags conditions passed (conditions length {}, elements length {})",
+        conditions.len(),
+        elements.len(),
+    );
+
+    // Confirm parser state modification caused by iftags content.
+    parser_tx.commit();
+
+    ok!(paragraph_safe; Elements::Multiple(elements), exceptions)
 }
 
 pub fn check_iftags(info: &PageInfo, conditions: &[ElementCondition]) -> bool {

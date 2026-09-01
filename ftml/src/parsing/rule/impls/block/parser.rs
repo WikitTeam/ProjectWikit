@@ -137,6 +137,54 @@ where
         })
     }
 
+    fn verify_start_block(&mut self, block_name: &str) -> Option<&'r ExtractedToken<'t>> {
+        self.save_evaluate_fn(|parser| {
+            parser.get_token(Token::LeftBlock, ParseWarningKind::BlockMissingName)?;
+            parser.get_optional_space()?;
+
+            let (name, _) = parser.get_block_name_internal(ParseWarningKind::BlockMissingName)?;
+            Ok(name.eq_ignore_ascii_case(block_name))
+        })
+    }
+
+    /// Walks past a body without building elements from it.
+    ///
+    /// A conditional block whose condition failed discards its body, so the body
+    /// never has to be well formed. Stepping over the tokens instead of parsing
+    /// them lets a body that opens a block in one include and closes it in
+    /// another survive, which is how theme warning banners are written.
+    pub fn skip_body(
+        &mut self,
+        block_rule: &BlockRule,
+        block_name: &str,
+    ) -> Result<(), ParseWarning> {
+        let mut first = true;
+        let mut depth = 0usize;
+
+        loop {
+            if self
+                .verify_end_block(first, block_rule, block_name)
+                .is_some()
+            {
+                if depth == 0 {
+                    return Ok(());
+                }
+                depth -= 1;
+                first = false;
+                continue;
+            }
+
+            if self.verify_start_block(block_name).is_some() {
+                depth += 1;
+                first = false;
+                continue;
+            }
+
+            first = false;
+            self.step()?;
+        }
+    }
+
     // Body parsing
 
     /// Generic helper function that performs the primary block collection.
