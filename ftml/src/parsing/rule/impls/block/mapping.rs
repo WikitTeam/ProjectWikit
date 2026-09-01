@@ -22,7 +22,7 @@ use super::{blocks::*, BlockRule};
 use std::collections::HashMap;
 use unicase::UniCase;
 
-pub const BLOCK_RULES: [BlockRule; 56] = [
+pub const BLOCK_RULES: [BlockRule; 57] = [
     BLOCK_ALIGN_CENTER,
     BLOCK_ALIGN_JUSTIFY,
     BLOCK_ALIGN_LEFT,
@@ -40,6 +40,7 @@ pub const BLOCK_RULES: [BlockRule; 56] = [
     BLOCK_FOOTNOTE_BLOCK,
     BLOCK_FORM,
     BLOCK_FORM_INPUT,
+    BLOCK_EMBED,
     BLOCK_HTML,
     BLOCK_IFCATEGORY,
     BLOCK_IFRAME,
