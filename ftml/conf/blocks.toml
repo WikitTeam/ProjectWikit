@@ -245,7 +245,7 @@ aliases = ["tt", "mono"]
 head = "map"
 body = "elements"
 html-attributes = true
-html-output = "html,code,wj-monospace"
+html-output = "html,tt,wj-monospace"
 
 [paragraph]
 aliases = ["p"]

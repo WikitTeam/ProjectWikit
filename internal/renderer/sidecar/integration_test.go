@@ -106,6 +106,7 @@ func TestRealSidecarRendersHTML(t *testing.T) {
 		{"inline formatting", "//斜体// 和 **粗体**", "<p><em>斜体</em> 和 <strong>粗体</strong></p>"},
 		{"module", "[[module Rate]]", `<div class="module">Rate</div>`},
 		{"comment removed", "[!-- 注释 --]文本", "<p>文本</p>"},
+		{"monospace", "{{等宽}}", `<tt class="wj-monospace">等宽</tt>`},
 		{"include miss", "[[include :other:page]]", "missing"},
 	}
 
