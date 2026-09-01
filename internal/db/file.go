@@ -39,3 +39,39 @@ func (d *DB) ArticleFile(ctx context.Context, articleRef, fileName string) (*Art
 	}
 	return &f, nil
 }
+
+type ArticleFileEntry struct {
+	ID       int64
+	Name     string
+	MimeType string
+	Size     int64
+}
+
+var qArticleFiles = register("ArticleFiles", `
+SELECT f.id, f.name, f.mime_type, f.size
+FROM web_file f
+WHERE f.article_id = $1 AND f.deleted_at IS NULL
+ORDER BY f.name, f.id`)
+
+// The name is unique per article only among the rows still alive, so the id
+// breaks the tie for a name that was deleted and uploaded again.
+func (d *DB) ArticleFiles(ctx context.Context, articleID int64) ([]ArticleFileEntry, error) {
+	rows, err := d.pool.Query(ctx, qArticleFiles, articleID)
+	if err != nil {
+		return nil, fmt.Errorf("list files of article %d: %w", articleID, err)
+	}
+	defer rows.Close()
+
+	var out []ArticleFileEntry
+	for rows.Next() {
+		var f ArticleFileEntry
+		if err := rows.Scan(&f.ID, &f.Name, &f.MimeType, &f.Size); err != nil {
+			return nil, fmt.Errorf("scan file: %w", err)
+		}
+		out = append(out, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list files of article %d: %w", articleID, err)
+	}
+	return out, nil
+}

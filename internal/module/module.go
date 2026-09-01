@@ -40,6 +40,8 @@ type Data interface {
 
 	ArticleByID(id int64) (*db.Article, error)
 	ArticleAuthors(articleID int64) ([]db.User, error)
+	ArticleFiles(articleID int64) ([]db.ArticleFileEntry, error)
+	CommentInfo(articleID int64) (db.CommentInfo, error)
 	RenderUserByID(id *int64) (string, error)
 	RenderUser(u db.User) (string, error)
 

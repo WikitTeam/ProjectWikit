@@ -100,6 +100,14 @@ func (m moduleData) ArticleAuthors(articleID int64) ([]db.User, error) {
 	return m.repo.db.ArticleAuthors(m.repo.ctx, articleID)
 }
 
+func (m moduleData) ArticleFiles(articleID int64) ([]db.ArticleFileEntry, error) {
+	return m.repo.db.ArticleFiles(m.repo.ctx, articleID)
+}
+
+func (m moduleData) CommentInfo(articleID int64) (db.CommentInfo, error) {
+	return m.repo.db.CommentInfo(m.repo.ctx, articleID)
+}
+
 func (m moduleData) TagCloud(limit *int) ([]db.CloudTag, error) {
 	return m.repo.db.TagCloud(m.repo.ctx, limit)
 }
