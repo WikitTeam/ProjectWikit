@@ -44,7 +44,14 @@ async function setTags(event: Event, operations: string) {
 
 function edit(event: Event) {
   event.preventDefault()
-  document.getElementById('edit-button')?.click()
+  const button = document.getElementById('edit-button')
+  if (button) {
+    button.click()
+    return
+  }
+  // A page that does not exist yet has no options bar to click through, so the
+  // button opens the create editor the same way the 404 body does.
+  ;(window as any)._openNewEditor?.()
 }
 
 function files(event: Event) {
