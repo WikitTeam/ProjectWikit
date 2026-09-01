@@ -1,6 +1,8 @@
 package pageconfig
 
 import (
+	"strconv"
+
 	"github.com/WikitTeam/ProjectWikit/internal/article"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
@@ -16,11 +18,13 @@ type Options struct {
 	Perms  perms.Set
 	Rating page.Rating
 
-	PathParams    article.Params
-	CommentCount  int
-	CanCreateTags bool
-	IsWatching    bool
-	Preferences   Preferences
+	PathParams      article.Params
+	CommentCount    int
+	CommentThreadID int64
+	CommentSlug     string
+	CanCreateTags   bool
+	IsWatching      bool
+	Preferences     Preferences
 }
 
 // Preferences is every preference the registry carries, which today is one. The
@@ -67,11 +71,16 @@ func (o Options) JSON() (string, error) {
 	})
 }
 
+// Linking the thread directly is what wikidot does. A page whose thread was
+// never opened has no id to link, so it goes through the path that opens one.
 func (o Options) commentThread() any {
 	if !o.HasArticle {
 		return nil
 	}
-	return "/" + o.NormalizedName + "/comments/show"
+	if o.CommentThreadID == 0 {
+		return "/" + o.NormalizedName + "/comments/show"
+	}
+	return "/forum/t-" + strconv.FormatInt(o.CommentThreadID, 10) + "/" + o.CommentSlug
 }
 
 func (o Options) preferences() wikijson.Object {

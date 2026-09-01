@@ -129,15 +129,13 @@ func (h *Handler) permsObject(req *request, perm *repo.Perms) (*perms.Object, bo
 // This only reads, so a page nobody has commented on gets no thread written for
 // it.
 func (h *Handler) commentsRedirect(req *request) (string, error) {
-	info, err := h.deps.DB.CommentInfo(req.ctx, req.article.ID)
+	id, err := h.deps.DB.CommentThreadFor(req.ctx, req.article.ID)
 	if err != nil {
 		return "", err
 	}
-	if info.ThreadID == 0 {
-		return "", nil
-	}
-	return "/forum/t-" + strconv.FormatInt(info.ThreadID, 10) + "/" +
-		wikidot.Normalize(req.article.DisplayName()), nil
+	// The slug is the page name. Normalizing the title instead drops every
+	// character outside ASCII, which leaves a stranger's page unrecognisable.
+	return "/forum/t-" + strconv.FormatInt(id, 10) + "/" + req.article.FullName(), nil
 }
 
 func (h *Handler) canonicalURL(req *request) string {

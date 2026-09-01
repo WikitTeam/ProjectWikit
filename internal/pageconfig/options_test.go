@@ -43,6 +43,7 @@ type optionsCase struct {
 	Votes         votesSpec      `json:"votes"`
 	Path          string         `json:"path"`
 	CommentCount  int            `json:"comment_count"`
+	CommentThread int64          `json:"comment_thread_id"`
 	CanCreateTags bool           `json:"can_create_tags"`
 	IsWatching    bool           `json:"is_watching"`
 	SourceEditor  bool           `json:"advanced_source_editor"`
@@ -83,12 +84,12 @@ func optionsCorpus() []optionsCase {
 		{
 			Name: "signed in member", PageID: "main", HasArticle: true,
 			Roles: []permRoleSpec{reader, member}, RatingMode: page.RatingModeUpDown,
-			Votes: votesSpec{Rates: []int{1, 1, -1}}, CommentCount: 4,
+			Votes: votesSpec{Rates: []int{1, 1, -1}}, CommentCount: 4, CommentThread: 1201,
 		},
 		{
 			Name: "editor", PageID: "scp-173", HasArticle: true,
 			Roles: []permRoleSpec{reader, member, editor}, RatingMode: page.RatingModeUpDown,
-			Votes: votesSpec{Rates: []int{1, 1, 1, -1}}, CommentCount: 1, CanCreateTags: true,
+			Votes: votesSpec{Rates: []int{1, 1, 1, -1}}, CommentCount: 1, CommentThread: 1202, CanCreateTags: true,
 		},
 		{
 			Name: "superuser on a locked page", PageID: "main", HasArticle: true, Superuser: true,
@@ -194,17 +195,19 @@ func toOptions(c optionsCase) Options {
 		rating = page.RatingOf(c.RatingMode, toStats(c.Votes))
 	}
 	return Options{
-		PageID:         c.PageID,
-		NormalizedName: c.PageID,
-		HasArticle:     c.HasArticle,
-		Anonymous:      c.Anonymous,
-		Perms:          perms.Resolve(toSubject(c), object),
-		Rating:         rating,
-		PathParams:     params,
-		CommentCount:   c.CommentCount,
-		CanCreateTags:  c.CanCreateTags,
-		IsWatching:     c.IsWatching,
-		Preferences:    Preferences{AdvancedSourceEditor: c.SourceEditor},
+		PageID:          c.PageID,
+		NormalizedName:  c.PageID,
+		HasArticle:      c.HasArticle,
+		Anonymous:       c.Anonymous,
+		Perms:           perms.Resolve(toSubject(c), object),
+		Rating:          rating,
+		PathParams:      params,
+		CommentCount:    c.CommentCount,
+		CommentThreadID: c.CommentThread,
+		CommentSlug:     c.PageID,
+		CanCreateTags:   c.CanCreateTags,
+		IsWatching:      c.IsWatching,
+		Preferences:     Preferences{AdvancedSourceEditor: c.SourceEditor},
 	}
 }
 

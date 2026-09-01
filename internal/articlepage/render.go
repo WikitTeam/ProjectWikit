@@ -498,10 +498,15 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 	}
 
 	title := firstNonEmpty(out.title, req.site.Title)
+	// The site name belongs in the browser tab, not in a share card headline.
+	document := title
+	if title != req.site.Title && req.site.Title != "" {
+		document = title + " - " + req.site.Title
+	}
 	return shell.Data{
 		SiteName:          req.site.Title,
 		SiteHeadline:      req.site.Headline,
-		SiteTitle:         title,
+		SiteTitle:         document,
 		SiteIcon:          req.site.Icon,
 		License:           license,
 		OGTitle:           title,
@@ -638,6 +643,8 @@ func (h *Handler) options(req *request) (string, error) {
 			return "", err
 		}
 		options.CommentCount = info.Count
+		options.CommentThreadID = info.ThreadID
+		options.CommentSlug = req.article.FullName()
 
 		watching, err := h.watching(req, info.ThreadID)
 		if err != nil {

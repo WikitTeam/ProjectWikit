@@ -175,3 +175,24 @@ func (d *DB) ArticlesByTag(ctx context.Context, categorySlug, name string, hidde
 	}
 	return out, nil
 }
+
+var qCommentThreadFor = register("CommentThreadFor", `
+WITH existing AS (
+    SELECT id FROM web_forumthread WHERE article_id = $1
+), created AS (
+    INSERT INTO web_forumthread (name, description, article_id, is_pinned, is_locked, created_at, updated_at)
+    SELECT '', '', $1, false, false, now(), now()
+    WHERE NOT EXISTS (SELECT 1 FROM existing)
+    RETURNING id
+)
+SELECT id FROM existing UNION ALL SELECT id FROM created`)
+
+// A page gets its comment thread the first time a reader asks for the
+// discussion, so reading the page never writes and the link still lands.
+func (d *DB) CommentThreadFor(ctx context.Context, articleID int64) (int64, error) {
+	var id int64
+	if err := d.pool.QueryRow(ctx, qCommentThreadFor, articleID).Scan(&id); err != nil {
+		return 0, fmt.Errorf("open comment thread of article %d: %w", articleID, err)
+	}
+	return id, nil
+}
