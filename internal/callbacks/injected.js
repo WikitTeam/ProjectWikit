@@ -1,18 +1,29 @@
 
     <script>
     (function(){
-        let lastHeight = 0;
-        function doFrame() {
+        let lastHeight = -1;
+        let settling = 0;
+        function measure() {
             const body = document.body;
             const html = document.documentElement;
-            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
-            window.requestAnimationFrame(doFrame);
-            if (lastHeight !== height) {
+            return Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
+        }
+        function report(force) {
+            const height = measure();
+            if (force || lastHeight !== height) {
                 parent.postMessage({type: 'iframe-change-height', payload: { height, id: %s } }, '*');
                 lastHeight = height;
             }
         }
+        function doFrame() {
+            window.requestAnimationFrame(doFrame);
+            report(false);
+        }
         doFrame();
+        const settle = setInterval(function(){
+            report(true);
+            if (++settling > 20) clearInterval(settle);
+        }, 100);
     })();
     const apiHandler = {
         get(target, name) {
