@@ -105,7 +105,7 @@ func newRenderRepo(ctx context.Context, d *db.DB, users *printuser.Renderer, loc
 	site *db.Site, viewer *db.User, rend renderer.Renderer) *Repository {
 
 	var r *Repository
-	source := NewVarSource(ctx, d, site.ID)
+	source := NewVarSource(ctx, d, site)
 	render := func(text string, pc *page.Context) (string, error) {
 		cb := callbacks.New(loc, r)
 		cb.SetContext(pc)

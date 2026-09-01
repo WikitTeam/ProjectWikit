@@ -12,16 +12,16 @@ import (
 // whole render because the rating setting is resolved against the site the
 // request arrived on.
 type VarSource struct {
-	ctx    context.Context
-	db     *db.DB
-	siteID int64
-	forms  *formLoader
+	ctx   context.Context
+	db    *db.DB
+	site  *db.Site
+	forms *formLoader
 }
 
 var _ page.VarSource = (*VarSource)(nil)
 
-func NewVarSource(ctx context.Context, d *db.DB, siteID int64) *VarSource {
-	return &VarSource{ctx: ctx, db: d, siteID: siteID, forms: newFormLoader(ctx, d)}
+func NewVarSource(ctx context.Context, d *db.DB, site *db.Site) *VarSource {
+	return &VarSource{ctx: ctx, db: d, site: site, forms: newFormLoader(ctx, d)}
 }
 
 func (s *VarSource) LatestSource(articleID int64) (string, error) {
@@ -49,7 +49,14 @@ func (s *VarSource) VoteStats(articleID int64) (db.VoteStats, error) {
 }
 
 func (s *VarSource) SiteRatingMode() (string, error) {
-	return s.db.SiteRatingMode(s.ctx, s.siteID)
+	return s.db.SiteRatingMode(s.ctx, s.site.ID)
+}
+
+func (s *VarSource) SiteName() string {
+	if s.site == nil {
+		return ""
+	}
+	return s.site.Slug
 }
 
 func (s *VarSource) CategoryRatingMode(category string) (string, error) {

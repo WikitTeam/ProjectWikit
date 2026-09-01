@@ -36,6 +36,7 @@ type VarSource interface {
 	HasVoted(articleID int64, userID *int64) (bool, error)
 	ArticleByID(id int64) (*db.Article, error)
 	CategoryForm(category string) (*form.Definition, error)
+	SiteName() string
 }
 
 // Vars resolves the page variables of one article. Every value is computed at
@@ -153,6 +154,8 @@ func (v *Vars) compute(name string) (string, bool) {
 		// Wikidot builds this from the page name; here it is the title, so it
 		// only lines up on pages whose title was never edited.
 		return "/" + a.Title, true
+	case "site_name":
+		return v.src.SiteName(), true
 	case "content":
 		return v.latestSource()
 	case "rating":

@@ -124,11 +124,11 @@ func cliPageVars(ctx context.Context, conn *db.DB, loc *i18n.Localizer, category
 	if err != nil {
 		return nil, nil, err
 	}
-	var siteID int64
-	if site, err := conn.SiteByHosts(ctx, []string{domain}); err == nil {
-		siteID = site.ID
+	site, err := conn.SiteByHosts(ctx, []string{domain})
+	if err != nil {
+		site = nil
 	}
-	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, siteID), loc), article, nil
+	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, site), loc), article, nil
 }
 
 func readSource(file string) (string, error) {

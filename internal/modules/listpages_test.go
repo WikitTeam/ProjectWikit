@@ -68,6 +68,8 @@ func (nopVars) ArticleByID(int64) (*db.Article, error)    { return nil, db.ErrNo
 
 func (nopVars) CategoryForm(string) (*form.Definition, error) { return nil, nil }
 
+func (nopVars) SiteName() string { return "" }
+
 func listedArticles(names ...string) []db.Article {
 	out := make([]db.Article, len(names))
 	for i, name := range names {

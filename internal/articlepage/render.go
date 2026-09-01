@@ -351,7 +351,7 @@ func (h *Handler) callbacks(req *request, vars *page.Vars, pc *page.Context) *ca
 		RenderMessageText: func(source string) (string, error) {
 			return h.messageText(req, source)
 		},
-		Vars: repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID),
+		Vars: repo.NewVarSource(req.ctx, h.deps.DB, req.site),
 	})
 	cb := callbacks.New(req.loc, store)
 	cb.SetPageVars(vars)
@@ -435,7 +435,7 @@ func (h *Handler) vars(req *request, of *db.Article) *page.Vars {
 	if of == nil {
 		return nil
 	}
-	return page.NewVars(of, req.user, repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID), req.loc)
+	return page.NewVars(of, req.user, repo.NewVarSource(req.ctx, h.deps.DB, req.site), req.loc)
 }
 
 func (h *Handler) pageInfo(req *request, source *db.Article) (renderer.PageInfo, error) {

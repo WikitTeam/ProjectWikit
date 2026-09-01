@@ -109,7 +109,7 @@ func TestVarsMatchOracle(t *testing.T) {
 				t.Fatalf("UserByName(%q) = %v, want nil", entry.Viewer, err)
 			}
 		}
-		vars := page.NewVars(article, viewer, repo.NewVarSource(ctx, conn, site.ID), loc)
+		vars := page.NewVars(article, viewer, repo.NewVarSource(ctx, conn, site), loc)
 		for _, name := range corpus.Names {
 			b.WriteString("=== " + entry.Name + " " + name + "\n" + resolveForCorpus(vars, name) + "\n")
 		}

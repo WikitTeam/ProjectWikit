@@ -14,6 +14,7 @@ type fakeSource struct {
 	sourceErr error
 	formDef   *form.Definition
 	formErr   error
+	siteName  string
 	authors   []db.User
 	editor    *db.User
 	editorErr error
@@ -39,6 +40,8 @@ func newFakeSource() *fakeSource {
 }
 
 func (f *fakeSource) count(name string) { f.calls[name]++ }
+
+func (f *fakeSource) SiteName() string { return f.siteName }
 
 func (f *fakeSource) CategoryForm(category string) (*form.Definition, error) {
 	f.count("CategoryForm")
@@ -752,5 +755,22 @@ func TestLookupFormVarsQueryTheCategoryOnce(t *testing.T) {
 	}
 	if got := src.calls["LatestSource"]; got != 1 {
 		t.Errorf("calls[LatestSource] = %d, want 1", got)
+	}
+}
+
+func TestLookupSiteName(t *testing.T) {
+	src := newFakeSource()
+	src.siteName = "lostmedia"
+	v := NewVars(testArticle(), nil, src, nil)
+
+	got, ok := v.Lookup("site_name")
+	if !ok {
+		t.Fatal("Lookup(\"site_name\") = _, false, want true")
+	}
+	if got != "lostmedia" {
+		t.Errorf("Lookup(\"site_name\") = %q, want %q", got, "lostmedia")
+	}
+	if got := PageVars("[%%site_name%%]", v, 1, 1); got != "[lostmedia]" {
+		t.Errorf("PageVars(\"[%%%%site_name%%%%]\") = %q, want %q", got, "[lostmedia]")
 	}
 }
