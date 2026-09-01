@@ -28,6 +28,7 @@ import { makeRecentPosts } from './forum/recent-posts-pagination'
 import { makeForumThread } from './forum/thread-pagination'
 import ReactivePage from './reactive/router'
 import { makePasswordToggle } from './util/password'
+import { makeTopBar } from './articles/top-bar'
 import AdminSusUsers from './entrypoints/admin-sus-users'
 import { renderTo } from '~util/react-render-into'
 
@@ -49,6 +50,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   makePasswordToggle()
   attachUserActions()
+  makeTopBar()
 
   // add new things here!
   const processNode = (node: HTMLElement) => {
