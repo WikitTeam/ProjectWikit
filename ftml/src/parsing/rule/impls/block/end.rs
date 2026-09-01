@@ -1,7 +1,7 @@
-//! Rule for an end block that closes nothing.
+//! Rule for an end block that closes nothing. 
 //!
 //! A block that is open consumes its own end block while gathering its body,
-//! so anything reaching this rule was never opened. Wikidot drops such a tag,
+//! so anything reaching this rule was never opened. ProjectWikit drops such a tag,
 //! and pages carrying one have been written against that for years.
 
 use super::super::prelude::*;
