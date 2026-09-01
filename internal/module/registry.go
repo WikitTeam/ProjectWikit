@@ -25,6 +25,7 @@ var registry = map[string]Info{
 	"forumpost":            {Name: "forumpost"},
 	"forumstart":           {Name: "forumstart"},
 	"forumthread":          {Name: "forumthread"},
+	"frontforum":           {Name: "frontforum", HasContent: true},
 	"gallery":              {Name: "gallery"},
 	"interwiki":            {Name: "interwiki", HasContent: true, Removed: true},
 	"listpages":            {Name: "listpages", HasContent: true},

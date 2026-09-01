@@ -39,7 +39,8 @@ type Options struct {
 	// reachable from here, so the caller that owns it supplies this.
 	Render func(source string, pc *page.Context) (string, error)
 
-	RenderMessage func(source string) (string, error)
+	RenderMessage     func(source string) (string, error)
+	RenderMessageText func(source string) (string, error)
 
 	Vars page.VarSource
 }
@@ -97,7 +98,9 @@ func (r *Repository) RenderModule(pc *page.Context, name string, params map[stri
 		Data:          moduleData{repo: r},
 		Render:        r.opts.Render,
 		RenderMessage: r.opts.RenderMessage,
-		Vars:          r.opts.Vars,
+
+		RenderMessageText: r.opts.RenderMessageText,
+		Vars:              r.opts.Vars,
 	}, name, params, body)
 	var moduleErr *module.Error
 	if errors.As(err, &moduleErr) {

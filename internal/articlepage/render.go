@@ -348,7 +348,10 @@ func (h *Handler) callbacks(req *request, vars *page.Vars, pc *page.Context) *ca
 		User:          req.user,
 		Render:        func(source string, into *page.Context) (string, error) { return h.nested(req, source, into) },
 		RenderMessage: func(source string) (string, error) { return h.message(req, source) },
-		Vars:          repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID),
+		RenderMessageText: func(source string) (string, error) {
+			return h.messageText(req, source)
+		},
+		Vars: repo.NewVarSource(req.ctx, h.deps.DB, req.site.ID),
 	})
 	cb := callbacks.New(req.loc, store)
 	cb.SetPageVars(vars)
@@ -412,6 +415,20 @@ func (h *Handler) message(req *request, source string) (string, error) {
 		return "", err
 	}
 	return html.Body, nil
+}
+
+func (h *Handler) messageText(req *request, source string) (string, error) {
+	pc := page.NewContext(nil, nil, nil, req.user)
+	info, err := h.pageInfo(req, nil)
+	if err != nil {
+		return "", err
+	}
+	text, err := h.deps.Engine.RenderText(req.ctx, page.PreRender(source, nil), info,
+		h.callbacks(req, nil, pc), renderer.ModeMessage)
+	if err != nil {
+		return "", err
+	}
+	return text.Body, nil
 }
 
 func (h *Handler) vars(req *request, of *db.Article) *page.Vars {

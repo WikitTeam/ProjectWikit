@@ -261,6 +261,61 @@ func (d *DB) scanThreads(ctx context.Context, sql string, args ...any) ([]ForumT
 	return out, rows.Err()
 }
 
+// Pinned threads keep their place in date order, unlike a category listing. A
+// news column would otherwise open with an old item.
+var qForumThreadsInCategories = register("ForumThreadsInCategories", `
+SELECT `+forumThreadColumns+`
+FROM web_forumthread
+WHERE category_id = ANY($1)
+ORDER BY created_at DESC, id DESC
+OFFSET $2 LIMIT $3`)
+
+func (d *DB) ForumThreadsInCategories(ctx context.Context, categoryIDs []int64, offset, limit int) ([]ForumThread, error) {
+	return d.scanThreads(ctx, qForumThreadsInCategories, categoryIDs, offset, limit)
+}
+
+var qForumFirstPosts = register("ForumFirstPosts", `
+SELECT DISTINCT ON (thread_id) `+forumPostColumns+`
+FROM web_forumpost
+WHERE thread_id = ANY($1) AND reply_to_id IS NULL
+ORDER BY thread_id, created_at`)
+
+func (d *DB) ForumFirstPosts(ctx context.Context, threadIDs []int64) (map[int64]ForumThreadPost, error) {
+	posts, err := d.scanPosts(ctx, qForumFirstPosts, threadIDs)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[int64]ForumThreadPost, len(posts))
+	for _, post := range posts {
+		out[post.ThreadID] = post
+	}
+	return out, nil
+}
+
+var qForumThreadPostCounts = register("ForumThreadPostCounts", `
+SELECT thread_id, count(*)
+FROM web_forumpost
+WHERE thread_id = ANY($1)
+GROUP BY thread_id`)
+
+func (d *DB) ForumThreadPostCounts(ctx context.Context, threadIDs []int64) (map[int64]int, error) {
+	rows, err := d.pool.Query(ctx, qForumThreadPostCounts, threadIDs)
+	if err != nil {
+		return nil, fmt.Errorf("count posts per thread: %w", err)
+	}
+	defer rows.Close()
+
+	out := make(map[int64]int, len(threadIDs))
+	for rows.Next() {
+		var id, count int64
+		if err := rows.Scan(&id, &count); err != nil {
+			return nil, fmt.Errorf("scan thread post count: %w", err)
+		}
+		out[id] = int(count)
+	}
+	return out, rows.Err()
+}
+
 var qForumThreadPostCount = register("ForumThreadPostCount", `
 SELECT count(*) FROM web_forumpost WHERE thread_id = $1`)
 

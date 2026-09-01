@@ -59,6 +59,7 @@
   "module-forumthread-forbidden": "权限不足，无法查看主题",
   "module-forumthread-not-found": "未找到主题 \"{name}\"",
   "module-forumthread-posts": "帖子数：",
+  "module-frontforum-no-category": "[[module FrontForum]] 缺少 category 参数",
   "module-gallery-size": "不支持的图库尺寸：{size}",
   "module-listpages-pager-count": "第&nbsp;{page}&nbsp页; 共&nbsp;{total}&nbsp;页",
   "module-listpages-pager-next": "下一页&nbsp;&raquo;",

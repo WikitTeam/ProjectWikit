@@ -67,6 +67,10 @@ type Data interface {
 	ForumCategoryLastPost(categoryID int64) (*db.ForumLastPost, error)
 	ForumCommentLastPost() (*db.ForumLastPost, error)
 
+	ForumThreadsInCategories(categoryIDs []int64, offset, limit int) ([]db.ForumThread, error)
+	ForumFirstPosts(threadIDs []int64) (map[int64]db.ForumThreadPost, error)
+	ForumThreadPostCounts(threadIDs []int64) (map[int64]int, error)
+
 	ForumThread(id int64) (*db.ForumThread, error)
 	ForumRootPostCount(threadID int64) (int, error)
 	ForumRootPosts(threadID int64, offset, limit int) ([]db.ForumThreadPost, error)
@@ -107,6 +111,10 @@ type Env struct {
 	Render func(source string, pc *page.Context) (string, error)
 
 	RenderMessage func(source string) (string, error)
+
+	// A module that summarises a forum post asks for the same pass without the
+	// markup, and only when its format wants a summary.
+	RenderMessageText func(source string) (string, error)
 
 	Vars page.VarSource
 }

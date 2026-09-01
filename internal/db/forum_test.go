@@ -225,3 +225,72 @@ func TestUserByIDOfAnUnknownID(t *testing.T) {
 		t.Errorf("UserByID(-1) err = %v, want ErrNotFound", err)
 	}
 }
+
+func TestForumThreadsInCategoriesKeepDateOrderAcrossCategories(t *testing.T) {
+	d, ctx := forumDB(t)
+	threads, err := d.ForumThreadsInCategories(ctx, []int64{55, 61}, 0, 20)
+	if err != nil {
+		t.Fatalf("ForumThreadsInCategories() err = %v, want nil", err)
+	}
+
+	want := []string{"Probe Long Thread", "Probe Deep Thread", "Probe Pinned Thread", "Probe Locked Thread", "Probe Thread"}
+	if len(threads) != len(want) {
+		t.Fatalf("len(ForumThreadsInCategories()) = %d, want %d", len(threads), len(want))
+	}
+	for i, name := range want {
+		if threads[i].Name != name {
+			t.Errorf("ForumThreadsInCategories()[%d].Name = %q, want %q", i, threads[i].Name, name)
+		}
+	}
+}
+
+func TestForumThreadsInCategoriesWindow(t *testing.T) {
+	d, ctx := forumDB(t)
+	threads, err := d.ForumThreadsInCategories(ctx, []int64{55, 61}, 2, 2)
+	if err != nil {
+		t.Fatalf("ForumThreadsInCategories() err = %v, want nil", err)
+	}
+
+	want := []string{"Probe Pinned Thread", "Probe Locked Thread"}
+	if len(threads) != len(want) {
+		t.Fatalf("len(ForumThreadsInCategories()) = %d, want %d", len(threads), len(want))
+	}
+	for i, name := range want {
+		if threads[i].Name != name {
+			t.Errorf("ForumThreadsInCategories()[%d].Name = %q, want %q", i, threads[i].Name, name)
+		}
+	}
+}
+
+func TestForumFirstPostsPickTheOldestRootPost(t *testing.T) {
+	d, ctx := forumDB(t)
+	first, err := d.ForumFirstPosts(ctx, []int64{97, 122})
+	if err != nil {
+		t.Fatalf("ForumFirstPosts() err = %v, want nil", err)
+	}
+
+	want := map[int64]int64{97: 22, 122: 54}
+	if len(first) != len(want) {
+		t.Fatalf("len(ForumFirstPosts()) = %d, want %d", len(first), len(want))
+	}
+	for thread, post := range want {
+		if first[thread].ID != post {
+			t.Errorf("ForumFirstPosts()[%d].ID = %d, want %d", thread, first[thread].ID, post)
+		}
+	}
+}
+
+func TestForumThreadPostCounts(t *testing.T) {
+	d, ctx := forumDB(t)
+	counts, err := d.ForumThreadPostCounts(ctx, []int64{97, 122})
+	if err != nil {
+		t.Fatalf("ForumThreadPostCounts() err = %v, want nil", err)
+	}
+
+	want := map[int64]int{97: 3, 122: 12}
+	for thread, count := range want {
+		if counts[thread] != count {
+			t.Errorf("ForumThreadPostCounts()[%d] = %d, want %d", thread, counts[thread], count)
+		}
+	}
+}

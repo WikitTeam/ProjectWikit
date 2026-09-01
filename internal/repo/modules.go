@@ -58,6 +58,18 @@ func (m moduleData) ArticleByRef(ref string) (*db.Article, error) {
 	return m.repo.db.ArticleByName(m.repo.ctx, ref)
 }
 
+func (m moduleData) ForumThreadsInCategories(categoryIDs []int64, offset, limit int) ([]db.ForumThread, error) {
+	return m.repo.db.ForumThreadsInCategories(m.repo.ctx, categoryIDs, offset, limit)
+}
+
+func (m moduleData) ForumFirstPosts(threadIDs []int64) (map[int64]db.ForumThreadPost, error) {
+	return m.repo.db.ForumFirstPosts(m.repo.ctx, threadIDs)
+}
+
+func (m moduleData) ForumThreadPostCounts(threadIDs []int64) (map[int64]int, error) {
+	return m.repo.db.ForumThreadPostCounts(m.repo.ctx, threadIDs)
+}
+
 func (m moduleData) LatestSource(articleID int64) (string, error) {
 	return m.repo.db.LatestSource(m.repo.ctx, articleID)
 }
