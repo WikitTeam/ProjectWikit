@@ -94,13 +94,13 @@ export interface NotificationSubscriptionResponse {
 }
 
 export async function getNotifications(cursor: number, limit: number = 10, unread: boolean = false, mark_viewed: boolean = false) {
-  return await wFetch<NotificationsResponse>(`/api/notifications?cursor=${cursor}&limit=${limit}&unread=${unread}&mark_as_viewed=${mark_viewed}`)
+  return await wFetch<NotificationsResponse>(`/pw-api/notifications?cursor=${cursor}&limit=${limit}&unread=${unread}&mark_as_viewed=${mark_viewed}`)
 }
 
 export async function subscribeToNotifications(data: NotificationSubscriptionData) {
-  return await wFetch<NotificationSubscriptionResponse>(`/api/notifications/subscribe`, { method: 'POST', sendJson: true, body: data })
+  return await wFetch<NotificationSubscriptionResponse>(`/pw-api/notifications/subscribe`, { method: 'POST', sendJson: true, body: data })
 }
 
 export async function unsubscribeFromNotifications(data: NotificationSubscriptionData) {
-  return await wFetch<NotificationSubscriptionResponse>(`/api/notifications/subscribe`, { method: 'DELETE', sendJson: true, body: data })
+  return await wFetch<NotificationSubscriptionResponse>(`/pw-api/notifications/subscribe`, { method: 'DELETE', sendJson: true, body: data })
 }

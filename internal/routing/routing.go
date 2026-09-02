@@ -26,7 +26,7 @@ var Table = []Route{
 	{Prefix: "/", Owner: OwnerGo, Label: "articles"},
 	{Prefix: "/-/", Owner: OwnerUpstream, Label: "system pages"},
 	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
-	{Prefix: "/api/", Owner: OwnerUpstream, Label: "API"},
+	{Prefix: "/pw-api/", Owner: OwnerUpstream, Label: "API"},
 	{Prefix: "/local--files/", Owner: OwnerGo, Label: "site files"},
 	{Prefix: "/local--resized-images/", Owner: OwnerGo, Label: "scaled images"},
 	{Prefix: "/local--code/", Owner: OwnerGo, Label: "code blocks"},

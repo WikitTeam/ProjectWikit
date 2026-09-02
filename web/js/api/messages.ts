@@ -37,7 +37,7 @@ export interface CanSendResponse {
 }
 
 export async function getConversations(): Promise<ConversationsResponse> {
-  return await wFetch<ConversationsResponse>('/api/messages/conversations')
+  return await wFetch<ConversationsResponse>('/pw-api/messages/conversations')
 }
 
 export async function getConversation(
@@ -54,12 +54,12 @@ export async function getConversation(
   })
   if (after >= 0) params.set('after', String(after))
   return await wFetch<ConversationResponse>(
-    `/api/messages/with/${partnerId}?${params.toString()}`,
+    `/pw-api/messages/with/${partnerId}?${params.toString()}`,
   )
 }
 
 export async function sendMessage(recipientId: number, body: string): Promise<DirectMessage> {
-  return await wFetch<DirectMessage>('/api/messages/send', {
+  return await wFetch<DirectMessage>('/pw-api/messages/send', {
     method: 'POST',
     sendJson: true,
     body: { recipient_id: recipientId, body },
@@ -67,15 +67,15 @@ export async function sendMessage(recipientId: number, body: string): Promise<Di
 }
 
 export async function canSendMessage(userId: number): Promise<CanSendResponse> {
-  return await wFetch<CanSendResponse>(`/api/messages/can-send/${userId}`)
+  return await wFetch<CanSendResponse>(`/pw-api/messages/can-send/${userId}`)
 }
 
 export async function blockUser(userId: number): Promise<{ status: string; blocked: boolean }> {
-  return await wFetch(`/api/users/${userId}/block`, { method: 'POST', sendJson: true, body: {} })
+  return await wFetch(`/pw-api/users/${userId}/block`, { method: 'POST', sendJson: true, body: {} })
 }
 
 export async function unblockUser(userId: number): Promise<{ status: string; blocked: boolean }> {
-  return await wFetch(`/api/users/${userId}/block`, { method: 'DELETE', sendJson: true, body: {} })
+  return await wFetch(`/pw-api/users/${userId}/block`, { method: 'DELETE', sendJson: true, body: {} })
 }
 
 export async function reportMessages(
@@ -83,7 +83,7 @@ export async function reportMessages(
   messageIds: number[],
   reason: string,
 ): Promise<{ status: string; report_id: number }> {
-  return await wFetch('/api/messages/report', {
+  return await wFetch('/pw-api/messages/report', {
     method: 'POST',
     sendJson: true,
     body: { reported_id: reportedId, message_ids: messageIds, reason },

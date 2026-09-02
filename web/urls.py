@@ -130,7 +130,7 @@ sys_patterns = [
 
 urlpatterns = [
     path("-/", include(sys_patterns)),
-    path("api/", include(api_patterns)),
+    path("pw-api/", include(api_patterns)),
 
     re_path(r'(?P<path>.*)$', ArticleView.as_view())
 ]

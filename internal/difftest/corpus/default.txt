@@ -17,16 +17,16 @@
 /-/login
 /-/signup
 
-/api/articles
-/api/articles/scp-173
-/api/articles/scp-173/links
-/api/articles/scp-173/votes
+/pw-api/articles
+/pw-api/articles/scp-173
+/pw-api/articles/scp-173/links
+/pw-api/articles/scp-173/votes
 
 /local--files/nonexistent.png
 /local--theme/1/style.css
 
-# keep these two: /api/ and /-/ must not swallow them
-/apidocs
+# keep these two: /pw-api/ and /-/ must not swallow them
+/pw-apidocs
 /-
 
 # page names above are the local seed set, not a real wiki

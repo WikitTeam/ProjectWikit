@@ -22,7 +22,7 @@ var translit = map[rune]string{
 	'ь': "", 'ъ': "",
 }
 
-var reserved = []string{"-", "_", "api", "forum", "local--files", "local--code", "local--html", "local--theme"}
+var reserved = []string{"-", "_", "api", "pw-api", "forum", "local--files", "local--code", "local--html", "local--theme"}
 
 func Normalize(fullName string) string {
 	var b strings.Builder

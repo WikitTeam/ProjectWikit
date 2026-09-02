@@ -628,7 +628,7 @@ class UserReportAdmin(admin.ModelAdmin):
         if not obj or not obj.pk:
             return ''
         return format_html(
-            '<a href="/api/admin/reports/{}/full-conversation" target="_blank">'
+            '<a href="/pw-api/admin/reports/{}/full-conversation" target="_blank">'
             '打开完整会话 JSON（需要"查看被检举会话全部记录"权限）</a>',
             obj.pk,
         )

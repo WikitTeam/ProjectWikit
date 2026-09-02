@@ -28,5 +28,5 @@ export function fetchSearch(text: string, opts?: SearchParams): Promise<SearchRe
     params.set('cursor', opts.cursor)
   }
 
-  return wFetch<SearchResults>(`/api/search?${params.toString()}`)
+  return wFetch<SearchResults>(`/pw-api/search?${params.toString()}`)
 }

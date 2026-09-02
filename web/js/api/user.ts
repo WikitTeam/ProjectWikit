@@ -15,11 +15,11 @@ export interface UserData {
 }
 
 export function fetchAllUsers(): Promise<UserData[]> {
-  return wFetch<UserData[]>('/api/users')
+  return wFetch<UserData[]>('/pw-api/users')
 }
 
 export function lookupUser(username: string): Promise<UserData> {
-  return wFetch<UserData>(`/api/users/lookup?username=${encodeURIComponent(username)}`)
+  return wFetch<UserData>(`/pw-api/users/lookup?username=${encodeURIComponent(username)}`)
 }
 
 export interface AdminSusUser {
@@ -31,5 +31,5 @@ export interface AdminSusUser {
 }
 
 export function fetchAdminSusUsers(): Promise<AdminSusUser[]> {
-  return wFetch<AdminSusUser[]>('/api/admin/sus')
+  return wFetch<AdminSusUser[]>('/pw-api/admin/sus')
 }

@@ -20,11 +20,11 @@ export interface ArticleFiles {
 }
 
 export async function fetchArticleFiles(pageId: string): Promise<ArticleFiles> {
-  return await wFetch<ArticleFiles>(`/api/articles/${pageId}/files`)
+  return await wFetch<ArticleFiles>(`/pw-api/articles/${pageId}/files`)
 }
 
 export async function uploadFile(pageId: string, file: File, fileName: string, uploadProgressHandler?: WRequestUploadProgressHandler) {
-  return await wFetch(`/api/articles/${pageId}/files`, {
+  return await wFetch(`/pw-api/articles/${pageId}/files`, {
     method: 'POST',
     backend: 'xhr',
     uploadProgressHandler,
@@ -36,7 +36,7 @@ export async function uploadFile(pageId: string, file: File, fileName: string, u
 }
 
 export async function renameFile(fileId: number, newFileName: string) {
-  return await wFetch(`/api/files/${encodeURIComponent(fileId)}`, {
+  return await wFetch(`/pw-api/files/${encodeURIComponent(fileId)}`, {
     method: 'PUT',
     sendJson: true,
     body: { name: newFileName },
@@ -44,7 +44,7 @@ export async function renameFile(fileId: number, newFileName: string) {
 }
 
 export async function deleteFile(fileId: number) {
-  return await wFetch(`/api/files/${encodeURIComponent(fileId)}`, {
+  return await wFetch(`/pw-api/files/${encodeURIComponent(fileId)}`, {
     method: 'DELETE',
   })
 }

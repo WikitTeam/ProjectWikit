@@ -25,9 +25,9 @@ func TestValidateRejectsBadTable(t *testing.T) {
 	}{
 		{"prefix does not start with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "api/", Owner: OwnerUpstream}}},
 		{"prefix does not end with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api", Owner: OwnerUpstream}}},
-		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerGo}}},
+		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerGo}}},
 		{"invalid owner", []Route{{Prefix: "/", Owner: "rust"}}},
-		{"missing fallback prefix", []Route{{Prefix: "/api/", Owner: OwnerUpstream}}},
+		{"missing fallback prefix", []Route{{Prefix: "/pw-api/", Owner: OwnerUpstream}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -65,11 +65,11 @@ func TestMuxRouteLongestPrefixWins(t *testing.T) {
 		{"/forum:start", "/"},
 		{"/-/login", "/-/"},
 		{"/-/static/app.js", "/-/static/"},
-		{"/api/articles/scp-173/votes", "/api/"},
+		{"/pw-api/articles/scp-173/votes", "/pw-api/"},
 		{"/local--files/a/b.png", "/local--files/"},
 		{"/local--theme/12/style.css", "/local--theme/"},
 		{"/-", "/"},
-		{"/apidocs", "/"},
+		{"/pw-apidocs", "/"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
@@ -87,15 +87,15 @@ func TestNewRejectsNilUpstream(t *testing.T) {
 }
 
 func TestNewRejectsGoRouteWithoutHandler(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerGo}}
+	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerGo}}
 	if _, err := New(table, stub("upstream"), nil); err == nil {
 		t.Error("New() err = nil, want non-nil")
 	}
 }
 
 func TestNewRejectsUpstreamRouteWithHandler(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api/", Owner: OwnerUpstream}}
-	handlers := map[string]http.Handler{"/api/": stub("go")}
+	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream}}
+	handlers := map[string]http.Handler{"/pw-api/": stub("go")}
 	if _, err := New(table, stub("upstream"), handlers); err == nil {
 		t.Error("New() err = nil, want non-nil")
 	}
@@ -112,9 +112,9 @@ func TestNewRejectsHandlerOutsideTable(t *testing.T) {
 func TestMuxServeHTTPDispatches(t *testing.T) {
 	table := []Route{
 		{Prefix: "/", Owner: OwnerUpstream},
-		{Prefix: "/api/", Owner: OwnerGo},
+		{Prefix: "/pw-api/", Owner: OwnerGo},
 	}
-	m, err := New(table, stub("upstream"), map[string]http.Handler{"/api/": stub("go")})
+	m, err := New(table, stub("upstream"), map[string]http.Handler{"/pw-api/": stub("go")})
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
@@ -123,7 +123,7 @@ func TestMuxServeHTTPDispatches(t *testing.T) {
 		path string
 		want string
 	}{
-		{"/api/articles", "go"},
+		{"/pw-api/articles", "go"},
 		{"/scp-173", "upstream"},
 	}
 	for _, tt := range tests {

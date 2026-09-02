@@ -14,5 +14,5 @@ export interface PreviewResponse {
 }
 
 export function makePreview(data: PreviewData) {
-  return wFetch<PreviewResponse>(`/api/preview`, { method: 'POST', sendJson: true, body: data })
+  return wFetch<PreviewResponse>(`/pw-api/preview`, { method: 'POST', sendJson: true, body: data })
 }

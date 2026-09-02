@@ -145,7 +145,7 @@ func TestParseCorpus(t *testing.T) {
 # comment
 /
 GET /main
-post /api/articles
+post /pw-api/articles
 !GET /-/login
 `
 	got, err := ParseCorpus(src)
@@ -155,7 +155,7 @@ post /api/articles
 	want := []Request{
 		{Method: "GET", Target: "/"},
 		{Method: "GET", Target: "/main"},
-		{Method: "POST", Target: "/api/articles"},
+		{Method: "POST", Target: "/pw-api/articles"},
 		{Method: "GET", Target: "/-/login", KnownDiffers: true},
 	}
 	if len(got) != len(want) {

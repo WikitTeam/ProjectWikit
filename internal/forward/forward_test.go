@@ -236,7 +236,7 @@ func TestProxyKeepsOriginByDefault(t *testing.T) {
 	front := httptest.NewServer(newProxy(t, up))
 	defer front.Close()
 
-	req, _ := http.NewRequest(http.MethodPost, front.URL+"/api/modules", nil)
+	req, _ := http.NewRequest(http.MethodPost, front.URL+"/pw-api/modules", nil)
 	req.Header.Set("Origin", "http://localhost:8080")
 	resp, err := front.Client().Do(req)
 	if err != nil {
@@ -261,7 +261,7 @@ func TestProxyDropsOriginPortWhenAsked(t *testing.T) {
 	front := httptest.NewServer(proxy)
 	defer front.Close()
 
-	req, _ := http.NewRequest(http.MethodPost, front.URL+"/api/modules", nil)
+	req, _ := http.NewRequest(http.MethodPost, front.URL+"/pw-api/modules", nil)
 	req.Header.Set("Origin", "http://localhost:8080")
 	resp, err := front.Client().Do(req)
 	if err != nil {
@@ -286,7 +286,7 @@ func TestProxyLeavesAMissingOriginAlone(t *testing.T) {
 	front := httptest.NewServer(proxy)
 	defer front.Close()
 
-	resp, err := front.Client().Post(front.URL+"/api/modules", "application/json", nil)
+	resp, err := front.Client().Post(front.URL+"/pw-api/modules", "application/json", nil)
 	if err != nil {
 		t.Fatalf("Post() err = %v, want nil", err)
 	}

@@ -18,7 +18,7 @@ export interface ArticleUpdateRequest extends ArticleData {
 }
 
 export async function createArticle(data: ArticleData) {
-  await wFetch(`/api/articles/new`, { method: 'POST', sendJson: true, body: data })
+  await wFetch(`/pw-api/articles/new`, { method: 'POST', sendJson: true, body: data })
 }
 
 export interface FullArticleRating {
@@ -43,19 +43,19 @@ export interface FullArticleData {
 }
 
 export function fetchAllArticles(): Promise<FullArticleData[]> {
-  return wFetch<FullArticleData[]>('/api/articles')
+  return wFetch<FullArticleData[]>('/pw-api/articles')
 }
 
 export function fetchArticle(pageId: string): Promise<ArticleData> {
-  return wFetch<ArticleData>(`/api/articles/${pageId}`)
+  return wFetch<ArticleData>(`/pw-api/articles/${pageId}`)
 }
 
 export async function updateArticle(pageId: string, data: ArticleUpdateRequest): Promise<ArticleData> {
-  return wFetch<ArticleData>(`/api/articles/${pageId}`, { method: 'PUT', sendJson: true, body: data })
+  return wFetch<ArticleData>(`/pw-api/articles/${pageId}`, { method: 'PUT', sendJson: true, body: data })
 }
 
 export async function deleteArticle(pageId: string) {
-  await wFetch(`/api/articles/${pageId}`, { method: 'DELETE', sendJson: true })
+  await wFetch(`/pw-api/articles/${pageId}`, { method: 'DELETE', sendJson: true })
 }
 
 export interface ArticleLogEntry {
@@ -74,11 +74,11 @@ export interface ArticleLog {
 }
 
 export async function fetchArticleLog(pageId: string, from: number = 0, to: number = from + 25): Promise<ArticleLog> {
-  return await wFetch<ArticleLog>(`/api/articles/${pageId}/log?from=${from}&to=${to}`)
+  return await wFetch<ArticleLog>(`/pw-api/articles/${pageId}/log?from=${from}&to=${to}`)
 }
 
 export async function revertArticleRevision(pageId: string, revNumber: number): Promise<ArticleData> {
-  return await wFetch(`/api/articles/${pageId}/log`, { method: 'PUT', sendJson: true, body: { revNumber: revNumber } })
+  return await wFetch(`/pw-api/articles/${pageId}/log`, { method: 'PUT', sendJson: true, body: { revNumber: revNumber } })
 }
 
 export interface ArticleVersion {
@@ -88,7 +88,7 @@ export interface ArticleVersion {
 
 export async function fetchArticleVersion(pageId: string, revNum: number, pathParams?: { [key: string]: string }): Promise<ArticleVersion> {
   const urlPathParams = pathParams && `&pathParams=${JSON.stringify(pathParams ?? {})}`
-  return await wFetch<ArticleVersion>(`/api/articles/${pageId}/version?revNum=${revNum}${urlPathParams}`)
+  return await wFetch<ArticleVersion>(`/pw-api/articles/${pageId}/version?revNum=${revNum}${urlPathParams}`)
 }
 
 export interface ArticleBacklink {
@@ -104,13 +104,13 @@ export interface ArticleBacklinks {
 }
 
 export async function fetchArticleBacklinks(pageId: string): Promise<ArticleBacklinks> {
-  return await wFetch<ArticleBacklinks>(`/api/articles/${pageId}/links`)
+  return await wFetch<ArticleBacklinks>(`/pw-api/articles/${pageId}/links`)
 }
 
 export async function fetchArticleVotes(pageId: string): Promise<ModuleRateVotesResponse> {
-  return await wFetch<ModuleRateVotesResponse>(`/api/articles/${pageId}/votes`)
+  return await wFetch<ModuleRateVotesResponse>(`/pw-api/articles/${pageId}/votes`)
 }
 
 export async function deleteArticleVotes(pageId: string): Promise<ModuleRateVotesResponse> {
-  return await wFetch<ModuleRateVotesResponse>(`/api/articles/${pageId}/votes`, { method: 'DELETE' })
+  return await wFetch<ModuleRateVotesResponse>(`/pw-api/articles/${pageId}/votes`, { method: 'DELETE' })
 }

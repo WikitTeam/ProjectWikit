@@ -14,5 +14,5 @@ export interface ModuleRenderResponse {
 }
 
 export async function callModule<T>(request: ModuleRequest) {
-  return await wFetch<T>(`/api/modules`, { method: 'POST', sendJson: true, body: request })
+  return await wFetch<T>(`/pw-api/modules`, { method: 'POST', sendJson: true, body: request })
 }
