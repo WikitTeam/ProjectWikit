@@ -49,6 +49,7 @@ function preciseTime(s: string | null): string {
 const SearchModule: React.FC<Props> = ({
   placeholder,
   tags: defaultTags,
+  category: defaultCategory,
   q: initialQ,
   author: initialAuthor,
   datefrom: initialDateFrom,
@@ -57,6 +58,7 @@ const SearchModule: React.FC<Props> = ({
   const [q, setQ] = useState(initialQ || '')
   const [author, setAuthor] = useState(initialAuthor || '')
   const [tags, setTags] = useState(defaultTags || '')
+  const [category, setCategory] = useState(defaultCategory || '')
   const [dateFrom, setDateFrom] = useState(initialDateFrom || '')
   const [dateTo, setDateTo] = useState(initialDateTo || '')
 
@@ -80,6 +82,7 @@ const SearchModule: React.FC<Props> = ({
         q: q.trim(),
         author: author.trim(),
         tags: tags.trim(),
+        category: category.trim(),
         datefrom: dateFrom,
         dateto: dateTo,
         offset,
@@ -101,7 +104,7 @@ const SearchModule: React.FC<Props> = ({
   })
 
   useEffect(() => {
-    const hasCriteria = !!(q.trim() || author.trim() || tags.trim() || dateFrom || dateTo)
+    const hasCriteria = !!(q.trim() || author.trim() || tags.trim() || category.trim() || dateFrom || dateTo)
     if (!hasCriteria) {
       seq.current++
       setResults([])
@@ -113,7 +116,7 @@ const SearchModule: React.FC<Props> = ({
     }
     const t = setTimeout(() => runSearch(0, false), 300)
     return () => clearTimeout(t)
-  }, [q, author, tags, dateFrom, dateTo])
+  }, [q, author, tags, category, dateFrom, dateTo])
 
   const onLoadMore = useConstCallback(() => runSearch(results.length, true))
 
@@ -132,6 +135,7 @@ const SearchModule: React.FC<Props> = ({
       <div className="w-search-filters">
         <input className="w-search-filter" type="text" value={author} placeholder={t('search.author-placeholder')} onChange={e => setAuthor(e.target.value)} />
         <input className="w-search-filter" type="text" value={tags} placeholder={t('search.tags-placeholder')} onChange={e => setTags(e.target.value)} />
+        <input className="w-search-filter" type="text" value={category} placeholder={t('search.category-placeholder')} onChange={e => setCategory(e.target.value)} />
         <div className="w-search-dates">
           <input className="w-search-filter w-search-date" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           <span className="w-search-date-sep">–</span>

@@ -411,6 +411,7 @@
   "search.page.title": "站内搜索",
   "search.page.updated-label": "最后修改:",
   "search.placeholder": "搜索…",
+  "search.category-placeholder": "分类",
   "search.tags-placeholder": "标签（空格分隔，- 排除）",
   "search.total": "共 {total} 条结果",
   "search.updated": "更新 {when}",

@@ -4,6 +4,7 @@ export interface SearchModuleParams {
   q?: string
   author?: string
   tags?: string
+  category?: string
   datefrom?: string
   dateto?: string
   offset?: number
