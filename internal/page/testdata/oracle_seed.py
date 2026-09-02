@@ -156,6 +156,9 @@ author = make_user(
     display_name='Probe Author',
     type=User.UserType.Normal,
     api_key='probe-key-author',
+    first_name='Probe',
+    last_name='Author',
+    bio='a bio with **bold** and a [[[probe:full|link]]]',
 )
 # An imported Wikidot account nobody has claimed yet. The uuid is fixed rather
 # than generated so the golden stays put; the importer generates one per user.

@@ -1,0 +1,72 @@
+{{define "profile.html"}}
+<div class="wikit-scope">
+  <div class="app-shell">
+
+    <header class="app-header">
+      <a href="/" class="brand">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="ProjectWikit">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        <span class="wordmark">ProjectWikit</span>
+      </a>
+      <span class="divider"></span>
+      <span class="path"><b>{{.T "profile.user"}}</b><span class="sep">/</span>{{esc .DisplayName}}</span>
+      <div class="spacer"></div>
+    </header>
+
+    <main class="app-main">
+
+      <div class="section-head">
+        <div class="kicker-crumb"><b>{{.T "profile.personal"}}</b><span class="sep">/</span>{{.T "profile.user"}}<span class="sep">/</span>{{.ID}}-{{esc .DisplayName}}</div>
+        <h1 class="h1">{{.T "profile.title"}}</h1>
+      </div>
+
+      <div class="profile-head">
+        <div class="avatar-big">
+          {{if .Avatar}}<img src="{{esc .Avatar}}" alt="{{esc .DisplayName}}">{{else}}{{esc .Initial}}{{end}}
+        </div>
+        <div class="id">
+          <div class="name">
+            
+              {{esc .DisplayName}}
+            
+          </div>
+          {{if .Subtitle}}<div class="meta">{{esc .Subtitle}}</div>{{end}}
+        </div>
+        <div class="actions">
+          {{if .IsSelf}}
+            <a class="btn-ghost" href="/-/profile/edit">{{.T "profile.edit"}}</a>
+          {{end}}
+          {{if .CanDirectMessage}}
+            <a class="btn-ghost" href="/-/messages/{{.ID}}">{{.T "profile.send-message"}}</a>
+            <span id="user-actions-container" data-config='{{.ActionsConfig}}'>
+              <a class="btn-ghost block-button" href="javascript:;" data-action="toggle-block">
+                <span class="block-label">{{if .IsBlocked}}{{.T "profile.unblock"}}{{else}}{{.T "profile.block"}}{{end}}</span>
+              </a>
+            </span>
+          {{end}}
+        </div>
+      </div>
+
+      <dl class="dl">
+        {{if .FromWikidot}}
+          <dt>{{.T "profile.account-state"}}</dt><dd>{{.T "profile.imported"}}</dd>
+        {{end}}
+        {{if .IsBot}}
+          <dt>{{.T "profile.account-type"}}</dt><dd>{{.T "profile.bot"}}</dd>
+        {{end}}
+        {{if .FullName}}
+          <dt>{{.T "profile.name"}}</dt><dd>{{esc .FullName}}</dd>
+        {{end}}
+        {{if .Bio}}
+          <dt>{{.T "profile.bio"}}</dt><dd>{{.BioHTML}}</dd>
+        {{end}}
+        <dt>{{.T "profile.joined"}}</dt>
+        <dd>
+          <span class="odate w-date" data-timestamp="{{.JoinedUnix}}000" data-format="{{esc (.T "profile.date-format-js")}}" style="display: inline">{{esc .Joined}}</span>
+        </dd>
+      </dl>
+
+    </main>
+
+  </div>
+</div>
+{{end}}

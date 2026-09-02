@@ -15,6 +15,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/userpage"
 	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 )
 
@@ -25,6 +26,7 @@ type pageStack struct {
 	theme     http.Handler
 	moduleAPI http.Handler
 	preview   http.Handler
+	profile   http.Handler
 	close     func()
 }
 
@@ -65,7 +67,11 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		theme:     localitem.NewTheme(items),
 		moduleAPI: webapi.New(api, upstream),
 		preview:   webapi.NewPreview(api),
-		close:     closeEngine,
+		profile: userpage.New(userpage.Deps{
+			DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
+			Assets: static.NewAssets(assets), TimeZone: location, Log: log,
+		}),
+		close: closeEngine,
 	}
 
 	// Without the key nothing can be verified, so every visitor stays
@@ -80,5 +86,6 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.theme = resolver.Middleware(stack.theme)
 	stack.moduleAPI = resolver.Middleware(stack.moduleAPI)
 	stack.preview = resolver.Middleware(stack.preview)
+	stack.profile = resolver.Middleware(stack.profile)
 	return stack, nil
 }

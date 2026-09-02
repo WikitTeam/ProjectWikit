@@ -171,3 +171,80 @@ func (v view) date() string {
 		"hour", fmt.Sprintf("%02d", at.Hour()),
 		"minute", fmt.Sprintf("%02d", at.Minute()))
 }
+
+// System is the page the wiki's own pages sit in, which is not the one an
+// article sits in.
+type System struct {
+	Title     string
+	Before    string
+	Heading   string
+	BodyClass string
+	BackLink  bool
+	Content   string
+}
+
+type Profile struct {
+	ID          int64
+	DisplayName string
+	Avatar      string
+	Subtitle    string
+	AuthIcon    string
+
+	IsSelf           bool
+	CanDirectMessage bool
+	IsBlocked        bool
+	ActionsConfig    string
+
+	FromWikidot bool
+	IsBot       bool
+	FullName    string
+	Bio         string
+	BioHTML     string
+	JoinedAt    time.Time
+}
+
+func (r *Renderer) SystemPage(w io.Writer, d System) error {
+	return tmpl.ExecuteTemplate(w, "system.html", systemView{System: d, r: r})
+}
+
+func (r *Renderer) Profile(d Profile) (string, error) {
+	return r.execute("profile.html", profileView{Profile: d, r: r})
+}
+
+type systemView struct {
+	System
+	r *Renderer
+}
+
+func (v systemView) Lang() string                    { return v.r.loc.Lang() }
+func (v systemView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v systemView) Asset(name string) string        { return v.r.assets.URL(name) }
+
+type profileView struct {
+	Profile
+	r *Renderer
+}
+
+func (v profileView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v profileView) Asset(name string) string        { return v.r.assets.URL(name) }
+
+// The letter the avatar box falls back to is the display name's first
+// character rather than its first byte.
+func (v profileView) Initial() string {
+	for _, r := range v.DisplayName {
+		return strings.ToUpper(string(r))
+	}
+	return ""
+}
+
+func (v profileView) JoinedUnix() string {
+	return strconv.FormatInt(v.JoinedAt.Unix(), 10)
+}
+
+func (v profileView) Joined() string {
+	at := v.JoinedAt.In(v.r.tz)
+	return v.T("profile.date-format",
+		"year", strconv.Itoa(at.Year()),
+		"month", strconv.Itoa(int(at.Month())),
+		"day", strconv.Itoa(at.Day()))
+}

@@ -30,3 +30,15 @@
 /-
 
 # page names above are the local seed set, not a real wiki
+
+# user profiles. probe-author carries a bio, a first and last name; the wikidot
+# account is inactive and reached by the name it kept.
+/-/users/probe-author
+/-/users/PROBE-AUTHOR
+/-/users/probevoter
+/-/users/probe-wd-original
+/-/users/probe-staff
+/-/users/nobody-at-all
+/-/users/1
+/-/users/1-
+HEAD /-/users/probe-author

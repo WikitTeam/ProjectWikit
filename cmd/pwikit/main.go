@@ -26,6 +26,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/userpage"
 	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 )
 
@@ -142,7 +143,7 @@ func serve(args []string) error {
 	}
 
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
-	var moduleAPI, preview http.Handler = proxy, proxy
+	var moduleAPI, preview, profile http.Handler = proxy, proxy, proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, *sidecar, *secret, *timezone, log)
 		if err != nil {
@@ -158,6 +159,7 @@ func serve(args []string) error {
 		themeHandler = served(stack.theme)
 		moduleAPI = served(stack.moduleAPI)
 		preview = served(stack.preview)
+		profile = served(stack.profile)
 	}
 
 	goHandlers := map[string]http.Handler{
@@ -172,6 +174,7 @@ func serve(args []string) error {
 		localitem.ThemePrefix: themeHandler,
 		webapi.ModulesPath:    moduleAPI,
 		webapi.PreviewPath:    preview,
+		userpage.Prefix:       profile,
 		"/":                   articles,
 	}
 
