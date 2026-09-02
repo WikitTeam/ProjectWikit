@@ -11,11 +11,11 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
-	"github.com/WikitTeam/ProjectWikit/internal/moduleapi"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 )
 
 type pageStack struct {
@@ -61,7 +61,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		code:     localitem.NewCode(items),
 		html:     localitem.NewHTML(items),
 		theme:    localitem.NewTheme(items),
-		moduleAPI: moduleapi.New(moduleapi.Deps{
+		moduleAPI: webapi.New(webapi.Deps{
 			DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log,
 		}, upstream),
 		close: closeEngine,

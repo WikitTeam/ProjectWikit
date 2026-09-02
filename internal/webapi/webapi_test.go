@@ -1,4 +1,4 @@
-package moduleapi
+package webapi
 
 import (
 	"bytes"
@@ -93,7 +93,7 @@ func (u *recorder) ServeHTTP(_ http.ResponseWriter, r *http.Request) {
 }
 
 func post(body string) *http.Request {
-	r := httptest.NewRequest(http.MethodPost, Path, bytes.NewReader([]byte(body)))
+	r := httptest.NewRequest(http.MethodPost, ModulesPath, bytes.NewReader([]byte(body)))
 	r.Header.Set("Content-Type", jsonMime)
 	return r
 }
@@ -126,7 +126,7 @@ func TestABodyTooLargeToReadGoesUpstreamWhole(t *testing.T) {
 
 func TestWhatIsNotAPostGoesUpstream(t *testing.T) {
 	up := &recorder{}
-	r := httptest.NewRequest(http.MethodGet, Path, nil)
+	r := httptest.NewRequest(http.MethodGet, ModulesPath, nil)
 
 	New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), r)
 

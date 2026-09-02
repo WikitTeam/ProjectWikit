@@ -1,6 +1,5 @@
-// Package moduleapi answers the endpoint a page calls to have one module
-// rendered again.
-package moduleapi
+// Package webapi answers the JSON endpoints a page calls back to.
+package webapi
 
 import (
 	"bytes"
@@ -24,7 +23,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
-const Path = "/pw-api/modules"
+const ModulesPath = "/pw-api/modules"
 
 const (
 	renderMethod = "render"
@@ -105,7 +104,7 @@ func (h *Handler) render(r *http.Request, loc *i18n.Localizer, parsed call) (str
 	ctx := r.Context()
 	current := site.FromContext(ctx)
 	if current == nil {
-		return "", 0, errors.New("moduleapi: the request carries no site")
+		return "", 0, errors.New("webapi: the request carries no site")
 	}
 	user := auth.FromContext(ctx)
 
@@ -145,7 +144,7 @@ func peek(body io.ReadCloser) (raw []byte, rest io.Reader, err error) {
 	if len(raw) < maxParsed {
 		return raw, nil, nil
 	}
-	return raw, body, errors.New("moduleapi: body too large to read as a call")
+	return raw, body, errors.New("webapi: body too large to read as a call")
 }
 
 func (h *Handler) forward(w http.ResponseWriter, r *http.Request, raw []byte, rest io.Reader) {

@@ -20,13 +20,13 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
-	"github.com/WikitTeam/ProjectWikit/internal/moduleapi"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/respheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 )
 
 const (
@@ -168,7 +168,7 @@ func serve(args []string) error {
 		localitem.CodePrefix:  codeHandler,
 		localitem.HTMLPrefix:  htmlHandler,
 		localitem.ThemePrefix: themeHandler,
-		moduleapi.Path:        moduleAPI,
+		webapi.ModulesPath:    moduleAPI,
 		"/":                   articles,
 	}
 
