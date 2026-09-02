@@ -28,6 +28,8 @@ func TestValidateRejectsBadTable(t *testing.T) {
 		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerGo}}},
 		{"invalid owner", []Route{{Prefix: "/", Owner: "rust"}}},
 		{"missing fallback prefix", []Route{{Prefix: "/pw-api/", Owner: OwnerUpstream}}},
+		{"exact route ends with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream, Exact: true}}},
+		{"exact fallback", []Route{{Prefix: "/", Owner: OwnerUpstream, Exact: true}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,6 +82,30 @@ func TestMuxRouteLongestPrefixWins(t *testing.T) {
 	}
 }
 
+func TestMuxRouteExactMatchesOnlyTheWholePath(t *testing.T) {
+	m, err := New(Table, stub("upstream"), goHandlers())
+	if err != nil {
+		t.Fatalf("New() err = %v, want nil", err)
+	}
+
+	tests := []struct {
+		path string
+		want string
+	}{
+		{"/pw-api/modules", "/pw-api/modules"},
+		{"/pw-api/modules/", "/pw-api/"},
+		{"/pw-api/modules/1", "/pw-api/"},
+		{"/pw-api/module", "/pw-api/"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			if got := m.Route(tt.path).Prefix; got != tt.want {
+				t.Errorf("Route(%q).Prefix = %q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNewRejectsNilUpstream(t *testing.T) {
 	if _, err := New(Table, nil, nil); err == nil {
 		t.Error("New(upstream=nil) err = nil, want non-nil")
@@ -112,9 +138,10 @@ func TestNewRejectsHandlerOutsideTable(t *testing.T) {
 func TestMuxServeHTTPDispatches(t *testing.T) {
 	table := []Route{
 		{Prefix: "/", Owner: OwnerUpstream},
-		{Prefix: "/pw-api/", Owner: OwnerGo},
+		{Prefix: "/pw-api/", Owner: OwnerUpstream},
+		{Prefix: "/pw-api/modules", Owner: OwnerGo, Exact: true},
 	}
-	m, err := New(table, stub("upstream"), map[string]http.Handler{"/pw-api/": stub("go")})
+	m, err := New(table, stub("upstream"), map[string]http.Handler{"/pw-api/modules": stub("go")})
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
@@ -123,7 +150,8 @@ func TestMuxServeHTTPDispatches(t *testing.T) {
 		path string
 		want string
 	}{
-		{"/pw-api/articles", "go"},
+		{"/pw-api/modules", "go"},
+		{"/pw-api/articles", "upstream"},
 		{"/scp-173", "upstream"},
 	}
 	for _, tt := range tests {

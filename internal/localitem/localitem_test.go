@@ -1,10 +1,6 @@
 package localitem
 
-import (
-	"testing"
-
-	"github.com/WikitTeam/ProjectWikit/internal/page"
-)
+import "testing"
 
 func TestSplitTakesTwoSegments(t *testing.T) {
 	cases := []struct {
@@ -36,35 +32,6 @@ func TestSplitRejectsOtherShapes(t *testing.T) {
 	} {
 		if _, _, ok := split(path, "/local--code/"); ok {
 			t.Errorf("split(%q) ok = true, want false", path)
-		}
-	}
-}
-
-func TestPathParamsKeepsOrder(t *testing.T) {
-	got := pathParams(`{"offset": "20", "tag": "euclid"}`)
-	want := page.PathParams{{Key: "offset", Value: "20"}, {Key: "tag", Value: "euclid"}}
-	if len(got) != len(want) {
-		t.Fatalf("len(pathParams()) = %d, want %d", len(got), len(want))
-	}
-	for i := range want {
-		if got[i] != want[i] {
-			t.Errorf("pathParams()[%d] = %v, want %v", i, got[i], want[i])
-		}
-	}
-}
-
-func TestPathParamsReadsNullAsBare(t *testing.T) {
-	got := pathParams(`{"norender": null}`)
-	want := page.PathParam{Key: "norender", Bare: true}
-	if len(got) != 1 || got[0] != want {
-		t.Errorf("pathParams(null) = %v, want [%v]", got, want)
-	}
-}
-
-func TestPathParamsRejectsWhatIsNotAnObjectOfStrings(t *testing.T) {
-	for _, raw := range []string{"", "[]", "{", `{"a": 1}`, `{"a": {"b": "c"}}`, "not json"} {
-		if got := pathParams(raw); got != nil {
-			t.Errorf("pathParams(%q) = %v, want nil", raw, got)
 		}
 	}
 }

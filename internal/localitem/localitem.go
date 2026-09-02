@@ -234,7 +234,7 @@ func (h *handler) load(r *http.Request, name string) (*request, item, error) {
 		article: article,
 		user:    user,
 		source:  source,
-		params:  pathParams(query.Get("pathParams")),
+		params:  page.ParsePathParams(query.Get("pathParams")),
 		query:   query,
 	}, item{}, nil
 }
@@ -255,42 +255,6 @@ func (h *handler) source(ctx context.Context, article *db.Article, revNum string
 		return "", nil
 	}
 	return source, err
-}
-
-// The order the caller wrote is kept, since the variables that read a path
-// print them back in it.
-func pathParams(raw string) page.PathParams {
-	if raw == "" {
-		return nil
-	}
-	dec := json.NewDecoder(strings.NewReader(raw))
-	if tok, err := dec.Token(); err != nil || tok != json.Delim('{') {
-		return nil
-	}
-	var out page.PathParams
-	for dec.More() {
-		key, err := dec.Token()
-		if err != nil {
-			return nil
-		}
-		name, ok := key.(string)
-		if !ok {
-			return nil
-		}
-		var value any
-		if err := dec.Decode(&value); err != nil {
-			return nil
-		}
-		switch v := value.(type) {
-		case nil:
-			out = out.Put(page.PathParam{Key: name, Bare: true})
-		case string:
-			out = out.Put(page.PathParam{Key: name, Value: v})
-		default:
-			return nil
-		}
-	}
-	return out
 }
 
 func stringMap(raw string) map[string]string {

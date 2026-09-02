@@ -1,4 +1,6 @@
 {
+  "api-internal-error": "服务器内部错误",
+  "api-page-not-found": "页面未找到",
   "button-copy-clipboard": "复制",
   "collapsible-hide": "- 关闭折叠",
   "collapsible-open": "+ 打开折叠",

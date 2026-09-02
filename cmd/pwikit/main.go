@@ -20,6 +20,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
+	"github.com/WikitTeam/ProjectWikit/internal/moduleapi"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/respheader"
@@ -141,8 +142,9 @@ func serve(args []string) error {
 	}
 
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
+	var moduleAPI http.Handler = proxy
 	if conn != nil {
-		stack, err := newPageStack(conn, p, assets, *sidecar, *secret, *timezone, log)
+		stack, err := newPageStack(conn, p, assets, proxy, *sidecar, *secret, *timezone, log)
 		if err != nil {
 			return err
 		}
@@ -154,6 +156,7 @@ func serve(args []string) error {
 		codeHandler = served(stack.code)
 		htmlHandler = served(stack.html)
 		themeHandler = served(stack.theme)
+		moduleAPI = served(stack.moduleAPI)
 	}
 
 	goHandlers := map[string]http.Handler{
@@ -165,6 +168,7 @@ func serve(args []string) error {
 		localitem.CodePrefix:  codeHandler,
 		localitem.HTMLPrefix:  htmlHandler,
 		localitem.ThemePrefix: themeHandler,
+		moduleapi.Path:        moduleAPI,
 		"/":                   articles,
 	}
 
@@ -220,7 +224,7 @@ func printRoutes() error {
 		return err
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "PREFIX\tOWNER\tLABEL")
+	fmt.Fprintln(w, "ROUTE\tOWNER\tLABEL")
 	for _, r := range routing.Table {
 		fmt.Fprintf(w, "%s\t%s\t%s\n", r.Prefix, r.Owner, r.Label)
 	}

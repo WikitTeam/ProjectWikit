@@ -11,6 +11,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
+	"github.com/WikitTeam/ProjectWikit/internal/moduleapi"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
@@ -18,14 +19,15 @@ import (
 )
 
 type pageStack struct {
-	articles http.Handler
-	code     http.Handler
-	html     http.Handler
-	theme    http.Handler
-	close    func()
+	articles  http.Handler
+	code      http.Handler
+	html      http.Handler
+	theme     http.Handler
+	moduleAPI http.Handler
+	close     func()
 }
 
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
@@ -59,7 +61,10 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, sidecar, secret, ti
 		code:     localitem.NewCode(items),
 		html:     localitem.NewHTML(items),
 		theme:    localitem.NewTheme(items),
-		close:    closeEngine,
+		moduleAPI: moduleapi.New(moduleapi.Deps{
+			DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log,
+		}, upstream),
+		close: closeEngine,
 	}
 
 	// Without the key nothing can be verified, so every visitor stays
@@ -72,5 +77,6 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, sidecar, secret, ti
 	stack.code = resolver.Middleware(stack.code)
 	stack.html = resolver.Middleware(stack.html)
 	stack.theme = resolver.Middleware(stack.theme)
+	stack.moduleAPI = resolver.Middleware(stack.moduleAPI)
 	return stack, nil
 }

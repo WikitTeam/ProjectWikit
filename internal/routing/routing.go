@@ -18,6 +18,15 @@ type Route struct {
 	Prefix string
 	Owner  Owner
 	Label  string
+
+	Exact bool
+}
+
+func (r Route) matches(path string) bool {
+	if r.Exact {
+		return path == r.Prefix
+	}
+	return strings.HasPrefix(path, r.Prefix)
 }
 
 const root = "/"
@@ -27,6 +36,7 @@ var Table = []Route{
 	{Prefix: "/-/", Owner: OwnerUpstream, Label: "system pages"},
 	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
 	{Prefix: "/pw-api/", Owner: OwnerUpstream, Label: "API"},
+	{Prefix: "/pw-api/modules", Owner: OwnerGo, Label: "module API", Exact: true},
 	{Prefix: "/local--files/", Owner: OwnerGo, Label: "site files"},
 	{Prefix: "/local--resized-images/", Owner: OwnerGo, Label: "scaled images"},
 	{Prefix: "/local--code/", Owner: OwnerGo, Label: "code blocks"},
@@ -41,7 +51,10 @@ func Validate(table []Route) error {
 		if !strings.HasPrefix(r.Prefix, "/") {
 			return fmt.Errorf("route prefix %q does not start with /", r.Prefix)
 		}
-		if !strings.HasSuffix(r.Prefix, "/") {
+		if r.Exact && strings.HasSuffix(r.Prefix, "/") {
+			return fmt.Errorf("exact route %q ends with /", r.Prefix)
+		}
+		if !r.Exact && !strings.HasSuffix(r.Prefix, "/") {
 			return fmt.Errorf("route prefix %q does not end with /", r.Prefix)
 		}
 		if seen[r.Prefix] {
@@ -52,6 +65,9 @@ func Validate(table []Route) error {
 			return fmt.Errorf("route %q owner = %q, want go or upstream", r.Prefix, r.Owner)
 		}
 		if r.Prefix == root {
+			if r.Exact {
+				return fmt.Errorf("route %q is exact, which leaves the table without a fallback", r.Prefix)
+			}
 			hasRoot = true
 		}
 	}
@@ -110,7 +126,7 @@ func New(table []Route, upstream http.Handler, goHandlers map[string]http.Handle
 
 func (m *Mux) Route(path string) Route {
 	for _, r := range m.routes {
-		if strings.HasPrefix(path, r.Prefix) {
+		if r.matches(path) {
 			return r
 		}
 	}
