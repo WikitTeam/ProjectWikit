@@ -21,12 +21,13 @@ type ArticleVote struct {
 	User       User
 	Rate       float64
 	Date       *time.Time
+	RoleID     *int64
 	GroupTitle string
 	GroupIndex *int
 }
 
 var qArticleVotes = register("ArticleVotes", `
-SELECT `+prefixed("u", userColumns)+`, v.rate, v.date,
+SELECT `+prefixed("u", userColumns)+`, v.rate, v.date, v.role_id,
        COALESCE(NULLIF(r.votes_title, ''), NULLIF(r.name, ''), r.slug), r.index
 FROM web_vote v
 JOIN web_user u ON u.id = v.user_id
@@ -46,7 +47,7 @@ func (d *DB) ArticleVotes(ctx context.Context, articleID int64) ([]ArticleVote, 
 		var v ArticleVote
 		var title *string
 		dest, finish := userDest(&v.User)
-		dest = append(dest, &v.Rate, &v.Date, &title, &v.GroupIndex)
+		dest = append(dest, &v.Rate, &v.Date, &v.RoleID, &title, &v.GroupIndex)
 		if err := rows.Scan(dest...); err != nil {
 			return nil, fmt.Errorf("scan vote: %w", err)
 		}
@@ -168,4 +169,50 @@ func (d *DB) AddActionLog(ctx context.Context, userID *int64, username, kind, me
 		return fmt.Errorf("write action log: %w", err)
 	}
 	return nil
+}
+
+// The log types an article carries, which the site changes list reads back.
+const (
+	LogVotesDeleted = "votes_deleted"
+)
+
+var (
+	qLockArticleLog = register("LockArticleLog", `SELECT pg_advisory_xact_lock($1)`)
+
+	qInsertArticleLog = register("InsertArticleLog", `
+INSERT INTO web_articlelogentry (article_id, user_id, type, meta, comment, created_at, rev_number)
+SELECT $1, $2, $3, $4, $5, $6, COALESCE(MAX(rev_number), -1) + 1
+FROM web_articlelogentry WHERE article_id = $1
+RETURNING rev_number`)
+
+	qTouchArticle = register("TouchArticle", `
+UPDATE web_article SET updated_at = $2 WHERE id = $1`)
+)
+
+// AddArticleLogEntry numbers the revision under a lock on this article alone,
+// so two writers cannot pick the same number and neither waits on a page it is
+// not touching.
+func (d *DB) AddArticleLogEntry(ctx context.Context, articleID int64, userID *int64,
+	kind, comment, meta string, at time.Time) (int, error) {
+
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("begin log entry: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, qLockArticleLog, articleID); err != nil {
+		return 0, fmt.Errorf("lock article log %d: %w", articleID, err)
+	}
+	var revNumber int
+	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, kind, meta, comment, at).Scan(&revNumber); err != nil {
+		return 0, fmt.Errorf("write log entry: %w", err)
+	}
+	if _, err := tx.Exec(ctx, qTouchArticle, articleID, at); err != nil {
+		return 0, fmt.Errorf("touch article %d: %w", articleID, err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("commit log entry: %w", err)
+	}
+	return revNumber, nil
 }
