@@ -461,6 +461,23 @@ relink(quarter, NL.join([
 relink(unratable, NL.join([
     'unratable source',
     '[[[wanted:gamma]]] [[[probe:full|a page that exists]]]',
+    '[[code type="css"]]',
+    '.probe-code { color : red ; }',
+    '[[/code]]',
+    '[[code]]',
+    'plain probe code',
+    '[[/code]]',
+    '[[html external="true"]]',
+    '<b>probe html</b>',
+    '[[/html]]',
+    '[[module CSS]]',
+    '.probe-theme { color : {$probecolor} ; }',
+    '[[/module]]',
+    '[[noinclude]]',
+    '[[module CSS]]',
+    '.probe-noinclude { color : green ; }',
+    '[[/module]]',
+    '[[/noinclude]]',
 ]))
 
 with threadvars.context():

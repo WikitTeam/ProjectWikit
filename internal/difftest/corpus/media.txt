@@ -20,3 +20,31 @@
 # default.txt exercises
 /main
 /-/login
+
+# the three routes that read a page's own source. the code, html and css blocks
+# they find are relinked onto probeoff:unratable by oracle_seed.py.
+/local--code/probeoff:unratable/1
+/local--code/probeoff:unratable/2
+/local--code/probeoff:unratable/3
+/local--code/probeoff:unratable/1?revNum=0
+/local--code/probeoff:unratable/1?revNum=99
+/local--code/probe:full/1
+/local--code/nope/1
+HEAD /local--code/probeoff:unratable/1
+OPTIONS /local--code/probeoff:unratable/1
+
+!/local--code/probeoff:unratable/x
+# django never reaches the view here: an index that is not a number matches no
+# route, so it answers with its own 404 page instead of the view's line.
+
+/local--html/probeoff:unratable/deadbeef-x
+/local--html/nope/deadbeef-x
+# the hash of a block that is there changes with the seed, so the matching one
+# is left to internal/localitem/testdata/oracle_localitem.py.
+
+/local--theme/probecss:styled/style.css
+/local--theme/probeoff:unratable/style.css
+/local--theme/probeoff:unratable/style.css?includeParams=%7B%22probecolor%22%3A%22blue%22%7D
+/local--theme/probeoff:unratable/style.css?revNum=0
+/local--theme/probe:full/style.css
+/local--theme/1/style.css

@@ -29,9 +29,9 @@ var Table = []Route{
 	{Prefix: "/api/", Owner: OwnerUpstream, Label: "API"},
 	{Prefix: "/local--files/", Owner: OwnerGo, Label: "site files"},
 	{Prefix: "/local--resized-images/", Owner: OwnerGo, Label: "scaled images"},
-	{Prefix: "/local--code/", Owner: OwnerUpstream, Label: "code blocks"},
-	{Prefix: "/local--html/", Owner: OwnerUpstream, Label: "embedded HTML"},
-	{Prefix: "/local--theme/", Owner: OwnerUpstream, Label: "page theme"},
+	{Prefix: "/local--code/", Owner: OwnerGo, Label: "code blocks"},
+	{Prefix: "/local--html/", Owner: OwnerGo, Label: "embedded HTML"},
+	{Prefix: "/local--theme/", Owner: OwnerGo, Label: "page theme"},
 }
 
 func Validate(table []Route) error {

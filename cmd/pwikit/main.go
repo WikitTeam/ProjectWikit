@@ -17,6 +17,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
+	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
@@ -139,23 +140,32 @@ func serve(args []string) error {
 		resizedHandler = site.NewHostRules(conn, listenPort(*listen), media.NewResized(p.Files(), conn), proxy)
 	}
 
-	var articles http.Handler = proxy
+	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
 	if conn != nil {
-		pages, closeEngine, err := articleHandler(conn, p, assets, *sidecar, *secret, *timezone, log)
+		stack, err := newPageStack(conn, p, assets, *sidecar, *secret, *timezone, log)
 		if err != nil {
 			return err
 		}
-		defer closeEngine()
-		articles = compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), pages, proxy)))
+		defer stack.close()
+		served := func(h http.Handler) http.Handler {
+			return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), h, proxy)))
+		}
+		articles = served(stack.articles)
+		codeHandler = served(stack.code)
+		htmlHandler = served(stack.html)
+		themeHandler = served(stack.theme)
 	}
 
 	goHandlers := map[string]http.Handler{
 		// The bundle is the one route answered above the session layer, so it
 		// is also the one that does not vary on the cookie.
-		static.Prefix:       static.New(assets, proxy),
-		media.Prefix:        respheader.VaryCookie(mediaHandler),
-		media.ResizedPrefix: respheader.VaryCookie(resizedHandler),
-		"/":                 articles,
+		static.Prefix:         static.New(assets, proxy),
+		media.Prefix:          respheader.VaryCookie(mediaHandler),
+		media.ResizedPrefix:   respheader.VaryCookie(resizedHandler),
+		localitem.CodePrefix:  codeHandler,
+		localitem.HTMLPrefix:  htmlHandler,
+		localitem.ThemePrefix: themeHandler,
+		"/":                   articles,
 	}
 
 	mux, err := routing.New(routing.Table, proxy, goHandlers)

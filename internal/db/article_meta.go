@@ -46,6 +46,33 @@ func (d *DB) LatestSource(ctx context.Context, articleID int64) (string, error) 
 	return source, nil
 }
 
+var qSourceAtRevision = register("SourceAtRevision", `
+SELECT v.source
+FROM web_articlelogentry e
+JOIN web_articleversion v ON v.id = coalesce(
+        (e.meta -> 'source' ->> 'version_id')::bigint,
+        (e.meta ->> 'version_id')::bigint)
+WHERE e.article_id = $1
+  AND e.rev_number <= $2
+  AND EXISTS (SELECT 1 FROM web_articlelogentry x
+              WHERE x.article_id = $1 AND x.rev_number = $2)
+ORDER BY e.rev_number DESC
+LIMIT 1`)
+
+// A revision that only renamed or retagged the page records no version, so the
+// source of the newest earlier revision that does is the source it had.
+func (d *DB) SourceAtRevision(ctx context.Context, articleID int64, revNumber int) (string, error) {
+	var source string
+	err := d.pool.QueryRow(ctx, qSourceAtRevision, articleID, revNumber).Scan(&source)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", fmt.Errorf("query source of article %d at revision %d: %w", articleID, revNumber, err)
+	}
+	return source, nil
+}
+
 // The join table carries no ordering of its own, so ordering by the link row is
 // what freezes the author order a page shows.
 var qArticleAuthors = register("ArticleAuthors", `

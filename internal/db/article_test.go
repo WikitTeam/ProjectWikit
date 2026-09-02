@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -66,5 +67,39 @@ func TestArticleSourcesReturnsSource(t *testing.T) {
 	}
 	if got["main"] == "" {
 		t.Error("ArticleSources()[\"main\"] = \"\", want the page source")
+	}
+}
+
+func TestSourceAtRevisionMatchesLatestOnTheOnlyRevision(t *testing.T) {
+	ctx := context.Background()
+	d := newTestDB(t)
+
+	article, err := d.ArticleByName(ctx, "probeoff:unratable")
+	if err != nil {
+		t.Fatalf("ArticleByName(probeoff:unratable) err = %v, want nil", err)
+	}
+	latest, err := d.LatestSource(ctx, article.ID)
+	if err != nil {
+		t.Fatalf("LatestSource() err = %v, want nil", err)
+	}
+	got, err := d.SourceAtRevision(ctx, article.ID, 0)
+	if err != nil {
+		t.Fatalf("SourceAtRevision(0) err = %v, want nil", err)
+	}
+	if got != latest {
+		t.Errorf("SourceAtRevision(0) = %q, want %q", got, latest)
+	}
+}
+
+func TestSourceAtRevisionOfRevisionThatIsNotThere(t *testing.T) {
+	ctx := context.Background()
+	d := newTestDB(t)
+
+	article, err := d.ArticleByName(ctx, "probeoff:unratable")
+	if err != nil {
+		t.Fatalf("ArticleByName(probeoff:unratable) err = %v, want nil", err)
+	}
+	if _, err := d.SourceAtRevision(ctx, article.ID, 99); !errors.Is(err, ErrNotFound) {
+		t.Errorf("SourceAtRevision(99) err = %v, want ErrNotFound", err)
 	}
 }
