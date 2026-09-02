@@ -31,6 +31,8 @@ const (
 	ViewForumSections       = "view_forum_sections"
 	ViewHiddenForumSections = "view_hidden_forum_sections"
 	ViewForumCategories     = "view_forum_categories"
+
+	ViewVotesTimestamp = "view_votes_timestamp"
 )
 
 // lockable is what a locked page takes away from anyone who cannot unlock it.
