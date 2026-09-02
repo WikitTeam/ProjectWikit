@@ -171,3 +171,61 @@ func TestRealSidecarReusesProcess(t *testing.T) {
 		}
 	}
 }
+
+type moduleHost struct {
+	stubHost
+	withBody map[string]bool
+}
+
+func (h moduleHost) ModuleHasBody(name string) (bool, error) {
+	return h.withBody[strings.ToLower(name)], nil
+}
+
+func (h moduleHost) RenderModule(name string, _ map[string]string, body string) (string, error) {
+	return "[" + name + ":" + body + "]", nil
+}
+
+func TestRealSidecarNestsModules(t *testing.T) {
+	r := newReal(t)
+	host := moduleHost{withBody: map[string]bool{"outer": true, "inner": true}}
+	info := renderer.PageInfo{Page: "173", Category: "scp", Domain: "example.org"}
+
+	tests := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{
+			"one level",
+			"[[module Outer]]\n[[module Inner]]\nx\n[[/module]]\n[[/module]]",
+			"[Outer:[[module Inner]]\nx\n[[/module]]]",
+		},
+		{
+			"two levels",
+			"[[module Outer]]\n[[module Outer]]\n[[module Inner]]\n[[/module]]\n[[/module]]\n[[/module]]",
+			"[Outer:[[module Outer]]\n[[module Inner]]\n[[/module]]\n[[/module]]]",
+		},
+		{
+			"module without a body opens no level",
+			"[[module Outer]]\n[[module Plain]]\n[[/module]]",
+			"[Outer:[[module Plain]]]",
+		},
+		{
+			"code ends at its first closing tag",
+			"[[code]]\n[[code]]\nx\n[[/code]]\nafter",
+			"after",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.RenderHTML(context.Background(), tt.source, info, host, renderer.ModeArticle)
+			if err != nil {
+				t.Fatalf("RenderHTML(%q) err = %v, want nil", tt.source, err)
+			}
+			if !strings.Contains(got.Body, tt.want) {
+				t.Errorf("RenderHTML(%q) = %q, want substring %q", tt.source, got.Body, tt.want)
+			}
+		})
+	}
+}

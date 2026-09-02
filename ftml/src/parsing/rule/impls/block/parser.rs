@@ -148,6 +148,61 @@ where
         })
     }
 
+    /// A module that takes a body opens a level of its own. One that does not
+    /// has no closing tag, so counting it would eat the outer block's.
+    fn verify_start_module(&mut self, block_name: &str) -> bool {
+        self.save_evaluate_fn(|parser| {
+            parser.get_token(Token::LeftBlock, ParseWarningKind::BlockMissingName)?;
+            parser.get_optional_space()?;
+
+            let (name, in_head) =
+                parser.get_block_name_internal(ParseWarningKind::BlockMissingName)?;
+            if !in_head || !name.eq_ignore_ascii_case(block_name) {
+                return Ok(false);
+            }
+
+            let (subname, _) =
+                parser.get_block_name_internal(ParseWarningKind::ModuleMissingName)?;
+            Ok(parser.page_callbacks().module_has_body(Cow::from(subname)))
+        })
+        .is_some()
+    }
+
+    /// Collect a block's body to its end, counting the blocks of the same name
+    /// that open inside it. Wikidot nests modules, so the first closing tag in
+    /// a module body need not be the one that ends it.
+    pub fn get_body_text_nested(
+        &mut self,
+        block_rule: &BlockRule,
+        closing_name: &str,
+    ) -> Result<&'t str, ParseWarning> {
+        info!("Getting nested block body as text (rule {})", block_rule.name);
+
+        let mut first = true;
+        let mut depth = 0usize;
+        let start = self.current();
+
+        loop {
+            if let Some(end) = self.verify_end_block(first, block_rule, closing_name) {
+                if depth == 0 {
+                    return Ok(self.full_text().slice_partial(start, end));
+                }
+                depth -= 1;
+                first = false;
+                continue;
+            }
+
+            if self.verify_start_module(closing_name) {
+                depth += 1;
+                first = false;
+                continue;
+            }
+
+            self.step()?;
+            first = false;
+        }
+    }
+
     /// Walks past a body without building elements from it.
     ///
     /// A conditional block whose condition failed discards its body, so the body
