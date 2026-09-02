@@ -74,9 +74,8 @@ INSERT INTO web_vote (article_id, user_id, rate, date, role_id)
 VALUES ($1, $2, $3, $4, $5)`)
 )
 
-// ReplaceVote drops whatever the user had voted and writes the new value, or
-// only drops it when rate is nil. The vote that was there comes back, since the
-// action log records what changed.
+// The vote that was there comes back, since the action log records what
+// changed rather than what it changed to.
 func (d *DB) ReplaceVote(ctx context.Context, articleID, userID int64, rate *float64, roleID *int64, at time.Time) (*Vote, error) {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
@@ -171,7 +170,6 @@ func (d *DB) AddActionLog(ctx context.Context, userID *int64, username, kind, me
 	return nil
 }
 
-// The log types an article carries, which the site changes list reads back.
 const (
 	LogVotesDeleted = "votes_deleted"
 )
@@ -189,9 +187,8 @@ RETURNING rev_number`)
 UPDATE web_article SET updated_at = $2 WHERE id = $1`)
 )
 
-// AddArticleLogEntry numbers the revision under a lock on this article alone,
-// so two writers cannot pick the same number and neither waits on a page it is
-// not touching.
+// The revision is numbered under a lock on this article alone, so two writers
+// cannot pick the same number and neither waits on a page it is not touching.
 func (d *DB) AddArticleLogEntry(ctx context.Context, articleID int64, userID *int64,
 	kind, comment, meta string, at time.Time) (int, error) {
 

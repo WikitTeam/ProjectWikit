@@ -39,8 +39,8 @@ func (d Deps) Env(ctx context.Context, loc *i18n.Localizer, site *db.Site, user 
 	return &Env{deps: d, ctx: ctx, loc: loc, site: site, user: user}
 }
 
-// SetClient records who is asking, which only the layer holding the proxy
-// trust can answer.
+// Only the layer holding the proxy trust can say which forwarded address to
+// believe.
 func (e *Env) SetClient(r *http.Request) {
 	if e.deps.Trust == nil {
 		return
@@ -95,8 +95,6 @@ func (e *Env) Callbacks(vars *page.Vars, pc *page.Context) *callbacks.Callbacks 
 	return cb
 }
 
-// ModuleAPI answers a question the page asks one module directly, which reaches
-// the same module set a render does.
 func (e *Env) ModuleAPI(pc *page.Context, name, method string, params map[string]string) (wikijson.Object, error) {
 	return e.store().CallAPI(pc, name, method, params)
 }

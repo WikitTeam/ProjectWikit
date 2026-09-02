@@ -21,14 +21,15 @@ import (
 )
 
 type pageStack struct {
-	articles  http.Handler
-	code      http.Handler
-	html      http.Handler
-	theme     http.Handler
-	moduleAPI http.Handler
-	preview   http.Handler
-	profile   http.Handler
-	close     func()
+	articles   http.Handler
+	code       http.Handler
+	html       http.Handler
+	theme      http.Handler
+	moduleAPI  http.Handler
+	preview    http.Handler
+	profile    http.Handler
+	articleAPI http.Handler
+	close      func()
 }
 
 func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, trust *proxyheader.Trust, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
@@ -62,12 +63,13 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 
 	stack := &pageStack{
-		articles:  pages,
-		code:      localitem.NewCode(items),
-		html:      localitem.NewHTML(items),
-		theme:     localitem.NewTheme(items),
-		moduleAPI: webapi.New(api, upstream),
-		preview:   webapi.NewPreview(api),
+		articles:   pages,
+		code:       localitem.NewCode(items),
+		html:       localitem.NewHTML(items),
+		theme:      localitem.NewTheme(items),
+		moduleAPI:  webapi.New(api, upstream),
+		preview:    webapi.NewPreview(api),
+		articleAPI: webapi.NewArticles(api, upstream),
 		profile: userpage.New(userpage.Deps{
 			DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
 			Assets: static.NewAssets(assets), TimeZone: location, Log: log,
@@ -81,12 +83,13 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		return stack, nil
 	}
 	resolver := auth.NewResolver(session.New(secret), conn, conn, log)
-	stack.articles = resolver.Middleware(stack.articles)
+	stack.articleAPI = resolver.Middleware(stack.articleAPI)
 	stack.code = resolver.Middleware(stack.code)
 	stack.html = resolver.Middleware(stack.html)
 	stack.theme = resolver.Middleware(stack.theme)
 	stack.moduleAPI = resolver.Middleware(stack.moduleAPI)
 	stack.preview = resolver.Middleware(stack.preview)
 	stack.profile = resolver.Middleware(stack.profile)
+	stack.articles = resolver.Middleware(stack.articles)
 	return stack, nil
 }
