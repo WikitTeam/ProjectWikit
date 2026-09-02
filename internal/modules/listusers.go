@@ -123,9 +123,11 @@ func viewerVars(env module.Env, params map[string]string) func(name string) (str
 		switch strings.ToLower(key) {
 		case "number":
 			return number, true
-		case "title":
+		// A page list substitutes over the whole body before the renderer sees
+		// it, so a body nested in one never gets to read title or name.
+		case "title", "user_displayname":
 			return title, true
-		case "name":
+		case "name", "user_name":
 			return name, true
 		case "avatar":
 			return avatar, true

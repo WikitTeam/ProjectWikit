@@ -83,3 +83,37 @@ func TestListUsersLeavesTheBodyAloneWithoutChips(t *testing.T) {
 		t.Errorf("putChipsBack() = %q, want %q", got, want)
 	}
 }
+
+func TestListUsersNamesThatSurviveAPageList(t *testing.T) {
+	env := listUsersEnv(t, &db.User{ID: 7, Username: "probe", DisplayName: "Probe Person"})
+
+	cases := map[string]string{
+		"%%title%%":            "Probe Person",
+		"%%user_displayname%%": "Probe Person",
+		"%%name%%":             "probe",
+		"%%user_name%%":        "probe",
+	}
+	for body, want := range cases {
+		got, err := renderListUsers(env, nil, body)
+		if err != nil {
+			t.Fatalf("renderListUsers(%s) err = %v, want nil", body, err)
+		}
+		if got != want {
+			t.Errorf("renderListUsers(%s) = %q, want %q", body, got, want)
+		}
+	}
+}
+
+func TestListUsersNamesOfAnAnonymousReader(t *testing.T) {
+	env := listUsersEnv(t, nil)
+
+	for _, body := range []string{"%%user_displayname%%", "%%user_name%%"} {
+		got, err := renderListUsers(env, map[string]string{"always": "yes", "anonname": "Guest"}, body)
+		if err != nil {
+			t.Fatalf("renderListUsers(%s) err = %v, want nil", body, err)
+		}
+		if want := "Guest"; got != want {
+			t.Errorf("renderListUsers(%s) = %q, want %q", body, got, want)
+		}
+	}
+}
