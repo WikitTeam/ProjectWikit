@@ -164,6 +164,7 @@ func serve(args []string) error {
 		// The bundle is the one route answered above the session layer, so it
 		// is also the one that does not vary on the cookie.
 		static.Prefix:         static.New(assets, proxy),
+		site.ThemePrefix:      respheader.VaryCookie(site.NewThemeFiles(p.Files())),
 		media.Prefix:          respheader.VaryCookie(mediaHandler),
 		media.ResizedPrefix:   respheader.VaryCookie(resizedHandler),
 		localitem.CodePrefix:  codeHandler,
