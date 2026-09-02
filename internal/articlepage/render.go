@@ -14,8 +14,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
+	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
-	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
@@ -112,7 +112,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	}
 
 	pc := h.context(req, req.article)
-	html, err := h.deps.Engine.RenderHTML(req.ctx, source, info, h.callbacks(req, vars, pc), renderer.ModeArticle)
+	html, err := h.env(req).HTML(source, info, h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
 		return body{}, err
 	}
@@ -120,8 +120,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	req.params = pc.PathParams
 
 	textPC := h.context(req, req.article)
-	text, err := h.deps.Engine.RenderText(req.ctx, source, info,
-		h.callbacks(req, vars, textPC), renderer.ModeArticle)
+	text, err := h.env(req).Text(source, info, h.callbacks(req, vars, textPC), renderer.ModeArticle)
 	if err != nil {
 		return body{}, err
 	}
@@ -277,8 +276,7 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 	}
 
 	pc := page.NewContext(asked, template, req.params, req.user)
-	html, err := h.deps.Engine.RenderHTML(req.ctx, source, info,
-		h.callbacks(req, vars, pc), renderer.ModeArticle)
+	html, err := h.env(req).HTML(source, info, h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
 		return body{}, err
 	}
@@ -332,47 +330,20 @@ func (h *Handler) nav(req *request, name string) (string, string, error) {
 		return "", "", err
 	}
 	pc := h.context(req, found)
-	html, err := h.deps.Engine.RenderHTML(req.ctx, page.PreRender(source, vars), info,
-		h.callbacks(req, vars, pc), renderer.ModeArticle)
+	html, err := h.env(req).HTML(page.PreRender(source, vars), info, h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
 		return "", "", err
 	}
 	return html.Body, pc.ComputedStyle, nil
 }
 
-func (h *Handler) callbacks(req *request, vars *page.Vars, pc *page.Context) *callbacks.Callbacks {
-	users := printuser.New(req.loc, h.deps.Icons)
-	store := repo.New(req.ctx, h.deps.DB, users, repo.Options{
-		Loc:           req.loc,
-		Site:          req.site,
-		User:          req.user,
-		Render:        func(source string, into *page.Context) (string, error) { return h.nested(req, source, into) },
-		RenderMessage: func(source string) (string, error) { return h.message(req, source) },
-		RenderMessageText: func(source string) (string, error) {
-			return h.messageText(req, source)
-		},
-		Vars: repo.NewVarSource(req.ctx, h.deps.DB, req.site),
-	})
-	cb := callbacks.New(req.loc, store)
-	cb.SetPageVars(vars)
-	cb.SetContext(pc)
-	return cb
+func (h *Handler) env(req *request) *pagerender.Env {
+	return pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
+		Env(req.ctx, req.loc, req.site, req.user)
 }
 
-// The page it renders against is the one the module put in the context, which
-// for a listing is the row and not the page the listing sits on.
-func (h *Handler) nested(req *request, source string, pc *page.Context) (string, error) {
-	vars := h.vars(req, pc.Article)
-	info, err := h.pageInfo(req, pc.SourceArticle)
-	if err != nil {
-		return "", err
-	}
-	html, err := h.deps.Engine.RenderHTML(req.ctx, page.PreRender(source, vars), info,
-		h.callbacks(req, vars, pc), renderer.ModeArticle)
-	if err != nil {
-		return "", err
-	}
-	return html.Body, nil
+func (h *Handler) callbacks(req *request, vars *page.Vars, pc *page.Context) *callbacks.Callbacks {
+	return h.env(req).Callbacks(vars, pc)
 }
 
 func (h *Handler) license(req *request) (string, error) {
@@ -388,8 +359,7 @@ func (h *Handler) license(req *request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	html, err := h.deps.Engine.RenderHTML(req.ctx, source, info,
-		h.callbacks(req, nil, pc), renderer.ModeSystemWithModules)
+	html, err := h.env(req).HTML(source, info, h.callbacks(req, nil, pc), renderer.ModeSystemWithModules)
 	if err != nil {
 		return "", err
 	}
@@ -403,58 +373,12 @@ func unwrapParagraphs(html string) string {
 	return strings.TrimSpace(out)
 }
 
-func (h *Handler) message(req *request, source string) (string, error) {
-	pc := page.NewContext(nil, nil, nil, req.user)
-	info, err := h.pageInfo(req, nil)
-	if err != nil {
-		return "", err
-	}
-	html, err := h.deps.Engine.RenderHTML(req.ctx, page.PreRender(source, nil), info,
-		h.callbacks(req, nil, pc), renderer.ModeMessage)
-	if err != nil {
-		return "", err
-	}
-	return html.Body, nil
-}
-
-func (h *Handler) messageText(req *request, source string) (string, error) {
-	pc := page.NewContext(nil, nil, nil, req.user)
-	info, err := h.pageInfo(req, nil)
-	if err != nil {
-		return "", err
-	}
-	text, err := h.deps.Engine.RenderText(req.ctx, page.PreRender(source, nil), info,
-		h.callbacks(req, nil, pc), renderer.ModeMessage)
-	if err != nil {
-		return "", err
-	}
-	return text.Body, nil
-}
-
 func (h *Handler) vars(req *request, of *db.Article) *page.Vars {
-	if of == nil {
-		return nil
-	}
-	return page.NewVars(of, req.user, repo.NewVarSource(req.ctx, h.deps.DB, req.site), req.loc)
+	return h.env(req).Vars(of)
 }
 
 func (h *Handler) pageInfo(req *request, source *db.Article) (renderer.PageInfo, error) {
-	info := renderer.PageInfo{
-		Site:        req.site.Slug,
-		Domain:      req.site.Domain,
-		MediaDomain: req.site.MediaDomain,
-	}
-	if source == nil {
-		return info, nil
-	}
-	info.Page = source.Name
-	info.Category = source.Category
-	tags, err := h.deps.DB.ArticleTagNames(req.ctx, source.ID)
-	if err != nil {
-		return renderer.PageInfo{}, err
-	}
-	info.Tags = tags
-	return info, nil
+	return h.env(req).PageInfo(source)
 }
 
 func (h *Handler) subject(req *request) (perms.Subject, error) {
