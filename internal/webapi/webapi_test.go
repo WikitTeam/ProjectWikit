@@ -24,9 +24,16 @@ func TestParamsFlattensScalars(t *testing.T) {
 }
 
 func TestParamsDropsWhatIsNotAScalar(t *testing.T) {
-	got := params(json.RawMessage(`{"a": null, "b": [1], "c": {"d": 1}, "e": "kept"}`))
+	got := params(json.RawMessage(`{"b": [1], "c": {"d": 1}, "e": "kept"}`))
 	if len(got) != 1 || got["e"] != "kept" {
 		t.Errorf("params() = %v, want map[e:kept]", got)
+	}
+}
+
+func TestParamsKeepsANullAsAnEmptyValue(t *testing.T) {
+	got := params(json.RawMessage(`{"value": null}`))
+	if value, ok := got["value"]; !ok || value != "" {
+		t.Errorf("params(null)[value] = %q, %v, want \"\", true", value, ok)
 	}
 }
 
@@ -98,9 +105,9 @@ func post(body string) *http.Request {
 	return r
 }
 
-func TestWriteMethodsGoUpstreamWithTheirBody(t *testing.T) {
+func TestUnportedMethodsGoUpstreamWithTheirBody(t *testing.T) {
 	up := &recorder{}
-	body := `{"module": "rate", "method": "rate", "params": {"value": 1}}`
+	body := `{"module": "forumnewthread", "method": "submit", "params": {"name": "x"}}`
 
 	New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), post(body))
 

@@ -8,24 +8,37 @@ import (
 
 type API func(env Env, params map[string]string) (wikijson.Object, error)
 
-// Only the methods that change nothing are registered here. The ones that write
-// are checked for a CSRF token first, and nothing does that yet.
 var apis = map[string]API{}
 
+var writes = map[string]bool{}
+
 func RegisterAPI(module, method string, fn API) {
+	register(module, method, fn, false)
+}
+
+// A method registered here changes something, so the caller has to have checked
+// the CSRF token before it runs.
+func RegisterWriteAPI(module, method string, fn API) {
+	register(module, method, fn, true)
+}
+
+func register(module, method string, fn API, writes_ bool) {
 	if _, ok := registry[module]; !ok {
 		panic("module: " + module + " is not in the registry")
 	}
-	apis[apiKey(module, method)] = fn
+	key := apiKey(module, method)
+	apis[key] = fn
+	writes[key] = writes_
 }
 
-func LookupAPI(module, method string) (API, bool) {
-	info, ok := Lookup(module)
-	if !ok || info.Removed {
-		return nil, false
+func LookupAPI(module, method string) (fn API, safe, ok bool) {
+	info, found := Lookup(module)
+	if !found || info.Removed {
+		return nil, false, false
 	}
-	fn, ok := apis[apiKey(info.Name, method)]
-	return fn, ok
+	key := apiKey(info.Name, method)
+	fn, ok = apis[key]
+	return fn, !writes[key], ok
 }
 
 func apiKey(module, method string) string {

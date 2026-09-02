@@ -19,6 +19,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -39,6 +40,7 @@ const maxParsed = 1 << 20
 
 type Deps struct {
 	DB     *db.DB
+	Trust  *proxyheader.Trust
 	Engine renderer.Renderer
 	Bundle *i18n.Bundle
 	Icons  roles.IconLoader
@@ -91,6 +93,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	if !h.safe(parsed) {
+		current := site.FromContext(r.Context())
+		if current == nil {
+			h.deps.log().Error("module api", "err", errors.New("the request carries no site"))
+			writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+			return
+		}
+		if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+			writeJSON(w, http.StatusForbidden, field("error", loc.T("api-csrf-failed")))
+			return
+		}
+	}
+
 	out, status, err := h.answer(r, loc, parsed)
 	if err != nil {
 		var moduleErr *callbacks.ModuleError
@@ -105,14 +120,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, status, out)
 }
 
-// A method beyond render is answered only when the module registered it, and a
-// module registers only what changes nothing. Everything else goes upstream,
-// which is what keeps the CSRF check over there.
+func (h *Handler) safe(parsed call) bool {
+	if parsed.Method == renderMethod {
+		return true
+	}
+	_, safe, _ := module.LookupAPI(parsed.Module, parsed.Method)
+	return safe
+}
+
+// A method the module never registered goes upstream, which is what keeps the
+// unported half working.
 func (h *Handler) answers(parsed call) bool {
 	if parsed.Method == renderMethod {
 		return true
 	}
-	_, ok := module.LookupAPI(parsed.Module, parsed.Method)
+	_, _, ok := module.LookupAPI(parsed.Module, parsed.Method)
 	return ok
 }
 
@@ -136,8 +158,9 @@ func (h *Handler) answer(r *http.Request, loc *i18n.Localizer, parsed call) (str
 		article = found
 	}
 
-	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
+	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons, Trust: h.deps.Trust}.
 		Env(ctx, loc, current, user)
+	env.SetClient(r)
 	pc := page.NewContext(article, article, page.ParsePathParams(string(parsed.PathParams)), user)
 	// Only a token the visitor already carries, since this response has no page
 	// to plant the cookie a fresh one would need.
@@ -210,8 +233,12 @@ func params(raw json.RawMessage) map[string]string {
 	return out
 }
 
+// A null is kept as a key with nothing in it, since a module reads some of them
+// as an instruction rather than as a missing value.
 func scalar(value any) (string, bool) {
 	switch v := value.(type) {
+	case nil:
+		return "", true
 	case string:
 		return v, true
 	case json.Number:
