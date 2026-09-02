@@ -12,6 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
@@ -30,7 +31,7 @@ type pageStack struct {
 	close     func()
 }
 
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, trust *proxyheader.Trust, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		Log:         log,
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
-	api := webapi.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
+	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 
 	stack := &pageStack{
 		articles:  pages,

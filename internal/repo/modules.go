@@ -5,9 +5,11 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/form"
+	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 type moduleData struct{ repo *Repository }
@@ -276,6 +278,49 @@ func (m moduleData) ForumThreadObject(t *db.ForumThread, u *db.User) (*perms.Obj
 
 func (m moduleData) ForumPostObject(p *db.ForumThreadPost, thread *perms.Object, u *db.User) *perms.Object {
 	return NewPerms(m.repo.ctx, m.repo.db).ForumPost(p, thread, u)
+}
+
+func (m moduleData) ArticleVotes(articleID int64) ([]db.ArticleVote, error) {
+	return m.repo.db.ArticleVotes(m.repo.ctx, articleID)
+}
+
+func (m moduleData) ReplaceVote(articleID, userID int64, rate *float64, roleID *int64) (*db.Vote, error) {
+	return m.repo.db.ReplaceVote(m.repo.ctx, articleID, userID, rate, roleID, time.Now().UTC())
+}
+
+func (m moduleData) VoteGroupRole(userID *int64) (*int64, error) {
+	return m.repo.db.VoteGroupRole(m.repo.ctx, userID)
+}
+
+// The address is the one the entry layer trusted, not whatever the request
+// claimed, so a reverse proxy cannot be talked into logging a made-up client.
+func (m moduleData) AddActionLog(user *db.User, kind, meta string) error {
+	var id *int64
+	name := ""
+	if user != nil {
+		id, name = &user.ID, user.Username
+	}
+	return m.repo.db.AddActionLog(m.repo.ctx, id, name, kind, meta, m.repo.opts.ClientIP, time.Now().UTC())
+}
+
+func (m moduleData) ArticleObject(article *db.Article, viewer *db.User) (*perms.Object, error) {
+	return NewPerms(m.repo.ctx, m.repo.db).Article(article, viewer)
+}
+
+func (m moduleData) UserJSON(u *db.User) (wikijson.Object, error) {
+	if u == nil {
+		return pageconfig.SystemUserJSON().Object(), nil
+	}
+	userRoles, err := m.repo.db.RolesByUser(m.repo.ctx, u.ID)
+	if err != nil {
+		return nil, err
+	}
+	subject, err := NewPerms(m.repo.ctx, m.repo.db).Subject(u, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	editor := perms.Resolve(subject, nil).Has(perms.EditArticles)
+	return pageconfig.SignedInUserJSON(u, userRoles, true, editor).Object(), nil
 }
 
 func (m moduleData) SearchArticles(f db.SearchFilter, offset, limit int) ([]db.SearchHit, error) {

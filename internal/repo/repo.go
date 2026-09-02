@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -45,6 +46,10 @@ type Options struct {
 	RenderMessageText func(source string) (string, error)
 
 	Vars page.VarSource
+
+	// ClientIP is what the action log records, and the entry layer is the only
+	// layer that knows which forwarded address to believe.
+	ClientIP *netip.Addr
 }
 
 var _ callbacks.Repository = (*Repository)(nil)
@@ -109,13 +114,18 @@ func (r *Repository) moduleEnv(pc *page.Context) module.Env {
 // CallAPI answers the page asking a module a question of its own, which is not
 // a render and so produces JSON rather than markup.
 func (r *Repository) CallAPI(pc *page.Context, name, method string, params map[string]string) (wikijson.Object, error) {
-	fn, ok := module.LookupAPI(name, method)
+	fn, _, ok := module.LookupAPI(name, method)
 	if !ok {
 		return nil, fmt.Errorf("repo: %s has no api method %s", name, method)
 	}
 	env := r.moduleEnv(pc)
 	env.Name = name
-	return fn(env, params)
+	out, err := fn(env, params)
+	var moduleErr *module.Error
+	if errors.As(err, &moduleErr) {
+		return nil, &callbacks.ModuleError{Message: moduleErr.Message}
+	}
+	return out, err
 }
 
 func (r *Repository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {

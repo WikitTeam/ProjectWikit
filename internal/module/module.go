@@ -12,6 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 // Error is the failure that reaches the reader as a block on the page rather
@@ -47,6 +48,13 @@ type Data interface {
 	CommentInfo(articleID int64) (db.CommentInfo, error)
 	RenderUserByID(id *int64) (string, error)
 	RenderUser(u db.User) (string, error)
+
+	ArticleVotes(articleID int64) ([]db.ArticleVote, error)
+	ReplaceVote(articleID, userID int64, rate *float64, roleID *int64) (*db.Vote, error)
+	VoteGroupRole(userID *int64) (*int64, error)
+	AddActionLog(user *db.User, kind, meta string) error
+	ArticleObject(article *db.Article, viewer *db.User) (*perms.Object, error)
+	UserJSON(u *db.User) (wikijson.Object, error)
 
 	SearchArticles(f db.SearchFilter, offset, limit int) ([]db.SearchHit, error)
 	SearchCount(f db.SearchFilter) (int, error)

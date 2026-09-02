@@ -4,12 +4,15 @@ package pagerender
 
 import (
 	"context"
+	"net/http"
+	"net/netip"
 
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
@@ -20,6 +23,7 @@ type Deps struct {
 	DB     *db.DB
 	Engine renderer.Renderer
 	Icons  roles.IconLoader
+	Trust  *proxyheader.Trust
 }
 
 type Env struct {
@@ -28,10 +32,22 @@ type Env struct {
 	loc  *i18n.Localizer
 	site *db.Site
 	user *db.User
+	ip   *netip.Addr
 }
 
 func (d Deps) Env(ctx context.Context, loc *i18n.Localizer, site *db.Site, user *db.User) *Env {
 	return &Env{deps: d, ctx: ctx, loc: loc, site: site, user: user}
+}
+
+// SetClient records who is asking, which only the layer holding the proxy
+// trust can answer.
+func (e *Env) SetClient(r *http.Request) {
+	if e.deps.Trust == nil {
+		return
+	}
+	if addr, ok := e.deps.Trust.ClientIP(r); ok {
+		e.ip = &addr
+	}
 }
 
 func (e *Env) HTML(source string, info renderer.PageInfo, cb *callbacks.Callbacks, mode renderer.Mode) (renderer.Result, error) {
@@ -95,6 +111,7 @@ func (e *Env) store() *repo.Repository {
 		RenderMessage:     e.message,
 		RenderMessageText: e.messageText,
 		Vars:              repo.NewVarSource(e.ctx, e.deps.DB, e.site),
+		ClientIP:          e.ip,
 	})
 }
 
