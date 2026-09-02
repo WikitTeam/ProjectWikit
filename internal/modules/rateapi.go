@@ -67,14 +67,15 @@ func rateGetVotes(env module.Env, _ map[string]string) (wikijson.Object, error) 
 		if err != nil {
 			return nil, err
 		}
+		var group, index any
+		if vote.RoleID != nil {
+			group, index = vote.GroupTitle, vote.GroupIndex
+		}
 		fields := wikijson.Object{
 			{Key: "user", Value: user},
 			{Key: "value", Value: vote.Rate},
-		}
-		if vote.GroupTitle != "" {
-			fields = append(fields,
-				wikijson.Field{Key: "visualGroup", Value: vote.GroupTitle},
-				wikijson.Field{Key: "visualGroupIndex", Value: vote.GroupIndex})
+			{Key: "visualGroup", Value: group},
+			{Key: "visualGroupIndex", Value: index},
 		}
 		if withDate {
 			fields = append(fields, wikijson.Field{Key: "date", Value: voteDate(vote.Date)})
