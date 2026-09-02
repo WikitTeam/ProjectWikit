@@ -48,6 +48,15 @@ type Data interface {
 	RenderUserByID(id *int64) (string, error)
 	RenderUser(u db.User) (string, error)
 
+	SearchArticles(f db.SearchFilter, offset, limit int) ([]db.SearchHit, error)
+	SearchCount(f db.SearchFilter) (int, error)
+	TagIDsByFullName(category, name string) ([]int64, error)
+	AuthorsOfArticles(ids []int64) (map[int64][]db.User, error)
+	VoteStatsOfArticles(ids []int64) (map[int64]db.VoteStats, error)
+	CommentCountsOfArticles(ids []int64) (map[int64]int, error)
+	TagsOfArticles(ids []int64) (map[int64][]db.ArticleTag, error)
+	UserByDisplayName(name string) (*db.User, error)
+
 	SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error)
 	SiteChangeCount(f db.SiteChangeFilter) (int, error)
 	ArticleCategories(hidden []string) ([]string, error)

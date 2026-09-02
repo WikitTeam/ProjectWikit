@@ -13,6 +13,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 type Deps struct {
@@ -72,8 +73,21 @@ func (e *Env) PageInfo(source *db.Article) (renderer.PageInfo, error) {
 }
 
 func (e *Env) Callbacks(vars *page.Vars, pc *page.Context) *callbacks.Callbacks {
+	cb := callbacks.New(e.loc, e.store())
+	cb.SetPageVars(vars)
+	cb.SetContext(pc)
+	return cb
+}
+
+// ModuleAPI answers a question the page asks one module directly, which reaches
+// the same module set a render does.
+func (e *Env) ModuleAPI(pc *page.Context, name, method string, params map[string]string) (wikijson.Object, error) {
+	return e.store().CallAPI(pc, name, method, params)
+}
+
+func (e *Env) store() *repo.Repository {
 	users := printuser.New(e.loc, e.deps.Icons)
-	store := repo.New(e.ctx, e.deps.DB, users, repo.Options{
+	return repo.New(e.ctx, e.deps.DB, users, repo.Options{
 		Loc:               e.loc,
 		Site:              e.site,
 		User:              e.user,
@@ -82,10 +96,6 @@ func (e *Env) Callbacks(vars *page.Vars, pc *page.Context) *callbacks.Callbacks 
 		RenderMessageText: e.messageText,
 		Vars:              repo.NewVarSource(e.ctx, e.deps.DB, e.site),
 	})
-	cb := callbacks.New(e.loc, store)
-	cb.SetPageVars(vars)
-	cb.SetContext(pc)
-	return cb
 }
 
 // The page it renders against is the one the module put in the context, which

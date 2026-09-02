@@ -278,6 +278,38 @@ func (m moduleData) ForumPostObject(p *db.ForumThreadPost, thread *perms.Object,
 	return NewPerms(m.repo.ctx, m.repo.db).ForumPost(p, thread, u)
 }
 
+func (m moduleData) SearchArticles(f db.SearchFilter, offset, limit int) ([]db.SearchHit, error) {
+	return m.repo.db.SearchArticles(m.repo.ctx, f, offset, limit)
+}
+
+func (m moduleData) SearchCount(f db.SearchFilter) (int, error) {
+	return m.repo.db.SearchCount(m.repo.ctx, f)
+}
+
+func (m moduleData) TagIDsByFullName(category, name string) ([]int64, error) {
+	return m.repo.db.TagIDsByFullName(m.repo.ctx, category, name)
+}
+
+func (m moduleData) AuthorsOfArticles(ids []int64) (map[int64][]db.User, error) {
+	return m.repo.db.AuthorsOfArticles(m.repo.ctx, ids)
+}
+
+func (m moduleData) VoteStatsOfArticles(ids []int64) (map[int64]db.VoteStats, error) {
+	return m.repo.db.VoteStatsOfArticles(m.repo.ctx, ids)
+}
+
+func (m moduleData) CommentCountsOfArticles(ids []int64) (map[int64]int, error) {
+	return m.repo.db.CommentCountsOfArticles(m.repo.ctx, ids)
+}
+
+func (m moduleData) TagsOfArticles(ids []int64) (map[int64][]db.ArticleTag, error) {
+	return m.repo.db.TagsOfArticles(m.repo.ctx, ids)
+}
+
+func (m moduleData) UserByDisplayName(name string) (*db.User, error) {
+	return m.repo.db.UserByDisplayName(m.repo.ctx, name)
+}
+
 func (m moduleData) SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error) {
 	return m.repo.db.SiteChanges(m.repo.ctx, f, offset, limit)
 }

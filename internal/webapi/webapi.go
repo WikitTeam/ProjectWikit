@@ -16,6 +16,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
@@ -84,13 +85,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var parsed call
-	if json.Unmarshal(raw, &parsed) != nil || parsed.Method != renderMethod {
+	if json.Unmarshal(raw, &parsed) != nil || !h.answers(parsed) {
 		h.forward(w, r, raw, rest)
 		return
 	}
 
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
-	out, status, err := h.render(r, loc, parsed)
+	out, status, err := h.answer(r, loc, parsed)
 	if err != nil {
 		var moduleErr *callbacks.ModuleError
 		if errors.As(err, &moduleErr) {
@@ -104,7 +105,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, status, out)
 }
 
-func (h *Handler) render(r *http.Request, loc *i18n.Localizer, parsed call) (string, int, error) {
+// A method beyond render is answered only when the module registered it, and a
+// module registers only what changes nothing. Everything else goes upstream,
+// which is what keeps the CSRF check over there.
+func (h *Handler) answers(parsed call) bool {
+	if parsed.Method == renderMethod {
+		return true
+	}
+	_, ok := module.LookupAPI(parsed.Module, parsed.Method)
+	return ok
+}
+
+func (h *Handler) answer(r *http.Request, loc *i18n.Localizer, parsed call) (string, int, error) {
 	ctx := r.Context()
 	current := site.FromContext(ctx)
 	if current == nil {
@@ -133,11 +145,28 @@ func (h *Handler) render(r *http.Request, loc *i18n.Localizer, parsed call) (str
 		pc.CSRF = token
 	}
 
+	if parsed.Method != renderMethod {
+		return h.callAPI(env, pc, parsed)
+	}
+
 	html, err := env.Callbacks(env.Vars(article), pc).RenderModule(parsed.Module, params(parsed.Params), parsed.Content)
 	if err != nil {
 		return "", 0, err
 	}
 	return field("result", html), http.StatusOK, nil
+}
+
+func (h *Handler) callAPI(env *pagerender.Env, pc *page.Context, parsed call) (string, int, error) {
+
+	out, err := env.ModuleAPI(pc, parsed.Module, parsed.Method, params(parsed.Params))
+	if err != nil {
+		return "", 0, err
+	}
+	body, err := wikijson.Marshal(out)
+	if err != nil {
+		return "", 0, err
+	}
+	return body, http.StatusOK, nil
 }
 
 func peek(body io.ReadCloser) (raw []byte, rest io.Reader, err error) {

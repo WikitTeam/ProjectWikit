@@ -4,6 +4,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
+	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 type Repository struct {
@@ -89,8 +91,8 @@ func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetc
 	return out, nil
 }
 
-func (r *Repository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {
-	html, err := module.Render(module.Env{
+func (r *Repository) moduleEnv(pc *page.Context) module.Env {
+	return module.Env{
 		Page:          pc,
 		Loc:           r.opts.Loc,
 		Site:          r.opts.Site,
@@ -101,7 +103,23 @@ func (r *Repository) RenderModule(pc *page.Context, name string, params map[stri
 
 		RenderMessageText: r.opts.RenderMessageText,
 		Vars:              r.opts.Vars,
-	}, name, params, body)
+	}
+}
+
+// CallAPI answers the page asking a module a question of its own, which is not
+// a render and so produces JSON rather than markup.
+func (r *Repository) CallAPI(pc *page.Context, name, method string, params map[string]string) (wikijson.Object, error) {
+	fn, ok := module.LookupAPI(name, method)
+	if !ok {
+		return nil, fmt.Errorf("repo: %s has no api method %s", name, method)
+	}
+	env := r.moduleEnv(pc)
+	env.Name = name
+	return fn(env, params)
+}
+
+func (r *Repository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {
+	html, err := module.Render(r.moduleEnv(pc), name, params, body)
 	var moduleErr *module.Error
 	if errors.As(err, &moduleErr) {
 		return "", &callbacks.ModuleError{Message: moduleErr.Message}
