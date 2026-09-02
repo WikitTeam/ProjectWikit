@@ -24,6 +24,7 @@ type pageStack struct {
 	html      http.Handler
 	theme     http.Handler
 	moduleAPI http.Handler
+	preview   http.Handler
 	close     func()
 }
 
@@ -55,16 +56,16 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		Log:         log,
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
+	api := webapi.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 
 	stack := &pageStack{
-		articles: pages,
-		code:     localitem.NewCode(items),
-		html:     localitem.NewHTML(items),
-		theme:    localitem.NewTheme(items),
-		moduleAPI: webapi.New(webapi.Deps{
-			DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log,
-		}, upstream),
-		close: closeEngine,
+		articles:  pages,
+		code:      localitem.NewCode(items),
+		html:      localitem.NewHTML(items),
+		theme:     localitem.NewTheme(items),
+		moduleAPI: webapi.New(api, upstream),
+		preview:   webapi.NewPreview(api),
+		close:     closeEngine,
 	}
 
 	// Without the key nothing can be verified, so every visitor stays
@@ -78,5 +79,6 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.html = resolver.Middleware(stack.html)
 	stack.theme = resolver.Middleware(stack.theme)
 	stack.moduleAPI = resolver.Middleware(stack.moduleAPI)
+	stack.preview = resolver.Middleware(stack.preview)
 	return stack, nil
 }

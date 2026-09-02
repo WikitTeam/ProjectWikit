@@ -1,4 +1,7 @@
 {
+  "api-bad-page-id": "无效的页面ID",
+  "api-bad-request": "无效请求",
+  "api-csrf-failed": "CSRF 校验失败",
   "api-internal-error": "服务器内部错误",
   "api-page-not-found": "页面未找到",
   "button-copy-clipboard": "复制",

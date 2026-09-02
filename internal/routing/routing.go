@@ -37,6 +37,7 @@ var Table = []Route{
 	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
 	{Prefix: "/pw-api/", Owner: OwnerUpstream, Label: "API"},
 	{Prefix: "/pw-api/modules", Owner: OwnerGo, Label: "module API", Exact: true},
+	{Prefix: "/pw-api/preview", Owner: OwnerGo, Label: "editor preview", Exact: true},
 	{Prefix: "/local--files/", Owner: OwnerGo, Label: "site files"},
 	{Prefix: "/local--resized-images/", Owner: OwnerGo, Label: "scaled images"},
 	{Prefix: "/local--code/", Owner: OwnerGo, Label: "code blocks"},

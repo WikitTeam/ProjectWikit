@@ -65,6 +65,8 @@ type Vars struct {
 
 	source      string
 	sourceDone  bool
+	content     string
+	contentSet  bool
 	formDef     *form.Definition
 	formDefDone bool
 	formValues  map[string]string
@@ -185,6 +187,9 @@ func (v *Vars) compute(name string) (string, bool) {
 	case "site_domain":
 		return v.src.SiteDomain(), true
 	case "content":
+		if v.contentSet {
+			return v.content, true
+		}
 		return v.latestSource()
 	case "rating":
 		return v.formattedRating()
@@ -771,4 +776,12 @@ func (v *Vars) userText(u *db.User) string {
 
 func QuoteAll(s string) string {
 	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
+}
+
+// SetContent hands the variables a source that is not in the database yet,
+// which is what a preview renders.
+func (v *Vars) SetContent(source string) {
+	if v != nil {
+		v.content, v.contentSet = source, true
+	}
 }

@@ -24,7 +24,10 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
-const ModulesPath = "/pw-api/modules"
+const (
+	ModulesPath = "/pw-api/modules"
+	PreviewPath = "/pw-api/preview"
+)
 
 const (
 	renderMethod = "render"
@@ -52,11 +55,11 @@ func New(d Deps, upstream http.Handler) *Handler {
 	return &Handler{deps: d, upstream: upstream}
 }
 
-func (h *Handler) log() *slog.Logger {
-	if h.deps.Log == nil {
+func (d Deps) log() *slog.Logger {
+	if d.Log == nil {
 		return slog.Default()
 	}
-	return h.deps.Log
+	return d.Log
 }
 
 type call struct {
@@ -94,7 +97,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusInternalServerError, field("error", moduleErr.Message))
 			return
 		}
-		h.log().Error("render module api", "module", parsed.Module, "err", err)
+		h.deps.log().Error("render module api", "module", parsed.Module, "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
 		return
 	}

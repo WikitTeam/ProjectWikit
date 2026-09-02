@@ -142,7 +142,7 @@ func serve(args []string) error {
 	}
 
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
-	var moduleAPI http.Handler = proxy
+	var moduleAPI, preview http.Handler = proxy, proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, *sidecar, *secret, *timezone, log)
 		if err != nil {
@@ -157,6 +157,7 @@ func serve(args []string) error {
 		htmlHandler = served(stack.html)
 		themeHandler = served(stack.theme)
 		moduleAPI = served(stack.moduleAPI)
+		preview = served(stack.preview)
 	}
 
 	goHandlers := map[string]http.Handler{
@@ -169,6 +170,7 @@ func serve(args []string) error {
 		localitem.HTMLPrefix:  htmlHandler,
 		localitem.ThemePrefix: themeHandler,
 		webapi.ModulesPath:    moduleAPI,
+		webapi.PreviewPath:    preview,
 		"/":                   articles,
 	}
 
