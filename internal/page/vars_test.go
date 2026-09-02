@@ -15,6 +15,11 @@ type fakeSource struct {
 	formDef   *form.Definition
 	formErr   error
 	siteName  string
+	siteTitle string
+	siteDom   string
+	children  int
+	comments  int
+	comment   *Comment
 	authors   []db.User
 	editor    *db.User
 	editorErr error
@@ -42,6 +47,25 @@ func newFakeSource() *fakeSource {
 func (f *fakeSource) count(name string) { f.calls[name]++ }
 
 func (f *fakeSource) SiteName() string { return f.siteName }
+
+func (f *fakeSource) SiteTitle() string { return f.siteTitle }
+
+func (f *fakeSource) SiteDomain() string { return f.siteDom }
+
+func (f *fakeSource) ChildCount(articleID int64) (int, error) {
+	f.count("ChildCount")
+	return f.children, f.err
+}
+
+func (f *fakeSource) CommentCount(articleID int64) (int, error) {
+	f.count("CommentCount")
+	return f.comments, f.err
+}
+
+func (f *fakeSource) LastComment(articleID int64) (*Comment, error) {
+	f.count("LastComment")
+	return f.comment, f.err
+}
 
 func (f *fakeSource) CategoryForm(category string) (*form.Definition, error) {
 	f.count("CategoryForm")
@@ -158,6 +182,235 @@ func TestLookupCategoryPrefixInFullName(t *testing.T) {
 	got, _ := v.Lookup("fullname")
 	if want := "component:box"; got != want {
 		t.Errorf("Lookup(\"fullname\") = %q, want %q", got, want)
+	}
+}
+
+func TestLookupSiteTitleAndDomain(t *testing.T) {
+	f := newFakeSource()
+	f.siteTitle = "Test Wiki"
+	f.siteDom = "wiki.example"
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("site_title"); got != "Test Wiki" {
+		t.Errorf("Lookup(\"site_title\") = %q, want %q", got, "Test Wiki")
+	}
+	if got, _ := v.Lookup("site_domain"); got != "wiki.example" {
+		t.Errorf("Lookup(\"site_domain\") = %q, want %q", got, "wiki.example")
+	}
+}
+
+func TestLookupAuthorUnixNameAndID(t *testing.T) {
+	f := newFakeSource()
+	f.authors = []db.User{{ID: 11, Username: "Big Bird"}, {ID: 12, Username: "kain"}}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("created_by_unix"); got != "big-bird kain" {
+		t.Errorf("Lookup(\"created_by_unix\") = %q, want %q", got, "big-bird kain")
+	}
+	if got, _ := v.Lookup("created_by_id"); got != "11 12" {
+		t.Errorf("Lookup(\"created_by_id\") = %q, want %q", got, "11 12")
+	}
+}
+
+func TestLookupEditorUnixNameAndID(t *testing.T) {
+	f := newFakeSource()
+	f.editor = &db.User{ID: 12, Username: "Kain Pathos Crow"}
+	f.editorErr = nil
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("updated_by_unix"); got != "kain-pathos-crow" {
+		t.Errorf("Lookup(\"updated_by_unix\") = %q, want %q", got, "kain-pathos-crow")
+	}
+	if got, _ := v.Lookup("updated_by_id"); got != "12" {
+		t.Errorf("Lookup(\"updated_by_id\") = %q, want %q", got, "12")
+	}
+}
+
+func TestLookupHiddenTags(t *testing.T) {
+	f := newFakeSource()
+	f.tags = []string{"hub", "_image", "safe"}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("_tags"); got != "_image" {
+		t.Errorf("Lookup(\"_tags\") = %q, want %q", got, "_image")
+	}
+	want := "[/system:page-tags/tag/_image _image]"
+	if got, _ := v.Lookup("_tags_linked"); got != want {
+		t.Errorf("Lookup(\"_tags_linked\") = %q, want %q", got, want)
+	}
+}
+
+func TestLookupTagScopes(t *testing.T) {
+	f := newFakeSource()
+	f.tags = []string{"hub", "_image", "safe"}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	tests := []struct{ name, want string }{
+		{"tags", "hub safe"},
+		{"alltags", "_image hub safe"},
+		{"_tags", "_image"},
+	}
+	for _, tt := range tests {
+		got, ok := v.Lookup(tt.name)
+		if !ok {
+			t.Errorf("Lookup(%q) = _, false, want true", tt.name)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("Lookup(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLookupLinkedTagScopes(t *testing.T) {
+	f := newFakeSource()
+	f.tags = []string{"hub", "_image"}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	tests := []struct{ name, want string }{
+		{"tags_linked", "[/system:page-tags/tag/hub hub]"},
+		{"alltags_linked", "[/system:page-tags/tag/_image _image], [/system:page-tags/tag/hub hub]"},
+		{"_tags_linked", "[/system:page-tags/tag/_image _image]"},
+	}
+	for _, tt := range tests {
+		got, ok := v.Lookup(tt.name)
+		if !ok {
+			t.Errorf("Lookup(%q) = _, false, want true", tt.name)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("Lookup(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLookupTagsLinkedUsesTheSetPrefix(t *testing.T) {
+	f := newFakeSource()
+	f.tags = []string{"shiny"}
+	v := NewVars(testArticle(), nil, f, nil)
+	v.SetTagPrefix("/pagename/tag/")
+
+	want := "[/pagename/tag/shiny shiny]"
+	if got, _ := v.Lookup("tags_linked"); got != want {
+		t.Errorf("Lookup(\"tags_linked\") = %q, want %q", got, want)
+	}
+}
+
+func TestLookupTagsLinkedPrefixInTheNameBeatsTheSetOne(t *testing.T) {
+	f := newFakeSource()
+	f.tags = []string{"shiny"}
+	v := NewVars(testArticle(), nil, f, nil)
+	v.SetTagPrefix("/pagename/tag/")
+
+	want := "[/player:shiny shiny]"
+	if got, _ := v.Lookup("tags_linked|player:"); got != want {
+		t.Errorf("Lookup(\"tags_linked|player:\") = %q, want %q", got, want)
+	}
+}
+
+func TestLookupTagsLinkedWithAPrefix(t *testing.T) {
+	f := newFakeSource()
+	f.tags = []string{"shiny"}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	tests := []struct{ name, want string }{
+		{"tags_linked|interesting-list/category/", "[/interesting-list/category/shiny shiny]"},
+		{"tags_linked|player:", "[/player:shiny shiny]"},
+		{"tags_linked|", "[/shiny shiny]"},
+		{"tags_linked|http://other.example/tag/", "[http://other.example/tag/shiny shiny]"},
+	}
+	for _, tt := range tests {
+		got, ok := v.Lookup(tt.name)
+		if !ok {
+			t.Errorf("Lookup(%q) = _, false, want true", tt.name)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("Lookup(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLookupSize(t *testing.T) {
+	f := newFakeSource()
+	f.source = "四个字符"
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("size"); got != "4" {
+		t.Errorf("Lookup(\"size\") = %q, want %q", got, "4")
+	}
+}
+
+func TestLookupChildrenAndComments(t *testing.T) {
+	f := newFakeSource()
+	f.children, f.comments = 3, 17
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("children"); got != "3" {
+		t.Errorf("Lookup(\"children\") = %q, want %q", got, "3")
+	}
+	if got, _ := v.Lookup("comments"); got != "17" {
+		t.Errorf("Lookup(\"comments\") = %q, want %q", got, "17")
+	}
+}
+
+func TestLookupLastComment(t *testing.T) {
+	f := newFakeSource()
+	f.comment = &Comment{
+		At:     time.Unix(1750000000, 0),
+		Author: &db.User{ID: 12, Username: "Kain Pathos Crow"},
+	}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	tests := []struct{ name, want string }{
+		{"commented_at", "[[date 1750000000]]"},
+		{"commented_by", "Kain Pathos Crow"},
+		{"commented_by_unix", "kain-pathos-crow"},
+		{"commented_by_id", "12"},
+		{"commented_by_linked", "[[*user Kain Pathos Crow]]"},
+	}
+	for _, tt := range tests {
+		got, ok := v.Lookup(tt.name)
+		if !ok {
+			t.Errorf("Lookup(%q) = _, false, want true", tt.name)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("Lookup(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLookupLastCommentOnAPageWithNone(t *testing.T) {
+	v := NewVars(testArticle(), nil, newFakeSource(), nil)
+	got, ok := v.Lookup("commented_by")
+	if !ok {
+		t.Error("Lookup(\"commented_by\") = _, false, want true")
+	}
+	if got != "" {
+		t.Errorf("Lookup(\"commented_by\") = %q, want %q", got, "")
+	}
+}
+
+func TestLookupRatingPercent(t *testing.T) {
+	f := newFakeSource()
+	f.siteMode = RatingModeStars
+	f.votes = db.VoteStats{Count: 4, Average: 3.75}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("rating_percent"); got != "75" {
+		t.Errorf("Lookup(\"rating_percent\") = %q, want %q", got, "75")
+	}
+}
+
+func TestLookupRatingPercentOutsideStars(t *testing.T) {
+	f := newFakeSource()
+	f.siteMode = RatingModeUpDown
+	f.votes = db.VoteStats{Count: 4, Sum: 4}
+	v := NewVars(testArticle(), nil, f, nil)
+
+	if got, _ := v.Lookup("rating_percent"); got != "0" {
+		t.Errorf("Lookup(\"rating_percent\") = %q, want %q", got, "0")
 	}
 }
 

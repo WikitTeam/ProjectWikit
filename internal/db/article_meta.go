@@ -113,6 +113,45 @@ func (d *DB) RevisionCount(ctx context.Context, articleID int64) (int, error) {
 	return n, nil
 }
 
+var qChildCount = register("ChildCount", `
+SELECT count(*)
+FROM web_article
+WHERE parent_id = $1`)
+
+func (d *DB) ChildCount(ctx context.Context, articleID int64) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qChildCount, articleID).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count children of article %d: %w", articleID, err)
+	}
+	return n, nil
+}
+
+var qCommentCount = register("CommentCount", `
+SELECT count(*)
+FROM web_forumpost p
+JOIN web_forumthread t ON t.id = p.thread_id
+WHERE t.article_id = $1`)
+
+func (d *DB) CommentCount(ctx context.Context, articleID int64) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qCommentCount, articleID).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count comments of article %d: %w", articleID, err)
+	}
+	return n, nil
+}
+
+var qArticleLastComment = register("ArticleLastComment", `
+SELECT `+forumLastPostColumns+`
+FROM web_forumpost p
+JOIN web_forumthread t ON t.id = p.thread_id
+WHERE t.article_id = $1
+ORDER BY p.created_at DESC
+LIMIT 1`)
+
+func (d *DB) ArticleLastComment(ctx context.Context, articleID int64) (*ForumLastPost, error) {
+	return d.scanLastPost(ctx, qArticleLastComment, articleID)
+}
+
 var qArticleTags = register("ArticleTags", `
 SELECT CASE WHEN c.slug = '_default' THEN t.name ELSE c.slug || ':' || t.name END
 FROM web_article_tags link

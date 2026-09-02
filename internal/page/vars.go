@@ -9,10 +9,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
 
 const (
@@ -36,7 +38,17 @@ type VarSource interface {
 	HasVoted(articleID int64, userID *int64) (bool, error)
 	ArticleByID(id int64) (*db.Article, error)
 	CategoryForm(category string) (*form.Definition, error)
+	ChildCount(articleID int64) (int, error)
+	CommentCount(articleID int64) (int, error)
+	LastComment(articleID int64) (*Comment, error)
 	SiteName() string
+	SiteTitle() string
+	SiteDomain() string
+}
+
+type Comment struct {
+	At     time.Time
+	Author *db.User
 }
 
 // Vars resolves the page variables of one article. Every value is computed at
@@ -64,6 +76,9 @@ type Vars struct {
 	votesDone   bool
 	parent      *db.Article
 	parentDone  bool
+	comment     *Comment
+	commentDone bool
+	tagPrefix   string
 }
 
 func NewVars(article *db.Article, user *db.User, src VarSource, loc *i18n.Localizer) *Vars {
@@ -107,6 +122,15 @@ func (v *Vars) Lookup(name string) (string, bool) {
 	}
 	if format, ok := strings.CutPrefix(name, "updated_at|"); ok {
 		return dateWithFormat(v.article.UpdatedAt.Unix(), format), true
+	}
+	if prefix, ok := strings.CutPrefix(name, "tags_linked|"); ok {
+		return v.tagLinks(visibleTags, prefix)
+	}
+	if prefix, ok := strings.CutPrefix(name, "alltags_linked|"); ok {
+		return v.tagLinks(allTags, prefix)
+	}
+	if prefix, ok := strings.CutPrefix(name, "_tags_linked|"); ok {
+		return v.tagLinks(hiddenTags, prefix)
 	}
 	return "", false
 }
@@ -156,6 +180,10 @@ func (v *Vars) compute(name string) (string, bool) {
 		return "/" + a.Title, true
 	case "site_name":
 		return v.src.SiteName(), true
+	case "site_title":
+		return v.src.SiteTitle(), true
+	case "site_domain":
+		return v.src.SiteDomain(), true
 	case "content":
 		return v.latestSource()
 	case "rating":
@@ -197,6 +225,10 @@ func (v *Vars) compute(name string) (string, bool) {
 			parts[i] = v.userText(&authors[i])
 		}
 		return strings.Join(parts, " "), true
+	case "created_by_unix":
+		return v.authorField(unixName)
+	case "created_by_id":
+		return v.authorField(userID)
 	case "created_by_linked":
 		return v.authorTags(false)
 	case "created_by_linked_plain":
@@ -207,6 +239,10 @@ func (v *Vars) compute(name string) (string, bool) {
 			return "", false
 		}
 		return v.userText(editor), true
+	case "updated_by_unix":
+		return v.editorField(unixName)
+	case "updated_by_id":
+		return v.editorField(userID)
 	case "updated_by_linked":
 		return v.editorTag(false)
 	case "updated_by_linked_plain":
@@ -217,22 +253,42 @@ func (v *Vars) compute(name string) (string, bool) {
 			return "", false
 		}
 		return strconv.Itoa(len(authors)), true
+	// TODO preview, preview(n), summary, first_paragraph ???
 	case "tags":
-		tags, ok := v.getTags()
-		if !ok {
-			return "", false
-		}
-		return strings.Join(tags, " "), true
+		return v.tagList(visibleTags)
+	case "alltags":
+		return v.tagList(allTags)
+	case "_tags":
+		return v.tagList(hiddenTags)
 	case "tags_linked":
-		tags, ok := v.getTags()
+		return v.tagLinks(visibleTags, v.tagPrefixOrDefault())
+	case "alltags_linked":
+		return v.tagLinks(allTags, v.tagPrefixOrDefault())
+	case "_tags_linked":
+		return v.tagLinks(hiddenTags, v.tagPrefixOrDefault())
+	case "children":
+		n, err := v.src.ChildCount(a.ID)
+		if err != nil {
+			return "", v.fail(err)
+		}
+		return strconv.Itoa(n), true
+	case "comments":
+		n, err := v.src.CommentCount(a.ID)
+		if err != nil {
+			return "", v.fail(err)
+		}
+		return strconv.Itoa(n), true
+	case "size":
+		source, ok := v.latestSource()
 		if !ok {
 			return "", false
 		}
-		parts := make([]string, len(tags))
-		for i, tag := range tags {
-			parts[i] = "[/system:page-tags/tag/" + QuoteAll(tag) + " " + tag + "]"
-		}
-		return strings.Join(parts, ", "), true
+		return strconv.Itoa(len([]rune(source))), true
+	case "rating_percent":
+		return v.ratingPercent()
+	case "commented_at", "commented_by", "commented_by_unix", "commented_by_id",
+		"commented_by_linked":
+		return v.commentVar(name)
 	case "created_at":
 		return fmt.Sprintf("[[date %d]]", a.CreatedAt.Unix()), true
 	case "updated_at":
@@ -408,6 +464,74 @@ func (v *Vars) getEditor() (*db.User, bool) {
 	return editor, true
 }
 
+const defaultTagPrefix = "system:page-tags/tag/"
+
+type tagScope int
+
+const (
+	allTags tagScope = iota
+	visibleTags
+	hiddenTags
+)
+
+func (v *Vars) tagList(scope tagScope) (string, bool) {
+	tags, ok := v.selectedTags(scope)
+	if !ok {
+		return "", false
+	}
+	return strings.Join(tags, " "), true
+}
+
+func (v *Vars) selectedTags(scope tagScope) ([]string, bool) {
+	tags, ok := v.getTags()
+	if !ok {
+		return nil, false
+	}
+	if scope == allTags {
+		return tags, true
+	}
+	out := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		if strings.HasPrefix(tag, "_") == (scope == hiddenTags) {
+			out = append(out, tag)
+		}
+	}
+	return out, true
+}
+
+func (v *Vars) tagPrefixOrDefault() string {
+	if v.tagPrefix != "" {
+		return v.tagPrefix
+	}
+	return defaultTagPrefix
+}
+
+// A prefix written into the variable itself still wins over this one.
+func (v *Vars) SetTagPrefix(prefix string) {
+	if v != nil {
+		v.tagPrefix = prefix
+	}
+}
+
+// A prefix that names a scheme or starts at the root is already a whole
+// address, so a tag list can point at another site.
+func (v *Vars) tagLinks(scope tagScope, prefix string) (string, bool) {
+	tags, ok := v.selectedTags(scope)
+	if !ok {
+		return "", false
+	}
+	parts := make([]string, len(tags))
+	for i, tag := range tags {
+		target := prefix + QuoteAll(tag)
+		if !strings.HasPrefix(target, "/") &&
+			!strings.HasPrefix(target, "http://") && !strings.HasPrefix(target, "https://") {
+			target = "/" + target
+		}
+		parts[i] = "[" + target + " " + tag + "]"
+	}
+	return strings.Join(parts, ", "), true
+}
+
 func (v *Vars) getTags() ([]string, bool) {
 	tags, err := v.src.Tags(v.article.ID)
 	if err != nil {
@@ -419,6 +543,76 @@ func (v *Vars) getTags() ([]string, bool) {
 	}
 	sort.Strings(out)
 	return out, true
+}
+
+func (v *Vars) authorField(of func(*db.User) string) (string, bool) {
+	authors, ok := v.getAuthors()
+	if !ok {
+		return "", false
+	}
+	parts := make([]string, len(authors))
+	for i := range authors {
+		parts[i] = of(&authors[i])
+	}
+	return strings.Join(parts, " "), true
+}
+
+func (v *Vars) editorField(of func(*db.User) string) (string, bool) {
+	editor, ok := v.getEditor()
+	if !ok {
+		return "", false
+	}
+	return of(editor), true
+}
+
+// A page nobody has commented on answers empty rather than staying unresolved,
+// so a listing template does not show the variable name back to the reader.
+func (v *Vars) commentVar(name string) (string, bool) {
+	if !v.commentDone {
+		comment, err := v.src.LastComment(v.article.ID)
+		if err != nil {
+			return "", v.notFoundOrFail(err)
+		}
+		v.comment, v.commentDone = comment, true
+	}
+	c := v.comment
+	if c == nil {
+		return "", true
+	}
+	switch name {
+	case "commented_at":
+		return fmt.Sprintf("[[date %d]]", c.At.Unix()), true
+	case "commented_by":
+		return v.userText(c.Author), true
+	case "commented_by_unix":
+		return unixName(c.Author), true
+	case "commented_by_id":
+		return userID(c.Author), true
+	case "commented_by_linked":
+		if c.Author == nil {
+			return v.userText(nil), true
+		}
+		return userTag(c.Author, false), true
+	}
+	return "", false
+}
+
+func unixName(u *db.User) string {
+	if u == nil {
+		return ""
+	}
+	name := u.Username
+	if name == "" {
+		name = u.WikidotUsername
+	}
+	return wikidot.CanonicalizeUsername(name)
+}
+
+func userID(u *db.User) string {
+	if u == nil {
+		return ""
+	}
+	return strconv.FormatInt(u.ID, 10)
 }
 
 func (v *Vars) voteStats() (db.VoteStats, bool) {
@@ -480,6 +674,24 @@ func (v *Vars) formattedRating() (string, bool) {
 		return fmt.Sprintf("%.1f", votes.Average), true
 	}
 	return "0", true
+}
+
+func (v *Vars) ratingPercent() (string, bool) {
+	mode, ok := v.ratingMode()
+	if !ok {
+		return "", false
+	}
+	if mode != RatingModeStars {
+		return "0", true
+	}
+	votes, ok := v.voteStats()
+	if !ok {
+		return "", false
+	}
+	if votes.Count == 0 {
+		return "0", true
+	}
+	return strconv.Itoa(roundHalfEven(votes.Average / 5 * 100)), true
 }
 
 func (v *Vars) popularity() (string, bool) {

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/form"
@@ -69,6 +70,47 @@ func (s *VarSource) HasVoted(articleID int64, userID *int64) (bool, error) {
 
 func (s *VarSource) ArticleByID(id int64) (*db.Article, error) {
 	return s.db.ArticleByID(s.ctx, id)
+}
+
+func (s *VarSource) ChildCount(articleID int64) (int, error) {
+	return s.db.ChildCount(s.ctx, articleID)
+}
+
+func (s *VarSource) CommentCount(articleID int64) (int, error) {
+	return s.db.CommentCount(s.ctx, articleID)
+}
+
+func (s *VarSource) LastComment(articleID int64) (*page.Comment, error) {
+	post, err := s.db.ArticleLastComment(s.ctx, articleID)
+	if errors.Is(err, db.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	comment := &page.Comment{At: post.CreatedAt}
+	if post.AuthorID != nil {
+		author, err := s.db.UserByID(s.ctx, *post.AuthorID)
+		if err != nil && !errors.Is(err, db.ErrNotFound) {
+			return nil, err
+		}
+		comment.Author = author
+	}
+	return comment, nil
+}
+
+func (s *VarSource) SiteTitle() string {
+	if s.site == nil {
+		return ""
+	}
+	return s.site.Title
+}
+
+func (s *VarSource) SiteDomain() string {
+	if s.site == nil {
+		return ""
+	}
+	return s.site.Domain
 }
 
 func (s *VarSource) CategoryForm(category string) (*form.Definition, error) {
