@@ -13,6 +13,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
+	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
@@ -125,7 +126,7 @@ func (h *Handler) render(r *http.Request, loc *i18n.Localizer, parsed call) (str
 	pc := page.NewContext(article, article, page.ParsePathParams(string(parsed.PathParams)), user)
 	// Only a token the visitor already carries, since this response has no page
 	// to plant the cookie a fresh one would need.
-	if token, isNew := page.CSRFToken(r); !isNew {
+	if token, isNew := csrf.Token(r); !isNew {
 		pc.CSRF = token
 	}
 

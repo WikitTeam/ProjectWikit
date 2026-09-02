@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
-	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
@@ -96,7 +96,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if out.SetCSRF != "" {
 		http.SetCookie(w, &http.Cookie{
-			Name:     page.CSRFCookie,
+			Name:     csrf.CookieName,
 			Value:    out.SetCSRF,
 			Path:     "/",
 			MaxAge:   csrfCookieMaxAge,
