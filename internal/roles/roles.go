@@ -152,3 +152,48 @@ func ColorizeIcon(svg, color string) (string, error) {
 	parts = slices.Insert(parts, 1, "<style>svg{color:"+color+"}</style")
 	return escape.URLQuote(strings.Join(parts, ">")), nil
 }
+
+type Showcase struct {
+	Badges []Badge
+	Titles []string
+}
+
+// ShowcaseOf is the profile page's half of NameTails, and it reads a different
+// column. Only one role per category reaches it, whatever mode each is in.
+func ShowcaseOf(rs []Role) Showcase {
+	seen := make(map[int64]bool)
+	var out Showcase
+	for _, role := range rs {
+		if role.ProfileVisualMode == ProfileHidden {
+			continue
+		}
+		if role.CategoryID != nil {
+			if seen[*role.CategoryID] {
+				continue
+			}
+			seen[*role.CategoryID] = true
+		}
+		switch role.ProfileVisualMode {
+		case ProfileBadge:
+			out.Badges = append(out.Badges, Badge{
+				Text:       firstNonEmpty(role.BadgeText, role.Name, role.Slug),
+				Bg:         role.BadgeBg,
+				TextColor:  role.BadgeTextColor,
+				ShowBorder: role.BadgeShowBorder,
+				Tooltip:    role.Name,
+			})
+		case ProfileStatus:
+			out.Titles = append(out.Titles, firstNonEmpty(role.Name, role.Slug))
+		}
+	}
+	return out
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
