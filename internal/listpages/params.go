@@ -85,8 +85,10 @@ func Parse(src Source, article *db.Article, viewer *db.User, params map[string]s
 	p.parseTags()
 	p.parseCategory()
 	p.parseParent()
+	p.parseLinkTo()
 	p.parseCreatedBy()
 	p.parseCreatedAt()
+	p.parseUpdatedAt()
 	p.parseRating()
 	p.parseVotes()
 	p.parsePopularity()
@@ -355,8 +357,33 @@ func (p *parser) parseCreatedBy() {
 	p.out.Filter.AuthorID = &user.ID
 }
 
+func (p *parser) parseLinkTo() {
+	raw := strings.TrimSpace(p.get("link_to"))
+	if raw == "" {
+		return
+	}
+	if raw == "." {
+		if p.article == nil {
+			p.invalid()
+			return
+		}
+		raw = p.article.FullName()
+	}
+	p.out.Filter.LinkTo, p.out.Filter.HasLinkTo = raw, true
+}
+
 func (p *parser) parseCreatedAt() {
-	raw := p.get("created_at")
+	p.parseTime("created_at", func(a *db.Article) time.Time { return a.CreatedAt },
+		func(f *db.TimeFilter) { p.out.Filter.CreatedAt = f })
+}
+
+func (p *parser) parseUpdatedAt() {
+	p.parseTime("updated_at", func(a *db.Article) time.Time { return a.UpdatedAt },
+		func(f *db.TimeFilter) { p.out.Filter.UpdatedAt = f })
+}
+
+func (p *parser) parseTime(key string, of func(*db.Article) time.Time, set func(*db.TimeFilter)) {
+	raw := p.get(key)
 	if raw == "" {
 		return
 	}
@@ -365,10 +392,10 @@ func (p *parser) parseCreatedAt() {
 			p.invalid()
 			return
 		}
-		y, m, d := p.article.CreatedAt.UTC().Date()
+		y, m, d := of(p.article).UTC().Date()
 		dayStart := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 		dayEnd := time.Date(y, m, d, 23, 59, 59, 0, time.UTC)
-		p.out.Filter.CreatedAt = &db.TimeFilter{Op: db.TimeRange, Start: dayStart, End: dayEnd}
+		set(&db.TimeFilter{Op: db.TimeRange, Start: dayStart, End: dayEnd})
 		return
 	}
 
@@ -378,7 +405,7 @@ func (p *parser) parseCreatedAt() {
 		p.invalid()
 		return
 	}
-	p.out.Filter.CreatedAt = &db.TimeFilter{Op: timeOp(op), Start: first, End: last}
+	set(&db.TimeFilter{Op: timeOp(op), Start: first, End: last})
 }
 
 func timeOp(op string) string {

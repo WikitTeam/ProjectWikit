@@ -428,6 +428,71 @@ func TestParseCreatedAtEqualsIsTheOwnDay(t *testing.T) {
 	}
 }
 
+func TestParseLinkTo(t *testing.T) {
+	q := parse(t, newFakeSource(), article173(), nil, map[string]string{"link_to": "theme:black"})
+	if !q.Filter.HasLinkTo || q.Filter.LinkTo != "theme:black" {
+		t.Errorf("LinkTo = %q, want %q", q.Filter.LinkTo, "theme:black")
+	}
+}
+
+func TestParseLinkToDotIsTheOwnPage(t *testing.T) {
+	q := parse(t, newFakeSource(), article173(), nil, map[string]string{"link_to": "."})
+	if q.Filter.LinkTo != "scp:scp-173" {
+		t.Errorf("LinkTo = %q, want %q", q.Filter.LinkTo, "scp:scp-173")
+	}
+}
+
+func TestParseLinkToDotWithoutAnArticle(t *testing.T) {
+	q := parse(t, newFakeSource(), nil, nil, map[string]string{"link_to": "."})
+	if q.Filter.HasLinkTo {
+		t.Errorf("Parse(link_to=., nil article).LinkTo = %q, want it unset", q.Filter.LinkTo)
+	}
+}
+
+func TestParseUpdatedAtBounds(t *testing.T) {
+	q := parse(t, newFakeSource(), article173(), nil, map[string]string{"updated_at": ">=2021-02"})
+	got := q.Filter.UpdatedAt
+	if got == nil {
+		t.Fatal("Parse(updated_at=>=2021-02).UpdatedAt = nil, want a filter")
+	}
+	if got.Op != db.TimeGTE {
+		t.Errorf("Op = %q, want %q", got.Op, db.TimeGTE)
+	}
+	if end := got.End.Format(time.RFC3339); end != "2021-02-28T00:00:00Z" {
+		t.Errorf("End = %q, want %q", end, "2021-02-28T00:00:00Z")
+	}
+}
+
+func TestParseUpdatedAtDoesNotTouchCreatedAt(t *testing.T) {
+	q := parse(t, newFakeSource(), article173(), nil, map[string]string{"updated_at": "2021"})
+	if q.Filter.CreatedAt != nil {
+		t.Errorf("CreatedAt = %+v, want nil", q.Filter.CreatedAt)
+	}
+}
+
+func TestParseUpdatedAtEqualsIsTheOwnDay(t *testing.T) {
+	a := article173()
+	a.UpdatedAt = time.Date(2022, 3, 9, 8, 0, 0, 0, time.UTC)
+	q := parse(t, newFakeSource(), a, nil, map[string]string{"updated_at": "="})
+	got := q.Filter.UpdatedAt
+	if got == nil {
+		t.Fatal("Parse(updated_at==).UpdatedAt = nil, want a filter")
+	}
+	if start := got.Start.Format(time.RFC3339); start != "2022-03-09T00:00:00Z" {
+		t.Errorf("Start = %q, want %q", start, "2022-03-09T00:00:00Z")
+	}
+	if end := got.End.Format(time.RFC3339); end != "2022-03-09T23:59:59Z" {
+		t.Errorf("End = %q, want %q", end, "2022-03-09T23:59:59Z")
+	}
+}
+
+func TestParseOrderBySize(t *testing.T) {
+	q := parse(t, newFakeSource(), article173(), nil, map[string]string{"order": "size desc"})
+	if want := (db.Sort{Column: db.SortSize}); q.Filter.Sort != want {
+		t.Errorf("Sort = %+v, want %+v", q.Filter.Sort, want)
+	}
+}
+
 func TestParseCreatedAtThatDoesNotParse(t *testing.T) {
 	for _, in := range []string{"twenty", "2021-", "-5", "0", "10000", " >2021"} {
 		q := parse(t, newFakeSource(), article173(), nil, map[string]string{"created_at": in})

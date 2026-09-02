@@ -50,6 +50,9 @@ const (
 	SortVotes      = "votes"
 	SortPopularity = "popularity"
 	SortRandom     = "random"
+	SortSize       = "size"
+	SortRevisions  = "revisions"
+	SortComments   = "comments"
 )
 
 type Sort struct {
@@ -82,7 +85,11 @@ type ListFilter struct {
 
 	AuthorID *int64
 
+	LinkTo    string
+	HasLinkTo bool
+
 	CreatedAt *TimeFilter
+	UpdatedAt *TimeFilter
 
 	Rating     *NumFilter
 	Votes      *NumFilter
@@ -132,6 +139,16 @@ func popularityExpr(mode string) string {
 }
 
 const votesExpr = "COALESCE(v.num_votes, 0)"
+
+// The three counts are subqueries rather than joins because a join would
+// multiply the article row and SELECT DISTINCT would then have to undo it.
+const (
+	sizeExpr = "COALESCE(length((SELECT av.source FROM web_articleversion av" +
+		" WHERE av.article_id = a.id ORDER BY av.created_at DESC LIMIT 1)), 0)"
+	revisionsExpr = "(SELECT COUNT(*) FROM web_articlelogentry le WHERE le.article_id = a.id)"
+	commentsExpr  = "(SELECT COUNT(*) FROM web_forumpost p" +
+		" JOIN web_forumthread th ON th.id = p.thread_id WHERE th.article_id = a.id)"
+)
 
 const voteJoin = `
 LEFT JOIN (
@@ -196,7 +213,14 @@ func (f ListFilter) build(b *listBuilder) string {
 		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_article_authors au"+
 			" WHERE au.article_id = a.id AND au.user_id = "+b.arg(*f.AuthorID)+")")
 	}
-	f.buildCreatedAt(b)
+	if f.HasLinkTo {
+		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_externallink l"+
+			" WHERE l.link_type = 'link'"+
+			" AND lower("+completeFrom+") = lower(a.complete_full_name)"+
+			" AND lower("+completeTo+") = "+b.arg(dumbName(f.LinkTo))+")")
+	}
+	f.buildTime(b, "a.created_at", f.CreatedAt)
+	f.buildTime(b, "a.updated_at", f.UpdatedAt)
 	f.buildNumbers(b)
 
 	sql := "FROM web_article a" + voteJoin
@@ -231,24 +255,23 @@ func (f ListFilter) buildTags(b *listBuilder) {
 	}
 }
 
-func (f ListFilter) buildCreatedAt(b *listBuilder) {
-	c := f.CreatedAt
+func (f ListFilter) buildTime(b *listBuilder, column string, c *TimeFilter) {
 	if c == nil {
 		return
 	}
 	switch c.Op {
 	case TimeRange:
-		b.where = append(b.where, "a.created_at >= "+b.arg(c.Start)+" AND a.created_at <= "+b.arg(c.End))
+		b.where = append(b.where, column+" >= "+b.arg(c.Start)+" AND "+column+" <= "+b.arg(c.End))
 	case TimeExcludeRange:
-		b.where = append(b.where, "(a.created_at < "+b.arg(c.Start)+" OR a.created_at > "+b.arg(c.End)+")")
+		b.where = append(b.where, "("+column+" < "+b.arg(c.Start)+" OR "+column+" > "+b.arg(c.End)+")")
 	case TimeLT:
-		b.where = append(b.where, "a.created_at < "+b.arg(c.Start))
+		b.where = append(b.where, column+" < "+b.arg(c.Start))
 	case TimeLTE:
-		b.where = append(b.where, "a.created_at <= "+b.arg(c.Start))
+		b.where = append(b.where, column+" <= "+b.arg(c.Start))
 	case TimeGT:
-		b.where = append(b.where, "a.created_at > "+b.arg(c.End))
+		b.where = append(b.where, column+" > "+b.arg(c.End))
 	case TimeGTE:
-		b.where = append(b.where, "a.created_at >= "+b.arg(c.End))
+		b.where = append(b.where, column+" >= "+b.arg(c.End))
 	}
 }
 
@@ -309,6 +332,12 @@ func (f ListFilter) orderBy() (expr, extra string) {
 		return "popularity" + direction, ", " + popularityExpr(f.RatingMode) + " AS popularity"
 	case SortRandom:
 		return "shuffled", ", RANDOM() AS shuffled"
+	case SortSize:
+		return "size" + direction, ", " + sizeExpr + " AS size"
+	case SortRevisions:
+		return "revisions" + direction, ", " + revisionsExpr + " AS revisions"
+	case SortComments:
+		return "comments" + direction, ", " + commentsExpr + " AS comments"
 	}
 	// A column nobody recognises falls back to the newest first, direction and
 	// all, so asking for one is not the same as asking for created_at.
