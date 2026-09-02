@@ -23,7 +23,7 @@ const (
 
 	// What a result shows is the text around the word that was searched for,
 	// not the head of the page.
-	searchExcerptPad = 60
+	searchExcerptPad = 20
 	searchExcerptLen = 160
 	searchDateLayout = "2006-01-02"
 )
