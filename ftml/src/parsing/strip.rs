@@ -28,6 +28,36 @@ pub fn strip_newlines(elements: &mut Vec<Element>) {
     elements.drain(elements.len()-removed_end..);
 }
 
+// Wikidot writes the newline between two block elements out as plain whitespace, so
+// a line break element there becomes a stray <br> and, inside a grid, a stray cell.
+pub fn strip_block_newlines(elements: &mut Vec<Element>) {
+    let mut i = 0;
+    while i < elements.len() {
+        if !matches!(elements[i], Element::LineBreak) {
+            i += 1;
+            continue;
+        }
+
+        let prev_block = i > 0 && is_block(&elements[i - 1]);
+        let next_block = i + 1 < elements.len() && is_block(&elements[i + 1]);
+
+        if prev_block || next_block {
+            elements.remove(i);
+        } else {
+            i += 1;
+        }
+    }
+}
+
+// paragraph_safe() panics on a partial, which a block body still holds when it caught
+// a stray table row or cell.
+fn is_block(element: &Element) -> bool {
+    match element {
+        Element::Partial(_) => false,
+        _ => !element.paragraph_safe(),
+    }
+}
+
 pub fn strip_whitespace(elements: &mut Vec<Element>) {
     let removed_start = elements.iter().position(|x| !x.is_whitespace()).unwrap_or(0);
     let removed_end = elements.iter().rev().position(|x| !x.is_whitespace()).unwrap_or(0);

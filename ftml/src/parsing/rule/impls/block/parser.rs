@@ -24,13 +24,14 @@ use crate::parsing::collect::{collect_text, collect_text_keep};
 use crate::parsing::condition::ParseCondition;
 use crate::parsing::consume::consume;
 use crate::parsing::rule::impls::prelude::check_step;
-use crate::parsing::strip::{strip_newlines, strip_whitespace};
+use crate::parsing::strip::{strip_block_newlines, strip_newlines, strip_whitespace};
 use crate::parsing::{
     gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
     ParseWarningKind, Parser, Token, ParseException
 };
 use crate::tree::Element;
 use regex::Regex;
+use std::borrow::Cow;
 
 lazy_static! {
     static ref ARGUMENT_KEY: Regex = Regex::new(r"[A-Za-z0-9_\-]+").unwrap();
@@ -328,6 +329,7 @@ where
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);
+                strip_block_newlines(&mut all_elements);
                 all_exceptions.push(ParseException::Warning(self.make_warn(ParseWarningKind::ManualBreak)));
                 return ok!(paragraph_safe; all_elements, all_exceptions);
             }
@@ -335,6 +337,7 @@ where
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);
+                strip_block_newlines(&mut all_elements);
                 return ok!(paragraph_safe; all_elements, all_exceptions);
             }
 
@@ -429,8 +432,14 @@ where
                     self.get_optional_space()?;
                     let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
-                    // Parse the string
-                    let mut value = parse_string(value_raw);
+                    // The newlines a value picks up by running across lines are source
+                    // layout rather than part of the value.
+                    let mut value = if value_raw.contains('\n') {
+                        let joined = value_raw.replace('\r', "").replace('\n', "");
+                        Cow::Owned(parse_string(&joined).into_owned())
+                    } else {
+                        parse_string(value_raw)
+                    };
                     self.replace_variables(value.to_mut());
                     
                     // Add to argument map
@@ -466,8 +475,9 @@ where
                     self.step()?;
                     break
                 }
+                // Wikidot lets a quoted value run across lines, so a newline does not
+                // close it.
                 Token::InputEnd => return Err(self.make_warn(kind)),
-                Token::LineBreak | Token::ParagraphBreak => return Err(self.make_warn(kind)),
                 _ => {}
             }
             self.step()?;
