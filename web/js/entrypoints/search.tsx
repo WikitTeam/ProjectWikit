@@ -2,7 +2,7 @@ import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { searchModule, SearchResultItem } from '../api/search-module'
-import { highlightWords } from '../reactive/pages/search/Search.utils'
+import { highlightWords } from '~util/highlight-words'
 import useConstCallback from '../util/const-callback'
 
 interface Props {

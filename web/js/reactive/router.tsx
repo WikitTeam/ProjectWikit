@@ -7,7 +7,6 @@ import { IConfigContext } from '~reactive/config/ConfigContext.types'
 import Messages from '~reactive/pages/messages'
 import Notifications from '~reactive/pages/notifications'
 import Profile from '~reactive/pages/profile'
-import Search from '~reactive/pages/search'
 import { Paths } from '~reactive/paths'
 import { SYSTEM_THEME } from '~reactive/theme/Theme.consts'
 
@@ -30,7 +29,6 @@ export default function ReactivePage() {
               <Route path={`${Paths.notifications}/*`} element={<Notifications />} />
               <Route path={Paths.messages} element={<Messages />} />
               <Route path={`${Paths.messages}/:user_id`} element={<Messages />} />
-              <Route path={Paths.search} element={<Search />} />
             </Routes>
           </BrowserRouter>
         </ThemeProvider>

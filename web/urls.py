@@ -25,7 +25,7 @@ from django.contrib import admin
 from .views import profile, signup, login, tickets, updates as updates_views
 from .views.theme import SiteThemeFileView
 
-from web.views.api import articles, preview, module, files, notifications, users, search, messages as api_messages, reports as api_reports
+from web.views.api import articles, preview, module, files, notifications, users, messages as api_messages, reports as api_reports
 from web.views.article import ArticleView
 from web.views.reactive import reactive_view
 
@@ -74,8 +74,6 @@ api_patterns = [
     path('messages/report', api_reports.SubmitReportView.as_view()),
     path('users/<int:user_id>/block', api_messages.BlockUserView.as_view()),
     path('admin/reports/<int:report_id>/full-conversation', api_reports.AdminReportFullConversationView.as_view()),
-
-    path('search', search.SearchView.as_view())
 ]
 
 
@@ -84,7 +82,6 @@ reactive_pages = [
     'profile',
     'notifications/all',
     'notifications/unread',
-    'search',
     'messages',
     'messages/<int:user_id>',
 ]
