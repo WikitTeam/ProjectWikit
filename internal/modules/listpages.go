@@ -53,13 +53,7 @@ func renderListPages(env module.Env, params map[string]string, body string) (str
 		}
 	}
 
-	// The legacy spelling is copied into the parameters rather than read
-	// alongside them, so the frontend gets back what the query actually used.
-	if _, ok := params["created_at"]; !ok {
-		if legacy, ok := params["date"]; ok {
-			params["created_at"] = legacy
-		}
-	}
+	retireLegacyParams(params)
 
 	query, err := listpages.Parse(env.Data, pc.Article, env.User, params, pc.PathParams)
 	if err != nil {
@@ -76,7 +70,8 @@ func renderListPages(env module.Env, params map[string]string, body string) (str
 	}
 
 	common := pc.CloneWith(pc.Article, pc.Article, pc.PathParams, pc.User)
-	out, err := renderListed(env, common, listed, body, prepend, appendix, result, separate)
+	out, err := renderListed(env, common, listed, body, prepend, appendix, result, separate,
+		tagLinkPrefix(params["tagtarget"]))
 	if err != nil {
 		return "", err
 	}
@@ -88,13 +83,64 @@ func renderListPages(env module.Env, params map[string]string, body string) (str
 	return wrap(env, pc, out, result, params, body, nullParams)
 }
 
+var legacyOrder = map[string]string{
+	"datecreatedasc":  "created_at",
+	"datecreateddesc": "created_at desc",
+	"dateeditedasc":   "updated_at",
+	"dateediteddesc":  "updated_at desc",
+	"titleasc":        "title",
+	"titledesc":       "title desc",
+	"ratingasc":       "rating",
+	"ratingdesc":      "rating desc",
+	"pagelengthasc":   "size",
+	"pagelengthdesc":  "size desc",
+}
+
+// The spellings Wikidot retired are rewritten in place rather than read
+// alongside the current ones, so the frontend gets back the query that ran.
+func retireLegacyParams(params map[string]string) {
+	rename(params, "date", "created_at")
+	rename(params, "categories", "category")
+	rename(params, "tag", "tags")
+
+	if _, taken := params["range"]; !taken {
+		if skip := module.BoolParam(params, "skipcurrent", false); skip {
+			params["range"] = "others"
+		}
+	}
+	if order, ok := params["order"]; ok {
+		if current, ok := legacyOrder[strings.ToLower(strings.TrimSpace(order))]; ok {
+			params["order"] = current
+		}
+	}
+}
+
+func rename(params map[string]string, from, to string) {
+	if _, taken := params[to]; taken {
+		return
+	}
+	if value, ok := params[from]; ok {
+		params[to] = value
+	}
+}
+
+func tagLinkPrefix(target string) string {
+	target = strings.Trim(strings.TrimSpace(target), "/")
+	if target == "" {
+		return ""
+	}
+	return "/" + target + "/tag/"
+}
+
 func renderListed(env module.Env, common *page.Context, listed []db.Article,
-	body, prepend, appendix string, result listpages.Result, separate bool) (string, error) {
+	body, prepend, appendix string, result listpages.Result, separate bool,
+	tagPrefix string) (string, error) {
 
 	index := result.PageIndex
 	next := func(a *db.Article) string {
 		index++
 		vars := page.NewVars(a, env.User, env.Vars, env.Loc)
+		vars.SetTagPrefix(tagPrefix)
 		return page.PageVars(body, vars, index, result.Total)
 	}
 

@@ -68,7 +68,94 @@ func (nopVars) ArticleByID(int64) (*db.Article, error)    { return nil, db.ErrNo
 
 func (nopVars) CategoryForm(string) (*form.Definition, error) { return nil, nil }
 
+func TestTagLinkPrefix(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"", ""},
+		{"  ", ""},
+		{"pagename", "/pagename/tag/"},
+		{"/pagename/", "/pagename/tag/"},
+		{"system:page-tags", "/system:page-tags/tag/"},
+	}
+	for _, tt := range tests {
+		if got := tagLinkPrefix(tt.in); got != tt.want {
+			t.Errorf("tagLinkPrefix(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
+func TestRetireLegacyParamsRenames(t *testing.T) {
+	tests := []struct{ from, to, value string }{
+		{"date", "created_at", "2021"},
+		{"categories", "category", "scp"},
+		{"tag", "tags", "hub"},
+	}
+	for _, tt := range tests {
+		params := map[string]string{tt.from: tt.value}
+		retireLegacyParams(params)
+		if got := params[tt.to]; got != tt.value {
+			t.Errorf("retireLegacyParams(%s).%s = %q, want %q", tt.from, tt.to, got, tt.value)
+		}
+	}
+}
+
+func TestRetireLegacyParamsKeepsTheCurrentSpelling(t *testing.T) {
+	params := map[string]string{"date": "2021", "created_at": "2020"}
+	retireLegacyParams(params)
+	if got := params["created_at"]; got != "2020" {
+		t.Errorf("created_at = %q, want %q", got, "2020")
+	}
+}
+
+func TestRetireLegacyParamsSkipCurrent(t *testing.T) {
+	params := map[string]string{"skipcurrent": "yes"}
+	retireLegacyParams(params)
+	if got := params["range"]; got != "others" {
+		t.Errorf("range = %q, want %q", got, "others")
+	}
+}
+
+func TestRetireLegacyParamsSkipCurrentNo(t *testing.T) {
+	params := map[string]string{"skipcurrent": "no"}
+	retireLegacyParams(params)
+	if got, ok := params["range"]; ok {
+		t.Errorf("range = %q, want it unset", got)
+	}
+}
+
+func TestRetireLegacyParamsOrder(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"dateCreatedAsc", "created_at"},
+		{"dateCreatedDesc", "created_at desc"},
+		{"dateEditedAsc", "updated_at"},
+		{"dateEditedDesc", "updated_at desc"},
+		{"titleAsc", "title"},
+		{"titleDesc", "title desc"},
+		{"ratingAsc", "rating"},
+		{"ratingDesc", "rating desc"},
+		{"pageLengthAsc", "size"},
+		{"pageLengthDesc", "size desc"},
+		{"created_at desc", "created_at desc"},
+	}
+	for _, tt := range tests {
+		params := map[string]string{"order": tt.in}
+		retireLegacyParams(params)
+		if got := params["order"]; got != tt.want {
+			t.Errorf("retireLegacyParams(order=%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
 func (nopVars) SiteName() string { return "" }
+
+func (nopVars) SiteTitle() string { return "" }
+
+func (nopVars) SiteDomain() string { return "" }
+
+func (nopVars) ChildCount(int64) (int, error) { return 0, nil }
+
+func (nopVars) CommentCount(int64) (int, error) { return 0, nil }
+
+func (nopVars) LastComment(int64) (*page.Comment, error) { return nil, nil }
 
 func listedArticles(names ...string) []db.Article {
 	out := make([]db.Article, len(names))
