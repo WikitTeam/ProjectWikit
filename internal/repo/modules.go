@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -22,14 +23,18 @@ func (m moduleData) TagArticles(categorySlug, name string, hidden []string) ([]d
 	return m.repo.db.ArticlesByTag(m.repo.ctx, categorySlug, name, hidden)
 }
 
+func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
+	return HiddenCategories(m.repo.ctx, m.repo.db, user)
+}
+
 // HiddenCategories asks the same question once per category, the way the page
 // list does. There is no query for it because permissions are resolved in Go.
-func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
-	names, err := m.repo.db.CategoryNames(m.repo.ctx)
+func HiddenCategories(ctx context.Context, d *db.DB, user *db.User) ([]string, error) {
+	names, err := d.CategoryNames(ctx)
 	if err != nil {
 		return nil, err
 	}
-	resolver := NewPerms(m.repo.ctx, m.repo.db)
+	resolver := NewPerms(ctx, d)
 	subject, err := resolver.Subject(user, time.Now())
 	if err != nil {
 		return nil, err
