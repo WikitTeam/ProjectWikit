@@ -313,14 +313,18 @@ func (m moduleData) ArticleObject(article *db.Article, viewer *db.User) (*perms.
 }
 
 func (m moduleData) UserJSON(u *db.User) (wikijson.Object, error) {
+	return UserJSON(m.repo.ctx, m.repo.db, u)
+}
+
+func UserJSON(ctx context.Context, d *db.DB, u *db.User) (wikijson.Object, error) {
 	if u == nil {
 		return pageconfig.SystemUserJSON().Object(), nil
 	}
-	userRoles, err := m.repo.db.RolesByUser(m.repo.ctx, u.ID)
+	userRoles, err := d.RolesByUser(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}
-	subject, err := NewPerms(m.repo.ctx, m.repo.db).Subject(u, time.Now())
+	subject, err := NewPerms(ctx, d).Subject(u, time.Now())
 	if err != nil {
 		return nil, err
 	}
