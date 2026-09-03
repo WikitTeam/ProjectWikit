@@ -1,13 +1,12 @@
 package modules
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
 
+	"github.com/WikitTeam/ProjectWikit/internal/changelog"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/listpages"
@@ -30,20 +29,9 @@ var siteChangeTypes = []string{
 	"authorship", "wikidot", "revert",
 }
 
-var siteChangeFlags = map[string]string{
-	"source": "S", "title": "T", "name": "R", "tags": "A", "new": "N",
-	"parent": "M", "file_added": "F", "file_deleted": "F", "file_renamed": "F",
-	"votes_deleted": "V", "authorship": "C", "wikidot": "W",
-}
-
-type siteChangeFlag struct {
-	id   string
-	desc string
-}
-
 type siteChangeRow struct {
 	revNumber int
-	flags     []siteChangeFlag
+	flags     []changelog.Flag
 	comment   string
 	author    string
 	date      string
@@ -174,7 +162,7 @@ func siteChangesBuild(env module.Env, path page.PathParams, params map[string]st
 		if t == "revert" {
 			continue
 		}
-		_, desc := siteChangeTypeName(env, t)
+		_, desc := changelog.TypeName(env.Loc, t)
 		view.types = append(view.types, siteChangesOption{
 			name: desc, id: t, selected: slices.Contains(filterTypes, t),
 		})
@@ -253,21 +241,18 @@ func siteChangeUserFilter(env module.Env, filter *db.SiteChangeFilter, userName 
 	return nil
 }
 
-func siteChangeTypeName(env module.Env, t string) (string, string) {
-	flag, ok := siteChangeFlags[t]
-	if !ok {
-		return "?", "?"
-	}
-	return flag, env.Text("module-sitechanges-type-" + strings.ReplaceAll(t, "_", "-"))
-}
-
 func siteChangeRowOf(env module.Env, change db.SiteChange) (siteChangeRow, error) {
-	meta, err := siteChangeMetaOf(change.Meta)
+	entry, err := changelog.Of(env.Loc, env.Data.UsersByIDs, change)
+	if errors.Is(err, changelog.ErrUnreadable) {
+		return siteChangeRow{}, errSiteChange
+	}
 	if err != nil {
 		return siteChangeRow{}, err
 	}
 
 	row := siteChangeRow{
+		flags:     entry.Flags,
+		comment:   entry.Comment,
 		revNumber: change.RevNumber,
 		date:      renderDate(env, change.CreatedAt),
 		title:     change.ArticleTitle,
@@ -278,330 +263,10 @@ func siteChangeRowOf(env module.Env, change db.SiteChange) (siteChangeRow, error
 		row.url = "/" + change.ArticleCategory + ":" + change.ArticleName
 	}
 
-	if raw, ok := meta["subtypes"]; ok {
-		var subtypes []string
-		if err := json.Unmarshal(raw, &subtypes); err != nil {
-			return siteChangeRow{}, errSiteChange
-		}
-		for _, subtype := range subtypes {
-			id, desc := siteChangeTypeName(env, subtype)
-			row.flags = append(row.flags, siteChangeFlag{id: id, desc: desc})
-		}
-	} else {
-		id, desc := siteChangeTypeName(env, change.Type)
-		row.flags = append(row.flags, siteChangeFlag{id: id, desc: desc})
-	}
-
-	if row.comment, err = siteChangeComment(env, change, meta); err != nil {
-		return siteChangeRow{}, err
-	}
 	if row.author, err = env.Data.RenderUserByID(change.UserID); err != nil {
 		return siteChangeRow{}, err
 	}
 	return row, nil
-}
-
-func siteChangeComment(env module.Env, change db.SiteChange, meta siteChangeMeta) (string, error) {
-	if strings.TrimSpace(change.Comment) != "" {
-		return change.Comment, nil
-	}
-
-	switch change.Type {
-	case "new":
-		return env.Text("module-sitechanges-comment-new"), nil
-	case "title":
-		prev, title, err := meta.two("prev_title", "title")
-		if err != nil {
-			return "", err
-		}
-		return env.Text("module-sitechanges-comment-title", "prev", prev, "title", title), nil
-	case "name":
-		prev, name, err := meta.two("prev_name", "name")
-		if err != nil {
-			return "", err
-		}
-		return env.Text("module-sitechanges-comment-name", "prev", prev, "name", name), nil
-	case "tags":
-		return siteChangeTagComment(env, meta)
-	case "parent":
-		return siteChangeParentComment(env, meta)
-	case "file_added":
-		name, err := meta.str("name")
-		if err != nil {
-			return "", err
-		}
-		return env.Text("module-sitechanges-comment-file-added", "name", name), nil
-	case "file_deleted":
-		name, err := meta.str("name")
-		if err != nil {
-			return "", err
-		}
-		return env.Text("module-sitechanges-comment-file-deleted", "name", name), nil
-	case "file_renamed":
-		prev, name, err := meta.two("prev_name", "name")
-		if err != nil {
-			return "", err
-		}
-		return env.Text("module-sitechanges-comment-file-renamed", "prev", prev, "name", name), nil
-	case "votes_deleted":
-		return siteChangeVotesComment(env, meta)
-	case "authorship":
-		return siteChangeAuthorComment(env, meta)
-	case "revert":
-		rev, err := meta.str("rev_number")
-		if err != nil {
-			return "", err
-		}
-		return env.Text("module-sitechanges-comment-revert", "rev", rev), nil
-	}
-	return "", nil
-}
-
-func siteChangeTagComment(env module.Env, meta siteChangeMeta) (string, error) {
-	added, err := meta.names("added_tags")
-	if err != nil {
-		return "", err
-	}
-	removed, err := meta.names("removed_tags")
-	if err != nil {
-		return "", err
-	}
-
-	var parts []string
-	if len(added) > 0 {
-		parts = append(parts, env.Text("module-sitechanges-comment-tags-added",
-			"tags", strings.Join(added, ", ")))
-	}
-	if len(removed) > 0 {
-		parts = append(parts, env.Text("module-sitechanges-comment-tags-removed",
-			"tags", strings.Join(removed, ", ")))
-	}
-	return strings.Join(parts, " "), nil
-}
-
-func siteChangeParentComment(env module.Env, meta siteChangeMeta) (string, error) {
-	prev, parent, err := meta.two("prev_parent", "parent")
-	if err != nil {
-		return "", err
-	}
-	switch {
-	case meta.truthy("prev_parent") && meta.truthy("parent"):
-		return env.Text("module-sitechanges-comment-parent-changed", "prev", prev, "parent", parent), nil
-	case meta.truthy("prev_parent"):
-		return env.Text("module-sitechanges-comment-parent-removed", "prev", prev), nil
-	case meta.truthy("parent"):
-		return env.Text("module-sitechanges-comment-parent-set", "parent", parent), nil
-	}
-	return "", nil
-}
-
-func siteChangeVotesComment(env module.Env, meta siteChangeMeta) (string, error) {
-	mode, err := meta.str("rating_mode")
-	if err != nil {
-		return "", err
-	}
-	votes, err := meta.str("votes_count")
-	if err != nil {
-		return "", err
-	}
-	popularity, err := meta.str("popularity")
-	if err != nil {
-		return "", err
-	}
-
-	rating := env.Text("module-sitechanges-comment-votes-none")
-	switch mode {
-	case "updown":
-		n, err := meta.integer("rating")
-		if err != nil {
-			return "", err
-		}
-		rating = fmt.Sprintf("%+d", n)
-	case "stars":
-		f, err := meta.float("rating")
-		if err != nil {
-			return "", err
-		}
-		rating = strconv.FormatFloat(f, 'f', 1, 64)
-	}
-	return env.Text("module-sitechanges-comment-votes",
-		"rating", rating, "votes", votes, "popularity", popularity), nil
-}
-
-func siteChangeAuthorComment(env module.Env, meta siteChangeMeta) (string, error) {
-	label := func(key string) (string, error) {
-		ids, err := meta.ids(key)
-		if err != nil {
-			return "", err
-		}
-		users, err := env.Data.UsersByIDs(ids)
-		if err != nil {
-			return "", err
-		}
-		names := make([]string, 0, len(users))
-		for i := range users {
-			names = append(names, users[i].DisplayLabel())
-		}
-		return strings.Join(names, ", "), nil
-	}
-
-	added, err := label("added_authors")
-	if err != nil {
-		return "", err
-	}
-	removed, err := label("removed_authors")
-	if err != nil {
-		return "", err
-	}
-
-	var parts []string
-	if added != "" {
-		parts = append(parts, env.Text("module-sitechanges-comment-authors-added", "names", added))
-	}
-	if removed != "" {
-		parts = append(parts, env.Text("module-sitechanges-comment-authors-removed", "names", removed))
-	}
-	return strings.Join(parts, " "), nil
-}
-
-type siteChangeMeta map[string]json.RawMessage
-
-func siteChangeMetaOf(raw []byte) (siteChangeMeta, error) {
-	if len(raw) == 0 {
-		return siteChangeMeta{}, nil
-	}
-	var meta siteChangeMeta
-	if err := json.Unmarshal(raw, &meta); err != nil {
-		return nil, errSiteChange
-	}
-	return meta, nil
-}
-
-func (m siteChangeMeta) str(key string) (string, error) {
-	raw, ok := m[key]
-	if !ok {
-		return "", errSiteChange
-	}
-	return metaText(raw), nil
-}
-
-func (m siteChangeMeta) two(first, second string) (string, string, error) {
-	a, err := m.str(first)
-	if err != nil {
-		return "", "", err
-	}
-	b, err := m.str(second)
-	if err != nil {
-		return "", "", err
-	}
-	return a, b, nil
-}
-
-func (m siteChangeMeta) truthy(key string) bool {
-	switch text := strings.TrimSpace(string(m[key])); text {
-	case "", "null", "false", "0", "0.0", `""`, "[]", "{}":
-		return false
-	}
-	return true
-}
-
-func (m siteChangeMeta) names(key string) ([]string, error) {
-	raw, ok := m[key]
-	if !ok {
-		return nil, nil
-	}
-	var items []map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &items); err != nil {
-		return nil, errSiteChange
-	}
-	out := make([]string, 0, len(items))
-	for _, item := range items {
-		name, ok := item["name"]
-		if !ok {
-			return nil, errSiteChange
-		}
-		out = append(out, metaText(name))
-	}
-	return out, nil
-}
-
-func (m siteChangeMeta) ids(key string) ([]int64, error) {
-	raw, ok := m[key]
-	if !ok {
-		return nil, nil
-	}
-	var ids []int64
-	if err := json.Unmarshal(raw, &ids); err != nil {
-		return nil, errSiteChange
-	}
-	return ids, nil
-}
-
-func (m siteChangeMeta) integer(key string) (int, error) {
-	raw, ok := m[key]
-	if !ok {
-		return 0, errSiteChange
-	}
-	if quoted, ok := unquoteJSON(raw); ok {
-		n, err := wikinum.Int(quoted)
-		if err != nil {
-			return 0, errSiteChange
-		}
-		return n, nil
-	}
-	f, err := strconv.ParseFloat(strings.TrimSpace(string(raw)), 64)
-	if err != nil {
-		return 0, errSiteChange
-	}
-	return int(f), nil
-}
-
-func (m siteChangeMeta) float(key string) (float64, error) {
-	raw, ok := m[key]
-	if !ok {
-		return 0, errSiteChange
-	}
-	if quoted, ok := unquoteJSON(raw); ok {
-		f, err := wikinum.Float(quoted)
-		if err != nil {
-			return 0, errSiteChange
-		}
-		return f, nil
-	}
-	f, err := strconv.ParseFloat(strings.TrimSpace(string(raw)), 64)
-	if err != nil {
-		return 0, errSiteChange
-	}
-	return f, nil
-}
-
-func unquoteJSON(raw json.RawMessage) (string, bool) {
-	if !strings.HasPrefix(strings.TrimSpace(string(raw)), `"`) {
-		return "", false
-	}
-	var out string
-	if err := json.Unmarshal(raw, &out); err != nil {
-		return "", false
-	}
-	return out, true
-}
-
-// The comment lines interpolate whatever the log entry stored, so a value that
-// is not a string still has to come out as text.
-func metaText(raw json.RawMessage) string {
-	text := strings.TrimSpace(string(raw))
-	switch text {
-	case "null":
-		return "None"
-	case "true":
-		return "True"
-	case "false":
-		return "False"
-	}
-	if unquoted, ok := unquoteJSON(raw); ok {
-		return unquoted
-	}
-	return text
 }
 
 func siteChangesHTML(env module.Env, v siteChangesView) string {
@@ -715,8 +380,8 @@ func siteChangesHTML(env module.Env, v siteChangesView) string {
 			"\n" + ind24 + `<td class="flags">` +
 			"\n" + ind28)
 		for _, flag := range row.flags {
-			b.WriteString(`<span class="spantip" title="` + escape.HTML(flag.desc) + `">` +
-				escape.HTML(flag.id) + `</span>`)
+			b.WriteString(`<span class="spantip" title="` + escape.HTML(flag.Desc) + `">` +
+				escape.HTML(flag.ID) + `</span>`)
 		}
 		b.WriteString("\n" + ind24 + `</td>` +
 			"\n" + ind24 + `<td class="mod-date">` +
