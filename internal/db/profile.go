@@ -56,6 +56,20 @@ func (d *DB) profile(ctx context.Context, query string, arg any) (*Profile, erro
 	return &p, nil
 }
 
+// A nil avatar leaves the stored one alone, so saving the form without picking
+// a file does not wipe the picture.
+var qUpdateProfile = register("UpdateProfile", `
+UPDATE web_user
+SET first_name = $2, last_name = $3, bio = $4, avatar = COALESCE($5, avatar)
+WHERE id = $1`)
+
+func (d *DB) UpdateProfile(ctx context.Context, id int64, firstName, lastName, bio string, avatar *string) error {
+	if _, err := d.pool.Exec(ctx, qUpdateProfile, id, firstName, lastName, bio, avatar); err != nil {
+		return fmt.Errorf("update profile %d: %w", id, err)
+	}
+	return nil
+}
+
 var qDirectMessageBlocked = register("DirectMessageBlocked", `
 SELECT EXISTS (SELECT 1 FROM web_directmessageblock
                WHERE blocker_id = $1 AND blocked_id = $2)`)
