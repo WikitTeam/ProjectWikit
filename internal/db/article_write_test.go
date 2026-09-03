@@ -176,3 +176,112 @@ func TestCreateArticleVersionTouchesTheArticle(t *testing.T) {
 		t.Errorf("article updated_at = %v, want %v", updated, at)
 	}
 }
+
+func linkSet(t *testing.T, d *DB, from string) map[string]bool {
+	t.Helper()
+	rows, err := d.pool.Query(context.Background(), `
+SELECT link_type, link_to FROM web_externallink WHERE link_from = $1`, from)
+	if err != nil {
+		t.Fatalf("read links err = %v, want nil", err)
+	}
+	defer rows.Close()
+
+	out := map[string]bool{}
+	for rows.Next() {
+		var kind, to string
+		if err := rows.Scan(&kind, &to); err != nil {
+			t.Fatalf("scan link err = %v, want nil", err)
+		}
+		out[kind+" "+to] = true
+	}
+	return out
+}
+
+func scratchLinkOwner(t *testing.T, d *DB) string {
+	t.Helper()
+	from := "probe-links-" + time.Now().Format("20060102150405.000000")
+	t.Cleanup(func() {
+		if _, err := d.pool.Exec(context.Background(),
+			`DELETE FROM web_externallink WHERE link_from = $1`, from); err != nil {
+			t.Errorf("clean up links err = %v, want nil", err)
+		}
+	})
+	return from
+}
+
+func TestReplaceArticleLinksWritesBothKinds(t *testing.T) {
+	d := writeTestDB(t)
+	from := scratchLinkOwner(t, d)
+
+	err := d.ReplaceArticleLinks(context.Background(), from, []ArticleLink{
+		{To: "component:box", Kind: LinkInclude},
+		{To: "scp-173", Kind: LinkPlain},
+	})
+	if err != nil {
+		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
+	}
+
+	got := linkSet(t, d, from)
+	for _, want := range []string{"include component:box", "link scp-173"} {
+		if !got[want] {
+			t.Errorf("links of %q missing %q, got %v", from, want, got)
+		}
+	}
+	if len(got) != 2 {
+		t.Errorf("len(links) = %d, want 2", len(got))
+	}
+}
+
+func TestReplaceArticleLinksDropsWhatIsGone(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	from := scratchLinkOwner(t, d)
+
+	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "old", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks(first) err = %v, want nil", err)
+	}
+	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "new", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks(second) err = %v, want nil", err)
+	}
+
+	got := linkSet(t, d, from)
+	if got["link old"] {
+		t.Errorf("links of %q still carry the dropped one, got %v", from, got)
+	}
+	if !got["link new"] {
+		t.Errorf("links of %q missing %q, got %v", from, "link new", got)
+	}
+}
+
+func TestReplaceArticleLinksCollapsesRepeats(t *testing.T) {
+	d := writeTestDB(t)
+	from := scratchLinkOwner(t, d)
+
+	err := d.ReplaceArticleLinks(context.Background(), from, []ArticleLink{
+		{To: "component:box", Kind: LinkInclude},
+		{To: "component:box", Kind: LinkInclude},
+		{To: "component:box", Kind: LinkPlain},
+	})
+	if err != nil {
+		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
+	}
+	if got := linkSet(t, d, from); len(got) != 2 {
+		t.Errorf("len(links) = %d, want 2, got %v", len(got), got)
+	}
+}
+
+func TestReplaceArticleLinksEmptiesTheSet(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	from := scratchLinkOwner(t, d)
+
+	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "old", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks(first) err = %v, want nil", err)
+	}
+	if err := d.ReplaceArticleLinks(ctx, from, nil); err != nil {
+		t.Fatalf("ReplaceArticleLinks(none) err = %v, want nil", err)
+	}
+	if got := linkSet(t, d, from); len(got) != 0 {
+		t.Errorf("len(links) = %d, want 0, got %v", len(got), got)
+	}
+}

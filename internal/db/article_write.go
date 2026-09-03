@@ -80,3 +80,48 @@ func versionMeta(versionID int64, w VersionWrite) (string, error) {
 	}
 	return string(encoded), nil
 }
+
+type ArticleLink struct {
+	To   string
+	Kind string
+}
+
+var (
+	qDropArticleLinks = register("DropArticleLinks", `
+DELETE FROM web_externallink WHERE link_from = $1`)
+
+	qInsertArticleLinks = register("InsertArticleLinks", `
+INSERT INTO web_externallink (link_from, link_type, link_to)
+SELECT $1, kind, target
+FROM unnest($2::text[], $3::text[]) AS t(kind, target)
+ON CONFLICT DO NOTHING`)
+)
+
+// The whole set is replaced under one transaction, so nobody reads a page as
+// having no links at all while it is being saved.
+func (d *DB) ReplaceArticleLinks(ctx context.Context, from string, links []ArticleLink) error {
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin links of %q: %w", from, err)
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, qDropArticleLinks, from); err != nil {
+		return fmt.Errorf("drop links of %q: %w", from, err)
+	}
+	if len(links) > 0 {
+		kinds := make([]string, 0, len(links))
+		targets := make([]string, 0, len(links))
+		for _, link := range links {
+			kinds = append(kinds, link.Kind)
+			targets = append(targets, link.To)
+		}
+		if _, err := tx.Exec(ctx, qInsertArticleLinks, from, kinds, targets); err != nil {
+			return fmt.Errorf("write links of %q: %w", from, err)
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit links of %q: %w", from, err)
+	}
+	return nil
+}
