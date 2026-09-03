@@ -79,7 +79,6 @@ api_patterns = [
 
 reactive_pages = [
     'notifications',
-    'profile',
     'notifications/all',
     'notifications/unread',
     'messages',
