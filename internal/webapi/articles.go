@@ -43,12 +43,17 @@ func NewArticles(d Deps, upstream http.Handler) *Articles {
 // Only the tails listed here are answered. A page's own URL still belongs to
 // the upstream, which is where saving lives.
 func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	if r.URL.Path == CreatePath && r.Method == http.MethodPost {
+		h.create(w, r, loc)
+		return
+	}
+
 	name, tail, found := cutLast(strings.TrimPrefix(r.URL.Path, ArticlesPrefix))
 	if !found || name == "" {
 		h.upstream.ServeHTTP(w, r)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
 
 	switch {
 	case tail == tailLinks && r.Method == http.MethodGet:
