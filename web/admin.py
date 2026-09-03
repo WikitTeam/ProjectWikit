@@ -209,7 +209,7 @@ class SiteAdmin(SingletonModelAdmin):
             'fields': ('slug', 'title', 'headline', 'domain', 'media_domain', 'home_page', 'active_theme')
         }),
         ('外观', {
-            'fields': ('icon', 'auth_icon', 'footer_license')
+            'fields': ('icon', 'auth_icon', 'footer_license', 'system_theme')
         }),
         ('注册与入组', {
             'fields': ('signup_notice', 'default_role', 'verified_role',
