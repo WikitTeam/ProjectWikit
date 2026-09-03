@@ -52,7 +52,12 @@ const (
 	HeaderName = "X-CSRFToken"
 	FormField  = "csrfmiddlewaretoken"
 
-	formMime = "application/x-www-form-urlencoded"
+	formMime      = "application/x-www-form-urlencoded"
+	multipartMime = "multipart/form-data"
+
+	// Big enough for the token, which is all this reads. How much of a file
+	// stays in memory is the handler's own parse to decide.
+	tokenMemory = 1 << 16
 )
 
 var (
@@ -88,14 +93,22 @@ func Verify(r *http.Request, hosts []string) error {
 }
 
 // A body that is not a form is left unread, since the handler still has to read
-// it and a form parse would take it away.
+// it and a form parse would take it away. A form's parsed values stay on the
+// request, so parsing one here costs the handler nothing.
 func sentToken(r *http.Request) string {
 	kind, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	if err == nil && kind == formMime {
-		if err := r.ParseForm(); err == nil {
-			if token := r.PostFormValue(FormField); token != "" {
-				return token
-			}
+	var parsed bool
+	if err == nil {
+		switch kind {
+		case formMime:
+			parsed = r.ParseForm() == nil
+		case multipartMime:
+			parsed = r.ParseMultipartForm(tokenMemory) == nil
+		}
+	}
+	if parsed {
+		if token := r.PostFormValue(FormField); token != "" {
+			return token
 		}
 	}
 	return r.Header.Get(HeaderName)
