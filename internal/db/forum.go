@@ -578,3 +578,68 @@ func (d *DB) RecentPosts(ctx context.Context, categoryIDs []int64, comments bool
 	}
 	return out, rows.Err()
 }
+
+type UserPost struct {
+	ID        int64
+	Name      string
+	CreatedAt time.Time
+
+	ThreadID         int64
+	ThreadName       string
+	ThreadCategoryID *int64
+
+	ArticleTitle    *string
+	ArticleName     *string
+	ArticleCategory *string
+}
+
+// The same visibility rule the recent-post listing uses, so one reader never
+// sees a post on the profile that the forum would have kept from them.
+var qUserPosts = register("UserPosts", `
+SELECT p.id, p.name, p.created_at,
+       t.id, t.name, t.category_id,
+       a.title, a.name, a.category
+FROM web_forumpost p
+JOIN web_forumthread t ON t.id = p.thread_id
+LEFT JOIN web_article a ON a.id = t.article_id
+WHERE p.author_id = $1
+  AND (t.category_id = ANY($2) OR ($3::boolean AND t.article_id IS NOT NULL))
+ORDER BY p.created_at DESC
+OFFSET $4 LIMIT $5`)
+
+var qUserPostCount = register("UserPostCount", `
+SELECT count(*)
+FROM web_forumpost p
+JOIN web_forumthread t ON t.id = p.thread_id
+WHERE p.author_id = $1
+  AND (t.category_id = ANY($2) OR ($3::boolean AND t.article_id IS NOT NULL))`)
+
+func (d *DB) UserPostCount(ctx context.Context, authorID int64, categoryIDs []int64, comments bool) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qUserPostCount, authorID, categoryIDs, comments).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count posts of user %d: %w", authorID, err)
+	}
+	return n, nil
+}
+
+func (d *DB) UserPosts(ctx context.Context, authorID int64, categoryIDs []int64,
+	comments bool, offset, limit int) ([]UserPost, error) {
+
+	rows, err := d.pool.Query(ctx, qUserPosts, authorID, categoryIDs, comments, offset, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query posts of user %d: %w", authorID, err)
+	}
+	defer rows.Close()
+
+	var out []UserPost
+	for rows.Next() {
+		var p UserPost
+		if err := rows.Scan(&p.ID, &p.Name, &p.CreatedAt,
+			&p.ThreadID, &p.ThreadName, &p.ThreadCategoryID,
+			&p.ArticleTitle, &p.ArticleName, &p.ArticleCategory); err != nil {
+			return nil, fmt.Errorf("scan post of user %d: %w", authorID, err)
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
