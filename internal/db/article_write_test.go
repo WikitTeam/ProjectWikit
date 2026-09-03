@@ -10,9 +10,9 @@ import (
 
 func writeTestDB(t *testing.T) *DB {
 	t.Helper()
-	dsn := os.Getenv(EnvDSN)
+	dsn := os.Getenv(EnvWriteDSN)
 	if dsn == "" {
-		t.Skipf("%s not set, skipping the database test", EnvDSN)
+		t.Skipf("%s not set, skipping the write test", EnvWriteDSN)
 	}
 	conn, err := Open(context.Background(), dsn)
 	if err != nil {
@@ -66,7 +66,7 @@ func TestCreateArticleVersionNumbersFromZero(t *testing.T) {
 	}
 
 	second, err := d.CreateArticleVersion(ctx, VersionWrite{
-		ArticleID: id, Source: "two", Kind: LogSource, Comment: "fixed a typo", At: at,
+		ArticleID: id, Source: "two", Kind: LogSource, Comment: "fixed a typo", At: at.Add(time.Second),
 	})
 	if err != nil {
 		t.Fatalf("CreateArticleVersion(source) err = %v, want nil", err)
@@ -401,7 +401,8 @@ func TestSetArticleParentRecordsTheMove(t *testing.T) {
 	}
 	dropArticle(t, d, child)
 
-	rev, err := d.SetArticleParent(ctx, child, &parent, nil, `{"parent":"probe-parent"}`, at)
+	meta := `{"parent": "probe-parent", "prev_parent": null, "parent_id": null, "prev_parent_id": null}`
+	rev, err := d.SetArticleParent(ctx, child, &parent, nil, meta, at)
 	if err != nil {
 		t.Fatalf("SetArticleParent() err = %v, want nil", err)
 	}
@@ -463,5 +464,398 @@ func TestSubscribeToArticleOnlyOnce(t *testing.T) {
 	}
 	if rows != 1 {
 		t.Errorf("count(subscriptions) = %d, want 1", rows)
+	}
+}
+
+func TestUpdateArticleTitleRecordsWhatItWas(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	at := time.Now().UTC().Truncate(time.Second)
+
+	id, err := d.CreateArticle(ctx, "_default",
+		"probe-title-"+time.Now().Format("20060102150405.000000"), "Before", nil, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	rev, err := d.UpdateArticleTitle(ctx, id, "After", nil, at)
+	if err != nil {
+		t.Fatalf("UpdateArticleTitle() err = %v, want nil", err)
+	}
+	if rev != 0 {
+		t.Errorf("UpdateArticleTitle() = %d, want 0", rev)
+	}
+
+	article, err := d.ArticleByID(ctx, id)
+	if err != nil {
+		t.Fatalf("ArticleByID() err = %v, want nil", err)
+	}
+	if article.Title != "After" {
+		t.Errorf("ArticleByID().Title = %q, want %q", article.Title, "After")
+	}
+
+	var kind string
+	var raw []byte
+	if err := d.pool.QueryRow(ctx,
+		`SELECT type, meta FROM web_articlelogentry WHERE article_id = $1 AND rev_number = 0`,
+		id).Scan(&kind, &raw); err != nil {
+		t.Fatalf("read revision err = %v, want nil", err)
+	}
+	if kind != LogTitle {
+		t.Errorf("revision type = %q, want %q", kind, LogTitle)
+	}
+	var meta map[string]any
+	if err := json.Unmarshal(raw, &meta); err != nil {
+		t.Fatalf("decode meta err = %v, want nil", err)
+	}
+	if got, want := meta["prev_title"], "Before"; got != want {
+		t.Errorf("meta prev_title = %v, want %q", got, want)
+	}
+	if got, want := meta["title"], "After"; got != want {
+		t.Errorf("meta title = %v, want %q", got, want)
+	}
+}
+
+func TestSetArticleLockLeavesNoRevision(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+
+	id, err := d.CreateArticle(ctx, "_default",
+		"probe-lock-"+time.Now().Format("20060102150405.000000"), "Probe", nil, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	if err := d.SetArticleLock(ctx, id, true); err != nil {
+		t.Fatalf("SetArticleLock() err = %v, want nil", err)
+	}
+	article, err := d.ArticleByID(ctx, id)
+	if err != nil {
+		t.Fatalf("ArticleByID() err = %v, want nil", err)
+	}
+	if !article.Locked {
+		t.Error("ArticleByID().Locked = false, want true")
+	}
+
+	var revisions int
+	if err := d.pool.QueryRow(ctx,
+		`SELECT count(*) FROM web_articlelogentry WHERE article_id = $1`, id).Scan(&revisions); err != nil {
+		t.Fatalf("count revisions err = %v, want nil", err)
+	}
+	if revisions != 0 {
+		t.Errorf("count(revisions) after locking = %d, want 0", revisions)
+	}
+}
+
+func twoUsers(t *testing.T, d *DB) (int64, int64) {
+	t.Helper()
+	rows, err := d.pool.Query(context.Background(), `SELECT id FROM web_user ORDER BY id LIMIT 2`)
+	if err != nil {
+		t.Fatalf("read users err = %v, want nil", err)
+	}
+	defer rows.Close()
+
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			t.Fatalf("scan user err = %v, want nil", err)
+		}
+		ids = append(ids, id)
+	}
+	if len(ids) < 2 {
+		t.Skip("the database holds fewer than two users")
+	}
+	return ids[0], ids[1]
+}
+
+func authorsOf(t *testing.T, d *DB, id int64) []int64 {
+	t.Helper()
+	rows, err := d.pool.Query(context.Background(),
+		`SELECT user_id FROM web_article_authors WHERE article_id = $1 ORDER BY user_id`, id)
+	if err != nil {
+		t.Fatalf("read authors err = %v, want nil", err)
+	}
+	defer rows.Close()
+
+	var out []int64
+	for rows.Next() {
+		var user int64
+		if err := rows.Scan(&user); err != nil {
+			t.Fatalf("scan author err = %v, want nil", err)
+		}
+		out = append(out, user)
+	}
+	return out
+}
+
+func TestSetArticleAuthorsReplacesTheCredit(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	first, second := twoUsers(t, d)
+	at := time.Now().UTC().Truncate(time.Second)
+
+	id, err := d.CreateArticle(ctx, "_default",
+		"probe-authors-"+time.Now().Format("20060102150405.000000"), "Probe", &first, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	rev, wrote, err := d.SetArticleAuthors(ctx, id, []int64{second}, nil, at)
+	if err != nil {
+		t.Fatalf("SetArticleAuthors() err = %v, want nil", err)
+	}
+	if !wrote {
+		t.Fatal("SetArticleAuthors() wrote no revision, want one")
+	}
+	if rev != 0 {
+		t.Errorf("SetArticleAuthors() = %d, want 0", rev)
+	}
+
+	got := authorsOf(t, d, id)
+	if len(got) != 1 || got[0] != second {
+		t.Errorf("authors = %v, want [%d]", got, second)
+	}
+
+	var raw []byte
+	if err := d.pool.QueryRow(ctx,
+		`SELECT meta FROM web_articlelogentry WHERE article_id = $1 AND rev_number = 0`, id).Scan(&raw); err != nil {
+		t.Fatalf("read revision err = %v, want nil", err)
+	}
+	var meta map[string][]int64
+	if err := json.Unmarshal(raw, &meta); err != nil {
+		t.Fatalf("decode meta err = %v, want nil", err)
+	}
+	if len(meta["added_authors"]) != 1 || meta["added_authors"][0] != second {
+		t.Errorf("meta added_authors = %v, want [%d]", meta["added_authors"], second)
+	}
+	if len(meta["removed_authors"]) != 1 || meta["removed_authors"][0] != first {
+		t.Errorf("meta removed_authors = %v, want [%d]", meta["removed_authors"], first)
+	}
+}
+
+func TestSetArticleAuthorsKeepsQuietWhenNothingMoves(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	first, _ := twoUsers(t, d)
+	at := time.Now().UTC().Truncate(time.Second)
+
+	id, err := d.CreateArticle(ctx, "_default",
+		"probe-samecredit-"+time.Now().Format("20060102150405.000000"), "Probe", &first, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	_, wrote, err := d.SetArticleAuthors(ctx, id, []int64{first}, nil, at)
+	if err != nil {
+		t.Fatalf("SetArticleAuthors() err = %v, want nil", err)
+	}
+	if wrote {
+		t.Error("SetArticleAuthors() wrote a revision, want none")
+	}
+}
+
+func TestSetArticleAuthorsIgnoresAnEmptyList(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	first, _ := twoUsers(t, d)
+	at := time.Now().UTC().Truncate(time.Second)
+
+	id, err := d.CreateArticle(ctx, "_default",
+		"probe-nocredit-"+time.Now().Format("20060102150405.000000"), "Probe", &first, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	if _, wrote, err := d.SetArticleAuthors(ctx, id, nil, nil, at); err != nil || wrote {
+		t.Errorf("SetArticleAuthors(nil) = %v, %v, want false, nil", wrote, err)
+	}
+	if got := authorsOf(t, d, id); len(got) != 1 || got[0] != first {
+		t.Errorf("authors = %v, want [%d]", got, first)
+	}
+}
+
+func TestRenameArticleTakesItsLinksAlong(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	at := time.Now().UTC().Truncate(time.Second)
+	stamp := time.Now().Format("20060102150405.000000")
+	from := "probe-from-" + stamp
+	to := "probe-to-" + stamp
+
+	id, err := d.CreateArticle(ctx, "_default", from, "Probe", nil, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+	t.Cleanup(func() {
+		for _, name := range []string{from, to} {
+			if _, err := d.pool.Exec(context.Background(),
+				`DELETE FROM web_externallink WHERE link_from = $1`, name); err != nil {
+				t.Errorf("clean up links err = %v, want nil", err)
+			}
+		}
+	})
+
+	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "main", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
+	}
+
+	rev, err := d.RenameArticle(ctx, id, "_default", to, from, nil, at)
+	if err != nil {
+		t.Fatalf("RenameArticle() err = %v, want nil", err)
+	}
+	if rev != 0 {
+		t.Errorf("RenameArticle() = %d, want 0", rev)
+	}
+
+	article, err := d.ArticleByID(ctx, id)
+	if err != nil {
+		t.Fatalf("ArticleByID() err = %v, want nil", err)
+	}
+	if article.Name != to {
+		t.Errorf("ArticleByID().Name = %q, want %q", article.Name, to)
+	}
+	if got := linkSet(t, d, to); !got["link main"] {
+		t.Errorf("links of %q = %v, want them moved over", to, got)
+	}
+	if got := linkSet(t, d, from); len(got) != 0 {
+		t.Errorf("links of %q = %v, want none left", from, got)
+	}
+
+	var kind string
+	var raw []byte
+	if err := d.pool.QueryRow(ctx,
+		`SELECT type, meta FROM web_articlelogentry WHERE article_id = $1 AND rev_number = 0`,
+		id).Scan(&kind, &raw); err != nil {
+		t.Fatalf("read revision err = %v, want nil", err)
+	}
+	if kind != LogName {
+		t.Errorf("revision type = %q, want %q", kind, LogName)
+	}
+	var meta map[string]string
+	if err := json.Unmarshal(raw, &meta); err != nil {
+		t.Fatalf("decode meta err = %v, want nil", err)
+	}
+	if meta["prev_name"] != from || meta["name"] != to {
+		t.Errorf("meta = %v, want prev_name %q and name %q", meta, from, to)
+	}
+}
+
+func TestRenameArticleClearsWhatSatUnderTheNewName(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	at := time.Now().UTC().Truncate(time.Second)
+	stamp := time.Now().Format("20060102150405.000000")
+	from := "probe-old-" + stamp
+	to := "probe-new-" + stamp
+
+	id, err := d.CreateArticle(ctx, "_default", from, "Probe", nil, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+	t.Cleanup(func() {
+		for _, name := range []string{from, to} {
+			if _, err := d.pool.Exec(context.Background(),
+				`DELETE FROM web_externallink WHERE link_from = $1`, name); err != nil {
+				t.Errorf("clean up links err = %v, want nil", err)
+			}
+		}
+	})
+
+	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "kept", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks(from) err = %v, want nil", err)
+	}
+	if err := d.ReplaceArticleLinks(ctx, to, []ArticleLink{{To: "stale", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks(to) err = %v, want nil", err)
+	}
+
+	if _, err := d.RenameArticle(ctx, id, "_default", to, from, nil, at); err != nil {
+		t.Fatalf("RenameArticle() err = %v, want nil", err)
+	}
+	got := linkSet(t, d, to)
+	if got["link stale"] {
+		t.Errorf("links of %q still carry the stale one, got %v", to, got)
+	}
+	if !got["link kept"] {
+		t.Errorf("links of %q missing the moved one, got %v", to, got)
+	}
+}
+
+func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	at := time.Now().UTC().Truncate(time.Second)
+	stamp := time.Now().Format("20060102150405.000000")
+	name := "probe-doomed-" + stamp
+
+	var author int64
+	if err := d.pool.QueryRow(ctx, `SELECT id FROM web_user ORDER BY id LIMIT 1`).Scan(&author); err != nil {
+		t.Fatalf("read a user err = %v, want nil", err)
+	}
+	id, err := d.CreateArticle(ctx, "_default", name, "Probe", &author, at)
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	if _, err := d.CreateArticleVersion(ctx, VersionWrite{
+		ArticleID: id, Source: "body", Kind: LogNew, Title: "Probe", At: at,
+	}); err != nil {
+		t.Fatalf("CreateArticleVersion() err = %v, want nil", err)
+	}
+	if err := d.SubscribeToArticle(ctx, author, id); err != nil {
+		t.Fatalf("SubscribeToArticle() err = %v, want nil", err)
+	}
+	if err := d.ReplaceArticleLinks(ctx, name, []ArticleLink{{To: "main", Kind: LinkPlain}}); err != nil {
+		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
+	}
+
+	child, err := d.CreateArticle(ctx, "_default", "probe-orphan-"+stamp, "Child", nil, at)
+	if err != nil {
+		t.Fatalf("CreateArticle(child) err = %v, want nil", err)
+	}
+	dropArticle(t, d, child)
+	if _, err := d.SetArticleParent(ctx, child, &id, nil,
+		`{"parent": "x", "prev_parent": null, "parent_id": null, "prev_parent_id": null}`, at); err != nil {
+		t.Fatalf("SetArticleParent() err = %v, want nil", err)
+	}
+
+	if err := d.DeleteArticle(ctx, id, name); err != nil {
+		t.Fatalf("DeleteArticle() err = %v, want nil", err)
+	}
+
+	for _, probe := range []struct {
+		what string
+		sql  string
+	}{
+		{"article", `SELECT count(*) FROM web_article WHERE id = $1`},
+		{"versions", `SELECT count(*) FROM web_articleversion WHERE article_id = $1`},
+		{"revisions", `SELECT count(*) FROM web_articlelogentry WHERE article_id = $1`},
+		{"authors", `SELECT count(*) FROM web_article_authors WHERE article_id = $1`},
+		{"subscriptions", `SELECT count(*) FROM web_usernotificationsubscription WHERE article_id = $1`},
+	} {
+		var left int
+		if err := d.pool.QueryRow(ctx, probe.sql, id).Scan(&left); err != nil {
+			t.Fatalf("count %s err = %v, want nil", probe.what, err)
+		}
+		if left != 0 {
+			t.Errorf("count(%s) after deleting = %d, want 0", probe.what, left)
+		}
+	}
+	if got := linkSet(t, d, name); len(got) != 0 {
+		t.Errorf("links of %q after deleting = %v, want none", name, got)
+	}
+
+	orphan, err := d.ArticleByID(ctx, child)
+	if err != nil {
+		t.Fatalf("ArticleByID(child) err = %v, want nil", err)
+	}
+	if orphan.ParentID != nil {
+		t.Errorf("child ParentID after deleting the parent = %v, want nil", orphan.ParentID)
 	}
 }

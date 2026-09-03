@@ -5,13 +5,20 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 const (
 	LogNew    = "new"
 	LogSource = "source"
 	LogParent = "parent"
+	LogTitle  = "title"
+	LogName   = "name"
+
+	LogAuthorship = "authorship"
 )
 
 type Revision struct {
@@ -223,4 +230,216 @@ func (d *DB) SubscribeToArticle(ctx context.Context, userID, articleID int64) er
 		return fmt.Errorf("subscribe %d to article %d: %w", userID, articleID, err)
 	}
 	return nil
+}
+
+var (
+	qReadArticleTitle = register("ReadArticleTitle", `
+SELECT title FROM web_article WHERE id = $1 FOR UPDATE`)
+
+	qUpdateArticleTitle = register("UpdateArticleTitle", `
+UPDATE web_article SET title = $2 WHERE id = $1`)
+)
+
+// The old title is read under the same lock that replaces it, so the revision
+// cannot name a title some other writer has already moved past.
+func (d *DB) UpdateArticleTitle(ctx context.Context, articleID int64, title string,
+	userID *int64, at time.Time) (int, error) {
+
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("begin title of %d: %w", articleID, err)
+	}
+	defer tx.Rollback(ctx)
+
+	var previous string
+	if err := tx.QueryRow(ctx, qReadArticleTitle, articleID).Scan(&previous); err != nil {
+		return 0, fmt.Errorf("read title of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qUpdateArticleTitle, articleID, title); err != nil {
+		return 0, fmt.Errorf("set title of %d: %w", articleID, err)
+	}
+
+	meta, err := json.Marshal(map[string]any{"title": title, "prev_title": previous})
+	if err != nil {
+		return 0, fmt.Errorf("encode title meta of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qLockArticleLog, articleID); err != nil {
+		return 0, fmt.Errorf("lock article log %d: %w", articleID, err)
+	}
+	var revNumber int
+	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, LogTitle, string(meta), "", at).Scan(&revNumber); err != nil {
+		return 0, fmt.Errorf("write revision of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qTouchArticle, articleID, at); err != nil {
+		return 0, fmt.Errorf("touch article %d: %w", articleID, err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("commit title of %d: %w", articleID, err)
+	}
+	return revNumber, nil
+}
+
+// Locking leaves no revision behind, so the page history says nothing about it.
+var qSetArticleLock = register("SetArticleLock", `
+UPDATE web_article SET locked = $2 WHERE id = $1`)
+
+func (d *DB) SetArticleLock(ctx context.Context, articleID int64, locked bool) error {
+	if _, err := d.pool.Exec(ctx, qSetArticleLock, articleID, locked); err != nil {
+		return fmt.Errorf("set lock of %d: %w", articleID, err)
+	}
+	return nil
+}
+
+var (
+	qKnownUsers = register("KnownUsers", `
+SELECT id FROM web_user WHERE id = ANY($1)`)
+
+	qReadArticleAuthors = register("ReadArticleAuthors", `
+SELECT user_id FROM web_article_authors WHERE article_id = $1 ORDER BY user_id`)
+
+	qDropArticleAuthors = register("DropArticleAuthors", `
+DELETE FROM web_article_authors WHERE article_id = $1 AND NOT (user_id = ANY($2))`)
+)
+
+// An empty list means the caller had nothing to say, not that the page should
+// lose the credit it has.
+func (d *DB) SetArticleAuthors(ctx context.Context, articleID int64, authorIDs []int64,
+	userID *int64, at time.Time) (int, bool, error) {
+
+	if len(authorIDs) == 0 {
+		return 0, false, nil
+	}
+
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return 0, false, fmt.Errorf("begin authors of %d: %w", articleID, err)
+	}
+	defer tx.Rollback(ctx)
+
+	wanted, err := scanIDs(ctx, tx, qKnownUsers, authorIDs)
+	if err != nil {
+		return 0, false, fmt.Errorf("look up authors of %d: %w", articleID, err)
+	}
+	if len(wanted) == 0 {
+		return 0, false, nil
+	}
+	held, err := scanIDs(ctx, tx, qReadArticleAuthors, articleID)
+	if err != nil {
+		return 0, false, fmt.Errorf("read authors of %d: %w", articleID, err)
+	}
+
+	added := missingFrom(wanted, held)
+	removed := missingFrom(held, wanted)
+	if len(added) == 0 && len(removed) == 0 {
+		return 0, false, nil
+	}
+	if _, err := tx.Exec(ctx, qDropArticleAuthors, articleID, wanted); err != nil {
+		return 0, false, fmt.Errorf("drop authors of %d: %w", articleID, err)
+	}
+	for _, id := range added {
+		if _, err := tx.Exec(ctx, qInsertArticleAuthor, articleID, id); err != nil {
+			return 0, false, fmt.Errorf("credit author of %d: %w", articleID, err)
+		}
+	}
+
+	meta, err := json.Marshal(map[string]any{"added_authors": added, "removed_authors": removed})
+	if err != nil {
+		return 0, false, fmt.Errorf("encode authorship meta of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qLockArticleLog, articleID); err != nil {
+		return 0, false, fmt.Errorf("lock article log %d: %w", articleID, err)
+	}
+	var revNumber int
+	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, LogAuthorship, string(meta), "", at).Scan(&revNumber); err != nil {
+		return 0, false, fmt.Errorf("write revision of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qTouchArticle, articleID, at); err != nil {
+		return 0, false, fmt.Errorf("touch article %d: %w", articleID, err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, false, fmt.Errorf("commit authors of %d: %w", articleID, err)
+	}
+	return revNumber, true, nil
+}
+
+func scanIDs(ctx context.Context, tx pgx.Tx, sql string, arg any) ([]int64, error) {
+	rows, err := tx.Query(ctx, sql, arg)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
+
+func missingFrom(want, have []int64) []int64 {
+	out := []int64{}
+	for _, id := range want {
+		if !slices.Contains(have, id) {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+var (
+	qRenameArticle = register("RenameArticle", `
+UPDATE web_article SET category = $2, name = $3 WHERE id = $1`)
+
+	qDropLinksFrom = register("DropLinksFrom", `
+DELETE FROM web_externallink WHERE link_from = $1`)
+
+	qMoveLinksFrom = register("MoveLinksFrom", `
+UPDATE web_externallink SET link_from = $2 WHERE link_from = $1`)
+)
+
+// What a page points at moves with it, but what points at the page does not.
+// Everyone who linked to the old name keeps linking to the old name.
+func (d *DB) RenameArticle(ctx context.Context, articleID int64, category, name, from string,
+	userID *int64, at time.Time) (int, error) {
+
+	to := (&Article{Category: category, Name: name}).FullName()
+
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("begin rename of %d: %w", articleID, err)
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, qRenameArticle, articleID, category, name); err != nil {
+		return 0, fmt.Errorf("rename article %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qDropLinksFrom, to); err != nil {
+		return 0, fmt.Errorf("drop links of %q: %w", to, err)
+	}
+	if _, err := tx.Exec(ctx, qMoveLinksFrom, from, to); err != nil {
+		return 0, fmt.Errorf("move links of %q: %w", from, err)
+	}
+
+	meta, err := json.Marshal(map[string]any{"name": to, "prev_name": from})
+	if err != nil {
+		return 0, fmt.Errorf("encode rename meta of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qLockArticleLog, articleID); err != nil {
+		return 0, fmt.Errorf("lock article log %d: %w", articleID, err)
+	}
+	var revNumber int
+	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, LogName, string(meta), "", at).Scan(&revNumber); err != nil {
+		return 0, fmt.Errorf("write revision of %d: %w", articleID, err)
+	}
+	if _, err := tx.Exec(ctx, qTouchArticle, articleID, at); err != nil {
+		return 0, fmt.Errorf("touch article %d: %w", articleID, err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("commit rename of %d: %w", articleID, err)
+	}
+	return revNumber, nil
 }
