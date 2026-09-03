@@ -338,3 +338,86 @@ func writeCorpus(t *testing.T, c corpusFile) {
 		t.Fatalf("WriteFile(%s) err = %v, want nil", corpusPath, err)
 	}
 }
+
+func profileTestRenderer(t *testing.T) *Renderer {
+	t.Helper()
+	bundle, err := i18n.Load("")
+	if err != nil {
+		t.Fatalf("i18n.Load() err = %v, want nil", err)
+	}
+	return New(bundle.Localizer(i18n.DefaultLanguage), static.NewAssets(nil), time.UTC)
+}
+
+func TestProfileFeedRendersOneRowPerItem(t *testing.T) {
+	at := time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
+	got, err := profileTestRenderer(t).Profile(Profile{
+		DisplayName: "probe-author",
+		JoinedAt:    at,
+		Edits: ProfileFeed{Items: []ProfileItem{
+			{URL: "/scp-173", Title: "SCP-173", Site: "Test Wiki", At: at,
+				Flags: []ProfileFlag{{ID: "S", Desc: "source"}}, Comment: "typo"},
+			{URL: "/component:box", Title: "Box", Site: "Test Wiki", At: at},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("Profile() err = %v, want nil", err)
+	}
+	if n := strings.Count(got, `<a class="what"`); n != 2 {
+		t.Errorf("count of feed links = %d, want 2", n)
+	}
+	if !strings.Contains(got, `href="/component:box">Box</a>`) {
+		t.Error(`Profile() does not link "Box" to /component:box`)
+	}
+	if !strings.Contains(got, `>Test Wiki<`) {
+		t.Error(`Profile() does not name the site a row came from`)
+	}
+	if !strings.Contains(got, `<span class="spantip" title="source">S</span>`) {
+		t.Error(`Profile() does not flag what an edit changed`)
+	}
+	if !strings.Contains(got, "typo") {
+		t.Error(`Profile() does not show an edit comment`)
+	}
+}
+
+func TestProfileFeedFallsBackToTheEmptyLine(t *testing.T) {
+	got, err := profileTestRenderer(t).Profile(Profile{DisplayName: "probe-author"})
+	if err != nil {
+		t.Fatalf("Profile() err = %v, want nil", err)
+	}
+	if n := strings.Count(got, `class="empty"`); n != 2 {
+		t.Errorf("count of empty feeds = %d, want 2", n)
+	}
+	if strings.Contains(got, `<ul class="feed">`) {
+		t.Error("Profile() renders a feed list with no items")
+	}
+}
+
+func TestProfileEditCarriesTheToken(t *testing.T) {
+	got, err := profileTestRenderer(t).ProfileEdit(ProfileEdit{
+		DisplayName: "probe-author", CSRF: "tok", FullName: "Ada Lovelace",
+	})
+	if err != nil {
+		t.Fatalf("ProfileEdit() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `name="csrfmiddlewaretoken" value="tok"`) {
+		t.Error("ProfileEdit() does not carry the csrf token")
+	}
+	if !strings.Contains(got, `enctype="multipart/form-data"`) {
+		t.Error("ProfileEdit() posts a form that cannot carry a file")
+	}
+	if strings.Contains(got, `class="error-inline"`) {
+		t.Error("ProfileEdit() shows an error block with no error")
+	}
+}
+
+func TestProfileEditShowsTheProblem(t *testing.T) {
+	got, err := profileTestRenderer(t).ProfileEdit(ProfileEdit{
+		DisplayName: "probe-author", Error: "too big",
+	})
+	if err != nil {
+		t.Fatalf("ProfileEdit() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, "<span>too big</span>") {
+		t.Error("ProfileEdit() does not show the error it was given")
+	}
+}
