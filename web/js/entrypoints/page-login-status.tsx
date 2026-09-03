@@ -57,7 +57,7 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
     return (
       <>
         <span className="printuser w-user">
-          <a href={`/-/profile`}>
+          <a href={`/-/users/${user.urlName || user.username}`}>
             <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.name || user.username} />
           </a>
           {user.name || user.username}
