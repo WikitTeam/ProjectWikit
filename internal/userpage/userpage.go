@@ -11,12 +11,17 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
+	"github.com/WikitTeam/ProjectWikit/internal/changelog"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
+	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -36,7 +41,15 @@ type Deps struct {
 	Icons    roles.IconLoader
 	Assets   *static.Assets
 	TimeZone *time.Location
+	Files    string
 	Log      *slog.Logger
+}
+
+func (d Deps) logger() *slog.Logger {
+	if d.Log == nil {
+		return slog.Default()
+	}
+	return d.Log
 }
 
 type Handler struct {
@@ -52,12 +65,7 @@ func New(d Deps) *Handler {
 	return &Handler{deps: d}
 }
 
-func (h *Handler) log() *slog.Logger {
-	if h.deps.Log == nil {
-		return slog.Default()
-	}
-	return h.deps.Log
-}
+func (h *Handler) log() *slog.Logger { return h.deps.logger() }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
@@ -116,9 +124,15 @@ func (h *Handler) page(r *http.Request, name string) (string, error) {
 		return "", err
 	}
 
+	theme, err := site.ThemeURLByID(ctx, h.deps.DB, current.SystemThemeID)
+	if err != nil {
+		return "", err
+	}
+
 	var out strings.Builder
 	err = render.SystemPage(&out, shell.System{
 		Title:     data.DisplayName,
+		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,
 	})
@@ -195,6 +209,16 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	}
 	data.IsSelf = viewer != nil && viewer.ID == profile.ID
 
+	if data.Roles, err = h.roles(ctx, current, profile); err != nil {
+		return shell.Profile{}, err
+	}
+	if data.Edits, err = h.edits(r, loc, current, profile, viewer); err != nil {
+		return shell.Profile{}, err
+	}
+	if data.Posts, err = h.posts(r, loc, current, profile, viewer); err != nil {
+		return shell.Profile{}, err
+	}
+
 	if profile.Bio != "" {
 		html, err := h.bio(r, loc, current, profile, viewer)
 		if err != nil {
@@ -203,6 +227,177 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		data.BioHTML = html
 	}
 	return data, nil
+}
+
+const historyPerPage = 10
+
+const (
+	editsParam = "edits"
+	postsParam = "posts"
+)
+
+// The history is read through the viewer's permissions rather than the profile
+// owner's, so a page one visitor may not see stays off the other's profile.
+func (h *Handler) edits(r *http.Request, loc *i18n.Localizer, site *db.Site,
+	profile *db.Profile, viewer *db.User) (shell.ProfileFeed, error) {
+
+	ctx := r.Context()
+	hidden, err := repo.HiddenCategories(ctx, h.deps.DB, viewer)
+	if err != nil {
+		return shell.ProfileFeed{}, err
+	}
+	filter := db.SiteChangeFilter{
+		Hidden:  hidden,
+		HasUser: true,
+		UserIDs: []int64{profile.ID},
+	}
+	total, err := h.deps.DB.SiteChangeCount(ctx, filter)
+	if err != nil {
+		return shell.ProfileFeed{}, err
+	}
+	page, pages := pageOf(r, editsParam, total)
+	changes, err := h.deps.DB.SiteChanges(ctx, filter, (page-1)*historyPerPage, historyPerPage)
+	if err != nil {
+		return shell.ProfileFeed{}, err
+	}
+
+	feed := shell.ProfileFeed{
+		Items:      make([]shell.ProfileItem, 0, len(changes)),
+		Pagination: listpages.PaginationLinks(loc, pageHref(r, editsParam), page, pages),
+	}
+	users := func(ids []int64) ([]db.User, error) { return h.deps.DB.UsersByIDs(ctx, ids) }
+	for _, c := range changes {
+		entry, err := changelog.Of(loc, users, c)
+		if err != nil {
+			return shell.ProfileFeed{}, err
+		}
+		article := db.Article{Category: c.ArticleCategory, Name: c.ArticleName, Title: c.ArticleTitle}
+		feed.Items = append(feed.Items, shell.ProfileItem{
+			URL:     "/" + article.FullName(),
+			Title:   article.DisplayName(),
+			Site:    site.Title,
+			At:      c.CreatedAt,
+			Flags:   profileFlags(entry.Flags),
+			Comment: entry.Comment,
+		})
+	}
+	return feed, nil
+}
+
+func profileFlags(flags []changelog.Flag) []shell.ProfileFlag {
+	out := make([]shell.ProfileFlag, 0, len(flags))
+	for _, f := range flags {
+		out = append(out, shell.ProfileFlag{ID: f.ID, Desc: f.Desc})
+	}
+	return out
+}
+
+func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, site *db.Site,
+	profile *db.Profile, viewer *db.User) (shell.ProfileFeed, error) {
+
+	ctx := r.Context()
+	resolver := repo.NewPerms(ctx, h.deps.DB)
+	subject, err := resolver.Subject(viewer, time.Now())
+	if err != nil {
+		return shell.ProfileFeed{}, err
+	}
+
+	var ids []int64
+	var comments bool
+	if perms.Resolve(subject, nil).Has(perms.ViewForumCategories) {
+		categories, err := h.deps.DB.ForumCategories(ctx)
+		if err != nil {
+			return shell.ProfileFeed{}, err
+		}
+		for _, c := range categories {
+			ids = append(ids, c.ID)
+			comments = comments || c.IsForComments
+		}
+	}
+
+	total, err := h.deps.DB.UserPostCount(ctx, profile.ID, ids, comments)
+	if err != nil {
+		return shell.ProfileFeed{}, err
+	}
+	page, pages := pageOf(r, postsParam, total)
+	posts, err := h.deps.DB.UserPosts(ctx, profile.ID, ids, comments,
+		(page-1)*historyPerPage, historyPerPage)
+	if err != nil {
+		return shell.ProfileFeed{}, err
+	}
+
+	feed := shell.ProfileFeed{
+		Items:      make([]shell.ProfileItem, 0, len(posts)),
+		Pagination: listpages.PaginationLinks(loc, pageHref(r, postsParam), page, pages),
+	}
+	for _, p := range posts {
+		feed.Items = append(feed.Items, shell.ProfileItem{
+			URL:   threadURL(p.ThreadID, threadName(p)) + "#post-" + strconv.FormatInt(p.ID, 10),
+			Title: threadName(p),
+			Site:  site.Title,
+			At:    p.CreatedAt,
+		})
+	}
+	return feed, nil
+}
+
+func (h *Handler) roles(ctx context.Context, site *db.Site, profile *db.Profile) ([]shell.ProfileRoles, error) {
+	rs, err := h.deps.DB.RolesByUser(ctx, profile.ID)
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, 0, len(rs))
+	for _, role := range rs {
+		names = append(names, firstNonEmpty(role.Name, role.Slug))
+	}
+	if len(names) == 0 {
+		return nil, nil
+	}
+	return []shell.ProfileRoles{{
+		Site:  site.Title,
+		URL:   "/",
+		Names: strings.Join(names, ", "),
+	}}, nil
+}
+
+func pageOf(r *http.Request, key string, total int) (page, pages int) {
+	pages = max(1, (total+historyPerPage-1)/historyPerPage)
+	page, err := strconv.Atoi(r.URL.Query().Get(key))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	return min(page, pages), pages
+}
+
+// The other section's page has to survive, so the link is the request's own
+// query with one key replaced.
+func pageHref(r *http.Request, key string) func(int) string {
+	return func(p int) string {
+		q := r.URL.Query()
+		q.Set(key, strconv.Itoa(p))
+		return escape.HTML(r.URL.EscapedPath() + "?" + q.Encode())
+	}
+}
+
+// A comment thread carries the name the article was created with, so the
+// article's own title is the one a reader recognises.
+func threadName(p db.UserPost) string {
+	if p.ThreadCategoryID == nil && p.ArticleName != nil {
+		article := db.Article{Category: deref(p.ArticleCategory), Name: deref(p.ArticleName), Title: deref(p.ArticleTitle)}
+		return article.DisplayName()
+	}
+	return p.ThreadName
+}
+
+func threadURL(id int64, name string) string {
+	return "/forum/t-" + strconv.FormatInt(id, 10) + "/" + wikidot.Normalize(name)
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 // The two states that outrank every role are answered first, the way the chip
