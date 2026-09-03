@@ -488,17 +488,7 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 }
 
 func (h *Handler) themeURL(req *request) (string, error) {
-	if req.site.ThemeID == nil {
-		return "", nil
-	}
-	theme, err := h.deps.DB.ThemeByID(req.ctx, *req.site.ThemeID)
-	if errors.Is(err, db.ErrNotFound) {
-		return "", nil
-	}
-	if err != nil {
-		return "", err
-	}
-	return site.ThemeURL(theme), nil
+	return site.ThemeURLByID(req.ctx, h.deps.DB, req.site.ThemeID)
 }
 
 func (h *Handler) indexed(req *request) (bool, error) {

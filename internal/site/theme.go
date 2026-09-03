@@ -1,6 +1,8 @@
 package site
 
 import (
+	"context"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -22,6 +24,20 @@ func ThemeURL(t *db.Theme) string {
 		return strings.TrimSpace(t.ExternalURL)
 	}
 	return "/-/theme/" + t.Slug + ".css?v=" + strconv.FormatInt(t.UpdatedAt.Unix(), 10)
+}
+
+func ThemeURLByID(ctx context.Context, d *db.DB, id *int64) (string, error) {
+	if id == nil {
+		return "", nil
+	}
+	theme, err := d.ThemeByID(ctx, *id)
+	if errors.Is(err, db.ErrNotFound) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return ThemeURL(theme), nil
 }
 
 const (
