@@ -389,3 +389,75 @@ func TestIncludePagesWithoutPageVarsKeepsThisVars(t *testing.T) {
 		t.Errorf("Content = %q, want %q", *got[0].Content, want)
 	}
 }
+
+func TestIncludePagesTakesARefNamingThisWikiAsLocal(t *testing.T) {
+	repo := &fakeRepo{}
+	c := newCallbacks(t, repo)
+	c.SetSite("lostmedia")
+
+	got, err := c.IncludePages([]renderer.IncludeRef{{FullName: ":lostmedia:component:box"}})
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	if len(repo.includeSeen) != 1 {
+		t.Fatalf("len(refs reaching the repository) = %d, want 1", len(repo.includeSeen))
+	}
+	if repo.includeSeen[0].FullName != "component:box" {
+		t.Errorf("ref reaching the repository = %q, want %q", repo.includeSeen[0].FullName, "component:box")
+	}
+	if len(got) != 1 {
+		t.Fatalf("len(IncludePages()) = %d, want 1", len(got))
+	}
+	if got[0].FullName != ":lostmedia:component:box" {
+		t.Errorf("FullName going back = %q, want %q", got[0].FullName, ":lostmedia:component:box")
+	}
+}
+
+func TestNoSuchIncludeTakesARefNamingThisWikiAsLocal(t *testing.T) {
+	c := newCallbacks(t, &fakeRepo{})
+	c.SetSite("lostmedia")
+
+	got, err := c.NoSuchInclude(":lostmedia:missing")
+	if err != nil {
+		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
+	}
+	want := `[[div class="error-block"]]插入的页面 "missing" 不存在 ([[a href="/missing/edit/true" target="_blank"]]立刻创建[[/a]])[[/div]]`
+	if got != want {
+		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
+	}
+}
+
+func TestIncludePagesDoesNotLookUpAnOffSiteRef(t *testing.T) {
+	repo := &fakeRepo{}
+	c := newCallbacks(t, repo)
+
+	got, err := c.IncludePages([]renderer.IncludeRef{
+		{FullName: ":other:component:box"},
+		{FullName: "component:box"},
+	})
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	if len(repo.includeSeen) != 1 {
+		t.Fatalf("len(refs reaching the repository) = %d, want 1", len(repo.includeSeen))
+	}
+	if repo.includeSeen[0].FullName != "component:box" {
+		t.Errorf("ref reaching the repository = %q, want %q", repo.includeSeen[0].FullName, "component:box")
+	}
+	if len(got) != 1 {
+		t.Errorf("len(IncludePages()) = %d, want 1", len(got))
+	}
+}
+
+func TestNoSuchIncludeReportsAnOffSiteRef(t *testing.T) {
+	c := newCallbacks(t, &fakeRepo{})
+
+	got, err := c.NoSuchInclude(":other:component:box")
+	if err != nil {
+		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
+	}
+	want := `[[div class="error-block"]]插入的页面 ":other:component:box" 在别的站点上，暂不支持跨站插入[[/div]]`
+	if got != want {
+		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
+	}
+}

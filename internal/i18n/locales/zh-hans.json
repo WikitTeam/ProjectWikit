@@ -14,6 +14,7 @@
   "include-create": "立刻创建",
   "include-loop": "插入的页面 \"{name}\" 导致了无限包含循环",
   "include-missing": "插入的页面 \"{name}\" 不存在",
+  "include-off-site": "插入的页面 \"{name}\" 在别的站点上，暂不支持跨站插入",
   "module-applicationform-body": "正文",
   "module-applicationform-login": "请先登录后再提交。",
   "module-applicationform-subject": "标题",
