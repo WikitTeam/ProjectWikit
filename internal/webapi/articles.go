@@ -27,6 +27,7 @@ const (
 	tailLinks   = "links"
 	tailVersion = "version"
 	tailVotes   = "votes"
+	tailLog     = "log"
 )
 
 type Articles struct {
@@ -64,6 +65,8 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.answer(w, r, loc, name, h.links)
 	case tail == tailVersion && r.Method == http.MethodGet:
 		h.answer(w, r, loc, name, h.version)
+	case tail == tailLog && r.Method == http.MethodGet:
+		h.answer(w, r, loc, name, h.log)
 	case tail == tailVotes && r.Method == http.MethodGet:
 		h.answer(w, r, loc, name, h.votes)
 	case tail == tailVotes && r.Method == http.MethodDelete:
@@ -405,7 +408,7 @@ func voteDateOrNil(at *time.Time) any {
 	if at == nil {
 		return nil
 	}
-	return at.UTC().Format("2006-01-02T15:04:05.999999-07:00")
+	return isoTime(*at)
 }
 
 // The name keeps every slash but the last, since a forum page carries some.
