@@ -285,3 +285,183 @@ func TestReplaceArticleLinksEmptiesTheSet(t *testing.T) {
 		t.Errorf("len(links) = %d, want 0, got %v", len(got), got)
 	}
 }
+
+func dropArticle(t *testing.T, d *DB, id int64) {
+	t.Helper()
+	t.Cleanup(func() {
+		clean := context.Background()
+		for _, sql := range []string{
+			`DELETE FROM web_articlelogentry WHERE article_id = $1`,
+			`DELETE FROM web_articleversion WHERE article_id = $1`,
+			`DELETE FROM web_article_authors WHERE article_id = $1`,
+			`DELETE FROM web_article WHERE id = $1`,
+		} {
+			if _, err := d.pool.Exec(clean, sql, id); err != nil {
+				t.Errorf("clean up article err = %v, want nil", err)
+			}
+		}
+	})
+}
+
+func TestCreateArticleCreditsTheAuthor(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+
+	var author int64
+	if err := d.pool.QueryRow(ctx, `SELECT id FROM web_user ORDER BY id LIMIT 1`).Scan(&author); err != nil {
+		t.Fatalf("read a user err = %v, want nil", err)
+	}
+	name := "probe-new-" + time.Now().Format("20060102150405.000000")
+
+	id, err := d.CreateArticle(ctx, "_default", name, "Probe", &author, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	var authors int
+	if err := d.pool.QueryRow(ctx,
+		`SELECT count(*) FROM web_article_authors WHERE article_id = $1 AND user_id = $2`,
+		id, author).Scan(&authors); err != nil {
+		t.Fatalf("read authors err = %v, want nil", err)
+	}
+	if authors != 1 {
+		t.Errorf("count(authors) = %d, want 1", authors)
+	}
+}
+
+func TestCreateArticleWithoutAnAuthor(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	name := "probe-new-" + time.Now().Format("20060102150405.000000")
+
+	id, err := d.CreateArticle(ctx, "_default", name, "Probe", nil, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+
+	article, err := d.ArticleByID(ctx, id)
+	if err != nil {
+		t.Fatalf("ArticleByID() err = %v, want nil", err)
+	}
+	if article.Title != "Probe" {
+		t.Errorf("ArticleByID().Title = %q, want %q", article.Title, "Probe")
+	}
+	if article.Locked {
+		t.Error("ArticleByID().Locked = true, want false")
+	}
+}
+
+func TestCreateArticleNamesTheMediaDirectoryApart(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	stamp := time.Now().Format("20060102150405.000000")
+
+	first, err := d.CreateArticle(ctx, "_default", "probe-media-a-"+stamp, "A", nil, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateArticle(a) err = %v, want nil", err)
+	}
+	dropArticle(t, d, first)
+	second, err := d.CreateArticle(ctx, "_default", "probe-media-b-"+stamp, "B", nil, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateArticle(b) err = %v, want nil", err)
+	}
+	dropArticle(t, d, second)
+
+	var a, b string
+	if err := d.pool.QueryRow(ctx, `SELECT media_name FROM web_article WHERE id = $1`, first).Scan(&a); err != nil {
+		t.Fatalf("read media_name err = %v, want nil", err)
+	}
+	if err := d.pool.QueryRow(ctx, `SELECT media_name FROM web_article WHERE id = $1`, second).Scan(&b); err != nil {
+		t.Fatalf("read media_name err = %v, want nil", err)
+	}
+	if a == b {
+		t.Errorf("media_name of two articles = %q for both, want them apart", a)
+	}
+	if len(a) != 36 {
+		t.Errorf("len(media_name) = %d, want 36", len(a))
+	}
+}
+
+func TestSetArticleParentRecordsTheMove(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	at := time.Now().UTC().Truncate(time.Second)
+	stamp := time.Now().Format("20060102150405.000000")
+
+	parent, err := d.CreateArticle(ctx, "_default", "probe-parent-"+stamp, "Parent", nil, at)
+	if err != nil {
+		t.Fatalf("CreateArticle(parent) err = %v, want nil", err)
+	}
+	dropArticle(t, d, parent)
+	child, err := d.CreateArticle(ctx, "_default", "probe-child-"+stamp, "Child", nil, at)
+	if err != nil {
+		t.Fatalf("CreateArticle(child) err = %v, want nil", err)
+	}
+	dropArticle(t, d, child)
+
+	rev, err := d.SetArticleParent(ctx, child, &parent, nil, `{"parent":"probe-parent"}`, at)
+	if err != nil {
+		t.Fatalf("SetArticleParent() err = %v, want nil", err)
+	}
+	if rev != 0 {
+		t.Errorf("SetArticleParent().RevNumber = %d, want 0", rev)
+	}
+
+	article, err := d.ArticleByID(ctx, child)
+	if err != nil {
+		t.Fatalf("ArticleByID() err = %v, want nil", err)
+	}
+	if article.ParentID == nil || *article.ParentID != parent {
+		t.Errorf("ArticleByID().ParentID = %v, want %d", article.ParentID, parent)
+	}
+
+	var kind string
+	if err := d.pool.QueryRow(ctx,
+		`SELECT type FROM web_articlelogentry WHERE article_id = $1 AND rev_number = 0`,
+		child).Scan(&kind); err != nil {
+		t.Fatalf("read revision err = %v, want nil", err)
+	}
+	if kind != LogParent {
+		t.Errorf("revision type = %q, want %q", kind, LogParent)
+	}
+}
+
+func TestSubscribeToArticleOnlyOnce(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+
+	var user int64
+	if err := d.pool.QueryRow(ctx, `SELECT id FROM web_user ORDER BY id LIMIT 1`).Scan(&user); err != nil {
+		t.Fatalf("read a user err = %v, want nil", err)
+	}
+	id, err := d.CreateArticle(ctx, "_default",
+		"probe-sub-"+time.Now().Format("20060102150405.000000"), "Probe", nil, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateArticle() err = %v, want nil", err)
+	}
+	dropArticle(t, d, id)
+	t.Cleanup(func() {
+		if _, err := d.pool.Exec(context.Background(),
+			`DELETE FROM web_usernotificationsubscription WHERE article_id = $1`, id); err != nil {
+			t.Errorf("clean up subscription err = %v, want nil", err)
+		}
+	})
+
+	for i := 0; i < 2; i++ {
+		if err := d.SubscribeToArticle(ctx, user, id); err != nil {
+			t.Fatalf("SubscribeToArticle(%d) err = %v, want nil", i, err)
+		}
+	}
+
+	var rows int
+	if err := d.pool.QueryRow(ctx,
+		`SELECT count(*) FROM web_usernotificationsubscription WHERE article_id = $1 AND subscriber_id = $2`,
+		id, user).Scan(&rows); err != nil {
+		t.Fatalf("count subscriptions err = %v, want nil", err)
+	}
+	if rows != 1 {
+		t.Errorf("count(subscriptions) = %d, want 1", rows)
+	}
+}
