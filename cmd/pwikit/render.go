@@ -35,6 +35,7 @@ func render(args []string) error {
 	pageName := fs.String("page", "page", "page name reported to ftml")
 	category := fs.String("category", "_default", "page category reported to ftml")
 	domain := fs.String("domain", "example.org", "site domain reported to ftml")
+	siteSlug := fs.String("site", "", "site slug an include may name to mean this wiki")
 	modules := fs.String("modules", "real", "how to answer modules: real, stub")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -91,6 +92,7 @@ func render(args []string) error {
 	}
 
 	cb := callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
+	cb.SetSite(*siteSlug)
 	cb.SetPageVars(vars)
 	if article != nil {
 		cb.SetContext(page.NewContext(article, article, nil, nil))
@@ -103,7 +105,7 @@ func render(args []string) error {
 		handler = recorder
 	}
 
-	info := renderer.PageInfo{Page: *pageName, Category: *category, Domain: *domain, Title: *pageName}
+	info := renderer.PageInfo{Page: *pageName, Category: *category, Site: *siteSlug, Domain: *domain, Title: *pageName}
 	if err := emit(ctx, engine, *output, source, info, handler, renderer.Mode(*mode)); err != nil {
 		return err
 	}

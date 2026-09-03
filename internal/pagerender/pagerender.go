@@ -90,6 +90,9 @@ func (e *Env) PageInfo(source *db.Article) (renderer.PageInfo, error) {
 
 func (e *Env) Callbacks(vars *page.Vars, pc *page.Context) *callbacks.Callbacks {
 	cb := callbacks.New(e.loc, e.store())
+	if e.site != nil {
+		cb.SetSite(e.site.Slug)
+	}
 	cb.SetPageVars(vars)
 	cb.SetContext(pc)
 	return cb
