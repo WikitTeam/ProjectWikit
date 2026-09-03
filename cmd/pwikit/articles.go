@@ -21,15 +21,16 @@ import (
 )
 
 type pageStack struct {
-	articles   http.Handler
-	code       http.Handler
-	html       http.Handler
-	theme      http.Handler
-	moduleAPI  http.Handler
-	preview    http.Handler
-	profile    http.Handler
-	articleAPI http.Handler
-	close      func()
+	articles    http.Handler
+	code        http.Handler
+	html        http.Handler
+	theme       http.Handler
+	moduleAPI   http.Handler
+	preview     http.Handler
+	profile     http.Handler
+	profileForm http.Handler
+	articleAPI  http.Handler
+	close       func()
 }
 
 func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, trust *proxyheader.Trust, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
@@ -62,19 +63,22 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 
+	profiles := userpage.Deps{
+		DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
+		Assets: static.NewAssets(assets), TimeZone: location, Files: p.Files(), Log: log,
+	}
+
 	stack := &pageStack{
-		articles:   pages,
-		code:       localitem.NewCode(items),
-		html:       localitem.NewHTML(items),
-		theme:      localitem.NewTheme(items),
-		moduleAPI:  webapi.New(api, upstream),
-		preview:    webapi.NewPreview(api),
-		articleAPI: webapi.NewArticles(api, upstream),
-		profile: userpage.New(userpage.Deps{
-			DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
-			Assets: static.NewAssets(assets), TimeZone: location, Log: log,
-		}),
-		close: closeEngine,
+		articles:    pages,
+		code:        localitem.NewCode(items),
+		html:        localitem.NewHTML(items),
+		theme:       localitem.NewTheme(items),
+		moduleAPI:   webapi.New(api, upstream),
+		preview:     webapi.NewPreview(api),
+		articleAPI:  webapi.NewArticles(api, upstream),
+		profile:     userpage.New(profiles),
+		profileForm: userpage.NewEdit(profiles),
+		close:       closeEngine,
 	}
 
 	// Without the key nothing can be verified, so every visitor stays
@@ -90,6 +94,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.moduleAPI = resolver.Middleware(stack.moduleAPI)
 	stack.preview = resolver.Middleware(stack.preview)
 	stack.profile = resolver.Middleware(stack.profile)
+	stack.profileForm = resolver.Middleware(stack.profileForm)
 	stack.articles = resolver.Middleware(stack.articles)
 	return stack, nil
 }

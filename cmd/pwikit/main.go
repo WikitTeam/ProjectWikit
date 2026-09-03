@@ -144,6 +144,7 @@ func serve(args []string) error {
 
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
 	var moduleAPI, preview, profile, articleAPI http.Handler = proxy, proxy, proxy, proxy
+	var profileForm http.Handler = proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, trust, *sidecar, *secret, *timezone, log)
 		if err != nil {
@@ -160,6 +161,7 @@ func serve(args []string) error {
 		moduleAPI = served(stack.moduleAPI)
 		preview = served(stack.preview)
 		profile = served(stack.profile)
+		profileForm = served(stack.profileForm)
 		articleAPI = served(stack.articleAPI)
 	}
 
@@ -176,6 +178,7 @@ func serve(args []string) error {
 		webapi.ModulesPath:    moduleAPI,
 		webapi.PreviewPath:    preview,
 		userpage.Prefix:       profile,
+		userpage.EditPrefix:   profileForm,
 		webapi.ArticlesPrefix: articleAPI,
 		"/":                   articles,
 	}

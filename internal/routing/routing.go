@@ -37,6 +37,7 @@ var Table = []Route{
 	{Prefix: "/-/static/", Owner: OwnerGo, Label: "static assets"},
 	{Prefix: "/-/theme/", Owner: OwnerGo, Label: "site theme"},
 	{Prefix: "/-/users/", Owner: OwnerGo, Label: "user profiles"},
+	{Prefix: "/-/profile/edit", Owner: OwnerGo, Label: "profile form", Exact: true},
 	{Prefix: "/pw-api/", Owner: OwnerUpstream, Label: "API"},
 	{Prefix: "/pw-api/modules", Owner: OwnerGo, Label: "module API", Exact: true},
 	{Prefix: "/pw-api/preview", Owner: OwnerGo, Label: "editor preview", Exact: true},
