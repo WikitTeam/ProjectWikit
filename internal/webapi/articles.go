@@ -50,7 +50,11 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name, tail, found := cutLast(strings.TrimPrefix(r.URL.Path, ArticlesPrefix))
-	if !found || name == "" {
+	if !found {
+		h.page(w, r, loc, strings.TrimPrefix(r.URL.Path, ArticlesPrefix))
+		return
+	}
+	if name == "" {
 		h.upstream.ServeHTTP(w, r)
 		return
 	}
@@ -64,6 +68,21 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.answer(w, r, loc, name, h.votes)
 	case tail == tailVotes && r.Method == http.MethodDelete:
 		h.answer(w, r, loc, name, h.resetVotes)
+	default:
+		h.upstream.ServeHTTP(w, r)
+	}
+}
+
+// The page's own path answers only what it writes. Reading one is still the
+// upstream's, which is where the editor asks for it.
+func (h *Articles) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, name string) {
+	switch {
+	case name == "":
+		h.upstream.ServeHTTP(w, r)
+	case r.Method == http.MethodPut:
+		h.answer(w, r, loc, name, h.update)
+	case r.Method == http.MethodDelete:
+		h.answer(w, r, loc, name, h.remove)
 	default:
 		h.upstream.ServeHTTP(w, r)
 	}
