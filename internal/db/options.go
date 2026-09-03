@@ -33,6 +33,39 @@ func (d *DB) SiteCanCreateTags(ctx context.Context, siteID int64) (string, error
 	return mode, nil
 }
 
+var qCategoryCanCreateTags = register("CategoryCanCreateTags", `
+SELECT s.can_user_create_tags
+FROM web_settings s
+JOIN web_category c ON c.id = s.category_id
+WHERE c.name = $1`)
+
+// A category with no row of its own reads the same as one left on default. Both
+// hand the question back to the site.
+func (d *DB) CategoryCanCreateTags(ctx context.Context, category string) (string, error) {
+	var mode string
+	err := d.pool.QueryRow(ctx, qCategoryCanCreateTags, category).Scan(&mode)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", fmt.Errorf("query tag setting of category %q: %w", category, err)
+	}
+	return mode, nil
+}
+
+// Creating tags is off unless something turns it on, and the category has the
+// last word.
+func CreatingTagsAllowed(siteMode, categoryMode string) bool {
+	mode := CreateTagsDisabled
+	if siteMode != "" && siteMode != CreateTagsDefault {
+		mode = siteMode
+	}
+	if categoryMode != "" && categoryMode != CreateTagsDefault {
+		mode = categoryMode
+	}
+	return mode == CreateTagsEnabled
+}
+
 type CommentInfo struct {
 	ThreadID int64
 	Count    int
