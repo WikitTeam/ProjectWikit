@@ -174,9 +174,7 @@ func (h *Articles) refreshLinks(r *http.Request, current *db.Site, id int64, sou
 	if err != nil {
 		return err
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
-	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
-		Env(ctx, loc, current, nil)
+	env := h.env(r, current, nil)
 
 	info, err := env.PageInfo(article)
 	if err != nil {
@@ -188,6 +186,12 @@ func (h *Articles) refreshLinks(r *http.Request, current *db.Site, id int64, sou
 		return err
 	}
 	return h.deps.DB.ReplaceArticleLinks(ctx, strings.ToLower(article.FullName()), links)
+}
+
+func (h *Articles) env(r *http.Request, current *db.Site, viewer *db.User) *pagerender.Env {
+	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	return pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
+		Env(r.Context(), loc, current, viewer)
 }
 
 func (h *Articles) setParent(r *http.Request, current *db.Site, id int64,
