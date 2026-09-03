@@ -30,6 +30,7 @@ var tmpl = template.Must(template.New("shell").Funcs(template.FuncMap{
 	"esc":   escape.HTML,
 	"escjs": escape.JS,
 	"sub":   func(a, b int) int { return a - b },
+	"feed":  newFeed,
 }).ParseFS(files, "templates/*.html"))
 
 type Breadcrumb struct {
@@ -176,6 +177,7 @@ func (v view) date() string {
 // article sits in.
 type System struct {
 	Title     string
+	ThemeURL  string
 	Before    string
 	Heading   string
 	BodyClass string
@@ -201,6 +203,60 @@ type Profile struct {
 	Bio         string
 	BioHTML     string
 	JoinedAt    time.Time
+
+	Roles []ProfileRoles
+	Edits ProfileFeed
+	Posts ProfileFeed
+}
+
+type ProfileRoles struct {
+	Site  string
+	URL   string
+	Names string
+}
+
+type ProfileFeed struct {
+	Items      []ProfileItem
+	Pagination string
+}
+
+type ProfileFlag struct {
+	ID   string
+	Desc string
+}
+
+type ProfileItem struct {
+	URL     string
+	Title   string
+	Site    string
+	At      time.Time
+	Flags   []ProfileFlag
+	Comment string
+}
+
+type feed struct {
+	View  profileView
+	Label string
+	Feed  ProfileFeed
+	Empty string
+}
+
+func newFeed(v profileView, label string, f ProfileFeed, empty string) feed {
+	return feed{View: v, Label: label, Feed: f, Empty: empty}
+}
+
+type ProfileEdit struct {
+	AuthIcon    string
+	DisplayName string
+	Avatar      string
+	ProfileURL  string
+
+	FullName string
+	Bio      string
+
+	CSRF  string
+	Error string
+	Saved bool
 }
 
 func (r *Renderer) SystemPage(w io.Writer, d System) error {
@@ -210,6 +266,19 @@ func (r *Renderer) SystemPage(w io.Writer, d System) error {
 func (r *Renderer) Profile(d Profile) (string, error) {
 	return r.execute("profile.html", profileView{Profile: d, r: r})
 }
+
+func (r *Renderer) ProfileEdit(d ProfileEdit) (string, error) {
+	return r.execute("profile_edit.html", profileEditView{ProfileEdit: d, r: r})
+}
+
+type profileEditView struct {
+	ProfileEdit
+	r *Renderer
+}
+
+func (v profileEditView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v profileEditView) Asset(name string) string        { return v.r.assets.URL(name) }
+func (v profileEditView) Initial() string                 { return initial(v.DisplayName) }
 
 type systemView struct {
 	System
@@ -228,21 +297,26 @@ type profileView struct {
 func (v profileView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
 func (v profileView) Asset(name string) string        { return v.r.assets.URL(name) }
 
+func (v profileView) Initial() string { return initial(v.DisplayName) }
+
 // The letter the avatar box falls back to is the display name's first
 // character rather than its first byte.
-func (v profileView) Initial() string {
-	for _, r := range v.DisplayName {
+func initial(name string) string {
+	for _, r := range name {
 		return strings.ToUpper(string(r))
 	}
 	return ""
 }
 
-func (v profileView) JoinedUnix() string {
-	return strconv.FormatInt(v.JoinedAt.Unix(), 10)
+func (v profileView) ODate(at time.Time) string {
+	return `<span class="odate w-date" data-timestamp="` +
+		strconv.FormatInt(at.Unix(), 10) + `000" data-format="` +
+		escape.HTML(v.T("profile.date-format-js")) + `" style="display: inline">` +
+		escape.HTML(v.date(at)) + `</span>`
 }
 
-func (v profileView) Joined() string {
-	at := v.JoinedAt.In(v.r.tz)
+func (v profileView) date(at time.Time) string {
+	at = at.In(v.r.tz)
 	return v.T("profile.date-format",
 		"year", strconv.Itoa(at.Year()),
 		"month", strconv.Itoa(int(at.Month())),

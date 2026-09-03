@@ -61,9 +61,26 @@
         {{end}}
         <dt>{{.T "profile.joined"}}</dt>
         <dd>
-          <span class="odate w-date" data-timestamp="{{.JoinedUnix}}000" data-format="{{esc (.T "profile.date-format-js")}}" style="display: inline">{{esc .Joined}}</span>
+          {{.ODate .JoinedAt}}
         </dd>
       </dl>
+
+      {{if .Roles}}
+      <section class="profile-section">
+        <span class="label">{{.T "profile.site-roles"}}</span>
+        <ul class="feed roles">
+          {{range .Roles}}
+          <li>
+            <span class="what-line"><a class="what" href="{{esc .URL}}">{{esc .Site}}</a></span>
+            <span class="when">{{esc .Names}}</span>
+          </li>
+          {{end}}
+        </ul>
+      </section>
+      {{end}}
+
+      {{template "profile_feed.html" (feed $ (.T "profile.edits") .Edits (.T "profile.no-edits"))}}
+      {{template "profile_feed.html" (feed $ (.T "profile.posts") .Posts (.T "profile.no-posts"))}}
 
     </main>
 

@@ -1,0 +1,22 @@
+{{define "profile_feed.html"}}
+      <section class="profile-section">
+        <span class="label">{{esc .Label}}</span>
+        {{if .Feed.Items}}
+        <ul class="feed">
+          {{range .Feed.Items}}
+          <li>
+            <span class="what-line">
+              <a class="what" href="{{esc .URL}}">{{esc .Title}}</a>
+              {{if .Flags}}<span class="flags">{{range .Flags}}<span class="spantip" title="{{esc .Desc}}">{{esc .ID}}</span>{{end}}</span>{{end}}
+            </span>
+            <span class="when">{{$.View.ODate .At}}</span>
+            <span class="from">{{esc .Site}}{{if .Comment}}<span class="sep">·</span>{{esc .Comment}}{{end}}</span>
+          </li>
+          {{end}}
+        </ul>
+        {{.Feed.Pagination}}
+        {{else}}
+        <div class="empty">{{esc .Empty}}</div>
+        {{end}}
+      </section>
+{{end}}

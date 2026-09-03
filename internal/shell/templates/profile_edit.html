@@ -1,0 +1,65 @@
+{{define "profile_edit.html"}}
+<div class="wikit-scope">
+  <div class="app-shell">
+
+    <header class="app-header">
+      <a href="/" class="brand">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="ProjectWikit">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        <span class="wordmark">ProjectWikit</span>
+      </a>
+      <span class="divider"></span>
+      <span class="path"><b>{{.T "profile.user"}}</b><span class="sep">/</span>{{esc .DisplayName}}</span>
+      <div class="spacer"></div>
+    </header>
+
+    <main class="app-main">
+
+      <div class="section-head">
+        <div class="kicker-crumb"><b>{{.T "profile.personal"}}</b><span class="sep">/</span>{{.T "profile.user"}}<span class="sep">/</span>{{.T "profile.edit"}}</div>
+        <h1 class="h1">{{.T "profile.edit"}}</h1>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" class="profile-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+
+        {{if .Error}}
+        <div class="error-inline">
+          <span class="marker">ERR</span>
+          <span>{{esc .Error}}</span>
+        </div>
+        {{end}}
+        {{if .Saved}}
+        <div class="action-inline"><span class="dot"></span><span class="meta">{{.T "profile.saved"}}</span></div>
+        {{end}}
+
+        <div class="form-block">
+          <div class="form-row">
+            <label class="label" for="id_full_name">{{.T "profile.name"}}</label>
+            <input type="text" name="full_name" id="id_full_name" value="{{esc .FullName}}" maxlength="150">
+          </div>
+          <div class="form-row">
+            <label class="label" for="id_bio">{{.T "profile.bio"}}<span class="hint">{{.T "profile.bio-hint"}}</span></label>
+            <textarea name="bio" id="id_bio" rows="6">{{esc .Bio}}</textarea>
+          </div>
+          <div class="form-row avatar-row">
+            <span class="label">{{.T "profile.avatar"}}</span>
+            <div class="avatar-pick">
+              <span class="avatar-now">{{if .Avatar}}<img src="{{esc .Avatar}}" alt="{{esc .DisplayName}}">{{else}}{{esc .Initial}}{{end}}</span>
+              <input type="file" name="avatar" id="id_avatar" accept="image/png,image/jpeg,image/gif,image/webp">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" type="submit">{{.T "profile.save"}}</button>
+
+        <div class="action-row">
+          <a class="link-muted" href="{{esc .ProfileURL}}">{{.T "profile.back"}}</a>
+        </div>
+
+      </form>
+
+    </main>
+
+  </div>
+</div>
+{{end}}

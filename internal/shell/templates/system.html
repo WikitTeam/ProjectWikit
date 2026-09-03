@@ -16,7 +16,8 @@
     <link rel="stylesheet" type="text/css" href="{{.Asset "system.css"}}">
     <link rel="stylesheet" type="text/css" href="{{.Asset "wikit-tokens.css"}}">
     <link rel="stylesheet" type="text/css" href="{{.Asset "wikit-shell.css"}}">
-
+    {{if .ThemeURL}}<link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">
+{{end}}
     
 </head>
 <body class="system {{.BodyClass}}">
