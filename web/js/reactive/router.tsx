@@ -6,7 +6,6 @@ import ConfigContextProvider from '~reactive/config'
 import { IConfigContext } from '~reactive/config/ConfigContext.types'
 import Messages from '~reactive/pages/messages'
 import Notifications from '~reactive/pages/notifications'
-import Profile from '~reactive/pages/profile'
 import { Paths } from '~reactive/paths'
 import { SYSTEM_THEME } from '~reactive/theme/Theme.consts'
 
@@ -25,7 +24,6 @@ export default function ReactivePage() {
         <ThemeProvider theme={SYSTEM_THEME}>
           <BrowserRouter basename="/-">
             <Routes>
-              <Route path={Paths.profile} element={<Profile />} />
               <Route path={`${Paths.notifications}/*`} element={<Notifications />} />
               <Route path={Paths.messages} element={<Messages />} />
               <Route path={`${Paths.messages}/:user_id`} element={<Messages />} />
