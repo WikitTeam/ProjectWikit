@@ -17,6 +17,8 @@
     <link rel="stylesheet" type="text/css" href="{% md5url "wikit-tokens.css" %}">
     <link rel="stylesheet" type="text/css" href="{% md5url "wikit-shell.css" %}">
 
+    {% if site_system_theme_url %}<link rel="stylesheet" type="text/css" href="{{ site_system_theme_url }}">{% endif %}
+
     {% block head %}{% endblock %}
 </head>
 <body class="system {% block body_class %}{% endblock %}">
