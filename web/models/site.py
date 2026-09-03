@@ -4,6 +4,7 @@ __all__ = [
     'SystemUpdate',
     'get_current_site',
     'get_site_theme_url',
+    'get_site_system_theme_url',
     'get_theme_dir',
 ]
 
@@ -101,6 +102,11 @@ class Site(SingletonModel):
         'Theme', verbose_name='站点主题', null=True, blank=True,
         on_delete=models.SET_NULL, related_name='+',
     )
+    system_theme = models.ForeignKey(
+        'Theme', verbose_name='系统页主题', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+        help_text='登录、注册、个人资料这类页面额外加载的 CSS。留空则只用内置样式。',
+    )
 
     auth_icon = models.ImageField('登录/注册页图标', null=True, blank=True, upload_to='-/sites')
     footer_license = models.TextField(
@@ -157,14 +163,24 @@ def get_current_site(required: bool=True) -> Optional[Site]:
 
 
 def get_site_theme_url() -> str:
-    default_url = django_settings.STATIC_URL + 'theme.css'
+    return _theme_url_of('active_theme_id', django_settings.STATIC_URL + 'theme.css')
 
+
+# 系统页自带完整样式，没配主题就什么都不加载，所以这里没有回落地址。
+def get_site_system_theme_url() -> str:
+    return _theme_url_of('system_theme_id', '')
+
+
+def _theme_url_of(field: str, default_url: str) -> str:
     site = get_current_site(required=False)
-    if site is None or not site.active_theme_id:
+    if site is None:
+        return default_url
+    theme_id = getattr(site, field, None)
+    if not theme_id:
         return default_url
 
     theme = (Theme.objects
-             .filter(pk=site.active_theme_id)
+             .filter(pk=theme_id)
              .only('slug', 'mode', 'external_url', 'updated_at')
              .first())
     if theme is None:
