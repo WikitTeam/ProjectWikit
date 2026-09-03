@@ -96,6 +96,16 @@ const (
 )
 
 func Pagination(loc *i18n.Localizer, basePath string, current, total int) string {
+	return pagination(loc, func(p int) string { return pageHref(basePath, p) }, true, current, total)
+}
+
+// PaginationLinks pages a view reached by its own URL rather than swapped in
+// place, so the numbers carry no hook for the script that re-renders a module.
+func PaginationLinks(loc *i18n.Localizer, href func(page int) string, current, total int) string {
+	return pagination(loc, href, false, current, total)
+}
+
+func pagination(loc *i18n.Localizer, href func(int) string, hook bool, current, total int) string {
 	if total <= 1 {
 		return ""
 	}
@@ -124,13 +134,13 @@ func Pagination(loc *i18n.Localizer, basePath string, current, total int) string
 		`</span>` + "\n" + ind16)
 
 	if current > 1 {
-		b.WriteString("\n" + ind20 + step(loc, basePath, current-1, "module-listpages-pager-prev") + "\n" + ind16)
+		b.WriteString("\n" + ind20 + step(loc, href, hook, current-1, "module-listpages-pager-prev") + "\n" + ind16)
 	}
 	b.WriteString("\n" + ind16)
 
 	writeRange := func(class string, from, to int) {
 		for p := from; p <= to; p++ {
-			b.WriteString("\n" + ind20 + "\n" + ind24 + number(basePath, class, p, p == current) + "\n" + ind20 + "\n" + ind16)
+			b.WriteString("\n" + ind20 + "\n" + ind24 + number(href, hook, class, p, p == current) + "\n" + ind20 + "\n" + ind16)
 		}
 	}
 	writeDots := func(show bool) {
@@ -150,23 +160,30 @@ func Pagination(loc *i18n.Localizer, basePath string, current, total int) string
 	b.WriteString("\n" + ind16)
 
 	if current < total {
-		b.WriteString("\n" + ind20 + step(loc, basePath, current+1, "module-listpages-pager-next") + "\n" + ind16)
+		b.WriteString("\n" + ind20 + step(loc, href, hook, current+1, "module-listpages-pager-next") + "\n" + ind16)
 	}
 	b.WriteString("\n" + ind12 + "</div>")
 	return b.String()
 }
 
-func step(loc *i18n.Localizer, basePath string, target int, label string) string {
-	return `<span class="target"><a href="` + pageHref(basePath, target) +
-		`" data-pagination-target="` + strconv.Itoa(target) + `">` + text(loc, label) + `</a></span>`
+func step(loc *i18n.Localizer, href func(int) string, hook bool, target int, label string) string {
+	return `<span class="target"><a href="` + href(target) + hookAttr(hook, target) +
+		`>` + text(loc, label) + `</a></span>`
 }
 
-func number(basePath, class string, p int, current bool) string {
+func number(href func(int) string, hook bool, class string, p int, current bool) string {
 	if current {
 		return `<span class="` + class + ` target current">` + strconv.Itoa(p) + `</span>`
 	}
-	return `<span class="` + class + ` target"><a href="` + pageHref(basePath, p) +
-		`" data-pagination-target="` + strconv.Itoa(p) + `">` + strconv.Itoa(p) + `</a></span>`
+	return `<span class="` + class + ` target"><a href="` + href(p) + hookAttr(hook, p) +
+		`>` + strconv.Itoa(p) + `</a></span>`
+}
+
+func hookAttr(hook bool, target int) string {
+	if !hook {
+		return `"`
+	}
+	return `" data-pagination-target="` + strconv.Itoa(target) + `"`
 }
 
 func pageHref(basePath string, p int) string {
