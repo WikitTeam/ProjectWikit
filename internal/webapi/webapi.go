@@ -44,6 +44,7 @@ type Deps struct {
 	Engine renderer.Renderer
 	Bundle *i18n.Bundle
 	Icons  roles.IconLoader
+	Files  string
 	Log    *slog.Logger
 }
 

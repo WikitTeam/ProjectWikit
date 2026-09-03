@@ -61,7 +61,8 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		Log:         log,
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
-	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
+	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons,
+		Files: p.Files(), Log: log}
 
 	profiles := userpage.Deps{
 		DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
