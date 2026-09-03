@@ -19,6 +19,8 @@ type Site struct {
 	Icon        string
 	ThemeID     *int64
 
+	SystemThemeID *int64
+
 	AuthIcon      string
 	FooterLicense string
 	SignupNotice  string
@@ -30,7 +32,7 @@ type Site struct {
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
-       COALESCE(auth_icon, ''), footer_license, signup_notice,
+       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice,
        membership_password_enabled, membership_password, membership_password_role_id
 FROM web_site
 WHERE domain = $1 OR media_domain = $1
@@ -45,7 +47,7 @@ func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 		var s Site
 		err := d.pool.QueryRow(ctx, qSiteByHost, host).Scan(
 			&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage,
-			&s.Icon, &s.ThemeID,
+			&s.Icon, &s.ThemeID, &s.SystemThemeID,
 			&s.AuthIcon, &s.FooterLicense, &s.SignupNotice,
 			&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID)
 		if errors.Is(err, pgx.ErrNoRows) {
