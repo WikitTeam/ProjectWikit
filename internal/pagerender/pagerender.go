@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 	"net/netip"
+	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -56,6 +57,23 @@ func (e *Env) HTML(source string, info renderer.PageInfo, cb *callbacks.Callback
 
 func (e *Env) Text(source string, info renderer.PageInfo, cb *callbacks.Callbacks, mode renderer.Mode) (renderer.Result, error) {
 	return e.deps.Engine.RenderText(e.ctx, source, info, cb, mode)
+}
+
+// ftml answers with the pages a source pulls in and the pages it points at, in
+// that order. Handing the two back swapped would invert every backlink on the site.
+func (e *Env) Backlinks(source string, info renderer.PageInfo, cb *callbacks.Callbacks) ([]db.ArticleLink, error) {
+	result, err := e.deps.Engine.CollectBacklinks(e.ctx, source, info, cb, renderer.ModeSystem)
+	if err != nil {
+		return nil, err
+	}
+	links := make([]db.ArticleLink, 0, len(result.IncludedPages)+len(result.LinkedPages))
+	for _, name := range result.IncludedPages {
+		links = append(links, db.ArticleLink{To: strings.ToLower(name), Kind: db.LinkInclude})
+	}
+	for _, name := range result.LinkedPages {
+		links = append(links, db.ArticleLink{To: strings.ToLower(name), Kind: db.LinkPlain})
+	}
+	return links, nil
 }
 
 func (e *Env) CodeAndHTML(source string, info renderer.PageInfo, cb *callbacks.Callbacks, mode renderer.Mode) (renderer.Parts, error) {
