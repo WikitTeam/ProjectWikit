@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const Container = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
@@ -12,7 +12,7 @@ export const Container = styled.div`
   overflow-x: auto;
 `
 
-export const Link = styled(NavLink)`
+const linkStyle = css`
   padding: 12px 14px;
   text-decoration: none;
   color: ${({ theme }) => theme.uiForeground};
@@ -36,3 +36,7 @@ export const Link = styled(NavLink)`
     font-weight: 500;
   }
 `
+
+export const Link = styled(NavLink)`${linkStyle}`
+
+export const ExternalLink = styled.a`${linkStyle}`

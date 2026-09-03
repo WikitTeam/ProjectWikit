@@ -6,7 +6,7 @@ import * as Styled from './Navigation.styles'
 const Navigation: React.FC = () => {
   return (
     <Styled.Container>
-      <Styled.Link to={Paths.profile}>{t('page.navigation.edit-profile')}</Styled.Link>
+      <Styled.ExternalLink href="/-/profile/edit">{t('page.navigation.edit-profile')}</Styled.ExternalLink>
       <Styled.Link to={Paths.notifications}>{t('page.navigation.notifications')}</Styled.Link>
       <Styled.Link to={Paths.messages}>{t('page.navigation.messages')}</Styled.Link>
     </Styled.Container>
