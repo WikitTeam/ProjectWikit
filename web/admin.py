@@ -206,10 +206,11 @@ class SiteAdmin(SingletonModelAdmin):
     inlines = [SettingsAdmin]
     fieldsets = (
         (None, {
-            'fields': ('slug', 'title', 'headline', 'domain', 'media_domain', 'home_page', 'active_theme')
+            'fields': ('slug', 'title', 'headline', 'domain', 'media_domain', 'home_page',
+                       'active_theme', 'system_theme')
         }),
         ('外观', {
-            'fields': ('icon', 'auth_icon', 'footer_license', 'system_theme')
+            'fields': ('icon', 'auth_icon', 'footer_license')
         }),
         ('注册与入组', {
             'fields': ('signup_notice', 'default_role', 'verified_role',
