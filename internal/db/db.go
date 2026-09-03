@@ -16,6 +16,10 @@ var ErrNotFound = errors.New("db: not found")
 // than in a _test.go file because other packages' tests gate on the same name.
 const EnvDSN = "PWIKIT_TEST_DSN"
 
+// A test that writes needs a database of its own. Rows it leaves standing for a
+// moment are visible to every other package's tests while they run.
+const EnvWriteDSN = "PWIKIT_TEST_WRITE_DSN"
+
 type DB struct {
 	pool *pgxpool.Pool
 }
@@ -48,6 +52,15 @@ var queries []query
 func register(name, sql string) string {
 	queries = append(queries, query{name: name, sql: sql})
 	return sql
+}
+
+// Each statement of an ordered sequence is registered on its own, so the
+// schema-drift test still sees every one of them.
+func registerAll(name string, sqls []string) []string {
+	for i, sql := range sqls {
+		register(fmt.Sprintf("%s.%d", name, i), sql)
+	}
+	return sqls
 }
 
 // prefixed qualifies a column list with a table alias so joins can reuse the
