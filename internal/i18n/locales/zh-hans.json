@@ -2,6 +2,7 @@
   "api-bad-json": "请求体中的JSON格式无效",
   "api-bad-page-id": "无效的页面ID",
   "api-bad-range": "无效的列表范围参数",
+  "api-bad-revision": "无效的版本号",
   "api-bad-request": "无效请求",
   "api-csrf-failed": "CSRF 校验失败",
   "api-forbidden": "权限不足",

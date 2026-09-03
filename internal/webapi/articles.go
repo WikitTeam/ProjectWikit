@@ -67,6 +67,8 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.answer(w, r, loc, name, h.version)
 	case tail == tailLog && r.Method == http.MethodGet:
 		h.answer(w, r, loc, name, h.log)
+	case tail == tailLog && r.Method == http.MethodPut:
+		h.answer(w, r, loc, name, h.revert)
 	case tail == tailVotes && r.Method == http.MethodGet:
 		h.answer(w, r, loc, name, h.votes)
 	case tail == tailVotes && r.Method == http.MethodDelete:

@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -80,8 +81,8 @@ func (h *Articles) update(r *http.Request, loc *i18n.Localizer, name string) (st
 	if err != nil {
 		return "", 0, err
 	}
-	raw, err := io.ReadAll(io.LimitReader(r.Body, bodyLimit+1))
-	if err != nil || len(raw) == 0 || len(raw) > bodyLimit {
+	raw, err := readBody(r)
+	if err != nil {
 		return field("error", loc.T("api-bad-request")), http.StatusBadRequest, nil
 	}
 	var body fields
@@ -113,6 +114,14 @@ func (h *Articles) update(r *http.Request, loc *i18n.Localizer, name string) (st
 		return field("error", loc.T(bad.key)), bad.status, nil
 	}
 	return e.answer()
+}
+
+func readBody(r *http.Request) ([]byte, error) {
+	raw, err := io.ReadAll(io.LimitReader(r.Body, bodyLimit+1))
+	if err != nil || len(raw) == 0 || len(raw) > bodyLimit {
+		return nil, errors.New("webapi: the body is missing or too long")
+	}
+	return raw, nil
 }
 
 func validateEdit(body fields) *refusal {
@@ -338,10 +347,14 @@ func (e *editor) reparent() (*refusal, error) {
 }
 
 func (e *editor) parentName(id *int64) (string, error) {
+	return e.handler.parentName(e.req.Context(), id)
+}
+
+func (h *Articles) parentName(ctx context.Context, id *int64) (string, error) {
 	if id == nil {
 		return "", nil
 	}
-	parent, err := e.handler.deps.DB.ArticleByID(e.req.Context(), *id)
+	parent, err := h.deps.DB.ArticleByID(ctx, *id)
 	if errors.Is(err, db.ErrNotFound) {
 		return "", nil
 	}

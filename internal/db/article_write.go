@@ -19,6 +19,10 @@ const (
 	LogName   = "name"
 
 	LogAuthorship = "authorship"
+
+	LogFileAdded   = "file_added"
+	LogFileDeleted = "file_deleted"
+	LogFileRenamed = "file_renamed"
 )
 
 type Revision struct {
@@ -362,6 +366,8 @@ func (d *DB) SetArticleAuthors(ctx context.Context, articleID int64, authorIDs [
 	return revNumber, true, nil
 }
 
+// The result is never nil. A nil slice reaches Postgres as NULL, and a delete
+// guarded by NOT (x = ANY(NULL)) then clears nothing at all.
 func scanIDs(ctx context.Context, tx pgx.Tx, sql string, arg any) ([]int64, error) {
 	rows, err := tx.Query(ctx, sql, arg)
 	if err != nil {
@@ -369,7 +375,7 @@ func scanIDs(ctx context.Context, tx pgx.Tx, sql string, arg any) ([]int64, erro
 	}
 	defer rows.Close()
 
-	var out []int64
+	out := []int64{}
 	for rows.Next() {
 		var id int64
 		if err := rows.Scan(&id); err != nil {
