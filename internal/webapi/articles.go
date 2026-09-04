@@ -28,6 +28,7 @@ const (
 	tailVersion = "version"
 	tailVotes   = "votes"
 	tailLog     = "log"
+	tailFiles   = "files"
 )
 
 type Articles struct {
@@ -71,6 +72,10 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.answer(w, r, loc, name, h.votes)
 	case tail == tailVotes && r.Method == http.MethodDelete:
 		h.answer(w, r, loc, name, h.resetVotes)
+	case tail == tailFiles && r.Method == http.MethodGet:
+		h.answer(w, r, loc, name, h.files)
+	case tail == tailFiles && r.Method == http.MethodPost:
+		h.answer(w, r, loc, name, h.upload)
 	default:
 		h.upstream.ServeHTTP(w, r)
 	}

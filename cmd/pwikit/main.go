@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -36,6 +37,8 @@ const (
 	envSecretKey    = "SECRET_KEY"
 	envTimeZone     = "PWIKIT_TIMEZONE"
 	envGoogleTag    = "GOOGLE_TAG_ID"
+	envUploadLimit  = "MEDIA_UPLOAD_LIMIT"
+	envStorageLimit = "ABSOLUTE_MEDIA_UPLOAD_LIMIT"
 	defaultUpstream = "http://127.0.0.1:8000"
 	defaultListen   = "127.0.0.1:8080"
 )
@@ -94,6 +97,8 @@ func serve(args []string) error {
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
 	bareOrigin := fs.Bool("bare-origin", false, "drop the port from the Origin header before forwarding")
+	uploadLimit := fs.String("upload-limit", envOr(envUploadLimit, "0"), "size the files still attached to pages may reach, such as 4GB; 0 for no ceiling")
+	storageLimit := fs.String("storage-limit", envOr(envStorageLimit, "0"), "size every file on disk may reach, deleted ones counted; 0 for no ceiling")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -142,11 +147,21 @@ func serve(args []string) error {
 		resizedHandler = site.NewHostRules(conn, listenPort(*listen), media.NewResized(p.Files(), conn), proxy)
 	}
 
+	soft, err := parseSize(*uploadLimit)
+	if err != nil {
+		return fmt.Errorf("parse -upload-limit: %w", err)
+	}
+	hard, err := parseSize(*storageLimit)
+	if err != nil {
+		return fmt.Errorf("parse -storage-limit: %w", err)
+	}
+
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
 	var moduleAPI, preview, profile, articleAPI http.Handler = proxy, proxy, proxy, proxy
-	var profileForm http.Handler = proxy
+	var profileForm, fileAPI http.Handler = proxy, proxy
 	if conn != nil {
-		stack, err := newPageStack(conn, p, assets, proxy, trust, *sidecar, *secret, *timezone, log)
+		stack, err := newPageStack(conn, p, assets, proxy, trust, limits{soft: soft, hard: hard},
+			*sidecar, *secret, *timezone, log)
 		if err != nil {
 			return err
 		}
@@ -163,6 +178,7 @@ func serve(args []string) error {
 		profile = served(stack.profile)
 		profileForm = served(stack.profileForm)
 		articleAPI = served(stack.articleAPI)
+		fileAPI = served(stack.fileAPI)
 	}
 
 	goHandlers := map[string]http.Handler{
@@ -180,6 +196,7 @@ func serve(args []string) error {
 		userpage.Prefix:       profile,
 		userpage.EditPrefix:   profileForm,
 		webapi.ArticlesPrefix: articleAPI,
+		webapi.FilesPrefix:    fileAPI,
 		"/":                   articles,
 	}
 
@@ -221,6 +238,25 @@ func assetFS(dir string) (iofs.FS, error) {
 		return nil, fmt.Errorf("static-dir %q is not a directory", dir)
 	}
 	return os.DirFS(dir), nil
+}
+
+var sizeUnits = map[string]int64{"B": 1, "KB": 1 << 10, "MB": 1 << 20, "GB": 1 << 30, "TB": 1 << 40}
+
+func parseSize(spec string) (int64, error) {
+	digits := strings.TrimLeft(spec, "0123456789")
+	number, err := strconv.ParseInt(spec[:len(spec)-len(digits)], 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("no leading number in %q", spec)
+	}
+	unit := strings.ToUpper(strings.TrimSpace(digits))
+	if unit == "" {
+		return number, nil
+	}
+	scale, ok := sizeUnits[unit]
+	if !ok {
+		return 0, fmt.Errorf("unknown size unit %q", unit)
+	}
+	return number * scale, nil
 }
 
 func envOr(key, fallback string) string {

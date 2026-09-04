@@ -30,10 +30,16 @@ type pageStack struct {
 	profile     http.Handler
 	profileForm http.Handler
 	articleAPI  http.Handler
+	fileAPI     http.Handler
 	close       func()
 }
 
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, trust *proxyheader.Trust, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
+type limits struct {
+	soft int64
+	hard int64
+}
+
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
@@ -62,7 +68,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons,
-		Files: p.Files(), Log: log}
+		Files: p.Files(), SoftLimit: size.soft, HardLimit: size.hard, Log: log}
 
 	profiles := userpage.Deps{
 		DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
@@ -77,6 +83,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		moduleAPI:   webapi.New(api, upstream),
 		preview:     webapi.NewPreview(api),
 		articleAPI:  webapi.NewArticles(api, upstream),
+		fileAPI:     webapi.NewFileItems(api, upstream),
 		profile:     userpage.New(profiles),
 		profileForm: userpage.NewEdit(profiles),
 		close:       closeEngine,
@@ -89,6 +96,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	}
 	resolver := auth.NewResolver(session.New(secret), conn, conn, log)
 	stack.articleAPI = resolver.Middleware(stack.articleAPI)
+	stack.fileAPI = resolver.Middleware(stack.fileAPI)
 	stack.code = resolver.Middleware(stack.code)
 	stack.html = resolver.Middleware(stack.html)
 	stack.theme = resolver.Middleware(stack.theme)

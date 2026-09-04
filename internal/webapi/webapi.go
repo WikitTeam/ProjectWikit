@@ -46,6 +46,10 @@ type Deps struct {
 	Icons  roles.IconLoader
 	Files  string
 	Log    *slog.Logger
+
+	// Zero means no ceiling at all, which is what an unconfigured site gets.
+	SoftLimit int64
+	HardLimit int64
 }
 
 type Handler struct {
