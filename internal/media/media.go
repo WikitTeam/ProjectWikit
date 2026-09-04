@@ -155,7 +155,7 @@ func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType strin
 	}
 
 	for i, s := range segments {
-		segments[i] = partialQuote(s)
+		segments[i] = QuoteName(s)
 	}
 	full, err := paths.Resolve(root, filepath.Join(segments...))
 	if err != nil {
@@ -164,9 +164,9 @@ func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType strin
 	return full, mimeType, size, true
 }
 
-// partialQuote is not urlencoding: the write side escapes only ':' and '/',
-// so widening this set would stop finding files already on disk.
-func partialQuote(s string) string {
+// Not urlencoding. Widening this set would put new uploads in directories where
+// the files already on disk are not.
+func QuoteName(s string) string {
 	return strings.NewReplacer(":", "%3A", "/", "%2F", "?", "%3F").Replace(s)
 }
 

@@ -77,7 +77,7 @@ func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string,
 		return nil, os.ErrNotExist
 	}
 
-	stored := filepath.Join(partialQuote(file.ArticleMediaName), partialQuote(file.MediaName))
+	stored := filepath.Join(QuoteName(file.ArticleMediaName), QuoteName(file.MediaName))
 	cache, err := paths.Resolve(filepath.Join(h.root, resizedDir), filepath.Join(stored, size.Name+".jpg"))
 	if err != nil {
 		return nil, err
