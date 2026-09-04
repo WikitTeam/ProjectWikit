@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type LogEntry struct {
@@ -53,4 +56,22 @@ func (d *DB) ArticleLogCount(ctx context.Context, articleID int64) (int, error) 
 		return 0, fmt.Errorf("count log of article %d: %w", articleID, err)
 	}
 	return n, nil
+}
+
+var qLogEntryByID = register("LogEntryByID", `
+SELECT rev_number, type, meta, comment, created_at, user_id
+FROM web_articlelogentry
+WHERE id = $1`)
+
+func (d *DB) LogEntryByID(ctx context.Context, id int64) (LogEntry, error) {
+	var e LogEntry
+	err := d.pool.QueryRow(ctx, qLogEntryByID, id).
+		Scan(&e.RevNumber, &e.Type, &e.Meta, &e.Comment, &e.CreatedAt, &e.UserID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return LogEntry{}, ErrNotFound
+	}
+	if err != nil {
+		return LogEntry{}, fmt.Errorf("read log entry %d: %w", id, err)
+	}
+	return e, nil
 }
