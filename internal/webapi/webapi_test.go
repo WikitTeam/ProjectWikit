@@ -107,7 +107,7 @@ func post(body string) *http.Request {
 
 func TestUnportedMethodsGoUpstreamWithTheirBody(t *testing.T) {
 	up := &recorder{}
-	body := `{"module": "forumnewthread", "method": "submit", "params": {"name": "x"}}`
+	body := `{"module": "listusers", "method": "get", "params": {"name": "x"}}`
 
 	New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), post(body))
 
