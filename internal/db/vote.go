@@ -181,7 +181,7 @@ var (
 INSERT INTO web_articlelogentry (article_id, user_id, type, meta, comment, created_at, rev_number)
 SELECT $1, $2, $3, $4, $5, $6, COALESCE(MAX(rev_number), -1) + 1
 FROM web_articlelogentry WHERE article_id = $1
-RETURNING rev_number`)
+RETURNING id, rev_number`)
 
 	qTouchArticle = register("TouchArticle", `
 UPDATE web_article SET updated_at = $2 WHERE id = $1`)
@@ -190,26 +190,27 @@ UPDATE web_article SET updated_at = $2 WHERE id = $1`)
 // The revision is numbered under a lock on this article alone, so two writers
 // cannot pick the same number and neither waits on a page it is not touching.
 func (d *DB) AddArticleLogEntry(ctx context.Context, articleID int64, userID *int64,
-	kind, comment, meta string, at time.Time) (int, error) {
+	kind, comment, meta string, at time.Time) (Revision, error) {
 
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("begin log entry: %w", err)
+		return Revision{}, fmt.Errorf("begin log entry: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
 	if _, err := tx.Exec(ctx, qLockArticleLog, articleID); err != nil {
-		return 0, fmt.Errorf("lock article log %d: %w", articleID, err)
+		return Revision{}, fmt.Errorf("lock article log %d: %w", articleID, err)
 	}
-	var revNumber int
-	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, kind, meta, comment, at).Scan(&revNumber); err != nil {
-		return 0, fmt.Errorf("write log entry: %w", err)
+	var rev Revision
+	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, kind, meta, comment, at).
+		Scan(&rev.EntryID, &rev.RevNumber); err != nil {
+		return Revision{}, fmt.Errorf("write log entry: %w", err)
 	}
 	if _, err := tx.Exec(ctx, qTouchArticle, articleID, at); err != nil {
-		return 0, fmt.Errorf("touch article %d: %w", articleID, err)
+		return Revision{}, fmt.Errorf("touch article %d: %w", articleID, err)
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return 0, fmt.Errorf("commit log entry: %w", err)
+		return Revision{}, fmt.Errorf("commit log entry: %w", err)
 	}
-	return revNumber, nil
+	return rev, nil
 }

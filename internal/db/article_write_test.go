@@ -406,8 +406,8 @@ func TestSetArticleParentRecordsTheMove(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SetArticleParent() err = %v, want nil", err)
 	}
-	if rev != 0 {
-		t.Errorf("SetArticleParent().RevNumber = %d, want 0", rev)
+	if rev.RevNumber != 0 {
+		t.Errorf("SetArticleParent().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
 	article, err := d.ArticleByID(ctx, child)
@@ -483,8 +483,8 @@ func TestUpdateArticleTitleRecordsWhatItWas(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UpdateArticleTitle() err = %v, want nil", err)
 	}
-	if rev != 0 {
-		t.Errorf("UpdateArticleTitle() = %d, want 0", rev)
+	if rev.RevNumber != 0 {
+		t.Errorf("UpdateArticleTitle().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
 	article, err := d.ArticleByID(ctx, id)
@@ -611,8 +611,8 @@ func TestSetArticleAuthorsReplacesTheCredit(t *testing.T) {
 	if !wrote {
 		t.Fatal("SetArticleAuthors() wrote no revision, want one")
 	}
-	if rev != 0 {
-		t.Errorf("SetArticleAuthors() = %d, want 0", rev)
+	if rev.RevNumber != 0 {
+		t.Errorf("SetArticleAuthors().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
 	got := authorsOf(t, d, id)
@@ -710,8 +710,8 @@ func TestRenameArticleTakesItsLinksAlong(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RenameArticle() err = %v, want nil", err)
 	}
-	if rev != 0 {
-		t.Errorf("RenameArticle() = %d, want 0", rev)
+	if rev.RevNumber != 0 {
+		t.Errorf("RenameArticle().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
 	article, err := d.ArticleByID(ctx, id)

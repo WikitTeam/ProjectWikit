@@ -65,27 +65,27 @@ WHERE slug = name
 // A name with a space in it is dropped rather than refused, so one bad entry
 // does not cost the page the rest of its tags.
 func (d *DB) SetArticleTags(ctx context.Context, articleID int64, tags []string,
-	allowCreate bool, userID *int64, at time.Time) (int, bool, error) {
+	allowCreate bool, userID *int64, at time.Time) (Revision, bool, error) {
 
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
-		return 0, false, fmt.Errorf("begin tags of %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("begin tags of %d: %w", articleID, err)
 	}
 	defer tx.Rollback(ctx)
 
 	wanted, err := resolveTags(ctx, tx, tags, allowCreate)
 	if err != nil {
-		return 0, false, fmt.Errorf("resolve tags of %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("resolve tags of %d: %w", articleID, err)
 	}
 	held, err := readArticleTags(ctx, tx, articleID)
 	if err != nil {
-		return 0, false, fmt.Errorf("read tags of %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("read tags of %d: %w", articleID, err)
 	}
 
 	added := tagsMissingFrom(wanted, held)
 	removed := tagsMissingFrom(held, wanted)
 	if len(added) == 0 && len(removed) == 0 {
-		return 0, false, nil
+		return Revision{}, false, nil
 	}
 
 	keep := make([]int64, 0, len(wanted))
@@ -93,40 +93,40 @@ func (d *DB) SetArticleTags(ctx context.Context, articleID int64, tags []string,
 		keep = append(keep, tag.ID)
 	}
 	if _, err := tx.Exec(ctx, qDropArticleTags, articleID, keep); err != nil {
-		return 0, false, fmt.Errorf("drop tags of %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("drop tags of %d: %w", articleID, err)
 	}
 	for _, tag := range added {
 		if _, err := tx.Exec(ctx, qInsertArticleTag, articleID, tag.ID); err != nil {
-			return 0, false, fmt.Errorf("tag %d: %w", articleID, err)
+			return Revision{}, false, fmt.Errorf("tag %d: %w", articleID, err)
 		}
 	}
 	if allowCreate {
 		if _, err := tx.Exec(ctx, qDropOrphanTags); err != nil {
-			return 0, false, fmt.Errorf("sweep tags: %w", err)
+			return Revision{}, false, fmt.Errorf("sweep tags: %w", err)
 		}
 		if _, err := tx.Exec(ctx, qDropOrphanTagCategories); err != nil {
-			return 0, false, fmt.Errorf("sweep tag categories: %w", err)
+			return Revision{}, false, fmt.Errorf("sweep tag categories: %w", err)
 		}
 	}
 
 	meta, err := json.Marshal(map[string]any{"added_tags": added, "removed_tags": removed})
 	if err != nil {
-		return 0, false, fmt.Errorf("encode tag meta of %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("encode tag meta of %d: %w", articleID, err)
 	}
 	if _, err := tx.Exec(ctx, qLockArticleLog, articleID); err != nil {
-		return 0, false, fmt.Errorf("lock article log %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("lock article log %d: %w", articleID, err)
 	}
-	var revNumber int
-	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, LogTags, string(meta), "", at).Scan(&revNumber); err != nil {
-		return 0, false, fmt.Errorf("write revision of %d: %w", articleID, err)
+	var rev Revision
+	if err := tx.QueryRow(ctx, qInsertArticleLog, articleID, userID, LogTags, string(meta), "", at).Scan(&rev.EntryID, &rev.RevNumber); err != nil {
+		return Revision{}, false, fmt.Errorf("write revision of %d: %w", articleID, err)
 	}
 	if _, err := tx.Exec(ctx, qTouchArticle, articleID, at); err != nil {
-		return 0, false, fmt.Errorf("touch article %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("touch article %d: %w", articleID, err)
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return 0, false, fmt.Errorf("commit tags of %d: %w", articleID, err)
+		return Revision{}, false, fmt.Errorf("commit tags of %d: %w", articleID, err)
 	}
-	return revNumber, true, nil
+	return rev, true, nil
 }
 
 func resolveTags(ctx context.Context, tx pgx.Tx, tags []string, allowCreate bool) ([]taggedName, error) {

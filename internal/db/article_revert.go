@@ -209,28 +209,28 @@ type RevertWrite struct {
 	At        time.Time
 }
 
-func (d *DB) WriteRevertEntry(ctx context.Context, w RevertWrite) (int, error) {
+func (d *DB) WriteRevertEntry(ctx context.Context, w RevertWrite) (Revision, error) {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("begin revert of %d: %w", w.ArticleID, err)
+		return Revision{}, fmt.Errorf("begin revert of %d: %w", w.ArticleID, err)
 	}
 	defer tx.Rollback(ctx)
 
 	if _, err := tx.Exec(ctx, qLockArticleLog, w.ArticleID); err != nil {
-		return 0, fmt.Errorf("lock article log %d: %w", w.ArticleID, err)
+		return Revision{}, fmt.Errorf("lock article log %d: %w", w.ArticleID, err)
 	}
-	var revNumber int
+	var rev Revision
 	if err := tx.QueryRow(ctx, qInsertArticleLog, w.ArticleID, w.UserID, LogRevert,
-		string(w.Meta), "", w.At).Scan(&revNumber); err != nil {
-		return 0, fmt.Errorf("write revision of %d: %w", w.ArticleID, err)
+		string(w.Meta), "", w.At).Scan(&rev.EntryID, &rev.RevNumber); err != nil {
+		return Revision{}, fmt.Errorf("write revision of %d: %w", w.ArticleID, err)
 	}
 	if _, err := tx.Exec(ctx, qTouchArticle, w.ArticleID, w.At); err != nil {
-		return 0, fmt.Errorf("touch article %d: %w", w.ArticleID, err)
+		return Revision{}, fmt.Errorf("touch article %d: %w", w.ArticleID, err)
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return 0, fmt.Errorf("commit revert of %d: %w", w.ArticleID, err)
+		return Revision{}, fmt.Errorf("commit revert of %d: %w", w.ArticleID, err)
 	}
-	return revNumber, nil
+	return rev, nil
 }
 
 var (
