@@ -315,25 +315,25 @@ const ForumPostOptions: React.FC<Props> = ({
       )}
       {canReply && (
         <strong>
-          <a href="#" onClick={onReply}>
+          <a href="#" className="btn btn-primary btn-small btn-sm" onClick={onReply}>
             {t('forum-post-options.reply')}
           </a>
         </strong>
       )}{' '}
       {(canEdit || canDelete) && (
-        <a href="#" onClick={onToggle}>
+        <a href="#" className="btn btn-default btn-small btn-sm" onClick={onToggle}>
           {t('forum-post-options.options')}
         </a>
       )}
       {open && (
         <div className="options">
           {canEdit && (
-            <a href="#" onClick={onEdit}>
+            <a href="#" className="btn btn-default btn-small btn-sm" onClick={onEdit}>
               {t('forum-post-options.edit')}
             </a>
           )}{' '}
           {canDelete && (
-            <a href="#" onClick={onDelete}>
+            <a href="#" className="btn btn-default btn-small btn-sm" onClick={onDelete}>
               {t('forum-post-options.delete')}
             </a>
           )}
