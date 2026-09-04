@@ -125,9 +125,13 @@ func (rev *reverter) apply(target int) error {
 	if err != nil {
 		return err
 	}
-	if _, err := rev.handler.deps.DB.WriteRevertEntry(rev.req.Context(), db.RevertWrite{
+	written, err := rev.handler.deps.DB.WriteRevertEntry(rev.req.Context(), db.RevertWrite{
 		ArticleID: rev.article.ID, UserID: rev.userID, Meta: encoded, At: rev.at,
-	}); err != nil {
+	})
+	if err != nil {
+		return err
+	}
+	if err := rev.handler.notifyRevision(rev.req, rev.article, written); err != nil {
 		return err
 	}
 	return rev.reindex()

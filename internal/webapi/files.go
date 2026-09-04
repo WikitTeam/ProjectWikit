@@ -257,8 +257,12 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 	if err != nil {
 		return "", 0, err
 	}
-	if _, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
-		db.LogFileAdded, "", string(meta), at); err != nil {
+	rev, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
+		db.LogFileAdded, "", string(meta), at)
+	if err != nil {
+		return "", 0, err
+	}
+	if err := h.notifyRevision(r, article, rev); err != nil {
 		return "", 0, err
 	}
 	return field("status", "ok"), http.StatusOK, nil
@@ -366,8 +370,12 @@ func (h *Articles) removeFile(r *http.Request, loc *i18n.Localizer,
 	if err != nil {
 		return "", 0, err
 	}
-	if _, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
-		db.LogFileDeleted, "", string(meta), at); err != nil {
+	rev, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
+		db.LogFileDeleted, "", string(meta), at)
+	if err != nil {
+		return "", 0, err
+	}
+	if err := h.notifyRevision(r, article, rev); err != nil {
 		return "", 0, err
 	}
 	return field("status", "ok"), http.StatusOK, nil
@@ -422,8 +430,12 @@ func (h *Articles) renameFile(r *http.Request, loc *i18n.Localizer,
 	if err != nil {
 		return "", 0, err
 	}
-	if _, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
-		db.LogFileRenamed, "", string(meta), time.Now().UTC()); err != nil {
+	rev, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
+		db.LogFileRenamed, "", string(meta), time.Now().UTC())
+	if err != nil {
+		return "", 0, err
+	}
+	if err := h.notifyRevision(r, article, rev); err != nil {
 		return "", 0, err
 	}
 	return field("status", "ok"), http.StatusOK, nil

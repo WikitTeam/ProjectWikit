@@ -202,12 +202,13 @@ func (e *editor) rename() (*refusal, error) {
 	}
 
 	newCategory, newName := wikidot.Split(free)
-	if _, err := e.handler.deps.DB.RenameArticle(e.req.Context(), e.article.ID,
-		newCategory, newName, from, e.userID, e.at); err != nil {
+	rev, err := e.handler.deps.DB.RenameArticle(e.req.Context(), e.article.ID,
+		newCategory, newName, from, e.userID, e.at)
+	if err != nil {
 		return nil, err
 	}
 	e.article.Category, e.article.Name = newCategory, newName
-	return nil, nil
+	return nil, e.announce(rev)
 }
 
 // Without a free name the move would fail on the unique constraint.
@@ -238,11 +239,12 @@ func (e *editor) retitle() (*refusal, error) {
 	if !e.may(perms.EditArticles) {
 		return ptr(refuse("api-forbidden", http.StatusForbidden)), nil
 	}
-	if _, err := e.handler.deps.DB.UpdateArticleTitle(e.req.Context(), e.article.ID, title, e.userID, e.at); err != nil {
+	rev, err := e.handler.deps.DB.UpdateArticleTitle(e.req.Context(), e.article.ID, title, e.userID, e.at)
+	if err != nil {
 		return nil, err
 	}
 	e.article.Title = title
-	return nil, nil
+	return nil, e.announce(rev)
 }
 
 func (e *editor) rewrite() (*refusal, error) {
@@ -263,17 +265,21 @@ func (e *editor) rewrite() (*refusal, error) {
 	}
 
 	comment, _ := e.body.text("comment")
-	if _, err := e.handler.deps.DB.CreateArticleVersion(ctx, db.VersionWrite{
+	rev, err := e.handler.deps.DB.CreateArticleVersion(ctx, db.VersionWrite{
 		ArticleID: e.article.ID,
 		Source:    source,
 		UserID:    e.userID,
 		Kind:      db.LogSource,
 		Comment:   comment,
 		At:        e.at,
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
-	return nil, e.handler.refreshLinks(e.req, e.site, e.article.ID, source)
+	if err := e.handler.refreshLinks(e.req, e.site, e.article.ID, source); err != nil {
+		return nil, err
+	}
+	return nil, e.announce(rev)
 }
 
 func (e *editor) retag() (*refusal, error) {
@@ -288,8 +294,11 @@ func (e *editor) retag() (*refusal, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = e.handler.deps.DB.SetArticleTags(e.req.Context(), e.article.ID, tags, allow, e.userID, e.at)
-	return nil, err
+	rev, _, err := e.handler.deps.DB.SetArticleTags(e.req.Context(), e.article.ID, tags, allow, e.userID, e.at)
+	if err != nil {
+		return nil, err
+	}
+	return nil, e.announce(rev)
 }
 
 func (e *editor) mayCreateTags() (bool, error) {
@@ -340,7 +349,11 @@ func (e *editor) reparent() (*refusal, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := e.handler.deps.DB.SetArticleParent(ctx, e.article.ID, parentID, e.userID, string(meta), e.at); err != nil {
+	rev, err := e.handler.deps.DB.SetArticleParent(ctx, e.article.ID, parentID, e.userID, string(meta), e.at)
+	if err != nil {
+		return nil, err
+	}
+	if err := e.announce(rev); err != nil {
 		return nil, err
 	}
 	e.article.ParentID = parentID
@@ -395,8 +408,15 @@ func (e *editor) recredit() (*refusal, error) {
 			ids = append(ids, id)
 		}
 	}
-	_, _, err := e.handler.deps.DB.SetArticleAuthors(e.req.Context(), e.article.ID, ids, e.userID, e.at)
-	return nil, err
+	rev, _, err := e.handler.deps.DB.SetArticleAuthors(e.req.Context(), e.article.ID, ids, e.userID, e.at)
+	if err != nil {
+		return nil, err
+	}
+	return nil, e.announce(rev)
+}
+
+func (e *editor) announce(rev db.Revision) error {
+	return e.handler.notifyRevision(e.req, e.article, rev)
 }
 
 func (e *editor) answer() (string, int, error) {

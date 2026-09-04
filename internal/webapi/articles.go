@@ -321,8 +321,12 @@ func (h *Articles) resetVotes(r *http.Request, loc *i18n.Localizer, name string)
 	if user != nil {
 		userID = &user.ID
 	}
-	if _, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
-		db.LogVotesDeleted, "", meta, time.Now().UTC()); err != nil {
+	rev, err := h.deps.DB.AddArticleLogEntry(ctx, article.ID, userID,
+		db.LogVotesDeleted, "", meta, time.Now().UTC())
+	if err != nil {
+		return "", 0, err
+	}
+	if err := h.notifyRevision(r, article, rev); err != nil {
 		return "", 0, err
 	}
 	return field("status", "ok"), http.StatusOK, nil

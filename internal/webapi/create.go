@@ -145,14 +145,25 @@ func (h *Articles) writeNewArticle(r *http.Request, current *db.Site, name strin
 	if err != nil {
 		return err
 	}
-	if _, err := h.deps.DB.CreateArticleVersion(ctx, db.VersionWrite{
+	rev, err := h.deps.DB.CreateArticleVersion(ctx, db.VersionWrite{
 		ArticleID: id,
 		Source:    *input.Source,
 		UserID:    userID,
 		Kind:      db.LogNew,
 		Title:     *input.Title,
 		At:        at,
-	}); err != nil {
+	})
+	if err != nil {
+		return err
+	}
+	fresh, err := h.deps.DB.ArticleByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := h.logCreate(r, fresh, user); err != nil {
+		return err
+	}
+	if err := h.notifyRevision(r, fresh, rev); err != nil {
 		return err
 	}
 	if err := h.refreshLinks(r, current, id, *input.Source); err != nil {
@@ -217,8 +228,15 @@ func (h *Articles) setParent(r *http.Request, current *db.Site, id int64,
 	if err != nil {
 		return err
 	}
-	_, err = h.deps.DB.SetArticleParent(ctx, id, parentID, userID, meta, at)
-	return err
+	rev, err := h.deps.DB.SetArticleParent(ctx, id, parentID, userID, meta, at)
+	if err != nil {
+		return err
+	}
+	child, err := h.deps.DB.ArticleByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	return h.notifyRevision(r, child, rev)
 }
 
 // A page created with a parent had none a moment ago, so the previous half of
