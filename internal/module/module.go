@@ -5,6 +5,7 @@ package module
 import (
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/form"
@@ -105,6 +106,18 @@ type Data interface {
 	RoleByRef(ref string) (*roles.Role, error)
 	ArticleHasAuthor(articleID, userID int64) (bool, error)
 	RolesByUser(id int64) ([]roles.Role, error)
+
+	ForumPostVersions(postID int64) ([]db.ForumPostVersion, error)
+	ForumPostSource(postID int64, at *time.Time) (string, error)
+	CreateForumPost(w db.ForumPostWrite) (int64, error)
+	CreateForumThread(w db.ForumThreadWrite, source string) (int64, int64, error)
+	UpdateForumPost(postID int64, name, source, previous string, authorID *int64) error
+	UpdateForumThread(threadID int64, e db.ForumThreadEdit) error
+	DeleteForumPost(postID int64) error
+	SendNotification(kind, meta string, recipients []int64) error
+	ThreadSubscribers(threadID int64) ([]int64, error)
+	SubscribeToThread(userID, threadID int64) error
+	ActiveUsersByNames(names []string) ([]db.User, error)
 
 	Subject(user *db.User) (perms.Subject, error)
 	ForumSectionObject(s *db.ForumSection) *perms.Object

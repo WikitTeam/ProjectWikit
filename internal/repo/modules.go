@@ -395,3 +395,47 @@ func (m moduleData) MemberCount(roleID *int64) (int, error) {
 func (m moduleData) RoleByRef(ref string) (*roles.Role, error) {
 	return m.repo.db.RoleByRef(m.repo.ctx, ref)
 }
+
+func (m moduleData) ForumPostVersions(postID int64) ([]db.ForumPostVersion, error) {
+	return m.repo.db.ForumPostVersions(m.repo.ctx, postID)
+}
+
+func (m moduleData) ForumPostSource(postID int64, at *time.Time) (string, error) {
+	return m.repo.db.ForumPostSource(m.repo.ctx, postID, at)
+}
+
+func (m moduleData) CreateForumPost(w db.ForumPostWrite) (int64, error) {
+	return m.repo.db.CreateForumPost(m.repo.ctx, w)
+}
+
+func (m moduleData) CreateForumThread(w db.ForumThreadWrite, source string) (int64, int64, error) {
+	return m.repo.db.CreateForumThread(m.repo.ctx, w, source)
+}
+
+func (m moduleData) UpdateForumPost(postID int64, name, source, previous string, authorID *int64) error {
+	return m.repo.db.UpdateForumPost(m.repo.ctx, postID, name, source, previous, authorID, time.Now().UTC())
+}
+
+func (m moduleData) UpdateForumThread(threadID int64, e db.ForumThreadEdit) error {
+	return m.repo.db.UpdateForumThread(m.repo.ctx, threadID, e)
+}
+
+func (m moduleData) DeleteForumPost(postID int64) error {
+	return m.repo.db.DeleteForumPost(m.repo.ctx, postID)
+}
+
+func (m moduleData) SendNotification(kind, meta string, recipients []int64) error {
+	return m.repo.db.SendNotification(m.repo.ctx, kind, meta, recipients, time.Now().UTC())
+}
+
+func (m moduleData) ThreadSubscribers(threadID int64) ([]int64, error) {
+	return m.repo.db.ThreadSubscribers(m.repo.ctx, threadID)
+}
+
+func (m moduleData) SubscribeToThread(userID, threadID int64) error {
+	return m.repo.db.SubscribeToThread(m.repo.ctx, userID, threadID)
+}
+
+func (m moduleData) ActiveUsersByNames(names []string) ([]db.User, error) {
+	return m.repo.db.ActiveUsersByNames(m.repo.ctx, names)
+}
