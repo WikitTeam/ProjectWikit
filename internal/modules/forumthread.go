@@ -652,26 +652,27 @@ func forumThreadHTML(env module.Env, view forumThreadView) string {
 func forumPostsHTML(posts []forumThreadPost) string {
 	var b strings.Builder
 	for _, post := range posts {
+		id := strconv.FormatInt(post.id, 10)
 		head := `<div class="head ">`
 		if post.isOP {
 			head = `<div class="head op-post">`
 		}
-		b.WriteString("\n" + ind8 + `<div class="post-container">` +
-			"\n" + ind12 + `<div class="post" id="post-` + strconv.FormatInt(post.id, 10) + `">` +
+		b.WriteString("\n" + ind8 + `<div class="post-container" id="fpc-` + id + `">` +
+			"\n" + ind12 + `<div class="post" id="post-` + id + `">` +
 			"\n" + ind16 + `<div class="long">` +
 			"\n" + ind20 + head +
-			"\n" + ind24 + `<div class="title">` +
+			"\n" + ind24 + `<div class="title" id="post-title-` + id + `">` +
 			"\n" + ind28 + escape.HTML(post.name) +
 			"\n" + ind24 + `</div>` +
 			"\n" + ind24 + `<div class="info">` +
 			"\n" + ind28 + post.author + " " + post.createdAt + " " + post.authorRate +
 			"\n" + ind24 + `</div>` +
 			"\n" + ind20 + `</div>` +
-			"\n" + ind20 + `<div class="content">` +
+			"\n" + ind20 + `<div class="content" id="post-content-` + id + `">` +
 			"\n" + ind24 + post.content +
 			"\n" + ind20 + `</div>` +
-			"\n" + ind20 + `<div class="options w-forum-post-options" data-config="` +
-			escape.HTML(post.options) + `"></div>` +
+			"\n" + ind20 + `<div class="options w-forum-post-options" id="post-options-` + id +
+			`" data-config="` + escape.HTML(post.options) + `"></div>` +
 			"\n" + ind16 + `</div>` +
 			"\n" + ind12 + `</div>` +
 			"\n" + ind12)

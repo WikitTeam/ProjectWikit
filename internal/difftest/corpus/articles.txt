@@ -67,6 +67,8 @@ OPTIONS /probe:full
 /forum/t-999999/p/2
 /forum:new-thread
 /forum:new-thread/c/999999
+!/forum/t-121
+# a thread that actually holds posts, unlike the misses above it.
 /search:site
 /search:site/q/scp
 /search:site/q/%20spaced%20/author/probe-author
