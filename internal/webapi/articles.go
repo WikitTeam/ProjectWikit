@@ -41,8 +41,6 @@ func NewArticles(d Deps, upstream http.Handler) *Articles {
 	return &Articles{deps: d, upstream: upstream}
 }
 
-// Only the tails listed here are answered. A page's own URL still belongs to
-// the upstream, which is where saving lives.
 func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
 	if r.URL.Path == CreatePath && r.Method == http.MethodPost {
@@ -78,12 +76,12 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// The page's own path answers only what it writes. Reading one is still the
-// upstream's, which is where the editor asks for it.
 func (h *Articles) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, name string) {
 	switch {
 	case name == "":
 		h.upstream.ServeHTTP(w, r)
+	case r.Method == http.MethodGet:
+		h.answer(w, r, loc, name, h.fetch)
 	case r.Method == http.MethodPut:
 		h.answer(w, r, loc, name, h.update)
 	case r.Method == http.MethodDelete:
@@ -397,6 +395,13 @@ func (h *Articles) rating(r *http.Request, article *db.Article) (page.Rating, er
 		return page.Rating{}, err
 	}
 	return page.RatingOf(mode, stats), nil
+}
+
+func textOrNil(s *string) any {
+	if s == nil {
+		return nil
+	}
+	return *s
 }
 
 func idOrNil(id *int64) any {

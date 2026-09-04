@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -404,12 +405,14 @@ func (e *editor) answer() (string, int, error) {
 	if err != nil {
 		return "", 0, err
 	}
-	source, err := e.handler.deps.DB.LatestSource(ctx, article.ID)
-	if err != nil && !errors.Is(err, db.ErrNotFound) {
+	source, err := e.handler.latestSource(ctx, article.ID)
+	if err != nil {
 		return "", 0, err
 	}
-	if err := e.reindex(article, source); err != nil {
-		return "", 0, err
+	if source != nil {
+		if err := e.reindex(article, *source); err != nil {
+			return "", 0, err
+		}
 	}
 
 	body, err := e.handler.articleJSON(e.req, article, source)
@@ -460,12 +463,16 @@ func (h *Articles) renderText(r *http.Request, current *db.Site, article *db.Art
 	return result.Body, nil
 }
 
-func (h *Articles) articleJSON(r *http.Request, article *db.Article, source string) (string, error) {
+func (h *Articles) articleJSON(r *http.Request, article *db.Article, source *string) (string, error) {
 	ctx := r.Context()
 	tags, err := h.deps.DB.ArticleTags(ctx, article.ID)
 	if err != nil {
 		return "", err
 	}
+	for i := range tags {
+		tags[i] = strings.ToLower(tags[i])
+	}
+	slices.Sort(tags)
 	authors, err := h.deps.DB.ArticleAuthors(ctx, article.ID)
 	if err != nil {
 		return "", err
@@ -500,7 +507,7 @@ func (h *Articles) articleJSON(r *http.Request, article *db.Article, source stri
 		{Key: "uid", Value: article.ID},
 		{Key: "pageId", Value: article.FullName()},
 		{Key: "title", Value: article.Title},
-		{Key: "source", Value: source},
+		{Key: "source", Value: textOrNil(source)},
 		{Key: "tags", Value: tags},
 		{Key: "author", Value: rendered[0]},
 		{Key: "authors", Value: rendered},

@@ -77,3 +77,12 @@ OPTIONS /probe:full
 /probe:changes/p/2
 /probe:changes/perpage/10/category/probe
 /probe:changes/username/~probe/source/true
+
+/pw-api/articles/probe:full
+/pw-api/articles/probe:bare
+/pw-api/articles/probe:tagged
+/pw-api/articles/probestars:unrated
+/pw-api/articles/probe:parent
+/pw-api/articles/_default:main
+/pw-api/articles/no-such-page
+# the editor asks for a page's source and metadata through these.
