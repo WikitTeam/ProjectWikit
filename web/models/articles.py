@@ -6,7 +6,8 @@ __all__ = [
     'ArticleVersion',
     'ArticleLogEntry',
     'Vote',
-    'ExternalLink'
+    'ExternalLink',
+    'ArticleFavourite'
 ]
 
 import re
@@ -287,3 +288,15 @@ class ExternalLink(auto_prefetch.Model):
     link_from = CITextField('源文章', null=False)
     link_to = CITextField('目标文章', null=False)
     link_type = models.TextField('链接类型', choices=Type.choices, null=False)
+
+class ArticleFavourite(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
+        verbose_name = '收藏'
+        verbose_name_plural = '收藏'
+
+        constraints = [models.UniqueConstraint(fields=['article', 'user'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['user', 'created_at'])]
+
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name='文章')
+    user = auto_prefetch.ForeignKey(User, on_delete=models.CASCADE, verbose_name='收藏者')
+    created_at = models.DateTimeField('收藏时间', auto_now_add=True)

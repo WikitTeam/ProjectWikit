@@ -3,7 +3,8 @@ __all__ = [
     'ForumCategory',
     'ForumThread',
     'ForumPost',
-    'ForumPostVersion'
+    'ForumPostVersion',
+    'ForumPostLike'
 ]
 
 import auto_prefetch
@@ -123,3 +124,15 @@ class ForumPostVersion(auto_prefetch.Model):
     source = models.TextField('帖子内容')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='编辑作者')
+
+class ForumPostLike(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
+        verbose_name = '帖子点赞'
+        verbose_name_plural = '帖子点赞'
+
+        constraints = [models.UniqueConstraint(fields=['post', 'user'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['post', 'created_at'])]
+
+    post = auto_prefetch.ForeignKey(ForumPost, on_delete=models.CASCADE, verbose_name='帖子')
+    user = auto_prefetch.ForeignKey(User, on_delete=models.CASCADE, verbose_name='点赞者')
+    created_at = models.DateTimeField('点赞时间', auto_now_add=True)
