@@ -71,6 +71,7 @@ type SubViewType =
 const BUTTON_HINTS: [string, string][] = [
   ['edit-button', 'page-options.hint.edit'],
   ['pagerate-button', 'page-options.hint.rate'],
+  ['favourite-button', 'page-options.hint.favourite'],
   ['tags-button', 'page-options.hint.tags'],
   ['discuss-button', 'page-options.hint.discuss'],
   ['history-button', 'page-options.hint.history'],

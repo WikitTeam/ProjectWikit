@@ -408,6 +408,7 @@
   "page-options.hint.delete": "删除本页，或将其移入归档分类。",
   "page-options.hint.discuss": "若您想要讨论本页内容，这是最简单的方法。",
   "page-options.hint.edit": "点击编辑本页内容。",
+  "page-options.hint.favourite": "把本页加入你的收藏，或取消收藏。",
   "page-options.hint.files": "检视并管理本页附件。",
   "page-options.hint.history": "查看本页过去是如何沿革的。",
   "page-options.hint.lock": "锁定本页，使其只能由管理员编辑。",
