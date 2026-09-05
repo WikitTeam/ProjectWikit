@@ -168,6 +168,10 @@
 .thread-container .post .long .head.op-post {
   background: #e0e0e0;
 }
+
+#new-post-div table.form {
+  margin: 1em 0;
+}
 /* =============== */
 
 .printuser .badge {

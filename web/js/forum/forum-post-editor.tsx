@@ -276,7 +276,7 @@ const ForumPostEditor: React.FC<Props> = ({
   }
 
   return (
-    <Styles>
+    <Styles id="new-post-div">
       {saving && (
         <WikidotModal isLoading>
           <p>{t('forum.post-editor.saving')}</p>
@@ -295,12 +295,13 @@ const ForumPostEditor: React.FC<Props> = ({
         </WikidotModal>
       )}
       <form id={formId} onSubmit={onSubmit}>
-        <table className="form" style={{ margin: '1em 0' }}>
+        <table className="form">
           <tbody>
             <tr>
               <td>{isThread ? t('forum.post-editor.thread-title-label') : t('forum.post-editor.post-title-label')}</td>
               <td>
                 <input
+                  id="np-subject"
                   className="text form-control"
                   value={name}
                   onChange={onInputChange}
@@ -308,7 +309,6 @@ const ForumPostEditor: React.FC<Props> = ({
                   type="text"
                   size={35}
                   maxLength={128}
-                  style={{ fontWeight: 'bold', fontSize: '130%' }}
                   disabled={loading || saving}
                 />
               </td>
@@ -337,13 +337,13 @@ const ForumPostEditor: React.FC<Props> = ({
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
           {!useAdvancedEditor && (
             <textarea
+              id="np-text"
               className="form-control"
               value={source}
               onChange={e => onSourceChange(e.target.value)}
               name="source"
               rows={10}
               cols={60}
-              style={{ width: '95%' }}
               disabled={loading || saving}
             />
           )}

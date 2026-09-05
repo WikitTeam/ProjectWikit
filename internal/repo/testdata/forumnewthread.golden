@@ -26,7 +26,6 @@ status: 200
                 ordinary threads
             </div>
         </div>
-        <!-- 希望没人试图给论坛页面加样式 -->
         <div class="w-forum-new-thread" data-config="{&quot;categoryId&quot;: 55, &quot;user&quot;: {&quot;type&quot;: &quot;normal&quot;, &quot;id&quot;: 188, &quot;name&quot;: &quot;Probe Staff&quot;, &quot;username&quot;: &quot;probe-staff&quot;, &quot;urlName&quot;: &quot;probe-staff&quot;, &quot;isActive&quot;: true, &quot;avatar&quot;: null, &quot;showAvatar&quot;: true, &quot;admin&quot;: true, &quot;staff&quot;: true, &quot;editor&quot;: true, &quot;roles&quot;: []}, &quot;cancelUrl&quot;: &quot;/forum/c-55/probe-chat&quot;}"></div>
 === empty
 title: 创建主题
@@ -60,7 +59,6 @@ status: 200
                 inside the hidden section
             </div>
         </div>
-        <!-- 希望没人试图给论坛页面加样式 -->
         <div class="w-forum-new-thread" data-config="{&quot;categoryId&quot;: 58, &quot;user&quot;: {&quot;type&quot;: &quot;normal&quot;, &quot;id&quot;: 188, &quot;name&quot;: &quot;Probe Staff&quot;, &quot;username&quot;: &quot;probe-staff&quot;, &quot;urlName&quot;: &quot;probe-staff&quot;, &quot;isActive&quot;: true, &quot;avatar&quot;: null, &quot;showAvatar&quot;: true, &quot;admin&quot;: true, &quot;staff&quot;: true, &quot;editor&quot;: true, &quot;roles&quot;: []}, &quot;cancelUrl&quot;: &quot;/forum/c-58/probe-hidden-chat&quot;}"></div>
 === comments-superuser
 title: 创建主题
@@ -82,7 +80,6 @@ status: 200
                 article comments
             </div>
         </div>
-        <!-- 希望没人试图给论坛页面加样式 -->
         <div class="w-forum-new-thread" data-config="{&quot;categoryId&quot;: 56, &quot;user&quot;: {&quot;type&quot;: &quot;normal&quot;, &quot;id&quot;: 188, &quot;name&quot;: &quot;Probe Staff&quot;, &quot;username&quot;: &quot;probe-staff&quot;, &quot;urlName&quot;: &quot;probe-staff&quot;, &quot;isActive&quot;: true, &quot;avatar&quot;: null, &quot;showAvatar&quot;: true, &quot;admin&quot;: true, &quot;staff&quot;: true, &quot;editor&quot;: true, &quot;roles&quot;: []}, &quot;cancelUrl&quot;: &quot;/forum/c-56/probe-comments&quot;}"></div>
 === missing
 title: 创建主题

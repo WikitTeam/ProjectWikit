@@ -79,7 +79,6 @@ func renderForumNewThread(env module.Env, _ map[string]string, _ string) (string
 		"\n" + ind16 + escape.HTML(category.Description) +
 		"\n" + ind12 + `</div>` +
 		"\n" + ind8 + `</div>` +
-		"\n" + ind8 + `<!-- ` + env.Text("module-forumnewthread-style-note") + ` -->` +
 		"\n" + ind8 + `<div class="w-forum-new-thread" data-config="` + escape.HTML(config) + `"></div>`)
 	return b.String(), nil
 }
