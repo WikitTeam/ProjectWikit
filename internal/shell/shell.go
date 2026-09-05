@@ -185,6 +185,11 @@ type System struct {
 	Content   string
 }
 
+type Reactive struct {
+	ThemeURL string
+	Config   string
+}
+
 type Profile struct {
 	ID          int64
 	DisplayName string
@@ -263,6 +268,10 @@ func (r *Renderer) SystemPage(w io.Writer, d System) error {
 	return tmpl.ExecuteTemplate(w, "system.html", systemView{System: d, r: r})
 }
 
+func (r *Renderer) Reactive(w io.Writer, d Reactive) error {
+	return tmpl.ExecuteTemplate(w, "reactive.html", reactiveView{Reactive: d, r: r})
+}
+
 func (r *Renderer) Profile(d Profile) (string, error) {
 	return r.execute("profile.html", profileView{Profile: d, r: r})
 }
@@ -288,6 +297,14 @@ type systemView struct {
 func (v systemView) Lang() string                    { return v.r.loc.Lang() }
 func (v systemView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
 func (v systemView) Asset(name string) string        { return v.r.assets.URL(name) }
+
+type reactiveView struct {
+	Reactive
+	r *Renderer
+}
+
+func (v reactiveView) Lang() string             { return v.r.loc.Lang() }
+func (v reactiveView) Asset(name string) string { return v.r.assets.URL(name) }
 
 type profileView struct {
 	Profile
