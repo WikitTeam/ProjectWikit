@@ -27,15 +27,14 @@ const (
 )
 
 type forumThreadPost struct {
-	id         int64
-	name       string
-	isOP       bool
-	author     string
-	authorRate string
-	createdAt  string
-	content    string
-	options    string
-	replies    []forumThreadPost
+	id        int64
+	name      string
+	isOP      bool
+	author    string
+	createdAt string
+	content   string
+	options   string
+	replies   []forumThreadPost
 }
 
 type forumThreadView struct {
@@ -299,13 +298,6 @@ func forumThreadPostInfo(env module.Env, view *forumThreadView, posts []db.Forum
 		return nil, err
 	}
 
-	var mode string
-	if view.article != nil {
-		if mode, err = articleRatingMode(env, view.article.Category); err != nil {
-			return nil, err
-		}
-	}
-
 	out := make([]forumThreadPost, 0, len(posts))
 	for _, post := range posts {
 		one := forumThreadPost{
@@ -318,12 +310,6 @@ func forumThreadPostInfo(env module.Env, view *forumThreadView, posts []db.Forum
 			return nil, err
 		}
 		if view.article != nil {
-			rate, voted, err := env.Data.VoteByUser(view.article.ID, post.AuthorID)
-			if err != nil {
-				return nil, err
-			}
-			one.authorRate = forumVoteHTML(env, mode, rate, voted)
-
 			if post.AuthorID != nil {
 				author, err := env.Data.ArticleHasAuthor(view.article.ID, *post.AuthorID)
 				if err != nil {
@@ -539,39 +525,6 @@ func highlightMentions(html string, usernames map[string]bool) string {
 	})
 }
 
-func forumVoteHTML(env module.Env, mode string, rate float64, voted bool) string {
-	if mode == page.RatingModeDisabled {
-		return ""
-	}
-	title := ` title="` + env.Text("vote-tooltip") + `"`
-	if !voted {
-		return `<span class="vote"` + title + `>` + escape.HTML(env.Text("vote-unrated")) + `</span>`
-	}
-
-	var shown string
-	switch mode {
-	case page.RatingModeUpDown:
-		shown = signedInt(rate)
-	case page.RatingModeStars:
-		shown = strconv.FormatFloat(rate, 'f', 1, 64)
-	default:
-		shown = strconv.FormatInt(int64(rate), 10)
-	}
-	// Two spans open here and one closes. Closing the outer one would change
-	// the DOM of every post that carries a rating.
-	return `<span class="vote"` + title + `><span class="rate">` + escape.HTML(shown) + `</span>`
-}
-
-func signedInt(f float64) string {
-	n := int64(f)
-	if n < 0 {
-		return strconv.FormatInt(n, 10)
-	}
-	return "+" + strconv.FormatInt(n, 10)
-}
-
-// The fractional part is dropped when it is zero, so the two shapes are not
-// interchangeable.
 func isoTimestamp(t time.Time) string {
 	t = t.UTC()
 	if t.Nanosecond() == 0 {
@@ -665,7 +618,7 @@ func forumPostsHTML(posts []forumThreadPost) string {
 			"\n" + ind28 + escape.HTML(post.name) +
 			"\n" + ind24 + `</div>` +
 			"\n" + ind24 + `<div class="info">` +
-			"\n" + ind28 + post.author + " " + post.createdAt + " " + post.authorRate +
+			"\n" + ind28 + post.author + " " + post.createdAt +
 			"\n" + ind24 + `</div>` +
 			"\n" + ind20 + `</div>` +
 			"\n" + ind20 + `<div class="content" id="post-content-` + id + `">` +

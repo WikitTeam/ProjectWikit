@@ -63,7 +63,6 @@
   "module-forumcategory-started": "创建信息",
   "module-forumcategory-thread": "主题标题",
   "module-forumnewthread-forbidden": "权限不足，无法创建主题",
-  "module-forumnewthread-style-note": "希望没人试图给论坛页面加样式",
   "module-forumpost-cannot-create": "权限不足，无法创建帖子",
   "module-forumpost-cannot-delete": "权限不足，无法删除帖子",
   "module-forumpost-cannot-edit": "权限不足，无法编辑帖子",
@@ -222,7 +221,5 @@
   "user-bot": "机器人",
   "user-bot-tooltip": "机器账户",
   "user-not-found": "用户 '{name}' 不存在",
-  "user-system": "系统",
-  "vote-tooltip": "讨论文章的评分",
-  "vote-unrated": "未评分"
+  "user-system": "系统"
 }

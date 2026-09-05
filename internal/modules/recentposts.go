@@ -24,7 +24,6 @@ type recentPostRow struct {
 	url          string
 	isOP         bool
 	author       string
-	authorRate   string
 	createdAt    string
 	content      string
 	hasCategory  bool
@@ -262,16 +261,6 @@ func recentPostsRow(env module.Env, post db.RecentPost, content db.ForumPostCont
 		return recentPostRow{}, err
 	}
 	if article != nil {
-		mode, err := articleRatingMode(env, article.Category)
-		if err != nil {
-			return recentPostRow{}, err
-		}
-		rate, voted, err := env.Data.VoteByUser(article.ID, post.AuthorID)
-		if err != nil {
-			return recentPostRow{}, err
-		}
-		row.authorRate = forumVoteHTML(env, mode, rate, voted)
-
 		if post.AuthorID != nil {
 			author, err := env.Data.ArticleHasAuthor(article.ID, *post.AuthorID)
 			if err != nil {
@@ -395,7 +384,7 @@ func recentPostsHTML(env module.Env, view recentPostsView) string {
 			"\n" + ind40 + `<a href="` + escape.HTML(row.url) + `">` + escape.HTML(row.name) + `</a>` +
 			"\n" + ind36 + `</div>` +
 			"\n" + ind36 + `<div class="info">` +
-			"\n" + ind40 + row.author + " " + row.createdAt + " " + row.authorRate +
+			"\n" + ind40 + row.author + " " + row.createdAt +
 			"\n" + ind36 + `</div>` +
 			"\n" + ind36 + `<span>` +
 			"\n" + ind40 + env.Text("module-recentposts-from") +
