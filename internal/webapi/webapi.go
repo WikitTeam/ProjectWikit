@@ -23,6 +23,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/token"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
@@ -40,6 +41,7 @@ const maxParsed = 1 << 20
 
 type Deps struct {
 	DB     *db.DB
+	Tokens token.Generator
 	Trust  *proxyheader.Trust
 	Engine renderer.Renderer
 	Bundle *i18n.Bundle
