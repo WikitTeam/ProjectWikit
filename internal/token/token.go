@@ -133,3 +133,10 @@ func pyBool(value bool) string {
 	}
 	return "False"
 }
+
+func Custom(parts ...string) Value {
+	joined := strings.Join(parts, "\x1f")
+	return func(stamp int64) string {
+		return joined + "\x1f" + strconv.FormatInt(stamp, 10)
+	}
+}
