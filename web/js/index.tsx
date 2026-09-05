@@ -18,6 +18,7 @@ import { makeTOC } from './articles/toc'
 import { makeWantedPages } from './articles/wanted-pages'
 import ForumNewPost from './entrypoints/forum-new-post'
 import ForumNewThread from './entrypoints/forum-new-thread'
+import PostLikes from './forum/post-likes'
 import ForumPostOptions from './entrypoints/forum-post-options'
 import ForumThreadOptions from './entrypoints/forum-thread-options'
 import { attachApiMessageListener } from './entrypoints/messages-api-interface'
@@ -48,6 +49,11 @@ window.addEventListener('DOMContentLoaded', () => {
     .querySelectorAll('.w-forum-new-thread')
     .forEach((node: HTMLElement) => renderTo(node, <ForumNewThread {...JSON.parse(node.dataset.config!)} />))
   document.querySelectorAll('.w-forum-new-post').forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config!)} />))
+  document.querySelectorAll('.w-post-likes').forEach((node: HTMLElement) => {
+    const props = { postId: Number(node.dataset.postId), liked: node.dataset.liked === 'true', count: Number(node.dataset.count) }
+    node.innerHTML = ''
+    renderTo(node, <PostLikes {...props} />)
+  })
   document
     .querySelectorAll('.w-forum-thread-options')
     .forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config!)} />))

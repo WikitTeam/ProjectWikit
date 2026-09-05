@@ -32,6 +32,7 @@ type forumThreadPost struct {
 	isOP      bool
 	author    string
 	createdAt string
+	likes     string
 	content   string
 	options   string
 	replies   []forumThreadPost
@@ -297,6 +298,10 @@ func forumThreadPostInfo(env module.Env, view *forumThreadView, posts []db.Forum
 	if err != nil {
 		return nil, err
 	}
+	counts, liked, err := forumLikeState(env, ids)
+	if err != nil {
+		return nil, err
+	}
 
 	out := make([]forumThreadPost, 0, len(posts))
 	for _, post := range posts {
@@ -309,6 +314,7 @@ func forumThreadPostInfo(env module.Env, view *forumThreadView, posts []db.Forum
 		if one.author, err = env.Data.RenderUserByID(post.AuthorID); err != nil {
 			return nil, err
 		}
+		one.likes = forumLikeHTML(env, post.ID, counts[post.ID], liked[post.ID])
 		if view.article != nil {
 			if post.AuthorID != nil {
 				author, err := env.Data.ArticleHasAuthor(view.article.ID, *post.AuthorID)
@@ -618,7 +624,7 @@ func forumPostsHTML(posts []forumThreadPost) string {
 			"\n" + ind28 + escape.HTML(post.name) +
 			"\n" + ind24 + `</div>` +
 			"\n" + ind24 + `<div class="info">` +
-			"\n" + ind28 + post.author + " " + post.createdAt +
+			"\n" + ind28 + post.author + " " + post.createdAt + post.likes +
 			"\n" + ind24 + `</div>` +
 			"\n" + ind20 + `</div>` +
 			"\n" + ind20 + `<div class="content" id="post-content-` + id + `">` +
@@ -637,4 +643,35 @@ func forumPostsHTML(posts []forumThreadPost) string {
 			"\n" + ind8)
 	}
 	return b.String()
+}
+
+// Both halves are one query each, so a thread costs the same whether it holds
+// three posts or three hundred.
+func forumLikeState(env module.Env, postIDs []int64) (map[int64]int, map[int64]bool, error) {
+	counts, err := env.Data.PostLikeCounts(postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	if env.User == nil {
+		return counts, map[int64]bool{}, nil
+	}
+	liked, err := env.Data.PostsLikedBy(env.User.ID, postIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	return counts, liked, nil
+}
+
+func forumLikeHTML(env module.Env, postID int64, count int, liked bool) string {
+	state := "far"
+	if liked {
+		state = "fas"
+	}
+	id := strconv.FormatInt(postID, 10)
+	return ` <span class="w-post-likes" data-post-id="` + id + `" data-liked="` +
+		strconv.FormatBool(liked) + `" data-count="` + strconv.Itoa(count) + `">` +
+		`<a href="javascript:;" class="like-toggle" title="` + escape.HTML(env.Text("forum-like-toggle")) + `">` +
+		`<i class="` + state + ` fa-thumbs-up"></i></a>` +
+		`<a href="javascript:;" class="like-count" title="` + escape.HTML(env.Text("forum-like-who")) + `">` +
+		strconv.Itoa(count) + `</a></span>`
 }
