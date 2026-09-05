@@ -93,3 +93,59 @@ export const LoaderContainer = styled.div`
   color: ${({ theme }) => theme.uiForeground};
   font-size: 13px;
 `
+
+export const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 12px;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.uiForeground};
+`
+
+export const ToolbarAction = styled.button<{ danger?: boolean }>`
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 2px;
+  border: 1px solid ${({ theme }) => theme.windowStrong};
+  color: ${({ danger, theme }) => (danger ? '#c92a2a' : theme.foreground)};
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  &:not(:disabled):hover {
+    background: ${({ theme }) => theme.windowPadding};
+  }
+`
+
+export const ToolbarLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+`
+
+export const SelectRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  > input {
+    margin-top: 20px;
+  }
+
+  > *:last-child {
+    flex: 1;
+    min-width: 0;
+  }
+`

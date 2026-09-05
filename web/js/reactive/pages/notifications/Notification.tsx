@@ -23,6 +23,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
       case 'new_article_revision': return 'REVISION'
       case 'welcome': return 'WELCOME'
       case 'direct_message': return 'PM'
+      case 'post_like': return 'LIKE'
       default: return 'INFO'
     }
   }, [notification.type])
@@ -95,6 +96,19 @@ const Notification: React.FC<Props> = ({ notification }) => {
       )
     } else if (notification.type === 'welcome') {
       return <Styled.TypeName>{t('notifications.item.type-welcome')}</Styled.TypeName>
+    } else if (notification.type === 'post_like') {
+      return (
+        <>
+          <Styled.TypeName>{t('notifications.item.type-post-like')}</Styled.TypeName>
+          <Styled.PostFrom>
+            <Trans id="notifications.item.liked-by" children={{ author: <UserView data={notification.author} /> }} />{' '}
+            &raquo; <a href={notification.thread.url}>{notification.thread.name}</a>
+          </Styled.PostFrom>
+          <Styled.PostName>
+            <a href={notification.post.url}>{notification.post.name || t('notifications.item.view-post')}</a>
+          </Styled.PostName>
+        </>
+      )
     } else if (notification.type === 'direct_message') {
       return (
         <>

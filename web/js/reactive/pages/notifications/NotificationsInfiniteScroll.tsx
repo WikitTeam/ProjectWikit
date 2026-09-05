@@ -2,7 +2,7 @@ import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from 'styled-components'
-import { getNotifications, Notification as INotification } from '~api/notifications'
+import { clearAllNotifications, clearNotifications, getNotifications, NotificationKind, Notification as INotification } from '~api/notifications'
 import useConstCallback from '~util/const-callback'
 import Loader from '~util/loader'
 import Notification from './Notification'
@@ -11,10 +11,11 @@ import * as Styled from './Notifications.styles'
 interface Props {
   batchSize: number
   showUnread: boolean
+  kind: NotificationKind
   isForceUpdate?: () => boolean
 }
 
-const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, isForceUpdate }) => {
+const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, kind, isForceUpdate }) => {
   const theme = useTheme()
   const [items, setItems] = useState<INotification[]>([])
   const [cursor, setCursor] = useState(-1)
@@ -22,6 +23,8 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
   const [isFetching, setIsFetching] = useState(false)
   const loaderRef = useRef<HTMLDivElement | null>(null)
   const [isLoaderVisible, setIsLoaderVisible] = useState(false)
+  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     if (!isForceUpdate) return
@@ -52,7 +55,7 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
 
     setIsFetching(true)
     try {
-      const resp = await getNotifications(cursor, batchSize, showUnread, true)
+      const resp = await getNotifications(cursor, batchSize, showUnread, true, kind)
       setItems(prev => [...prev, ...resp.notifications])
       setCursor(resp.cursor)
 
@@ -85,11 +88,72 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
     }
   }, [loaderRef.current])
 
+  const toggle = useConstCallback((id: number) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  })
+
+  const toggleAll = useConstCallback(() => {
+    setSelected(prev => (prev.size === items.length ? new Set<number>() : new Set(items.map(x => x.id))))
+  })
+
+  const clearSelected = useConstCallback(async () => {
+    if (selected.size === 0 || clearing) return
+    setClearing(true)
+    try {
+      const ids = Array.from(selected)
+      await clearNotifications(ids)
+      setItems(prev => prev.filter(x => !selected.has(x.id)))
+      setSelected(new Set())
+    } catch (e: any) {
+      console.error('Failed to clear notifications', e)
+    } finally {
+      setClearing(false)
+    }
+  })
+
+  const clearEverything = useConstCallback(async () => {
+    if (clearing) return
+    setClearing(true)
+    try {
+      await clearAllNotifications(kind)
+      setItems([])
+      setSelected(new Set())
+      setHasMore(false)
+    } catch (e: any) {
+      console.error('Failed to clear notifications', e)
+    } finally {
+      setClearing(false)
+    }
+  })
+
   return (
     <>
+      {items.length > 0 && (
+        <Styled.Toolbar>
+          <Styled.ToolbarLabel>
+            <input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleAll} />
+            {t('notifications.select-all')}
+          </Styled.ToolbarLabel>
+          <span>{t('notifications.selected-count', { count: selected.size })}</span>
+          <Styled.ToolbarAction danger disabled={selected.size === 0 || clearing} onClick={clearSelected}>
+            {t('notifications.clear-selected')}
+          </Styled.ToolbarAction>
+          <Styled.ToolbarAction danger disabled={clearing} onClick={clearEverything}>
+            {t('notifications.clear-all')}
+          </Styled.ToolbarAction>
+        </Styled.Toolbar>
+      )}
       <Styled.List>
-        {items.map((item, n) => (
-          <Notification notification={item} key={n} />
+        {items.map(item => (
+          <Styled.SelectRow key={item.id}>
+            <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggle(item.id)} />
+            <Notification notification={item} />
+          </Styled.SelectRow>
         ))}
       </Styled.List>
       {hasMore && (

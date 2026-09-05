@@ -71,6 +71,13 @@ interface NotificationDirectMessage extends BaseNotification {
   preview: string
 }
 
+interface NotificationPostLike extends BaseNotification {
+  type: 'post_like'
+  author: UserData
+  thread: NotificationEntity
+  post: NotificationEntity
+}
+
 export type Notification =
   | NotificationNewPostReply
   | NotificationNewThreadPost
@@ -78,6 +85,7 @@ export type Notification =
   | NotificationNewArticleRevision
   | NotificationForumMention
   | NotificationDirectMessage
+  | NotificationPostLike
 
 export interface NotificationsResponse {
   cursor: number
@@ -93,8 +101,40 @@ export interface NotificationSubscriptionResponse {
   status?: string
 }
 
-export async function getNotifications(cursor: number, limit: number = 10, unread: boolean = false, mark_viewed: boolean = false) {
-  return await wFetch<NotificationsResponse>(`/pw-api/notifications?cursor=${cursor}&limit=${limit}&unread=${unread}&mark_as_viewed=${mark_viewed}`)
+export type NotificationKind = 'all' | 'post_like' | 'replies' | 'direct_message'
+
+// The reply tab covers both shapes a forum answer can arrive as, so one tab
+// does not leave half of them behind.
+const KIND_QUERY: Record<NotificationKind, string> = {
+  all: '',
+  post_like: 'post_like',
+  replies: 'new_post_reply,new_thread_post',
+  direct_message: 'direct_message',
+}
+
+export async function getNotifications(
+  cursor: number,
+  limit: number = 10,
+  unread: boolean = false,
+  mark_viewed: boolean = false,
+  kind: NotificationKind = 'all',
+) {
+  const type = KIND_QUERY[kind] ? `&type=${KIND_QUERY[kind]}` : ''
+  return await wFetch<NotificationsResponse>(
+    `/pw-api/notifications?cursor=${cursor}&limit=${limit}&unread=${unread}&mark_as_viewed=${mark_viewed}${type}`,
+  )
+}
+
+export async function clearNotifications(ids: number[]) {
+  return await wFetch<{ removed: number }>(`/pw-api/notifications`, { method: 'DELETE', sendJson: true, body: { ids } })
+}
+
+export async function clearAllNotifications(kind: NotificationKind) {
+  return await wFetch<{ removed: number }>(`/pw-api/notifications`, {
+    method: 'DELETE',
+    sendJson: true,
+    body: { all: true, type: KIND_QUERY[kind] || undefined },
+  })
 }
 
 export async function subscribeToNotifications(data: NotificationSubscriptionData) {
