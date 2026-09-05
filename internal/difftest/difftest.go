@@ -56,6 +56,11 @@ var DefaultScrubbers = []Scrubber{
 		Rewrite: sortListPagesParams,
 	},
 	{
+		Name:    "go-only-options",
+		Pattern: regexp.MustCompile(`, &quot;favourites&quot;: \d+, &quot;isFavourited&quot;: (true|false)`),
+		Repl:    "",
+	},
+	{
 		Name:    "html-lang",
 		Pattern: regexp.MustCompile(`(<html lang="|<meta http-equiv="content-language" content=")zh(-hans)?(")`),
 		Repl:    "${1}SCRUBBED${3}",

@@ -598,6 +598,19 @@ func (h *Handler) options(req *request) (string, error) {
 			return "", err
 		}
 		options.IsWatching = watching
+
+		favourites, err := h.deps.DB.ArticleFavouriteCount(req.ctx, req.article.ID)
+		if err != nil {
+			return "", err
+		}
+		options.Favourites = favourites
+		if req.user != nil {
+			mine, err := h.deps.DB.HasFavourited(req.ctx, req.article.ID, req.user.ID)
+			if err != nil {
+				return "", err
+			}
+			options.IsFavourited = mine
+		}
 	}
 	return options.JSON()
 }

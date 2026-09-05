@@ -24,6 +24,8 @@ type Options struct {
 	CommentSlug     string
 	CanCreateTags   bool
 	IsWatching      bool
+	Favourites      int
+	IsFavourited    bool
 	Preferences     Preferences
 }
 
@@ -68,6 +70,8 @@ func (o Options) JSON() (string, error) {
 		{Key: "canWatch", Value: !o.Anonymous},
 		{Key: "preferences", Value: o.preferences()},
 		{Key: "isWatching", Value: o.IsWatching},
+		{Key: "favourites", Value: o.Favourites},
+		{Key: "isFavourited", Value: o.IsFavourited},
 	})
 }
 

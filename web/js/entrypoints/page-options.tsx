@@ -14,6 +14,7 @@ import ArticleFiles from '../articles/article-files'
 import ArticleHistory from '../articles/article-history'
 import ArticleLock from '../articles/article-lock'
 import ArticleParent from '../articles/article-parent'
+import ArticleFavourite from '../articles/article-favourite'
 import ArticleRating from '../articles/article-rating'
 import ArticleRename from '../articles/article-rename'
 import ArticleSource from '../articles/article-source'
@@ -45,12 +46,15 @@ interface Props {
   canResetVotes?: boolean
   canWatch?: boolean
   isWatching?: boolean
+  favourites?: number
+  isFavourited?: boolean
   preferences?: { [key: string]: any }
 }
 
 type SubViewType =
   | 'edit'
   | 'rating'
+  | 'favourite'
   | 'tags'
   | 'history'
   | 'source'
@@ -91,6 +95,8 @@ const PageOptions: React.FC<Props> = ({
   rating,
   ratingVotes,
   ratingMode,
+  favourites,
+  isFavourited,
   pathParams,
   canRate,
   canDelete,
@@ -142,6 +148,12 @@ const PageOptions: React.FC<Props> = ({
     e.preventDefault()
     e.stopPropagation()
     setSubView('edit')
+  })
+
+  const onFavourite = useConstCallback(e => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSubView('favourite')
   })
 
   const onRate = useConstCallback(e => {
@@ -301,6 +313,16 @@ const PageOptions: React.FC<Props> = ({
           />
         )
 
+      case 'favourite':
+        return (
+          <ArticleFavourite
+            pageId={pageId}
+            favourites={favourites ?? 0}
+            favourited={Boolean(isFavourited)}
+            onClose={onCancelSubView}
+          />
+        )
+
       case 'tags':
         return <ArticleTags pageId={pageId} onClose={onCancelSubView} canCreateTags={canCreateTags} />
 
@@ -396,6 +418,9 @@ const PageOptions: React.FC<Props> = ({
             {t('page-options.rate')} ({renderRating()})
           </a>
         )}
+        <a id="favourite-button" className="btn btn-default" href="#" onClick={onFavourite}>
+          {t('page-options.favourite')} ({favourites ?? 0})
+        </a>
         {tagable && (
           <a id="tags-button" className="btn btn-default" href="#" onClick={onTags}>
             {t('page-options.tags')}
