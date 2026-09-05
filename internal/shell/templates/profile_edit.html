@@ -48,6 +48,12 @@
               <input type="file" name="avatar" id="id_avatar" accept="image/png,image/jpeg,image/gif,image/webp">
             </div>
           </div>
+          <div class="form-row">
+            <label class="label" for="id_advanced_editor">
+              <input type="checkbox" name="advanced_editor" id="id_advanced_editor" value="1"{{if .AdvancedEditor}} checked{{end}}>
+              {{.T "profile.advanced-editor"}}<span class="hint">{{.T "profile.advanced-editor-hint"}}</span>
+            </label>
+          </div>
         </div>
 
         <button class="btn-primary" type="submit">{{.T "profile.save"}}</button>

@@ -16,6 +16,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
@@ -63,13 +64,7 @@ func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
 
-	token, isNew := csrf.Token(r)
-	if isNew {
-		http.SetCookie(w, &http.Cookie{
-			Name: csrf.CookieName, Value: token, Path: "/",
-			Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode,
-		})
-	}
+	token := csrf.Issue(w, r)
 
 	var problem string
 	if r.Method == http.MethodPost {
@@ -134,7 +129,12 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 
 	first, last := splitFullName(r.PostFormValue("full_name"))
 	bio := strings.TrimSpace(r.PostFormValue("bio"))
-	return "", h.deps.DB.UpdateProfile(r.Context(), viewer.ID, first, last, bio, avatar)
+	if err := h.deps.DB.UpdateProfile(r.Context(), viewer.ID, first, last, bio, avatar); err != nil {
+		return "", err
+	}
+	return "", h.deps.DB.SetUserPreference(r.Context(), viewer.ID,
+		pageconfig.PreferenceSection, pageconfig.PreferenceAdvancedSourceEditor,
+		pageconfig.PreferenceValue(r.PostFormValue("advanced_editor") != ""))
 }
 
 func (h *EditHandler) avatar(r *http.Request, loc *i18n.Localizer, viewer *db.User) (*string, string, error) {
@@ -202,16 +202,23 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		return "", err
 	}
 
+	raw, err := h.deps.DB.UserPreference(r.Context(), viewer.ID,
+		pageconfig.PreferenceSection, pageconfig.PreferenceAdvancedSourceEditor)
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return "", err
+	}
+
 	data := shell.ProfileEdit{
-		AuthIcon:    authIcon(current),
-		DisplayName: displayName(profile),
-		Avatar:      avatar(profile),
-		ProfileURL:  Prefix + url.PathEscape(profile.Username),
-		FullName:    strings.TrimSpace(profile.FirstName + " " + profile.LastName),
-		Bio:         profile.Bio,
-		CSRF:        token,
-		Error:       problem,
-		Saved:       problem == "" && r.URL.Query().Get("saved") == "1",
+		AuthIcon:       authIcon(current),
+		DisplayName:    displayName(profile),
+		Avatar:         avatar(profile),
+		ProfileURL:     Prefix + url.PathEscape(profile.Username),
+		FullName:       strings.TrimSpace(profile.FirstName + " " + profile.LastName),
+		Bio:            profile.Bio,
+		AdvancedEditor: pageconfig.PreferenceEnabled(raw),
+		CSRF:           token,
+		Error:          problem,
+		Saved:          problem == "" && r.URL.Query().Get("saved") == "1",
 	}
 
 	render := shell.New(loc, h.deps.Assets, h.deps.TimeZone)

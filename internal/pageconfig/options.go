@@ -43,6 +43,13 @@ const (
 
 func PreferenceEnabled(raw string) bool { return raw == "True" }
 
+func PreferenceValue(on bool) string {
+	if on {
+		return "True"
+	}
+	return "False"
+}
+
 func (o Options) JSON() (string, error) {
 	return wikijson.Marshal(wikijson.Object{
 		{Key: "optionsEnabled", Value: o.HasArticle},
