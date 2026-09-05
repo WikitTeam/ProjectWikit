@@ -28,6 +28,7 @@ type Config struct {
 	Username string
 	Password string
 	UseTLS   bool
+	Implicit bool
 	From     string
 }
 
@@ -64,10 +65,9 @@ func (s *SMTP) Send(ctx context.Context, to []string, subject, body string) erro
 		return ErrNoSender
 	}
 	address := net.JoinHostPort(s.Host, s.Port)
-	dialer := net.Dialer{Timeout: dialTimeout}
-	conn, err := dialer.DialContext(ctx, "tcp", address)
+	conn, err := s.dial(ctx, address)
 	if err != nil {
-		return fmt.Errorf("dial mail host %s: %w", address, err)
+		return err
 	}
 	client, err := smtp.NewClient(conn, s.Host)
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *SMTP) Send(ctx context.Context, to []string, subject, body string) erro
 	}
 	defer client.Close()
 
-	if s.UseTLS {
+	if s.UseTLS && !s.Implicit {
 		if err := client.StartTLS(&tls.Config{ServerName: s.Host}); err != nil {
 			return fmt.Errorf("start TLS with %s: %w", address, err)
 		}
@@ -105,6 +105,23 @@ func (s *SMTP) Send(ctx context.Context, to []string, subject, body string) erro
 		return fmt.Errorf("write message: %w", err)
 	}
 	return client.Quit()
+}
+
+func (s *SMTP) dial(ctx context.Context, address string) (net.Conn, error) {
+	dialer := &net.Dialer{Timeout: dialTimeout}
+	if s.Implicit {
+		conn, err := (&tls.Dialer{NetDialer: dialer, Config: &tls.Config{ServerName: s.Host}}).
+			DialContext(ctx, "tcp", address)
+		if err != nil {
+			return nil, fmt.Errorf("dial mail host %s over TLS: %w", address, err)
+		}
+		return conn, nil
+	}
+	conn, err := dialer.DialContext(ctx, "tcp", address)
+	if err != nil {
+		return nil, fmt.Errorf("dial mail host %s: %w", address, err)
+	}
+	return conn, nil
 }
 
 func message(from string, to []string, subject, body string) []byte {
