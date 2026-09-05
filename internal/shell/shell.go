@@ -177,6 +177,7 @@ func (v view) date() string {
 // article sits in.
 type System struct {
 	Title     string
+	SiteTitle string
 	ThemeURL  string
 	Before    string
 	Heading   string
@@ -265,9 +266,20 @@ type Signup struct {
 	Notice    string
 
 	Username  string
+	Email     string
 	IsWikidot bool
+	Sent      bool
 	CSRF      string
 	Error     string
+}
+
+type Notice struct {
+	AuthIcon  string
+	SiteTitle string
+	Heading   string
+	Body      string
+	LinkURL   string
+	LinkText  string
 }
 
 type Reset struct {
@@ -298,6 +310,12 @@ type ProfileEdit struct {
 
 	AdvancedEditor bool
 
+	Email         string
+	EmailVerified bool
+	EmailPending  string
+	CanRename     bool
+
+	Said  string
 	CSRF  string
 	Error string
 	Saved bool
@@ -330,6 +348,18 @@ func (r *Renderer) Signup(d Signup) (string, error) {
 func (r *Renderer) Accept(d Accept) (string, error) {
 	return r.execute("accept.html", acceptView{Accept: d, r: r})
 }
+
+func (r *Renderer) Notice(d Notice) (string, error) {
+	return r.execute("notice.html", noticeView{Notice: d, r: r})
+}
+
+type noticeView struct {
+	Notice
+	r *Renderer
+}
+
+func (v noticeView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v noticeView) Asset(name string) string        { return v.r.assets.URL(name) }
 
 func (r *Renderer) Reset(d Reset) (string, error) {
 	return r.execute("reset.html", resetView{Reset: d, r: r})

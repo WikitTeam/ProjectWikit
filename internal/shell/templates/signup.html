@@ -1,6 +1,20 @@
 {{define "signup.html"}}
 <div class="wikit-scope">
   <div class="auth-shell">
+    {{if .Sent}}
+    <div class="auth-column">
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "signup.sent-title"}}</h1>
+      </div>
+      <p class="meta">{{.T "signup.sent" "email" .Email}}</p>
+      <div class="action-row">
+        <a class="link-muted" href="/-/login">{{.T "reset.back-login"}}</a>
+      </div>
+    </div>
+    {{else}}
     <form method="POST" id="signup-form" class="auth-column">
       <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
@@ -40,6 +54,11 @@
         </div>
 
         <div class="form-row">
+          <label class="label" for="id_email">{{.T "signup.email"}}<span class="hint">{{.T "signup.email-hint"}}</span></label>
+          <input type="email" name="email" id="id_email" value="{{esc .Email}}" maxlength="254" required placeholder="you@example.com">
+        </div>
+
+        <div class="form-row">
           <label class="label" for="id_password">{{.T "signup.password"}}</label>
           <input type="password" name="password" id="id_password" required placeholder="{{.T "signup.password-placeholder"}}">
         </div>
@@ -57,9 +76,11 @@
       </div>
 
     </form>
+    {{end}}
   </div>
 </div>
 
+{{if not .Sent}}
 <script>
 (function () {
     const usernameInput = document.getElementById('id_username');
@@ -177,4 +198,5 @@
     });
 })();
 </script>
+{{end}}
 {{end}}

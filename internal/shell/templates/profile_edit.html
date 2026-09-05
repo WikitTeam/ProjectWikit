@@ -19,6 +19,10 @@
         <h1 class="h1">{{.T "profile.edit"}}</h1>
       </div>
 
+      {{if .Said}}
+      <div class="action-inline"><span class="dot"></span><span class="meta">{{.T (printf "settings.%s" .Said)}}</span></div>
+      {{end}}
+
       <form method="post" enctype="multipart/form-data" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
@@ -62,6 +66,71 @@
           <a class="link-muted" href="{{esc .ProfileURL}}">{{.T "profile.back"}}</a>
         </div>
 
+      </form>
+
+      <div class="section-head">
+        <h2 class="h1">{{.T "profile.email-section"}}</h2>
+      </div>
+      <form method="post" action="/-/profile/email" class="profile-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <div class="form-block">
+          <div class="form-row">
+            <span class="meta">
+              {{if not .Email}}{{.T "profile.email-none"}}
+              {{else if .EmailVerified}}{{esc .Email}} — {{.T "profile.email-verified"}}
+              {{else}}{{esc .Email}} — {{.T "profile.email-unverified"}}{{end}}
+              {{if .EmailPending}}<br>{{.T "profile.email-pending" "email" .EmailPending}}{{end}}
+            </span>
+          </div>
+          <div class="form-row">
+            <label class="label" for="id_email">{{.T "profile.email-new"}}</label>
+            <input type="email" name="email" id="id_email" value="{{esc .Email}}" maxlength="254" required>
+          </div>
+          <div class="form-row">
+            <label class="label" for="id_email_password">{{.T "profile.email-password"}}<span class="hint">{{.T "profile.email-password-hint"}}</span></label>
+            <input type="password" name="password" id="id_email_password" autocomplete="current-password">
+          </div>
+        </div>
+        <button class="btn-primary" type="submit">{{.T "profile.email-submit"}}</button>
+      </form>
+
+      <div class="section-head">
+        <h2 class="h1">{{.T "profile.password-section"}}</h2>
+      </div>
+      <form method="post" action="/-/profile/password" class="profile-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <div class="form-block">
+          <div class="form-row">
+            <label class="label" for="id_current">{{.T "profile.password-current"}}</label>
+            <input type="password" name="current" id="id_current" autocomplete="current-password" required>
+          </div>
+          <div class="form-row">
+            <label class="label" for="id_new1">{{.T "profile.password-new"}}</label>
+            <input type="password" name="new1" id="id_new1" autocomplete="new-password" required>
+          </div>
+          <div class="form-row">
+            <label class="label" for="id_new2">{{.T "profile.password-again"}}</label>
+            <input type="password" name="new2" id="id_new2" autocomplete="new-password" required>
+          </div>
+        </div>
+        <button class="btn-primary" type="submit">{{.T "profile.password-submit"}}</button>
+        <div class="action-row">
+          <a class="link-muted" href="/-/password_reset">{{.T "profile.password-forgot"}}</a>
+        </div>
+      </form>
+
+      <div class="section-head">
+        <h2 class="h1">{{.T "profile.name-section"}}</h2>
+      </div>
+      <form method="post" action="/-/profile/name" class="profile-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <div class="form-block">
+          <div class="form-row">
+            <label class="label" for="id_display_name">{{.T "profile.name-new"}}<span class="hint">{{.T "profile.name-hint"}}</span></label>
+            <input type="text" name="display_name" id="id_display_name" value="{{esc .DisplayName}}" maxlength="50" required{{if not .CanRename}} disabled{{end}}>
+          </div>
+        </div>
+        <button class="btn-primary" type="submit"{{if not .CanRename}} disabled{{end}}>{{.T "profile.name-submit"}}</button>
       </form>
 
     </main>

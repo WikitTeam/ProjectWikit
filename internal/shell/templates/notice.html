@@ -1,0 +1,20 @@
+{{define "notice.html"}}
+<div class="wikit-scope">
+  <div class="auth-shell">
+    <div class="auth-column">
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+      <div class="auth-heading">
+        <h1 class="h1">{{esc .Heading}}</h1>
+      </div>
+      <p class="meta">{{esc .Body}}</p>
+      {{if .LinkURL}}
+      <div class="action-row">
+        <a class="link-muted" href="{{esc .LinkURL}}">{{esc .LinkText}}</a>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}
