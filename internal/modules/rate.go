@@ -19,7 +19,7 @@ const (
 	starColorUnrated = "#000000"
 )
 
-func renderRate(env module.Env, _ map[string]string, _ string) (string, error) {
+func renderRate(env module.Env, params map[string]string, _ string) (string, error) {
 	if env.Data == nil {
 		return "", &module.Error{Message: env.Text("module-failed", "name", env.Name)}
 	}
@@ -44,8 +44,12 @@ func renderRate(env module.Env, _ map[string]string, _ string) (string, error) {
 	}
 	rating := page.RatingOf(mode, stats)
 
+	star, err := favouriteStar(env, params, article)
+	if err != nil {
+		return "", err
+	}
 	if mode == page.RatingModeUpDown {
-		return upDownWidget(env, article.FullName(), rating), nil
+		return upDownWidget(env, article.FullName(), rating) + star, nil
 	}
 
 	// The vote lookup is only reached for a signed-in reader, so the anonymous
@@ -57,7 +61,27 @@ func renderRate(env module.Env, _ map[string]string, _ string) (string, error) {
 			return "", err
 		}
 	}
-	return starsWidget(env, article.FullName(), rating, voted), nil
+	return starsWidget(env, article.FullName(), rating, voted) + star, nil
+}
+
+// The star rides along only when the wikitext asks for it, so a page that never
+// mentions it keeps the markup it had.
+func favouriteStar(env module.Env, params map[string]string, article *db.Article) (string, error) {
+	if !module.BoolParam(params, "favourite", false) {
+		return "", nil
+	}
+	count, err := env.Data.ArticleFavouriteCount(article.ID)
+	if err != nil {
+		return "", err
+	}
+	mine := false
+	if env.User != nil {
+		mine, err = env.Data.HasFavourited(article.ID, env.User.ID)
+		if err != nil {
+			return "", err
+		}
+	}
+	return favouriteStarHTML(env, article, count, mine), nil
 }
 
 func articleRatingMode(env module.Env, category string) (string, error) {
