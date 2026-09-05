@@ -62,8 +62,8 @@ var DefaultScrubbers = []Scrubber{
 	},
 	{
 		Name:    "html-lang",
-		Pattern: regexp.MustCompile(`(<html lang="|<meta http-equiv="content-language" content=")zh(-hans)?(")`),
-		Repl:    "${1}SCRUBBED${3}",
+		Pattern: regexp.MustCompile(`(<html lang="|<meta http-equiv="content-language" content=")(zh(-hans)?|en)(")`),
+		Repl:    "${1}SCRUBBED${4}",
 	},
 }
 

@@ -17,7 +17,7 @@
 /-/login
 /-/signup
 
-/pw-api/articles
+!/pw-api/articles
 /pw-api/articles/scp-173
 /pw-api/articles/scp-173/links
 /pw-api/articles/scp-173/votes
