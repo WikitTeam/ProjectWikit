@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { searchModule, SearchResultItem } from '../api/search-module'
 import { highlightWords } from '~util/highlight-words'
 import useConstCallback from '../util/const-callback'
+import Loader from '~util/loader'
 
 interface Props {
   placeholder?: string
@@ -146,15 +147,7 @@ const SearchModule: React.FC<Props> = ({
       {error && <div className="w-search-error">{error}</div>}
 
       {loading ? (
-        <div className="w-search-results">
-          {[0, 1, 2, 3, 4].map(i => (
-            <div className="w-search-skeleton" key={i}>
-              <div className="w-search-sk-line w-search-sk-title" />
-              <div className="w-search-sk-line" />
-              <div className="w-search-sk-line w-search-sk-short" />
-            </div>
-          ))}
-        </div>
+        <Loader className="w-search-loader" />
       ) : searched && !results.length && !error ? (
         <div className="w-search-empty">{t('search.empty')}</div>
       ) : (
@@ -190,9 +183,10 @@ const SearchModule: React.FC<Props> = ({
               </div>
             ))}
           </div>
-          {hasMore && (
-            <button className="w-search-more" onClick={onLoadMore} disabled={loadingMore}>
-              {loadingMore ? t('search.loading-more') : t('search.load-more')}
+          {loadingMore && <Loader className="w-search-loader" />}
+          {hasMore && !loadingMore && (
+            <button className="w-search-more" onClick={onLoadMore}>
+              {t('search.load-more')}
             </button>
           )}
         </>

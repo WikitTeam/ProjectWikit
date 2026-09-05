@@ -211,8 +211,8 @@
   --s-border: var(--wk-border, #dce2ee);
   --s-border-strong: var(--wk-border-strong, #c2cbdd);
   --s-accent: #111111;
-  --s-radius: var(--wk-radius, 10px);
-  --s-radius-sm: var(--wk-radius-sm, 6px);
+  --s-radius: 0;
+  --s-radius-sm: 0;
   font-family: var(--wk-font, inherit);
   color: var(--s-ink);
   max-width: 760px;
@@ -358,14 +358,10 @@
   text-decoration: underline;
 }
 
-.w-search-result-rating::before {
-  content: '★ ';
-}
-
 .w-search .highlight {
   background: rgba(0, 0, 0, 0.12);
   color: inherit;
-  border-radius: 2px;
+  border-radius: 0;
   padding: 0 1px;
 }
 
@@ -392,35 +388,9 @@
   cursor: default;
 }
 
-.w-search-skeleton {
-  padding: 12px 14px;
-}
-
-.w-search-sk-line {
-  height: 10px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  background: linear-gradient(90deg, var(--s-sunken) 25%, var(--s-alt) 37%, var(--s-sunken) 63%);
-  background-size: 400% 100%;
-  animation: w-search-shimmer 1.3s ease infinite;
-}
-
-.w-search-sk-title {
-  height: 14px;
-  width: 45%;
-}
-
-.w-search-sk-short {
-  width: 70%;
-}
-
-@keyframes w-search-shimmer {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
+/* The bar is 2px of currentColor, so it needs room of its own to be seen. */
+.w-search-loader {
+  margin: 18px 0;
 }
 
 @media (prefers-color-scheme: dark) {
