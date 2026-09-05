@@ -36,8 +36,6 @@ type Handler struct {
 	shell func(loc *i18n.Localizer) *shell.Renderer
 }
 
-const csrfCookieMaxAge = 60 * 60 * 24 * 365
-
 const allowedMethods = "GET, HEAD, OPTIONS"
 
 var _ http.Handler = (*Handler)(nil)
@@ -99,7 +97,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Name:     csrf.CookieName,
 			Value:    out.SetCSRF,
 			Path:     "/",
-			MaxAge:   csrfCookieMaxAge,
+			MaxAge:   csrf.CookieMaxAge,
 			SameSite: http.SameSiteLaxMode,
 		})
 	}

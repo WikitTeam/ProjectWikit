@@ -3,6 +3,7 @@
 package csrf
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"errors"
@@ -24,6 +25,19 @@ func Token(r *http.Request) (token string, isNew bool) {
 		return cookie.Value, false
 	}
 	return newToken(), true
+}
+
+const CookieMaxAge = 60 * 60 * 24 * 365
+
+func Issue(w http.ResponseWriter, r *http.Request) string {
+	token, isNew := Token(r)
+	if isNew {
+		http.SetCookie(w, &http.Cookie{
+			Name: CookieName, Value: token, Path: "/",
+			MaxAge: CookieMaxAge, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode,
+		})
+	}
+	return token
 }
 
 func Valid(token string) bool {
@@ -69,8 +83,22 @@ var (
 	ErrBadReferer = errors.New("csrf: the referer is not one the site answers for")
 )
 
+type exemptKey struct{}
+
+func Exempt(ctx context.Context) context.Context {
+	return context.WithValue(ctx, exemptKey{}, true)
+}
+
+func exempt(ctx context.Context) bool {
+	on, _ := ctx.Value(exemptKey{}).(bool)
+	return on
+}
+
 // The host the request arrived on is trusted alongside hosts.
 func Verify(r *http.Request, hosts []string) error {
+	if exempt(r.Context()) {
+		return nil
+	}
 	if err := verifyOrigin(r, hosts); err != nil {
 		return err
 	}
