@@ -213,7 +213,7 @@ class SiteAdmin(SingletonModelAdmin):
             'fields': ('icon', 'auth_icon', 'footer_license')
         }),
         ('注册与入组', {
-            'fields': ('signup_notice', 'default_role', 'verified_role',
+            'fields': ('signup_notice', 'password_help', 'default_role', 'verified_role',
                        'membership_password_enabled', 'membership_password', 'membership_password_role')
         }),
     )

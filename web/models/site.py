@@ -117,6 +117,11 @@ class Site(SingletonModel):
         '注册页提示', blank=True,
         help_text='留空使用内置文案。显示在注册按钮下方。',
     )
+    password_help = models.TextField(
+        '找回密码求助文案', blank=True,
+        help_text='找回密码页上「邮箱收不到信？」展开后显示的内容。'
+                  '留空使用内置文案。支持 wikitext，不允许任何模块。',
+    )
 
     default_role = models.ForeignKey(
         'Role', verbose_name='普通注册获得的角色', null=True, blank=True,
