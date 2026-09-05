@@ -11,7 +11,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -208,6 +210,15 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		return "", err
 	}
 
+	state, err := h.deps.DB.AccountEmail(r.Context(), viewer.ID)
+	if err != nil {
+		return "", err
+	}
+	renamedAt, err := h.deps.DB.UsernameChangedAt(r.Context(), viewer.ID)
+	if err != nil {
+		return "", err
+	}
+
 	data := shell.ProfileEdit{
 		AuthIcon:       authIcon(current),
 		DisplayName:    displayName(profile),
@@ -216,6 +227,11 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		FullName:       strings.TrimSpace(profile.FirstName + " " + profile.LastName),
 		Bio:            profile.Bio,
 		AdvancedEditor: pageconfig.PreferenceEnabled(raw),
+		Email:          state.Email,
+		EmailVerified:  state.VerifiedAt != nil,
+		EmailPending:   state.Pending,
+		CanRename:      renamedAt == nil || time.Since(*renamedAt) >= account.RenameCooldown,
+		Said:           account.Outcome(r.URL.Query().Get("said")),
 		CSRF:           token,
 		Error:          problem,
 		Saved:          problem == "" && r.URL.Query().Get("saved") == "1",
@@ -234,6 +250,7 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 	var out strings.Builder
 	err = render.SystemPage(&out, shell.System{
 		Title:     loc.T("profile.edit"),
+		SiteTitle: current.Title,
 		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,
