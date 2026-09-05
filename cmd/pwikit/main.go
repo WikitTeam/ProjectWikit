@@ -44,6 +44,8 @@ const (
 	envMailUser     = "EMAIL_USERNAME"
 	envMailPassword = "EMAIL_PASSWORD"
 	envMailTLS      = "EMAIL_USE_TLS"
+	envMailImplicit = "EMAIL_IMPLICIT_TLS"
+	envMailEngine   = "EMAIL_ENGINE"
 	envMailFrom     = "EMAIL_DEFAULT_FROM"
 	envStorageLimit = "ABSOLUTE_MEDIA_UPLOAD_LIMIT"
 	defaultUpstream = "http://127.0.0.1:8000"
@@ -169,6 +171,7 @@ func serve(args []string) error {
 	var allArticles http.Handler = proxy
 	var subscribeAPI, messageAPI, userAPI, adminAPI http.Handler = proxy, proxy, proxy, proxy
 	var login, logout, signup, accept, reset, tickets http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
+	var emailLinks, settings http.Handler = proxy, proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, trust, limits{soft: soft, hard: hard},
 			*sidecar, *secret, *timezone, log)
@@ -199,6 +202,8 @@ func serve(args []string) error {
 		accept = served(stack.accept)
 		reset = served(stack.reset)
 		tickets = served(stack.tickets)
+		emailLinks = served(stack.emailLinks)
+		settings = served(stack.settings)
 		favesAPI = served(stack.favesAPI)
 		ownRowsAPI = served(stack.ownRowsAPI)
 		articleAPI = served(stack.articleAPI)
@@ -230,6 +235,8 @@ func serve(args []string) error {
 		account.ResetConfirmPath:        reset,
 		account.TicketPath:              tickets,
 		account.MembershipPath:          tickets,
+		account.EmailPrefix:             emailLinks,
+		account.SettingsPrefix:          settings,
 		userpage.FavouritesPrefix:       reactivePages,
 		webapi.NotificationsPath:        notifyAPI,
 		webapi.SubscribePath:            subscribeAPI,

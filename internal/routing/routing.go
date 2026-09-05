@@ -45,6 +45,8 @@ var Table = []Route{
 	{Prefix: "/-/password_reset", Owner: OwnerGo, Label: "password reset", Exact: true},
 	{Prefix: "/-/password_reset/", Owner: OwnerGo, Label: "password reset"},
 	{Prefix: "/-/reset/", Owner: OwnerGo, Label: "password reset"},
+	{Prefix: "/-/email/", Owner: OwnerGo, Label: "email links"},
+	{Prefix: "/-/profile/", Owner: OwnerGo, Label: "account settings"},
 	{Prefix: "/-/tickets/submit", Owner: OwnerGo, Label: "ticket form", Exact: true},
 	{Prefix: "/-/membership/password", Owner: OwnerGo, Label: "membership form", Exact: true},
 	{Prefix: "/-/profile/edit", Owner: OwnerGo, Label: "profile form", Exact: true},

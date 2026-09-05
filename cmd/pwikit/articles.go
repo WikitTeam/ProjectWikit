@@ -45,6 +45,8 @@ type pageStack struct {
 	accept        http.Handler
 	reset         http.Handler
 	tickets       http.Handler
+	emailLinks    http.Handler
+	settings      http.Handler
 	allArticles   http.Handler
 	favesAPI      http.Handler
 	ownRowsAPI    http.Handler
@@ -119,6 +121,8 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		accept:        upstream,
 		reset:         upstream,
 		tickets:       upstream,
+		emailLinks:    upstream,
+		settings:      upstream,
 		favesAPI:      webapi.NewFavourites(api, upstream),
 		ownRowsAPI:    webapi.NewOwnRows(api, upstream),
 		close:         closeEngine,
@@ -142,6 +146,8 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.accept = account.NewAccept(accounts)
 	stack.reset = account.NewReset(accounts)
 	stack.tickets = account.NewTickets(accounts)
+	stack.emailLinks = account.NewEmail(accounts)
+	stack.settings = account.NewSettings(accounts)
 
 	resolver := auth.NewResolver(store, conn, conn, log)
 	stack.login = resolver.Middleware(stack.login)
@@ -150,6 +156,8 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.accept = resolver.Middleware(stack.accept)
 	stack.reset = resolver.Middleware(stack.reset)
 	stack.tickets = resolver.Middleware(stack.tickets)
+	stack.emailLinks = resolver.Middleware(stack.emailLinks)
+	stack.settings = resolver.Middleware(stack.settings)
 	stack.articleAPI = resolver.Middleware(stack.articleAPI)
 	stack.allArticles = resolver.Middleware(stack.allArticles)
 	stack.fileAPI = resolver.Middleware(stack.fileAPI)
@@ -173,12 +181,19 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 }
 
 func mailConfig() mail.Config {
+	if os.Getenv(envMailEngine) == "console" {
+		return mail.Config{}
+	}
+	port := envOr(envMailPort, "1025")
 	return mail.Config{
 		Host:     os.Getenv(envMailHost),
-		Port:     envOr(envMailPort, "1025"),
+		Port:     port,
 		Username: os.Getenv(envMailUser),
 		Password: os.Getenv(envMailPassword),
-		UseTLS:   os.Getenv(envMailTLS) == "true",
+		UseTLS:   os.Getenv(envMailTLS) == "true" || port == implicitTLSPort,
+		Implicit: os.Getenv(envMailImplicit) == "true" || port == implicitTLSPort,
 		From:     os.Getenv(envMailFrom),
 	}
 }
+
+const implicitTLSPort = "465"
