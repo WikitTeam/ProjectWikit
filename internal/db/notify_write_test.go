@@ -26,6 +26,9 @@ RETURNING id`, name+"@example.invalid", name).Scan(&id)
 			`DELETE FROM web_usernotificationsubscription WHERE subscriber_id = $1`,
 			`DELETE FROM web_forumpostlike WHERE user_id = $1`,
 			`DELETE FROM web_articlefavourite WHERE user_id = $1`,
+			`DELETE FROM web_directmessage WHERE sender_id = $1 OR recipient_id = $1`,
+			`DELETE FROM web_directmessageblock WHERE blocker_id = $1 OR blocked_id = $1`,
+			`DELETE FROM web_userreport WHERE reporter_id = $1 OR reported_id = $1`,
 			`DELETE FROM web_user WHERE id = $1`,
 		} {
 			if _, err := d.pool.Exec(clean, sql, id); err != nil {

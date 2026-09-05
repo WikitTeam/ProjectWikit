@@ -107,3 +107,27 @@ func (d *DB) SubscribeToThread(ctx context.Context, userID, threadID int64) erro
 	}
 	return nil
 }
+
+var qUnsubscribeFromArticle = register("UnsubscribeFromArticle", `
+DELETE FROM web_usernotificationsubscription
+WHERE subscriber_id = $1 AND article_id = $2`)
+
+func (d *DB) UnsubscribeFromArticle(ctx context.Context, userID, articleID int64) (bool, error) {
+	tag, err := d.pool.Exec(ctx, qUnsubscribeFromArticle, userID, articleID)
+	if err != nil {
+		return false, fmt.Errorf("unsubscribe %d from article %d: %w", userID, articleID, err)
+	}
+	return tag.RowsAffected() > 0, nil
+}
+
+var qUnsubscribeFromThread = register("UnsubscribeFromThread", `
+DELETE FROM web_usernotificationsubscription
+WHERE subscriber_id = $1 AND forum_thread_id = $2`)
+
+func (d *DB) UnsubscribeFromThread(ctx context.Context, userID, threadID int64) (bool, error) {
+	tag, err := d.pool.Exec(ctx, qUnsubscribeFromThread, userID, threadID)
+	if err != nil {
+		return false, fmt.Errorf("unsubscribe %d from thread %d: %w", userID, threadID, err)
+	}
+	return tag.RowsAffected() > 0, nil
+}
