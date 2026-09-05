@@ -48,6 +48,14 @@ var lockable = []string{EditArticles, ManageArticleAuthors, ManageArticleFiles, 
 // forum posts underneath.
 var silenced = []string{CommentArticles, CreateForumPosts, EditForumPosts, DeleteForumPosts, EditForumThreads, PinForumThreads, MoveForumThreads}
 
+var unverified = []string{
+	RateArticles, CreateArticles, EditArticles, TagArticles, MoveArticles, LockArticles,
+	ManageArticleFiles, DeleteArticles, ResetArticleVotes, CommentArticles, ManageArticleAuthors,
+	CreateForumPosts, EditForumPosts, DeleteForumPosts,
+	CreateForumThreads, EditForumThreads, PinForumThreads, LockForumThreads, MoveForumThreads,
+	SendDirectMessage,
+}
+
 // Set answers one question at a time. A superuser gets a set that says yes to
 // every name before any rule runs.
 type Set struct {
@@ -89,6 +97,7 @@ type Subject struct {
 	Anonymous   bool
 	Active      bool
 	ForumActive bool
+	Unverified  bool
 	Superuser   bool
 	Roles       []Role
 }
@@ -145,6 +154,11 @@ func Resolve(s Subject, o *Object) Set {
 	}
 	if o != nil {
 		applyObject(granted, o, s)
+	}
+	if s.Unverified {
+		for _, name := range unverified {
+			delete(granted, name)
+		}
 	}
 	return Set{named: granted}
 }

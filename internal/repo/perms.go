@@ -6,6 +6,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
 
 const (
@@ -60,8 +61,16 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 		subject.Active = u.ActiveAt(now)
 		subject.ForumActive = u.ForumActiveAt(now)
 		subject.Superuser = u.IsSuperuser
+		subject.Unverified = unverified(site.FromContext(p.ctx), u)
 	}
 	return subject, nil
+}
+
+func unverified(current *db.Site, u *db.User) bool {
+	if current == nil || u.EmailVerifiedAt != nil {
+		return false
+	}
+	return current.EmailPolicy == db.EmailRequired || current.EmailPolicy == db.EmailAtSignup
 }
 
 // Article is the object side for a page that exists. Its category is the only
