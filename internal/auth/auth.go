@@ -7,8 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 )
@@ -20,6 +22,7 @@ type Sessions interface {
 
 type Users interface {
 	UserForSession(ctx context.Context, id int64) (*db.User, string, error)
+	BotByAPIKey(ctx context.Context, key string) (*db.User, error)
 }
 
 type Resolver struct {
@@ -39,9 +42,35 @@ type contextKey struct{}
 // an error and not a separate branch: FromContext returns nil for it.
 func (r *Resolver) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		if bot := r.bearer(req); bot != nil {
+			ctx = csrf.Exempt(ctx)
+			next.ServeHTTP(w, req.WithContext(context.WithValue(ctx, contextKey{}, bot)))
+			return
+		}
 		user := r.resolve(req)
-		next.ServeHTTP(w, req.WithContext(context.WithValue(req.Context(), contextKey{}, user)))
+		next.ServeHTTP(w, req.WithContext(context.WithValue(ctx, contextKey{}, user)))
 	})
+}
+
+const bearerPrefix = "Bearer "
+
+func (r *Resolver) bearer(req *http.Request) *db.User {
+	key, ok := strings.CutPrefix(req.Header.Get("Authorization"), bearerPrefix)
+	if !ok || key == "" {
+		return nil
+	}
+	bot, err := r.users.BotByAPIKey(req.Context(), key)
+	if err != nil {
+		if !errors.Is(err, db.ErrNotFound) {
+			r.log.Error("read bot key", "err", err)
+		}
+		return nil
+	}
+	if !bot.ActiveAt(time.Now()) {
+		return nil
+	}
+	return bot
 }
 
 // FromContext returns nil when nobody is signed in.

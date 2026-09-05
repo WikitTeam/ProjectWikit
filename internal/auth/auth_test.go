@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 )
@@ -46,6 +47,16 @@ type fakeUsers struct {
 	user     *db.User
 	password string
 	err      error
+
+	bot    *db.User
+	botKey string
+}
+
+func (f *fakeUsers) BotByAPIKey(_ context.Context, key string) (*db.User, error) {
+	if f.bot == nil || key != f.botKey {
+		return nil, db.ErrNotFound
+	}
+	return f.bot, nil
 }
 
 func (f *fakeUsers) UserForSession(_ context.Context, _ int64) (*db.User, string, error) {
@@ -234,5 +245,55 @@ func TestMiddlewarePutsUserOnTheContext(t *testing.T) {
 func TestFromContextWithoutMiddleware(t *testing.T) {
 	if got := FromContext(context.Background()); got != nil {
 		t.Errorf("FromContext(bare context) = %v, want nil", got)
+	}
+}
+
+func TestBearerTokenSignsInABot(t *testing.T) {
+	users := &fakeUsers{
+		bot:    &db.User{ID: 9, Type: db.UserTypeBot, Username: "probe-bot", IsActive: true},
+		botKey: "probe-key",
+	}
+	resolver := NewResolver(session.New("secret"), &fakeSessions{err: db.ErrNotFound}, users, quietLog())
+
+	var got *db.User
+	var exempt bool
+	handler := resolver.Middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		got = FromContext(r.Context())
+		exempt = csrf.Verify(r, []string{"wiki.example"}) == nil
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/pw-api/articles/new", nil)
+	req.Header.Set("Authorization", "Bearer probe-key")
+	handler.ServeHTTP(httptest.NewRecorder(), req)
+
+	if got == nil {
+		t.Fatalf("FromContext() = nil, want the bot")
+	}
+	if got.Username != "probe-bot" {
+		t.Errorf("FromContext().Username = %q, want %q", got.Username, "probe-bot")
+	}
+	if !exempt {
+		t.Errorf("csrf.Verify() = error, want nil")
+	}
+}
+
+func TestBearerTokenRefusesAnUnknownKey(t *testing.T) {
+	users := &fakeUsers{
+		bot:    &db.User{ID: 9, Type: db.UserTypeBot, Username: "probe-bot", IsActive: true},
+		botKey: "probe-key",
+	}
+	resolver := NewResolver(session.New("secret"), &fakeSessions{err: db.ErrNotFound}, users, quietLog())
+
+	var got *db.User
+	handler := resolver.Middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		got = FromContext(r.Context())
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/pw-api/articles/new", nil)
+	req.Header.Set("Authorization", "Bearer wrong-key")
+	handler.ServeHTTP(httptest.NewRecorder(), req)
+
+	if got != nil {
+		t.Errorf("FromContext() = %v, want nil", got)
 	}
 }
