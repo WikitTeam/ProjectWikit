@@ -93,7 +93,8 @@ class User(AbstractUser, RolesMixin):
 
         constraints = [
             models.UniqueConstraint(Lower('email'), name='user_email_ci_uniqueness',
-            condition=models.Q(email__isnull=False) & ~models.Q(email=''))
+            condition=models.Q(email__isnull=False) & ~models.Q(email='')
+                      & models.Q(email_verified_at__isnull=False))
         ]
 
         abstract = False
@@ -127,6 +128,12 @@ class User(AbstractUser, RolesMixin):
     forum_inactive_until = models.DateTimeField('论坛权限禁用至', null=True)
 
     can_send_direct_messages = models.BooleanField('允许发送私信', default=True)
+
+    email_verified_at = models.DateTimeField('邮箱验证时间', null=True, blank=True)
+    pending_email = models.TextField('待验证的新邮箱', blank=True, default='')
+    previous_email = models.TextField('改绑前的邮箱', blank=True, default='')
+    email_changed_at = models.DateTimeField('邮箱上次改绑时间', null=True, blank=True)
+    username_changed_at = models.DateTimeField('用户名上次修改时间', null=True, blank=True)
 
     is_active = models.BooleanField('已启用', default=True)
     inactive_until = models.DateTimeField('禁用至', null=True)

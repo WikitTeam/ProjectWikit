@@ -117,6 +117,16 @@ class Site(SingletonModel):
         '注册页提示', blank=True,
         help_text='留空使用内置文案。显示在注册按钮下方。',
     )
+    class EmailPolicy(models.TextChoices):
+        AtSignup = ('at_signup', '注册时就必须验证')
+        Required = ('required', '可以注册，但未验证不能操作')
+        Optional = ('optional', '只当标识，未验证只影响找回密码')
+
+    email_policy = models.TextField(
+        '邮箱验证要求', choices=EmailPolicy.choices, default=EmailPolicy.Optional,
+        blank=False, null=False,
+        help_text='注册一律要填邮箱。这里决定没验证的人还能做什么。',
+    )
     password_help = models.TextField(
         '找回密码求助文案', blank=True,
         help_text='找回密码页上「邮箱收不到信？」展开后显示的内容。'
