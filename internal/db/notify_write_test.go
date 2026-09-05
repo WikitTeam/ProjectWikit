@@ -13,8 +13,9 @@ func scratchUser(t *testing.T, d *DB, name string) int64 {
 	var id int64
 	err := d.pool.QueryRow(ctx, `
 INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
-	username, type, bio, is_forum_active, is_active, can_send_direct_messages)
-VALUES ('!', false, '', '', $1, now(), $2, 'normal', '', true, true, true)
+	username, type, bio, is_forum_active, is_active, can_send_direct_messages,
+	pending_email, previous_email)
+VALUES ('!', false, '', '', $1, now(), $2, 'normal', '', true, true, true, '', '')
 RETURNING id`, name+"@example.invalid", name).Scan(&id)
 	if err != nil {
 		t.Fatalf("insert scratch user err = %v, want nil", err)

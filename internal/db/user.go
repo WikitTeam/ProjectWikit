@@ -31,6 +31,7 @@ type User struct {
 	ForumInactiveUntil *time.Time
 
 	CanSendDirectMessages bool
+	EmailVerifiedAt       *time.Time
 }
 
 // A deadline in the future overrides the stored flag in both directions, so
@@ -72,7 +73,7 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until, can_send_direct_messages`
+const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until, can_send_direct_messages, email_verified_at`
 
 var qUserByName = register("UserByName", `
 SELECT `+userColumns+`
@@ -166,7 +167,7 @@ func userDest(u *User) (dest []any, finish func()) {
 	dest = []any{
 		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
 		&u.IsActive, &u.InactiveUntil, &u.IsSuperuser,
-		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDirectMessages,
+		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDirectMessages, &u.EmailVerifiedAt,
 	}
 	return dest, func() {
 		u.WikidotUsername = deref(wikidotUsername)

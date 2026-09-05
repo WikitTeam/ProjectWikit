@@ -11,8 +11,9 @@ import (
 
 var qCreateUser = register("CreateUser", `
 INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
-	username, display_name, type, bio, is_forum_active, is_active, can_send_direct_messages)
-VALUES ($1, false, '', '', '', $2, $3, $4, $5, '', true, $6, true)
+	username, display_name, type, bio, is_forum_active, is_active, can_send_direct_messages,
+	pending_email, previous_email)
+VALUES ($1, false, '', '', '', $2, $3, $4, $5, '', true, $6, true, '', '')
 RETURNING id`)
 
 func (d *DB) CreateUser(ctx context.Context, username, displayName, hash string, active bool, at time.Time) (int64, error) {
@@ -151,8 +152,9 @@ func (d *DB) SetUserPreference(ctx context.Context, userID int64, section, name,
 
 var qCreateInvitedUser = register("CreateInvitedUser", `
 INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
-	username, type, bio, is_forum_active, is_active, can_send_direct_messages)
-VALUES ('!', false, '', '', $1::text, $2, 'invite-' || md5($1::text), $3, '', true, false, true)
+	username, type, bio, is_forum_active, is_active, can_send_direct_messages,
+	pending_email, previous_email)
+VALUES ('!', false, '', '', $1::text, $2, 'invite-' || md5($1::text), $3, '', true, false, true, '', '')
 RETURNING id`)
 
 var qNameInvitedUser = register("NameInvitedUser", `
