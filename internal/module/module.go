@@ -107,6 +107,18 @@ type Data interface {
 	ArticleHasAuthor(articleID, userID int64) (bool, error)
 	RolesByUser(id int64) ([]roles.Role, error)
 
+	PostLikeCounts(postIDs []int64) (map[int64]int, error)
+	PostsLikedBy(userID int64, postIDs []int64) (map[int64]bool, error)
+	PostLikeCount(postID int64) (int, error)
+	PostLikers(postID int64, offset, limit int) ([]db.User, error)
+	LikePost(postID, userID int64) (bool, error)
+	UnlikePost(postID, userID int64) error
+
+	ArticleFavouriteCount(articleID int64) (int, error)
+	HasFavourited(articleID, userID int64) (bool, error)
+	AddFavourite(articleID, userID int64) error
+	RemoveFavourite(articleID, userID int64) error
+
 	TagsCategories() ([]db.TagsCategory, error)
 	AllTags() ([]db.NamedTag, error)
 

@@ -447,3 +447,43 @@ func (m moduleData) TagsCategories() ([]db.TagsCategory, error) {
 func (m moduleData) AllTags() ([]db.NamedTag, error) {
 	return m.repo.db.AllTags(m.repo.ctx)
 }
+
+func (m moduleData) PostLikeCounts(postIDs []int64) (map[int64]int, error) {
+	return m.repo.db.PostLikeCounts(m.repo.ctx, postIDs)
+}
+
+func (m moduleData) PostsLikedBy(userID int64, postIDs []int64) (map[int64]bool, error) {
+	return m.repo.db.PostsLikedBy(m.repo.ctx, userID, postIDs)
+}
+
+func (m moduleData) PostLikeCount(postID int64) (int, error) {
+	return m.repo.db.PostLikeCount(m.repo.ctx, postID)
+}
+
+func (m moduleData) PostLikers(postID int64, offset, limit int) ([]db.User, error) {
+	return m.repo.db.PostLikers(m.repo.ctx, postID, offset, limit)
+}
+
+func (m moduleData) LikePost(postID, userID int64) (bool, error) {
+	return m.repo.db.LikePost(m.repo.ctx, postID, userID, time.Now().UTC())
+}
+
+func (m moduleData) UnlikePost(postID, userID int64) error {
+	return m.repo.db.UnlikePost(m.repo.ctx, postID, userID)
+}
+
+func (m moduleData) ArticleFavouriteCount(articleID int64) (int, error) {
+	return m.repo.db.ArticleFavouriteCount(m.repo.ctx, articleID)
+}
+
+func (m moduleData) HasFavourited(articleID, userID int64) (bool, error) {
+	return m.repo.db.HasFavourited(m.repo.ctx, articleID, userID)
+}
+
+func (m moduleData) AddFavourite(articleID, userID int64) error {
+	return m.repo.db.AddFavourite(m.repo.ctx, articleID, userID, time.Now().UTC())
+}
+
+func (m moduleData) RemoveFavourite(articleID, userID int64) error {
+	return m.repo.db.RemoveFavourite(m.repo.ctx, articleID, userID)
+}
