@@ -1,40 +1,115 @@
 {{define "reset.html"}}
-    <div class="login-form">
-        {{if eq .Stage "ask"}}
-        <p>{{.T "reset.ask"}}</p>
-        <form method="POST">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-            <div class="text-input">
-                <input type="email" name="email" autocomplete="email" placeholder="{{.T "reset.email"}}" maxlength="254" required id="id_email">
-            </div>
-            <button class="btn btn-primary" type="submit">{{.T "reset.send"}}</button>
-        </form>
-        {{else if eq .Stage "sent"}}
-        <p>{{.T "reset.sent"}}<br>
-            {{.T "reset.sent-check"}}</p>
-        {{else if eq .Stage "set"}}
-            {{if .Error}}
-            <div class="error">
-                <p>{{esc .Error}}</p>
-            </div>
-            <br>
-            {{end}}
-            <p>{{.T "reset.set"}}</p>
-            <form method="POST">
-                <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-                <div class="text-input">
-                    <input type="password" name="new_password1" autocomplete="new-password" placeholder="{{.T "reset.new-password"}}" required id="id_new_password1">
-                </div>
-                <div class="text-input">
-                    <input type="password" name="new_password2" autocomplete="new-password" placeholder="{{.T "reset.new-password-again"}}" required id="id_new_password2">
-                </div>
-                <button class="btn" type="submit">{{.T "reset.submit"}}</button>
-            </form>
-        {{else if eq .Stage "dead"}}
-            {{.T "reset.dead"}}
-        {{else}}
-        <p>{{.T "reset.done"}}</p>
-        <button onclick="location.href='/-/login'" type="button" class="btn">{{.T "reset.login"}}</button>
-        {{end}}
+<div class="wikit-scope">
+  <div class="auth-shell">
+    {{if eq .Stage "ask"}}
+    <form method="POST" class="auth-column">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.title"}}</h1>
+      </div>
+
+      <p class="meta">{{.T "reset.ask"}}</p>
+
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label" for="id_email">{{.T "reset.email"}}</label>
+          <input type="email" name="email" id="id_email" autocomplete="email" maxlength="254" required autofocus placeholder="you@example.com">
+        </div>
+      </div>
+
+      <button class="btn-primary" type="submit">{{.T "reset.send"}}</button>
+
+      <div class="action-row">
+        <a class="link-muted" href="/-/password_reset/help">{{.T "reset.help-toggle"}}</a>
+        <a class="link-muted" href="/-/login">{{.T "reset.back-login"}}</a>
+      </div>
+    </form>
+
+    {{else if eq .Stage "set"}}
+    <form method="POST" class="auth-column">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.set-title"}}</h1>
+      </div>
+
+      {{if .Error}}
+      <div class="error-inline">
+        <span class="marker">ERR</span>
+        <span>{{esc .Error}}</span>
+      </div>
+      {{end}}
+
+      <p class="meta">{{.T "reset.set"}}</p>
+
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label" for="id_new_password1">{{.T "reset.new-password"}}</label>
+          <input type="password" name="new_password1" id="id_new_password1" autocomplete="new-password" required autofocus placeholder="••••••••">
+        </div>
+        <div class="form-row">
+          <label class="label" for="id_new_password2">{{.T "reset.new-password-again"}}</label>
+          <input type="password" name="new_password2" id="id_new_password2" autocomplete="new-password" required placeholder="••••••••">
+        </div>
+      </div>
+
+      <button class="btn-primary" type="submit">{{.T "reset.submit"}}</button>
+    </form>
+
+    {{else}}
+    <div class="auth-column">
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+
+      {{if eq .Stage "sent"}}
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.sent-title"}}</h1>
+      </div>
+      <p class="meta">{{.T "reset.sent"}}<br>{{.T "reset.sent-check"}}</p>
+      <div class="action-row">
+        <a class="link-muted" href="/-/password_reset/help">{{.T "reset.help-toggle"}}</a>
+        <a class="link-muted" href="/-/login">{{.T "reset.back-login"}}</a>
+      </div>
+
+      {{else if eq .Stage "help"}}
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.help-title"}}</h1>
+      </div>
+      <div class="auth-help-body">{{if .Help}}{{.Help}}{{else}}<p>{{.T "reset.help-default"}}</p>{{end}}</div>
+      <div class="action-row">
+        <a class="link-muted" href="/-/password_reset">{{.T "reset.back-reset"}}</a>
+        <a class="link-muted" href="/-/login">{{.T "reset.back-login"}}</a>
+      </div>
+
+      {{else if eq .Stage "dead"}}
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.dead-title"}}</h1>
+      </div>
+      <p class="meta">{{.T "reset.dead"}}</p>
+      <div class="action-row">
+        <a class="link-muted" href="/-/password_reset">{{.T "reset.dead-again"}}</a>
+        <a class="link-muted" href="/-/login">{{.T "reset.back-login"}}</a>
+      </div>
+
+      {{else}}
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.done-title"}}</h1>
+      </div>
+      <p class="meta">{{.T "reset.done"}}</p>
+      <button class="btn-primary" type="button" onclick="location.href='/-/login'">{{.T "reset.login"}}</button>
+      {{end}}
     </div>
+    {{end}}
+  </div>
+</div>
 {{end}}

@@ -24,6 +24,7 @@ type Site struct {
 	AuthIcon      string
 	FooterLicense string
 	SignupNotice  string
+	PasswordHelp  string
 
 	MembershipPasswordEnabled bool
 	MembershipPassword        string
@@ -35,7 +36,7 @@ type Site struct {
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
-       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice,
+       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
        membership_password_enabled, membership_password, membership_password_role_id,
        default_role_id, verified_role_id
 FROM web_site
@@ -52,7 +53,7 @@ func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 		err := d.pool.QueryRow(ctx, qSiteByHost, host).Scan(
 			&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage,
 			&s.Icon, &s.ThemeID, &s.SystemThemeID,
-			&s.AuthIcon, &s.FooterLicense, &s.SignupNotice,
+			&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp,
 			&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID,
 			&s.DefaultRoleID, &s.VerifiedRoleID)
 		if errors.Is(err, pgx.ErrNoRows) {

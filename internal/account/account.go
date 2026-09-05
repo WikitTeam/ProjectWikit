@@ -11,6 +11,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
+	"github.com/WikitTeam/ProjectWikit/internal/renderer"
+	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -31,6 +33,8 @@ type Deps struct {
 	Tokens   token.Generator
 	Verifier Verifier
 	Mail     mail.Sender
+	Engine   renderer.Renderer
+	Icons    roles.IconLoader
 	Bundle   *i18n.Bundle
 	Assets   *static.Assets
 	TimeZone *time.Location

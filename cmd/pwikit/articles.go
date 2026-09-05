@@ -130,7 +130,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	}
 	store := session.New(secret)
 	accounts := account.Deps{
-		DB: conn, Sessions: store, Bundle: bundle,
+		DB: conn, Sessions: store, Engine: engine, Icons: icons, Bundle: bundle,
 		Tokens:   token.Generator{Secret: secret},
 		Verifier: account.NewVerifier(),
 		Mail:     mail.New(mailConfig()),

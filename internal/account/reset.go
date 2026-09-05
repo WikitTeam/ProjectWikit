@@ -9,10 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
+	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/password"
+	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
@@ -23,6 +27,7 @@ const (
 	ResetDonePath     = "/-/password_reset/done"
 	ResetConfirmPath  = "/-/reset/"
 	ResetCompletePath = "/-/reset/done"
+	ResetHelpPath     = "/-/password_reset/help"
 	ResetPrefix       = ResetPath + "/"
 )
 
@@ -31,6 +36,7 @@ const (
 	stageSent = "sent"
 	stageSet  = "set"
 	stageDead = "dead"
+	stageHelp = "help"
 	stageDone = "done"
 )
 
@@ -55,10 +61,21 @@ func (h *ResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
-	form := shell.Reset{CSRF: csrf.Issue(w, r)}
+	form := shell.Reset{
+		AuthIcon: authIcon(current), SiteTitle: current.Title, CSRF: csrf.Issue(w, r),
+	}
 	title := ""
 
 	switch {
+	case r.URL.Path == ResetHelpPath:
+		form.Stage, title = stageHelp, loc.T("reset.help-title")
+		help, err := h.help(r, current)
+		if err != nil {
+			h.deps.logger().Error("render password help", "err", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		form.Help = help
 	case r.URL.Path == ResetPath:
 		form.Stage, title = stageAsk, loc.T("reset.title")
 		if r.Method == http.MethodPost {
@@ -112,6 +129,30 @@ func (h *ResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	h.deps.logger().Error("render password reset", "err", err)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+// The text a site writes here is wikitext, but it is rendered in the mode that
+// turns modules off, so a setting cannot reach into the module set.
+func (h *ResetHandler) help(r *http.Request, current *db.Site) (string, error) {
+	source := strings.TrimSpace(current.PasswordHelp)
+	if source == "" {
+		return "", nil
+	}
+	ctx := r.Context()
+	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
+		Env(ctx, loc, current, auth.FromContext(ctx))
+
+	info, err := env.PageInfo(nil)
+	if err != nil {
+		return "", err
+	}
+	pc := page.NewContext(nil, nil, nil, auth.FromContext(ctx))
+	html, err := env.HTML(source, info, env.Callbacks(nil, pc), renderer.ModeSystem)
+	if err != nil {
+		return "", err
+	}
+	return html.Body, nil
 }
 
 func (h *ResetHandler) checkToken(w http.ResponseWriter, r *http.Request, current *db.Site) bool {

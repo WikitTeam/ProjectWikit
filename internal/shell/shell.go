@@ -271,9 +271,12 @@ type Signup struct {
 }
 
 type Reset struct {
-	Stage string
-	CSRF  string
-	Error string
+	Stage     string
+	AuthIcon  string
+	SiteTitle string
+	Help      string
+	CSRF      string
+	Error     string
 }
 
 type Accept struct {
