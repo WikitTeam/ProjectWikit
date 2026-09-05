@@ -15,6 +15,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
@@ -38,6 +39,12 @@ const (
 	envTimeZone     = "PWIKIT_TIMEZONE"
 	envGoogleTag    = "GOOGLE_TAG_ID"
 	envUploadLimit  = "MEDIA_UPLOAD_LIMIT"
+	envMailHost     = "EMAIL_HOST"
+	envMailPort     = "EMAIL_PORT"
+	envMailUser     = "EMAIL_USERNAME"
+	envMailPassword = "EMAIL_PASSWORD"
+	envMailTLS      = "EMAIL_USE_TLS"
+	envMailFrom     = "EMAIL_DEFAULT_FROM"
 	envStorageLimit = "ABSOLUTE_MEDIA_UPLOAD_LIMIT"
 	defaultUpstream = "http://127.0.0.1:8000"
 	defaultListen   = "127.0.0.1:8080"
@@ -158,7 +165,10 @@ func serve(args []string) error {
 
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
 	var moduleAPI, preview, profile, articleAPI http.Handler = proxy, proxy, proxy, proxy
-	var profileForm, fileAPI, favourites, notifyAPI, favesAPI, ownRowsAPI http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
+	var profileForm, fileAPI, reactivePages, notifyAPI, favesAPI, ownRowsAPI http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
+	var allArticles http.Handler = proxy
+	var subscribeAPI, messageAPI, userAPI, adminAPI http.Handler = proxy, proxy, proxy, proxy
+	var login, logout, signup, accept, reset, tickets http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, trust, limits{soft: soft, hard: hard},
 			*sidecar, *secret, *timezone, log)
@@ -177,38 +187,69 @@ func serve(args []string) error {
 		preview = served(stack.preview)
 		profile = served(stack.profile)
 		profileForm = served(stack.profileForm)
-		favourites = served(stack.favourites)
+		reactivePages = served(stack.reactivePages)
 		notifyAPI = served(stack.notifyAPI)
+		subscribeAPI = served(stack.subscribeAPI)
+		messageAPI = served(stack.messageAPI)
+		userAPI = served(stack.userAPI)
+		adminAPI = served(stack.adminAPI)
+		login = served(stack.login)
+		logout = served(stack.logout)
+		signup = served(stack.signup)
+		accept = served(stack.accept)
+		reset = served(stack.reset)
+		tickets = served(stack.tickets)
 		favesAPI = served(stack.favesAPI)
 		ownRowsAPI = served(stack.ownRowsAPI)
 		articleAPI = served(stack.articleAPI)
+		allArticles = served(stack.allArticles)
 		fileAPI = served(stack.fileAPI)
 	}
 
 	goHandlers := map[string]http.Handler{
 		// The bundle is the one route answered above the session layer, so it
 		// is also the one that does not vary on the cookie.
-		static.Prefix:             static.New(assets, proxy),
-		site.ThemePrefix:          respheader.VaryCookie(site.NewThemeFiles(p.Files())),
-		media.Prefix:              respheader.VaryCookie(mediaHandler),
-		media.ResizedPrefix:       respheader.VaryCookie(resizedHandler),
-		localitem.CodePrefix:      codeHandler,
-		localitem.HTMLPrefix:      htmlHandler,
-		localitem.ThemePrefix:     themeHandler,
-		webapi.ModulesPath:        moduleAPI,
-		webapi.PreviewPath:        preview,
-		userpage.Prefix:           profile,
-		userpage.EditPrefix:       profileForm,
-		userpage.FavouritesPrefix: favourites,
-		webapi.NotificationsPath:  notifyAPI,
-		webapi.FavouritesPath:     favesAPI,
-		webapi.RatingsPath:        ownRowsAPI,
-		webapi.LikedPostsPath:     ownRowsAPI,
-		userpage.RatingsPrefix:    favourites,
-		userpage.LikedPostsPrefix: favourites,
-		webapi.ArticlesPrefix:     articleAPI,
-		webapi.FilesPrefix:        fileAPI,
-		"/":                       articles,
+		static.Prefix:                   static.New(assets, proxy),
+		site.ThemePrefix:                respheader.VaryCookie(site.NewThemeFiles(p.Files())),
+		media.Prefix:                    respheader.VaryCookie(mediaHandler),
+		media.ResizedPrefix:             respheader.VaryCookie(resizedHandler),
+		localitem.CodePrefix:            codeHandler,
+		localitem.HTMLPrefix:            htmlHandler,
+		localitem.ThemePrefix:           themeHandler,
+		webapi.ModulesPath:              moduleAPI,
+		webapi.PreviewPath:              preview,
+		userpage.Prefix:                 profile,
+		userpage.EditPrefix:             profileForm,
+		account.LoginPath:               login,
+		account.LogoutPath:              logout,
+		account.SignupPath:              signup,
+		account.SignupPrefix:            signup,
+		account.AcceptPrefix:            accept,
+		account.ResetPath:               reset,
+		account.ResetPrefix:             reset,
+		account.ResetConfirmPath:        reset,
+		account.TicketPath:              tickets,
+		account.MembershipPath:          tickets,
+		userpage.FavouritesPrefix:       reactivePages,
+		webapi.NotificationsPath:        notifyAPI,
+		webapi.SubscribePath:            subscribeAPI,
+		webapi.MessagesPrefix:           messageAPI,
+		webapi.UsersPath:                userAPI,
+		webapi.UsersPrefix:              userAPI,
+		webapi.AdminPrefix:              adminAPI,
+		webapi.FavouritesPath:           favesAPI,
+		webapi.RatingsPath:              ownRowsAPI,
+		webapi.LikedPostsPath:           ownRowsAPI,
+		userpage.RatingsPrefix:          reactivePages,
+		userpage.NotificationsPrefix:    reactivePages,
+		userpage.NotificationsSubPrefix: reactivePages,
+		userpage.MessagesPrefix:         reactivePages,
+		userpage.MessagesSubPrefix:      reactivePages,
+		userpage.LikedPostsPrefix:       reactivePages,
+		webapi.AllArticlesPath:          allArticles,
+		webapi.ArticlesPrefix:           articleAPI,
+		webapi.FilesPrefix:              fileAPI,
+		"/":                             articles,
 	}
 
 	mux, err := routing.New(routing.Table, proxy, goHandlers)
