@@ -9,6 +9,7 @@ import (
 func scratchUser(t *testing.T, d *DB, name string) int64 {
 	t.Helper()
 	ctx := context.Background()
+	name = name + "-" + time.Now().Format("150405.000000")
 	var id int64
 	err := d.pool.QueryRow(ctx, `
 INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
@@ -23,6 +24,8 @@ RETURNING id`, name+"@example.invalid", name).Scan(&id)
 		for _, sql := range []string{
 			`DELETE FROM web_usernotificationmapping WHERE recipient_id = $1`,
 			`DELETE FROM web_usernotificationsubscription WHERE subscriber_id = $1`,
+			`DELETE FROM web_forumpostlike WHERE user_id = $1`,
+			`DELETE FROM web_articlefavourite WHERE user_id = $1`,
 			`DELETE FROM web_user WHERE id = $1`,
 		} {
 			if _, err := d.pool.Exec(clean, sql, id); err != nil {
