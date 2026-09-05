@@ -28,12 +28,16 @@ type Site struct {
 	MembershipPasswordEnabled bool
 	MembershipPassword        string
 	MembershipPasswordRoleID  *int64
+
+	DefaultRoleID  *int64
+	VerifiedRoleID *int64
 }
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice,
-       membership_password_enabled, membership_password, membership_password_role_id
+       membership_password_enabled, membership_password, membership_password_role_id,
+       default_role_id, verified_role_id
 FROM web_site
 WHERE domain = $1 OR media_domain = $1
 ORDER BY id
@@ -49,7 +53,8 @@ func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 			&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage,
 			&s.Icon, &s.ThemeID, &s.SystemThemeID,
 			&s.AuthIcon, &s.FooterLicense, &s.SignupNotice,
-			&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID)
+			&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID,
+			&s.DefaultRoleID, &s.VerifiedRoleID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			continue
 		}

@@ -271,3 +271,57 @@ func (d *DB) TagsOfArticles(ctx context.Context, ids []int64) (map[int64][]Artic
 	}
 	return out, rows.Err()
 }
+
+var qLatestEditorsOfArticles = register("LatestEditorsOfArticles", `
+SELECT DISTINCT ON (e.article_id) e.article_id, `+prefixed("u", userColumns)+`
+FROM web_articlelogentry e
+JOIN web_user u ON u.id = e.user_id
+WHERE e.article_id = ANY($1)
+ORDER BY e.article_id, e.rev_number DESC`)
+
+func (d *DB) LatestEditorsOfArticles(ctx context.Context, ids []int64) (map[int64]User, error) {
+	out := make(map[int64]User, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := d.pool.Query(ctx, qLatestEditorsOfArticles, ids)
+	if err != nil {
+		return nil, fmt.Errorf("query latest editors: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var u User
+		dest, finish := userDest(&u)
+		if err := rows.Scan(append([]any{&id}, dest...)...); err != nil {
+			return nil, fmt.Errorf("scan latest editor: %w", err)
+		}
+		finish()
+		out[id] = u
+	}
+	return out, rows.Err()
+}
+
+var qCategoryRatingModes = register("CategoryRatingModes", `
+SELECT c.name, s.rating_mode
+FROM web_settings s
+JOIN web_category c ON c.id = s.category_id`)
+
+func (d *DB) CategoryRatingModes(ctx context.Context) (map[string]string, error) {
+	rows, err := d.pool.Query(ctx, qCategoryRatingModes)
+	if err != nil {
+		return nil, fmt.Errorf("query category rating modes: %w", err)
+	}
+	defer rows.Close()
+
+	out := map[string]string{}
+	for rows.Next() {
+		var name, mode string
+		if err := rows.Scan(&name, &mode); err != nil {
+			return nil, fmt.Errorf("scan category rating mode: %w", err)
+		}
+		out[name] = mode
+	}
+	return out, rows.Err()
+}
