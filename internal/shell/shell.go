@@ -250,6 +250,40 @@ func newFeed(v profileView, label string, f ProfileFeed, empty string) feed {
 	return feed{View: v, Label: label, Feed: f, Empty: empty}
 }
 
+type Login struct {
+	AuthIcon  string
+	SiteTitle string
+
+	Username string
+	CSRF     string
+	Error    string
+}
+
+type Signup struct {
+	AuthIcon  string
+	SiteTitle string
+	Notice    string
+
+	Username  string
+	IsWikidot bool
+	CSRF      string
+	Error     string
+}
+
+type Reset struct {
+	Stage string
+	CSRF  string
+	Error string
+}
+
+type Accept struct {
+	Username  string
+	IsWikidot bool
+	CSRF      string
+	Error     string
+	Fatal     bool
+}
+
 type ProfileEdit struct {
 	AuthIcon    string
 	DisplayName string
@@ -258,6 +292,8 @@ type ProfileEdit struct {
 
 	FullName string
 	Bio      string
+
+	AdvancedEditor bool
 
 	CSRF  string
 	Error string
@@ -279,6 +315,54 @@ func (r *Renderer) Profile(d Profile) (string, error) {
 func (r *Renderer) ProfileEdit(d ProfileEdit) (string, error) {
 	return r.execute("profile_edit.html", profileEditView{ProfileEdit: d, r: r})
 }
+
+func (r *Renderer) Login(d Login) (string, error) {
+	return r.execute("login.html", loginView{Login: d, r: r})
+}
+
+func (r *Renderer) Signup(d Signup) (string, error) {
+	return r.execute("signup.html", signupView{Signup: d, r: r})
+}
+
+func (r *Renderer) Accept(d Accept) (string, error) {
+	return r.execute("accept.html", acceptView{Accept: d, r: r})
+}
+
+func (r *Renderer) Reset(d Reset) (string, error) {
+	return r.execute("reset.html", resetView{Reset: d, r: r})
+}
+
+type resetView struct {
+	Reset
+	r *Renderer
+}
+
+func (v resetView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v resetView) Asset(name string) string        { return v.r.assets.URL(name) }
+
+type signupView struct {
+	Signup
+	r *Renderer
+}
+
+func (v signupView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v signupView) Asset(name string) string        { return v.r.assets.URL(name) }
+
+type acceptView struct {
+	Accept
+	r *Renderer
+}
+
+func (v acceptView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v acceptView) Asset(name string) string        { return v.r.assets.URL(name) }
+
+type loginView struct {
+	Login
+	r *Renderer
+}
+
+func (v loginView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
+func (v loginView) Asset(name string) string        { return v.r.assets.URL(name) }
 
 type profileEditView struct {
 	ProfileEdit

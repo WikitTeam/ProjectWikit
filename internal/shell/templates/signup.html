@@ -1,0 +1,180 @@
+{{define "signup.html"}}
+<div class="wikit-scope">
+  <div class="auth-shell">
+    <form method="POST" id="signup-form" class="auth-column">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "signup.heading"}}</h1>
+      </div>
+
+      {{if .Error}}
+      <div class="error-inline" id="server-error">
+        <span class="marker">ERR</span>
+        <span>{{esc .Error}}</span>
+      </div>
+      {{end}}
+
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label" for="id_username">{{.T "signup.username"}}</label>
+          <input type="text" name="username" id="id_username" required autofocus placeholder="{{.T "signup.username-placeholder"}}" value="{{esc .Username}}">
+        </div>
+
+        <div id="wikidot-section" style="display:{{if .IsWikidot}}block{{else}}none{{end}};">
+          <div class="form-row disabled">
+            <span class="meta"><i class="fas fa-info-circle"></i>&nbsp;{{.T "signup.wikidot-detected"}}</span>
+          </div>
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end;">
+            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+              <label class="label" for="id_verification_code">{{.T "signup.code"}}</label>
+              <input type="text" name="verification_code" id="id_verification_code" placeholder="{{.T "signup.code-placeholder"}}" inputmode="numeric">
+            </div>
+            <button type="button" id="send-code-btn" class="btn-ghost" style="align-self: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px;">{{.T "signup.send-code"}}</button>
+          </div>
+          <div id="send-code-msg" class="form-row" style="display: none;"></div>
+        </div>
+
+        <div class="form-row">
+          <label class="label" for="id_password">{{.T "signup.password"}}</label>
+          <input type="password" name="password" id="id_password" required placeholder="{{.T "signup.password-placeholder"}}">
+        </div>
+        <div class="form-row">
+          <label class="label" for="id_password_confirm">{{.T "signup.password-confirm"}}</label>
+          <input type="password" name="password_confirm" id="id_password_confirm" required placeholder="{{.T "signup.password-confirm-placeholder"}}">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn">{{.T "signup.submit"}}</button>
+
+      <div class="action-row">
+        <span class="meta">{{if .Notice}}{{esc .Notice}}{{else}}{{.T "signup.notice"}}{{end}}</span>
+        <a class="link-muted" href="/-/login">{{.T "signup.have-account"}}</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+    const usernameInput = document.getElementById('id_username');
+    const wikidotSection = document.getElementById('wikidot-section');
+    const sendCodeBtn = document.getElementById('send-code-btn');
+    const sendCodeMsg = document.getElementById('send-code-msg');
+    const submitBtn = document.getElementById('submit-btn');
+
+    const TEXT = {
+        submit: '{{escjs (.T "signup.submit")}}',
+        claim: '{{escjs (.T "signup.submit-claim")}}',
+        send: '{{escjs (.T "signup.send-code")}}',
+        sending: '{{escjs (.T "signup.code-sending")}}',
+        sent: '{{escjs (.T "signup.code-sent")}}',
+        failed: '{{escjs (.T "signup.code-failed")}}',
+        network: '{{escjs (.T "signup.network-error")}}',
+        resend: '{{escjs (.T "signup.resend")}}'
+    };
+
+    let checkTimer = null;
+    let isWikidot = {{if .IsWikidot}}true{{else}}false{{end}};
+
+    function updateSubmitBtn() {
+        submitBtn.textContent = isWikidot ? TEXT.claim : TEXT.submit;
+    }
+    updateSubmitBtn();
+
+    usernameInput.addEventListener('input', function () {
+        clearTimeout(checkTimer);
+        const serverError = document.getElementById('server-error');
+        if (serverError) serverError.remove();
+        const username = usernameInput.value.trim();
+        if (!username) {
+            setWikidot(false);
+            return;
+        }
+        checkTimer = setTimeout(function () {
+            checkWikidotUsername(username);
+        }, 600);
+    });
+
+    function checkWikidotUsername(username) {
+        fetch('/-/signup/check-wikidot?username=' + encodeURIComponent(username))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                setWikidot(data.is_wikidot);
+            })
+            .catch(function () {
+                setWikidot(false);
+            });
+    }
+
+    function setWikidot(val) {
+        isWikidot = val;
+        wikidotSection.style.display = val ? 'block' : 'none';
+        updateSubmitBtn();
+        if (!val) {
+            sendCodeMsg.textContent = '';
+            sendCodeMsg.style.display = 'none';
+        }
+    }
+
+    sendCodeBtn.addEventListener('click', function () {
+        const username = usernameInput.value.trim();
+        if (!username) return;
+
+        sendCodeBtn.disabled = true;
+        sendCodeMsg.style.color = 'var(--muted)';
+        sendCodeMsg.style.background = 'var(--well)';
+        sendCodeMsg.style.display = 'block';
+        sendCodeMsg.textContent = TEXT.sending;
+
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        fetch('/-/signup/send-wikidot-code', {
+            method: 'POST',
+            body: formData
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    sendCodeMsg.style.color = 'var(--ink)';
+                    sendCodeMsg.style.background = 'var(--well)';
+                    sendCodeMsg.style.display = 'block';
+                    sendCodeMsg.textContent = TEXT.sent;
+                    let countdown = 60;
+                    sendCodeBtn.textContent = TEXT.resend.replace('{seconds}', countdown);
+                    const timer = setInterval(function () {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            sendCodeBtn.disabled = false;
+                            sendCodeBtn.textContent = TEXT.send;
+                        } else {
+                            sendCodeBtn.textContent = TEXT.resend.replace('{seconds}', countdown);
+                        }
+                    }, 1000);
+                } else {
+                    sendCodeMsg.style.color = 'var(--danger)';
+                    sendCodeMsg.style.background = 'transparent';
+                    sendCodeMsg.style.display = 'block';
+                    sendCodeMsg.textContent = data.error || TEXT.failed;
+                    sendCodeBtn.disabled = false;
+                }
+            })
+            .catch(function () {
+                sendCodeMsg.style.color = 'var(--danger)';
+                sendCodeMsg.style.background = 'transparent';
+                sendCodeMsg.style.display = 'block';
+                sendCodeMsg.textContent = TEXT.network;
+                sendCodeBtn.disabled = false;
+            });
+    });
+})();
+</script>
+{{end}}

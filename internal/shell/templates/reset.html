@@ -1,0 +1,40 @@
+{{define "reset.html"}}
+    <div class="login-form">
+        {{if eq .Stage "ask"}}
+        <p>{{.T "reset.ask"}}</p>
+        <form method="POST">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+            <div class="text-input">
+                <input type="email" name="email" autocomplete="email" placeholder="{{.T "reset.email"}}" maxlength="254" required id="id_email">
+            </div>
+            <button class="btn btn-primary" type="submit">{{.T "reset.send"}}</button>
+        </form>
+        {{else if eq .Stage "sent"}}
+        <p>{{.T "reset.sent"}}<br>
+            {{.T "reset.sent-check"}}</p>
+        {{else if eq .Stage "set"}}
+            {{if .Error}}
+            <div class="error">
+                <p>{{esc .Error}}</p>
+            </div>
+            <br>
+            {{end}}
+            <p>{{.T "reset.set"}}</p>
+            <form method="POST">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+                <div class="text-input">
+                    <input type="password" name="new_password1" autocomplete="new-password" placeholder="{{.T "reset.new-password"}}" required id="id_new_password1">
+                </div>
+                <div class="text-input">
+                    <input type="password" name="new_password2" autocomplete="new-password" placeholder="{{.T "reset.new-password-again"}}" required id="id_new_password2">
+                </div>
+                <button class="btn" type="submit">{{.T "reset.submit"}}</button>
+            </form>
+        {{else if eq .Stage "dead"}}
+            {{.T "reset.dead"}}
+        {{else}}
+        <p>{{.T "reset.done"}}</p>
+        <button onclick="location.href='/-/login'" type="button" class="btn">{{.T "reset.login"}}</button>
+        {{end}}
+    </div>
+{{end}}
