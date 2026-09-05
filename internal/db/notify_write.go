@@ -13,6 +13,7 @@ const (
 	NotifyNewArticleRevision = "new_article_revision"
 	NotifyForumMention       = "forum_mention"
 	NotifyDirectMessage      = "direct_message"
+	NotifyPostLike           = "post_like"
 )
 
 var (

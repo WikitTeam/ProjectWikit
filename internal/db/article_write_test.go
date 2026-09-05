@@ -39,6 +39,14 @@ RETURNING id`, name, name).Scan(&id)
 		for _, sql := range []string{
 			`DELETE FROM web_articlelogentry WHERE article_id = $1`,
 			`DELETE FROM web_articleversion WHERE article_id = $1`,
+			`DELETE FROM web_articlefavourite WHERE article_id = $1`,
+			`DELETE FROM web_forumpostlike WHERE post_id IN (
+				SELECT p.id FROM web_forumpost p
+				JOIN web_forumthread t ON t.id = p.thread_id
+				WHERE t.article_id = $1)`,
+			`DELETE FROM web_forumpost WHERE thread_id IN (
+				SELECT id FROM web_forumthread WHERE article_id = $1)`,
+			`DELETE FROM web_forumthread WHERE article_id = $1`,
 			`DELETE FROM web_article WHERE id = $1`,
 		} {
 			if _, err := d.pool.Exec(clean, sql, id); err != nil {
