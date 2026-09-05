@@ -29,6 +29,10 @@ type pageStack struct {
 	preview     http.Handler
 	profile     http.Handler
 	profileForm http.Handler
+	favourites  http.Handler
+	notifyAPI   http.Handler
+	favesAPI    http.Handler
+	ownRowsAPI  http.Handler
 	articleAPI  http.Handler
 	fileAPI     http.Handler
 	close       func()
@@ -86,6 +90,10 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		fileAPI:     webapi.NewFileItems(api, upstream),
 		profile:     userpage.New(profiles),
 		profileForm: userpage.NewEdit(profiles),
+		favourites:  userpage.NewReactive(profiles),
+		notifyAPI:   webapi.NewNotifications(api, upstream),
+		favesAPI:    webapi.NewFavourites(api, upstream),
+		ownRowsAPI:  webapi.NewOwnRows(api, upstream),
 		close:       closeEngine,
 	}
 
@@ -104,6 +112,10 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.preview = resolver.Middleware(stack.preview)
 	stack.profile = resolver.Middleware(stack.profile)
 	stack.profileForm = resolver.Middleware(stack.profileForm)
+	stack.favourites = resolver.Middleware(stack.favourites)
+	stack.notifyAPI = resolver.Middleware(stack.notifyAPI)
+	stack.favesAPI = resolver.Middleware(stack.favesAPI)
+	stack.ownRowsAPI = resolver.Middleware(stack.ownRowsAPI)
 	stack.articles = resolver.Middleware(stack.articles)
 	return stack, nil
 }

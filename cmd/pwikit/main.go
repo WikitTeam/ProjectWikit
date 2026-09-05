@@ -158,7 +158,7 @@ func serve(args []string) error {
 
 	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
 	var moduleAPI, preview, profile, articleAPI http.Handler = proxy, proxy, proxy, proxy
-	var profileForm, fileAPI http.Handler = proxy, proxy
+	var profileForm, fileAPI, favourites, notifyAPI, favesAPI, ownRowsAPI http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, trust, limits{soft: soft, hard: hard},
 			*sidecar, *secret, *timezone, log)
@@ -177,6 +177,10 @@ func serve(args []string) error {
 		preview = served(stack.preview)
 		profile = served(stack.profile)
 		profileForm = served(stack.profileForm)
+		favourites = served(stack.favourites)
+		notifyAPI = served(stack.notifyAPI)
+		favesAPI = served(stack.favesAPI)
+		ownRowsAPI = served(stack.ownRowsAPI)
 		articleAPI = served(stack.articleAPI)
 		fileAPI = served(stack.fileAPI)
 	}
@@ -184,20 +188,27 @@ func serve(args []string) error {
 	goHandlers := map[string]http.Handler{
 		// The bundle is the one route answered above the session layer, so it
 		// is also the one that does not vary on the cookie.
-		static.Prefix:         static.New(assets, proxy),
-		site.ThemePrefix:      respheader.VaryCookie(site.NewThemeFiles(p.Files())),
-		media.Prefix:          respheader.VaryCookie(mediaHandler),
-		media.ResizedPrefix:   respheader.VaryCookie(resizedHandler),
-		localitem.CodePrefix:  codeHandler,
-		localitem.HTMLPrefix:  htmlHandler,
-		localitem.ThemePrefix: themeHandler,
-		webapi.ModulesPath:    moduleAPI,
-		webapi.PreviewPath:    preview,
-		userpage.Prefix:       profile,
-		userpage.EditPrefix:   profileForm,
-		webapi.ArticlesPrefix: articleAPI,
-		webapi.FilesPrefix:    fileAPI,
-		"/":                   articles,
+		static.Prefix:             static.New(assets, proxy),
+		site.ThemePrefix:          respheader.VaryCookie(site.NewThemeFiles(p.Files())),
+		media.Prefix:              respheader.VaryCookie(mediaHandler),
+		media.ResizedPrefix:       respheader.VaryCookie(resizedHandler),
+		localitem.CodePrefix:      codeHandler,
+		localitem.HTMLPrefix:      htmlHandler,
+		localitem.ThemePrefix:     themeHandler,
+		webapi.ModulesPath:        moduleAPI,
+		webapi.PreviewPath:        preview,
+		userpage.Prefix:           profile,
+		userpage.EditPrefix:       profileForm,
+		userpage.FavouritesPrefix: favourites,
+		webapi.NotificationsPath:  notifyAPI,
+		webapi.FavouritesPath:     favesAPI,
+		webapi.RatingsPath:        ownRowsAPI,
+		webapi.LikedPostsPath:     ownRowsAPI,
+		userpage.RatingsPrefix:    favourites,
+		userpage.LikedPostsPrefix: favourites,
+		webapi.ArticlesPrefix:     articleAPI,
+		webapi.FilesPrefix:        fileAPI,
+		"/":                       articles,
 	}
 
 	mux, err := routing.New(routing.Table, proxy, goHandlers)
