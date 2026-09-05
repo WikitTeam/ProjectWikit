@@ -122,3 +122,64 @@ func (d *DB) TagCloud(ctx context.Context, limit *int) ([]CloudTag, error) {
 	}
 	return out, nil
 }
+
+type TagsCategory struct {
+	ID          int64
+	Name        string
+	Description string
+	Slug        string
+}
+
+var qTagsCategories = register("TagsCategories", `
+SELECT id, name, description, slug
+FROM web_tagscategory
+ORDER BY priority, id`)
+
+func (d *DB) TagsCategories(ctx context.Context) ([]TagsCategory, error) {
+	rows, err := d.pool.Query(ctx, qTagsCategories)
+	if err != nil {
+		return nil, fmt.Errorf("list tag categories: %w", err)
+	}
+	defer rows.Close()
+
+	var out []TagsCategory
+	for rows.Next() {
+		var c TagsCategory
+		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.Slug); err != nil {
+			return nil, fmt.Errorf("scan tag category: %w", err)
+		}
+		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list tag categories: %w", err)
+	}
+	return out, nil
+}
+
+type NamedTag struct {
+	CategoryID int64
+	Name       string
+}
+
+var qAllTags = register("AllTags", `SELECT category_id, name FROM web_tag ORDER BY id`)
+
+func (d *DB) AllTags(ctx context.Context) ([]NamedTag, error) {
+	rows, err := d.pool.Query(ctx, qAllTags)
+	if err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+	defer rows.Close()
+
+	var out []NamedTag
+	for rows.Next() {
+		var t NamedTag
+		if err := rows.Scan(&t.CategoryID, &t.Name); err != nil {
+			return nil, fmt.Errorf("scan tag: %w", err)
+		}
+		out = append(out, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+	return out, nil
+}
