@@ -95,6 +95,15 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
                 <a href={`/-/messages`}>{t('page-login-status.messages')}</a>
               </li>
               <li>
+                <a href={`/-/favourites`}>{t('page-login-status.favourites')}</a>
+              </li>
+              <li>
+                <a href={`/-/ratings`}>{t('page-login-status.ratings')}</a>
+              </li>
+              <li>
+                <a href={`/-/liked-posts`}>{t('page-login-status.liked-posts')}</a>
+              </li>
+              <li>
                 <a href={`/-/profile/edit`}>{t('page-login-status.settings')}</a>
               </li>
               <li>
