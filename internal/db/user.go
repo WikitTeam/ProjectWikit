@@ -29,6 +29,8 @@ type User struct {
 
 	IsForumActive      bool
 	ForumInactiveUntil *time.Time
+
+	CanSendDirectMessages bool
 }
 
 // A deadline in the future overrides the stored flag in both directions, so
@@ -70,7 +72,7 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until`
+const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until, can_send_direct_messages`
 
 var qUserByName = register("UserByName", `
 SELECT `+userColumns+`
@@ -164,7 +166,7 @@ func userDest(u *User) (dest []any, finish func()) {
 	dest = []any{
 		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
 		&u.IsActive, &u.InactiveUntil, &u.IsSuperuser,
-		&u.IsForumActive, &u.ForumInactiveUntil,
+		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDirectMessages,
 	}
 	return dest, func() {
 		u.WikidotUsername = deref(wikidotUsername)
@@ -223,4 +225,106 @@ func (d *DB) UsernamesLower(ctx context.Context) (map[string]bool, error) {
 		out[name] = true
 	}
 	return out, rows.Err()
+}
+
+var qAllUsers = register("AllUsers", `
+SELECT `+userColumns+`
+FROM web_user
+ORDER BY id`)
+
+func (d *DB) AllUsers(ctx context.Context) ([]User, error) {
+	rows, err := d.pool.Query(ctx, qAllUsers)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	defer rows.Close()
+
+	var out []User
+	for rows.Next() {
+		var u User
+		dest, finish := userDest(&u)
+		if err := rows.Scan(dest...); err != nil {
+			return nil, fmt.Errorf("scan user: %w", err)
+		}
+		finish()
+		out = append(out, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	return out, nil
+}
+
+var qUserByAnyName = register("UserByAnyName", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE upper(username) = upper($1)
+	OR upper(wikidot_username) = upper($1)
+	OR upper(display_name) = upper($2)
+ORDER BY id
+LIMIT 1`)
+
+func (d *DB) UserByAnyName(ctx context.Context, canonical, raw string) (*User, error) {
+	var u User
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserByAnyName, canonical, raw).Scan(dest...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("look up user %q: %w", raw, err)
+	}
+	finish()
+	return &u, nil
+}
+
+var qUserForLogin = register("UserForLogin", `
+SELECT `+userColumns+`, password
+FROM web_user
+WHERE username = $1`)
+
+func (d *DB) UserForLogin(ctx context.Context, username string) (*User, string, error) {
+	var (
+		u        User
+		password string
+	)
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserForLogin, username).Scan(append(dest, &password)...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", ErrNotFound
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("look up user %q: %w", username, err)
+	}
+	finish()
+	return &u, password, nil
+}
+
+var qSetPassword = register("SetPassword", `
+UPDATE web_user SET password = $2 WHERE id = $1`)
+
+func (d *DB) SetPassword(ctx context.Context, id int64, hash string) error {
+	if _, err := d.pool.Exec(ctx, qSetPassword, id, hash); err != nil {
+		return fmt.Errorf("store password of user %d: %w", id, err)
+	}
+	return nil
+}
+
+var qSetLastLogin = register("SetLastLogin", `
+UPDATE web_user SET last_login = $2 WHERE id = $1`)
+
+func (d *DB) SetLastLogin(ctx context.Context, id int64, at time.Time) error {
+	if _, err := d.pool.Exec(ctx, qSetLastLogin, id, at); err != nil {
+		return fmt.Errorf("store last login of user %d: %w", id, err)
+	}
+	return nil
+}
+
+var qBotByAPIKey = register("BotByAPIKey", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE type = 'bot' AND api_key = $1`)
+
+func (d *DB) BotByAPIKey(ctx context.Context, key string) (*User, error) {
+	return d.scanUser(ctx, qBotByAPIKey, key)
 }

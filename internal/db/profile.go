@@ -17,8 +17,7 @@ type Profile struct {
 	DateJoined time.Time
 }
 
-const profileColumns = `id, type, username, wikidot_username, display_name, avatar,
-       is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until,
+const profileColumns = userColumns + `,
        bio, first_name, last_name, date_joined`
 
 var qProfileByID = register("ProfileByID", `
