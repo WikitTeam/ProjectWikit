@@ -71,6 +71,7 @@ func (d Deps) page(r *http.Request, loc *i18n.Localizer, current *db.Site, title
 	var out strings.Builder
 	err = shell.New(loc, d.Assets, d.TimeZone).SystemPage(&out, shell.System{
 		Title:     title,
+		SiteTitle: current.Title,
 		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,

@@ -114,7 +114,21 @@ func (h *SignupHandler) register(w http.ResponseWriter, r *http.Request, loc *i1
 	ctx := r.Context()
 	raw := wikidot.NormalizeDisplayName(r.PostFormValue("username"))
 	form.Username = raw
+	form.Email = lower(r.PostFormValue("email"))
 	plain := r.PostFormValue("password")
+
+	if !plausibleEmail(form.Email) {
+		form.Error = loc.T("signup.error-email-invalid")
+		return false, nil
+	}
+	held, err := h.deps.DB.VerifiedEmailTaken(ctx, form.Email, 0)
+	if err != nil {
+		return false, err
+	}
+	if held {
+		form.Error = loc.T("signup.error-email-taken")
+		return false, nil
+	}
 
 	if problem := wikidot.ValidateDisplayName(raw); problem != wikidot.DisplayNameOK {
 		form.Error = displayNameError(loc, problem)
@@ -173,6 +187,9 @@ func (h *SignupHandler) register(w http.ResponseWriter, r *http.Request, loc *i1
 	if err != nil {
 		return false, err
 	}
+	if err := h.deps.DB.SetEmail(ctx, id, form.Email); err != nil {
+		return false, err
+	}
 	if name == "" {
 		if err := h.fallbackName(ctx, id, display); err != nil {
 			return false, err
@@ -187,6 +204,13 @@ func (h *SignupHandler) register(w http.ResponseWriter, r *http.Request, loc *i1
 	user, err := h.deps.DB.UserByID(ctx, id)
 	if err != nil {
 		return false, err
+	}
+	if err := h.deps.sendVerification(ctx, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
+		return false, err
+	}
+	if current.EmailPolicy == db.EmailAtSignup {
+		form.Sent = true
+		return false, nil
 	}
 	return true, h.deps.signIn(ctx, w, r, user)
 }
@@ -216,12 +240,22 @@ func (h *SignupHandler) claim(w http.ResponseWriter, r *http.Request, loc *i18n.
 	if err := h.grant(ctx, current.VerifiedRoleID, claiming.ID); err != nil {
 		return false, err
 	}
+	if err := h.deps.DB.SetEmail(ctx, claiming.ID, form.Email); err != nil {
+		return false, err
+	}
 	if err := h.deps.welcome(ctx, claiming.ID); err != nil {
 		return false, err
 	}
 	user, err := h.deps.DB.UserByID(ctx, claiming.ID)
 	if err != nil {
 		return false, err
+	}
+	if err := h.deps.sendVerification(ctx, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
+		return false, err
+	}
+	if current.EmailPolicy == db.EmailAtSignup {
+		form.Sent = true
+		return false, nil
 	}
 	return true, h.deps.signIn(ctx, w, r, user)
 }
