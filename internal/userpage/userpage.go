@@ -32,7 +32,7 @@ import (
 
 const Prefix = "/-/users/"
 
-const notFoundBody = "User not found"
+const userNotFoundBody = "User not found"
 
 type Deps struct {
 	DB       *db.DB
@@ -75,7 +75,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	name, ok := strings.CutPrefix(r.URL.Path, Prefix)
 	if !ok || name == "" || strings.Contains(name, "/") {
-		notFound(w)
+		notFound(w, userNotFoundBody)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body == "" {
-		notFound(w)
+		notFound(w, userNotFoundBody)
 		return
 	}
 
@@ -468,9 +468,9 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-func notFound(w http.ResponseWriter) {
+func notFound(w http.ResponseWriter, body string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Length", strconv.Itoa(len(notFoundBody)))
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(http.StatusNotFound)
-	_, _ = w.Write([]byte(notFoundBody))
+	_, _ = w.Write([]byte(body))
 }

@@ -3,6 +3,8 @@ package userpage
 import (
 	"net/http"
 	"net/url"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,7 +23,37 @@ const (
 	FavouritesPrefix = "/-/favourites"
 	RatingsPrefix    = "/-/ratings"
 	LikedPostsPrefix = "/-/liked-posts"
+
+	NotificationsPrefix = "/-/notifications"
+	MessagesPrefix      = "/-/messages"
+
+	NotificationsSubPrefix = NotificationsPrefix + "/"
+	MessagesSubPrefix      = MessagesPrefix + "/"
 )
+
+const pageNotFoundBody = "Not found"
+
+var reactivePaths = []string{
+	FavouritesPrefix,
+	RatingsPrefix,
+	LikedPostsPrefix,
+	NotificationsPrefix,
+	NotificationsPrefix + "/all",
+	NotificationsPrefix + "/unread",
+	MessagesPrefix,
+}
+
+func answers(path string) bool {
+	if slices.Contains(reactivePaths, path) {
+		return true
+	}
+	rest, ok := strings.CutPrefix(path, MessagesSubPrefix)
+	if !ok || rest == "" {
+		return false
+	}
+	_, err := strconv.ParseInt(rest, 10, 64)
+	return err == nil
+}
 
 type ReactiveHandler struct {
 	deps Deps
@@ -31,12 +63,14 @@ var _ http.Handler = (*ReactiveHandler)(nil)
 
 func NewReactive(d Deps) *ReactiveHandler { return &ReactiveHandler{deps: d} }
 
-// Every page behind this handler lists the reader's own rows, so there is no
-// user in the address and no way to ask for someone else's.
 func (h *ReactiveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		w.Header().Set("Allow", "GET, HEAD")
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	if !answers(r.URL.Path) {
+		notFound(w, pageNotFoundBody)
 		return
 	}
 	ctx := r.Context()

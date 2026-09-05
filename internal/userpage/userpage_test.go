@@ -72,3 +72,29 @@ func TestMediaTypeDropsTheCharset(t *testing.T) {
 		t.Errorf("mediaType(%q) = %q, want %q", "text/plain; charset=utf-8", got, want)
 	}
 }
+
+func TestAnswers(t *testing.T) {
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{"/-/favourites", true},
+		{"/-/ratings", true},
+		{"/-/liked-posts", true},
+		{"/-/notifications", true},
+		{"/-/notifications/all", true},
+		{"/-/notifications/unread", true},
+		{"/-/notifications/other", false},
+		{"/-/messages", true},
+		{"/-/messages/12", true},
+		{"/-/messages/", false},
+		{"/-/messages/bob", false},
+		{"/-/messages/12/34", false},
+		{"/-/login", false},
+	}
+	for _, c := range cases {
+		if got := answers(c.path); got != c.want {
+			t.Errorf("answers(%q) = %v, want %v", c.path, got, c.want)
+		}
+	}
+}
