@@ -107,6 +107,9 @@ type Data interface {
 	ArticleHasAuthor(articleID, userID int64) (bool, error)
 	RolesByUser(id int64) ([]roles.Role, error)
 
+	TagsCategories() ([]db.TagsCategory, error)
+	AllTags() ([]db.NamedTag, error)
+
 	ForumPostVersions(postID int64) ([]db.ForumPostVersion, error)
 	ForumPostSource(postID int64, at *time.Time) (string, error)
 	CreateForumPost(w db.ForumPostWrite) (int64, error)

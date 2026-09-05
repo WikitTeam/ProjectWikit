@@ -439,3 +439,11 @@ func (m moduleData) SubscribeToThread(userID, threadID int64) error {
 func (m moduleData) ActiveUsersByNames(names []string) ([]db.User, error) {
 	return m.repo.db.ActiveUsersByNames(m.repo.ctx, names)
 }
+
+func (m moduleData) TagsCategories() ([]db.TagsCategory, error) {
+	return m.repo.db.TagsCategories(m.repo.ctx)
+}
+
+func (m moduleData) AllTags() ([]db.NamedTag, error) {
+	return m.repo.db.AllTags(m.repo.ctx)
+}
