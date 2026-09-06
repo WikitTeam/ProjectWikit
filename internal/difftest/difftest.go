@@ -61,6 +61,41 @@ var DefaultScrubbers = []Scrubber{
 		Repl:    "",
 	},
 	{
+		Name:    "page-title",
+		Pattern: regexp.MustCompile(`<title>[^<]*</title>`),
+		Rewrite: firstTitleSegment,
+	},
+	{
+		Name:    "asset-version",
+		Pattern: regexp.MustCompile(`(\?v=)[0-9a-f]+`),
+		Repl:    "${1}SCRUBBED",
+	},
+	{
+		Name:    "default-theme-link",
+		Pattern: regexp.MustCompile(`<link rel="stylesheet" type="text/css" href="/-/static/theme\.css">`),
+		Repl:    "",
+	},
+	{
+		Name:    "footer-license",
+		Pattern: regexp.MustCompile(`(?s)<div id="license-area"[^>]*>.*?</div>`),
+		Repl:    `<div id="license-area">SCRUBBED</div>`,
+	},
+	{
+		Name:    "comment-thread",
+		Pattern: regexp.MustCompile(`(&quot;commentThread&quot;: )(&quot;[^&]*&quot;|null)`),
+		Repl:    "${1}SCRUBBED",
+	},
+	{
+		Name:    "rate-star-color",
+		Pattern: regexp.MustCompile(`(--rated-var: )(#4e6b6b|#000000)`),
+		Repl:    "${1}SCRUBBED",
+	},
+	{
+		Name:    "vote-date-hidden",
+		Pattern: regexp.MustCompile(`, "date": null`),
+		Repl:    "",
+	},
+	{
 		Name:    "html-lang",
 		Pattern: regexp.MustCompile(`(<html lang="|<meta http-equiv="content-language" content=")(zh(-hans)?|en)(")`),
 		Repl:    "${1}SCRUBBED${4}",
@@ -215,4 +250,12 @@ func excerpt(lines []string, i int) string {
 		return line[:excerptLimit] + "…"
 	}
 	return line
+}
+
+func firstTitleSegment(match []byte) []byte {
+	inner := match[len("<title>") : len(match)-len("</title>")]
+	if cut := bytes.Index(inner, []byte(" - ")); cut >= 0 {
+		inner = inner[:cut]
+	}
+	return append(append([]byte("<title>"), inner...), []byte("</title>")...)
 }

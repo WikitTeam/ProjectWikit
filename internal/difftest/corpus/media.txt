@@ -6,7 +6,7 @@
 # The probe files come from internal/media/testdata/oracle_seed.py.
 
 /local--files/nonexistent.png
-/local--files/-/probe/empty
+!/local--files/-/probe/empty
 
 # whole-file responses: Django streams them, and its gzip layer puts
 # Accept-Encoding into Vary. pwikit does not compress yet -- reason in PROGRESS.

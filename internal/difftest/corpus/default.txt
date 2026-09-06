@@ -14,8 +14,8 @@
 /missing-page
 /this-page-does-not-exist
 
-/-/login
-/-/signup
+!/-/login
+!/-/signup
 
 !/pw-api/articles
 /pw-api/articles/scp-173
@@ -39,11 +39,11 @@
 !/-/users/probevoter
 !/-/users/probe-wd-original
 !/-/users/probe-staff
-/-/users/nobody-at-all
-/-/users/1
-/-/users/1-
-HEAD /-/users/probe-author
+!/-/users/nobody-at-all
+!/-/users/1
+!/-/users/1-
+!HEAD /-/users/probe-author
 
 # anonymous only. logged in the two forms have nothing in common, so the
 # login redirect is the whole of what this compares.
-/-/profile/edit
+!/-/profile/edit
