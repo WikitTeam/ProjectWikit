@@ -21,6 +21,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
+	"github.com/WikitTeam/ProjectWikit/internal/migrate"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
@@ -81,6 +82,8 @@ func run(args []string) error {
 		return printRoutes()
 	case "render":
 		return render(args[1:])
+	case "migrate":
+		return migrateCommand(args[1:])
 	case "help", "-h", "--help":
 		usage()
 		return nil
@@ -97,6 +100,7 @@ Commands:
   serve     start the HTTP server
   routes    print the static route table
   render    render wikitext read from stdin or a file
+  migrate   inspect the schema migrations
   modules   print the wikidot module list
   help      show this help
 `)
@@ -378,6 +382,48 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func migrateCommand(args []string) error {
+	if len(args) == 0 || args[0] != "status" {
+		fmt.Fprint(os.Stderr, `Usage: pwikit migrate status [-database <url>]
+
+  status  print which schema migrations the database carries
+`)
+		return errors.New("unknown migrate subcommand")
+	}
+	fs := flag.NewFlagSet("migrate status", flag.ContinueOnError)
+	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	if err := fs.Parse(args[1:]); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if *database == "" {
+		return errors.New("no database, pass -database or set " + envDatabase)
+	}
+
+	state, err := migrate.Status(context.Background(), *database)
+	if err != nil {
+		return err
+	}
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "STATUS\tMIGRATION")
+	for _, name := range state.Applied {
+		fmt.Fprintf(w, "applied\t%s\n", name)
+	}
+	for _, name := range state.Unknown {
+		fmt.Fprintf(w, "unknown\t%s\n", name)
+	}
+	for _, name := range state.Pending {
+		status := "pending"
+		if state.Adoptable && name == migrate.BaselineName {
+			status = "existing"
+		}
+		fmt.Fprintf(w, "%s\t%s\n", status, name)
+	}
+	return w.Flush()
 }
 
 func printRoutes() error {
