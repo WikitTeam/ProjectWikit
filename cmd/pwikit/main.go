@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -27,6 +28,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/respheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
+	"github.com/WikitTeam/ProjectWikit/internal/seed"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
@@ -84,6 +86,10 @@ func run(args []string) error {
 		return render(args[1:])
 	case "migrate":
 		return migrateCommand(args[1:])
+	case "createsite":
+		return createSite(args[1:])
+	case "seed":
+		return seedPages(args[1:])
 	case "help", "-h", "--help":
 		usage()
 		return nil
@@ -97,12 +103,14 @@ func usage() {
 	fmt.Fprint(os.Stderr, `Usage: pwikit <command> [options]
 
 Commands:
-  serve     start the HTTP server
-  routes    print the static route table
-  render    render wikitext read from stdin or a file
-  migrate   inspect the schema migrations
-  modules   print the wikidot module list
-  help      show this help
+  serve       start the HTTP server
+  createsite  create the site this database serves
+  seed        write the pages a new site starts with
+  routes      print the static route table
+  render      render wikitext read from stdin or a file
+  migrate     inspect the schema migrations
+  modules     print the wikidot module list
+  help        show this help
 `)
 }
 
@@ -382,6 +390,94 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func seedPages(args []string) error {
+	fs := flag.NewFlagSet("seed", flag.ContinueOnError)
+	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if *database == "" {
+		return errors.New("no database, pass -database or set " + envDatabase)
+	}
+
+	ctx := context.Background()
+	conn, err := db.Open(ctx, *database)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	written, err := seed.Run(ctx, conn)
+	for _, name := range written {
+		fmt.Println("wrote " + name)
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%d of %d pages written, the rest were already there\n", len(written), len(seed.Names()))
+	return nil
+}
+
+var slugPattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+
+func createSite(args []string) error {
+	fs := flag.NewFlagSet("createsite", flag.ContinueOnError)
+	slug := fs.String("slug", "", "short name for the site, letters, digits, - and _")
+	domain := fs.String("domain", "", "domain the pages are served on")
+	mediaDomain := fs.String("media-domain", "", "domain the uploaded files are served on; defaults to -domain")
+	title := fs.String("title", "", "site title")
+	headline := fs.String("headline", "", "site subtitle")
+	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	for name, value := range map[string]string{"slug": *slug, "domain": *domain, "title": *title, "headline": *headline} {
+		if value == "" {
+			return fmt.Errorf("no -%s", name)
+		}
+	}
+	if !slugPattern.MatchString(*slug) {
+		return fmt.Errorf("slug %q may only hold letters, digits, - and _", *slug)
+	}
+	if *mediaDomain == "" {
+		mediaDomain = domain
+	}
+	if *database == "" {
+		return errors.New("no database, pass -database or set " + envDatabase)
+	}
+
+	ctx := context.Background()
+	conn, err := db.Open(ctx, *database)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	taken, err := conn.AnySite(ctx)
+	if err != nil {
+		return err
+	}
+	if taken {
+		return errors.New("this database already holds a site, and one database serves one site")
+	}
+
+	id, err := conn.CreateSite(ctx, db.NewSite{
+		Slug: *slug, Title: *title, Headline: *headline,
+		Domain: *domain, MediaDomain: *mediaDomain,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("created site %s (%d) on %s\n", *slug, id, *domain)
+	return nil
 }
 
 func migrateCommand(args []string) error {

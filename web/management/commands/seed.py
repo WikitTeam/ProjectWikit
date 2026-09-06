@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from web import seeds, threadvars
+from web import threadvars
 from web.models.site import Site
 
 
@@ -8,7 +8,7 @@ class Command(BaseCommand):
     help = 'Seeds the database'
 
     def add_arguments(self, parser):
-        parser.add_argument("-a", "--archive", required=False, help="从指定的 wikitCLI 备份归档进行迁移")
+        parser.add_argument("-a", "--archive", required=True, help="从指定的 wikitCLI 备份归档进行迁移")
         # parser.add_argument("-o", "--fetch-from", required=False, help="Fetch from existing site, running on RuFoundation Engine.\nMake sure that the site engine version matches your version")
         parser.add_argument("-s", "--scope", choices=['all', 'pages', 'forum'], default='all',
                             help="迁移范围（仅归档模式）：all=全部，pages=仅页面（含文件/标签/评分/父页面），forum=仅论坛。默认 all")
@@ -27,14 +27,11 @@ class Command(BaseCommand):
 
         with threadvars.context():
             threadvars.put('current_site', site)
-            if options["archive"]:
-                from web.seeds import wikit_archive
-                wikit_archive.run(
-                    options["archive"],
-                    scope=options["scope"],
-                    force_tags=options["force_tags"],
-                    import_votes=not options["no_votes"],
-                    update_existing=options["update_existing"],
-                )
-            else:
-                seeds.run()
+            from web.seeds import wikit_archive
+            wikit_archive.run(
+                options["archive"],
+                scope=options["scope"],
+                force_tags=options["force_tags"],
+                import_votes=not options["no_votes"],
+                update_existing=options["update_existing"],
+            )
