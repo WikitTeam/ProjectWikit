@@ -387,3 +387,77 @@ func count(t *testing.T, conn *pgx.Conn, table string) int {
 	}
 	return n
 }
+
+var carriedElsewhere = []string{
+	"django_content_type", "auth_permission", "web_rolecategory", "web_role",
+	"web_role_permissions", "web_theme", "django_migrations", "django_session",
+	"django_admin_log", versionTable,
+}
+
+func TestFixtureRebuildsTheTestDatabase(t *testing.T) {
+	reference := requireDSN(t)
+	fresh := scratch(t)
+	ctx := context.Background()
+
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	body, err := os.ReadFile("testdata/fixture.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	conn := connect(t, fresh)
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.Exec(ctx, string(body)); err != nil {
+		t.Fatalf("apply the fixture err = %v, want nil", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	want := rowCounts(t, reference)
+	got := rowCounts(t, fresh)
+	if len(want) == 0 {
+		t.Fatal("rowCounts(reference) = 0 tables, want the schema")
+	}
+	for table, n := range want {
+		if got[table] != n {
+			t.Errorf("count(%s) = %d, want %d", table, got[table], n)
+		}
+	}
+}
+
+func rowCounts(t *testing.T, dsn string) map[string]int {
+	t.Helper()
+	conn := connect(t, dsn)
+	ctx := context.Background()
+	rows, err := conn.Query(ctx,
+		`SELECT table_name FROM information_schema.tables
+		 WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY 1`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tables []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Contains(carriedElsewhere, name) {
+			tables = append(tables, name)
+		}
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	out := make(map[string]int, len(tables))
+	for _, table := range tables {
+		out[table] = count(t, conn, table)
+	}
+	return out
+}

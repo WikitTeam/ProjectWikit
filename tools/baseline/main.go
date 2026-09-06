@@ -24,6 +24,21 @@ verbatim. Feed it two dumps in this order, from two different databases.
     pg_dump --data-only --inserts --no-owner --no-privileges --no-comments \
       -t django_content_type -t auth_permission -t web_rolecategory \
       -t web_role -t web_role_permissions -t web_theme
+
+It also makes the test fixture, from the seeded test database, as one dump on
+its own:
+
+  go run ./tools/baseline > internal/migrate/testdata/fixture.sql
+
+    pg_dump --data-only --inserts --no-owner --no-privileges --no-comments \
+      --exclude-table=django_content_type --exclude-table=auth_permission \
+      --exclude-table=web_rolecategory --exclude-table=web_role \
+      --exclude-table=web_role_permissions --exclude-table=web_theme \
+      --exclude-table=django_migrations --exclude-table=django_session \
+      --exclude-table=django_admin_log
+
+Applying the baseline and then that fixture to an empty database rebuilds the
+test database. TestFixtureRebuildsTheTestDatabase checks it still does.
 `
 
 func main() {
