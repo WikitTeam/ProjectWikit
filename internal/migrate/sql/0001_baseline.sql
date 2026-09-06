@@ -1712,3 +1712,1526 @@ ALTER TABLE ONLY public.web_vote
 ALTER TABLE ONLY public.web_vote
     ADD CONSTRAINT web_vote_user_id_591bef6d_fk_web_user_id FOREIGN KEY (user_id) REFERENCES public.web_user(id) DEFERRABLE INITIALLY DEFERRED;
 
+INSERT INTO public.django_content_type VALUES (1, 'web', 'roles');
+INSERT INTO public.django_content_type VALUES (2, 'admin', 'logentry');
+INSERT INTO public.django_content_type VALUES (3, 'auth', 'permission');
+INSERT INTO public.django_content_type VALUES (4, 'auth', 'group');
+INSERT INTO public.django_content_type VALUES (5, 'contenttypes', 'contenttype');
+INSERT INTO public.django_content_type VALUES (6, 'sessions', 'session');
+INSERT INTO public.django_content_type VALUES (7, 'dynamic_preferences', 'globalpreferencemodel');
+INSERT INTO public.django_content_type VALUES (8, 'dynamic_preferences_users', 'userpreferencemodel');
+INSERT INTO public.django_content_type VALUES (9, 'web', 'usedtoken');
+INSERT INTO public.django_content_type VALUES (10, 'web', 'user');
+INSERT INTO public.django_content_type VALUES (11, 'web', 'article');
+INSERT INTO public.django_content_type VALUES (12, 'web', 'settings');
+INSERT INTO public.django_content_type VALUES (13, 'web', 'site');
+INSERT INTO public.django_content_type VALUES (14, 'web', 'vote');
+INSERT INTO public.django_content_type VALUES (15, 'web', 'tag');
+INSERT INTO public.django_content_type VALUES (16, 'web', 'file');
+INSERT INTO public.django_content_type VALUES (17, 'web', 'category');
+INSERT INTO public.django_content_type VALUES (18, 'web', 'articleversion');
+INSERT INTO public.django_content_type VALUES (19, 'web', 'articlelogentry');
+INSERT INTO public.django_content_type VALUES (20, 'web', 'externallink');
+INSERT INTO public.django_content_type VALUES (21, 'web', 'forumcategory');
+INSERT INTO public.django_content_type VALUES (22, 'web', 'forumpost');
+INSERT INTO public.django_content_type VALUES (23, 'web', 'forumthread');
+INSERT INTO public.django_content_type VALUES (24, 'web', 'forumsection');
+INSERT INTO public.django_content_type VALUES (25, 'web', 'forumpostversion');
+INSERT INTO public.django_content_type VALUES (26, 'web', 'tagscategory');
+INSERT INTO public.django_content_type VALUES (27, 'web', 'actionlogentry');
+INSERT INTO public.django_content_type VALUES (28, 'web', 'usernotification');
+INSERT INTO public.django_content_type VALUES (29, 'web', 'usernotificationmapping');
+INSERT INTO public.django_content_type VALUES (30, 'web', 'usernotificationsubscription');
+INSERT INTO public.django_content_type VALUES (31, 'web', 'articlesearchindex');
+INSERT INTO public.django_content_type VALUES (32, 'web', 'rolecategory');
+INSERT INTO public.django_content_type VALUES (33, 'web', 'role');
+INSERT INTO public.django_content_type VALUES (34, 'web', 'rolepermissionsoverride');
+INSERT INTO public.django_content_type VALUES (35, 'web', 'directmessage');
+INSERT INTO public.django_content_type VALUES (36, 'web', 'directmessageblock');
+INSERT INTO public.django_content_type VALUES (37, 'web', 'userreport');
+INSERT INTO public.django_content_type VALUES (38, 'web', 'theme');
+INSERT INTO public.django_content_type VALUES (39, 'web', 'systemupdate');
+INSERT INTO public.django_content_type VALUES (40, 'web', 'userticket');
+INSERT INTO public.django_content_type VALUES (41, 'web', 'membershipapplication');
+INSERT INTO public.django_content_type VALUES (42, 'web', 'supportticket');
+INSERT INTO public.django_content_type VALUES (43, 'web', 'invitelink');
+INSERT INTO public.django_content_type VALUES (44, 'web', 'forumpostlike');
+INSERT INTO public.django_content_type VALUES (45, 'web', 'articlefavourite');
+
+INSERT INTO public.auth_permission VALUES (1, '', 1, 'view_articles');
+INSERT INTO public.auth_permission VALUES (2, '', 1, 'rate_articles');
+INSERT INTO public.auth_permission VALUES (3, '', 1, 'create_articles');
+INSERT INTO public.auth_permission VALUES (4, '', 1, 'edit_articles');
+INSERT INTO public.auth_permission VALUES (5, '', 1, 'tag_articles');
+INSERT INTO public.auth_permission VALUES (6, '', 1, 'move_articles');
+INSERT INTO public.auth_permission VALUES (7, '', 1, 'lock_articles');
+INSERT INTO public.auth_permission VALUES (8, '', 1, 'manage_article_files');
+INSERT INTO public.auth_permission VALUES (9, '', 1, 'delete_articles');
+INSERT INTO public.auth_permission VALUES (10, '', 1, 'reset_article_votes');
+INSERT INTO public.auth_permission VALUES (11, '', 1, 'comment_articles');
+INSERT INTO public.auth_permission VALUES (12, '', 1, 'view_article_comments');
+INSERT INTO public.auth_permission VALUES (13, '', 1, 'manage_article_authors');
+INSERT INTO public.auth_permission VALUES (14, '', 1, 'view_forum_posts');
+INSERT INTO public.auth_permission VALUES (15, '', 1, 'create_forum_posts');
+INSERT INTO public.auth_permission VALUES (16, '', 1, 'edit_forum_posts');
+INSERT INTO public.auth_permission VALUES (17, '', 1, 'delete_forum_posts');
+INSERT INTO public.auth_permission VALUES (18, '', 1, 'view_forum_threads');
+INSERT INTO public.auth_permission VALUES (19, '', 1, 'create_forum_threads');
+INSERT INTO public.auth_permission VALUES (20, '', 1, 'edit_forum_threads');
+INSERT INTO public.auth_permission VALUES (21, '', 1, 'pin_forum_threads');
+INSERT INTO public.auth_permission VALUES (22, '', 1, 'lock_forum_threads');
+INSERT INTO public.auth_permission VALUES (23, '', 1, 'move_forum_threads');
+INSERT INTO public.auth_permission VALUES (24, '', 1, 'view_forum_sections');
+INSERT INTO public.auth_permission VALUES (25, '', 1, 'view_hidden_forum_sections');
+INSERT INTO public.auth_permission VALUES (26, '', 1, 'view_forum_categories');
+INSERT INTO public.auth_permission VALUES (27, '', 1, 'manage_users');
+INSERT INTO public.auth_permission VALUES (28, '', 1, 'manage_roles');
+INSERT INTO public.auth_permission VALUES (29, '', 1, 'manage_site');
+INSERT INTO public.auth_permission VALUES (30, '', 1, 'view_actions_log');
+INSERT INTO public.auth_permission VALUES (31, '', 1, 'manage_categories');
+INSERT INTO public.auth_permission VALUES (32, '', 1, 'manage_tags');
+INSERT INTO public.auth_permission VALUES (33, '', 1, 'manage_forum');
+INSERT INTO public.auth_permission VALUES (34, '', 1, 'view_sensitive_info');
+INSERT INTO public.auth_permission VALUES (35, '', 1, 'view_votes_timestamp');
+INSERT INTO public.auth_permission VALUES (36, '', 1, 'manage_updates');
+INSERT INTO public.auth_permission VALUES (37, '', 1, 'manage_permissions');
+INSERT INTO public.auth_permission VALUES (38, '', 1, 'send_direct_message');
+INSERT INTO public.auth_permission VALUES (39, '', 1, 'view_user_reports');
+INSERT INTO public.auth_permission VALUES (40, '', 1, 'view_reported_full_conversation');
+INSERT INTO public.auth_permission VALUES (41, '', 1, 'view_user_tickets');
+INSERT INTO public.auth_permission VALUES (42, '', 1, 'review_membership_applications');
+INSERT INTO public.auth_permission VALUES (43, 'Can add log entry', 2, 'add_logentry');
+INSERT INTO public.auth_permission VALUES (44, 'Can change log entry', 2, 'change_logentry');
+INSERT INTO public.auth_permission VALUES (45, 'Can delete log entry', 2, 'delete_logentry');
+INSERT INTO public.auth_permission VALUES (46, 'Can view log entry', 2, 'view_logentry');
+INSERT INTO public.auth_permission VALUES (47, 'Can add permission', 3, 'add_permission');
+INSERT INTO public.auth_permission VALUES (48, 'Can change permission', 3, 'change_permission');
+INSERT INTO public.auth_permission VALUES (49, 'Can delete permission', 3, 'delete_permission');
+INSERT INTO public.auth_permission VALUES (50, 'Can view permission', 3, 'view_permission');
+INSERT INTO public.auth_permission VALUES (51, 'Can add group', 4, 'add_group');
+INSERT INTO public.auth_permission VALUES (52, 'Can change group', 4, 'change_group');
+INSERT INTO public.auth_permission VALUES (53, 'Can delete group', 4, 'delete_group');
+INSERT INTO public.auth_permission VALUES (54, 'Can view group', 4, 'view_group');
+INSERT INTO public.auth_permission VALUES (55, 'Can add content type', 5, 'add_contenttype');
+INSERT INTO public.auth_permission VALUES (56, 'Can change content type', 5, 'change_contenttype');
+INSERT INTO public.auth_permission VALUES (57, 'Can delete content type', 5, 'delete_contenttype');
+INSERT INTO public.auth_permission VALUES (58, 'Can view content type', 5, 'view_contenttype');
+INSERT INTO public.auth_permission VALUES (59, 'Can add session', 6, 'add_session');
+INSERT INTO public.auth_permission VALUES (60, 'Can change session', 6, 'change_session');
+INSERT INTO public.auth_permission VALUES (61, 'Can delete session', 6, 'delete_session');
+INSERT INTO public.auth_permission VALUES (62, 'Can view session', 6, 'view_session');
+INSERT INTO public.auth_permission VALUES (63, 'Can add Global preference', 7, 'add_globalpreferencemodel');
+INSERT INTO public.auth_permission VALUES (64, 'Can change Global preference', 7, 'change_globalpreferencemodel');
+INSERT INTO public.auth_permission VALUES (65, 'Can delete Global preference', 7, 'delete_globalpreferencemodel');
+INSERT INTO public.auth_permission VALUES (66, 'Can view Global preference', 7, 'view_globalpreferencemodel');
+INSERT INTO public.auth_permission VALUES (67, 'Can add user preference', 8, 'add_userpreferencemodel');
+INSERT INTO public.auth_permission VALUES (68, 'Can change user preference', 8, 'change_userpreferencemodel');
+INSERT INTO public.auth_permission VALUES (69, 'Can delete user preference', 8, 'delete_userpreferencemodel');
+INSERT INTO public.auth_permission VALUES (70, 'Can view user preference', 8, 'view_userpreferencemodel');
+INSERT INTO public.auth_permission VALUES (71, 'Can add 已使用的令牌', 9, 'add_usedtoken');
+INSERT INTO public.auth_permission VALUES (72, 'Can change 已使用的令牌', 9, 'change_usedtoken');
+INSERT INTO public.auth_permission VALUES (73, 'Can delete 已使用的令牌', 9, 'delete_usedtoken');
+INSERT INTO public.auth_permission VALUES (74, 'Can view 已使用的令牌', 9, 'view_usedtoken');
+INSERT INTO public.auth_permission VALUES (75, 'Can add 用户', 10, 'add_user');
+INSERT INTO public.auth_permission VALUES (76, 'Can change 用户', 10, 'change_user');
+INSERT INTO public.auth_permission VALUES (77, 'Can delete 用户', 10, 'delete_user');
+INSERT INTO public.auth_permission VALUES (78, 'Can view 用户', 10, 'view_user');
+INSERT INTO public.auth_permission VALUES (79, 'Can add 文章', 11, 'add_article');
+INSERT INTO public.auth_permission VALUES (80, 'Can change 文章', 11, 'change_article');
+INSERT INTO public.auth_permission VALUES (81, 'Can delete 文章', 11, 'delete_article');
+INSERT INTO public.auth_permission VALUES (82, 'Can view 文章', 11, 'view_article');
+INSERT INTO public.auth_permission VALUES (83, 'Can add 设置', 12, 'add_settings');
+INSERT INTO public.auth_permission VALUES (84, 'Can change 设置', 12, 'change_settings');
+INSERT INTO public.auth_permission VALUES (85, 'Can delete 设置', 12, 'delete_settings');
+INSERT INTO public.auth_permission VALUES (86, 'Can view 设置', 12, 'view_settings');
+INSERT INTO public.auth_permission VALUES (87, 'Can add 站点', 13, 'add_site');
+INSERT INTO public.auth_permission VALUES (88, 'Can change 站点', 13, 'change_site');
+INSERT INTO public.auth_permission VALUES (89, 'Can delete 站点', 13, 'delete_site');
+INSERT INTO public.auth_permission VALUES (90, 'Can view 站点', 13, 'view_site');
+INSERT INTO public.auth_permission VALUES (91, 'Can add 评分', 14, 'add_vote');
+INSERT INTO public.auth_permission VALUES (92, 'Can change 评分', 14, 'change_vote');
+INSERT INTO public.auth_permission VALUES (93, 'Can delete 评分', 14, 'delete_vote');
+INSERT INTO public.auth_permission VALUES (94, 'Can view 评分', 14, 'view_vote');
+INSERT INTO public.auth_permission VALUES (95, 'Can add 标签', 15, 'add_tag');
+INSERT INTO public.auth_permission VALUES (96, 'Can change 标签', 15, 'change_tag');
+INSERT INTO public.auth_permission VALUES (97, 'Can delete 标签', 15, 'delete_tag');
+INSERT INTO public.auth_permission VALUES (98, 'Can view 标签', 15, 'view_tag');
+INSERT INTO public.auth_permission VALUES (99, 'Can add 文件', 16, 'add_file');
+INSERT INTO public.auth_permission VALUES (100, 'Can change 文件', 16, 'change_file');
+INSERT INTO public.auth_permission VALUES (101, 'Can delete 文件', 16, 'delete_file');
+INSERT INTO public.auth_permission VALUES (102, 'Can view 文件', 16, 'view_file');
+INSERT INTO public.auth_permission VALUES (103, 'Can add 分类设置', 17, 'add_category');
+INSERT INTO public.auth_permission VALUES (104, 'Can change 分类设置', 17, 'change_category');
+INSERT INTO public.auth_permission VALUES (105, 'Can delete 分类设置', 17, 'delete_category');
+INSERT INTO public.auth_permission VALUES (106, 'Can view 分类设置', 17, 'view_category');
+INSERT INTO public.auth_permission VALUES (107, 'Can add 文章版本', 18, 'add_articleversion');
+INSERT INTO public.auth_permission VALUES (108, 'Can change 文章版本', 18, 'change_articleversion');
+INSERT INTO public.auth_permission VALUES (109, 'Can delete 文章版本', 18, 'delete_articleversion');
+INSERT INTO public.auth_permission VALUES (110, 'Can view 文章版本', 18, 'view_articleversion');
+INSERT INTO public.auth_permission VALUES (111, 'Can add 日志条目', 19, 'add_articlelogentry');
+INSERT INTO public.auth_permission VALUES (112, 'Can change 日志条目', 19, 'change_articlelogentry');
+INSERT INTO public.auth_permission VALUES (113, 'Can delete 日志条目', 19, 'delete_articlelogentry');
+INSERT INTO public.auth_permission VALUES (114, 'Can view 日志条目', 19, 'view_articlelogentry');
+INSERT INTO public.auth_permission VALUES (115, 'Can add 链接关系', 20, 'add_externallink');
+INSERT INTO public.auth_permission VALUES (116, 'Can change 链接关系', 20, 'change_externallink');
+INSERT INTO public.auth_permission VALUES (117, 'Can delete 链接关系', 20, 'delete_externallink');
+INSERT INTO public.auth_permission VALUES (118, 'Can view 链接关系', 20, 'view_externallink');
+INSERT INTO public.auth_permission VALUES (119, 'Can add 论坛版块', 21, 'add_forumcategory');
+INSERT INTO public.auth_permission VALUES (120, 'Can change 论坛版块', 21, 'change_forumcategory');
+INSERT INTO public.auth_permission VALUES (121, 'Can delete 论坛版块', 21, 'delete_forumcategory');
+INSERT INTO public.auth_permission VALUES (122, 'Can view 论坛版块', 21, 'view_forumcategory');
+INSERT INTO public.auth_permission VALUES (123, 'Can add 论坛帖子', 22, 'add_forumpost');
+INSERT INTO public.auth_permission VALUES (124, 'Can change 论坛帖子', 22, 'change_forumpost');
+INSERT INTO public.auth_permission VALUES (125, 'Can delete 论坛帖子', 22, 'delete_forumpost');
+INSERT INTO public.auth_permission VALUES (126, 'Can view 论坛帖子', 22, 'view_forumpost');
+INSERT INTO public.auth_permission VALUES (127, 'Can add 论坛主题', 23, 'add_forumthread');
+INSERT INTO public.auth_permission VALUES (128, 'Can change 论坛主题', 23, 'change_forumthread');
+INSERT INTO public.auth_permission VALUES (129, 'Can delete 论坛主题', 23, 'delete_forumthread');
+INSERT INTO public.auth_permission VALUES (130, 'Can view 论坛主题', 23, 'view_forumthread');
+INSERT INTO public.auth_permission VALUES (131, 'Can add 论坛分类', 24, 'add_forumsection');
+INSERT INTO public.auth_permission VALUES (132, 'Can change 论坛分类', 24, 'change_forumsection');
+INSERT INTO public.auth_permission VALUES (133, 'Can delete 论坛分类', 24, 'delete_forumsection');
+INSERT INTO public.auth_permission VALUES (134, 'Can view 论坛分类', 24, 'view_forumsection');
+INSERT INTO public.auth_permission VALUES (135, 'Can add 论坛帖子版本', 25, 'add_forumpostversion');
+INSERT INTO public.auth_permission VALUES (136, 'Can change 论坛帖子版本', 25, 'change_forumpostversion');
+INSERT INTO public.auth_permission VALUES (137, 'Can delete 论坛帖子版本', 25, 'delete_forumpostversion');
+INSERT INTO public.auth_permission VALUES (138, 'Can view 论坛帖子版本', 25, 'view_forumpostversion');
+INSERT INTO public.auth_permission VALUES (139, 'Can add 标签分类', 26, 'add_tagscategory');
+INSERT INTO public.auth_permission VALUES (140, 'Can change 标签分类', 26, 'change_tagscategory');
+INSERT INTO public.auth_permission VALUES (141, 'Can delete 标签分类', 26, 'delete_tagscategory');
+INSERT INTO public.auth_permission VALUES (142, 'Can view 标签分类', 26, 'view_tagscategory');
+INSERT INTO public.auth_permission VALUES (143, 'Can add 操作记录', 27, 'add_actionlogentry');
+INSERT INTO public.auth_permission VALUES (144, 'Can change 操作记录', 27, 'change_actionlogentry');
+INSERT INTO public.auth_permission VALUES (145, 'Can delete 操作记录', 27, 'delete_actionlogentry');
+INSERT INTO public.auth_permission VALUES (146, 'Can view 操作记录', 27, 'view_actionlogentry');
+INSERT INTO public.auth_permission VALUES (147, 'Can add 通知', 28, 'add_usernotification');
+INSERT INTO public.auth_permission VALUES (148, 'Can change 通知', 28, 'change_usernotification');
+INSERT INTO public.auth_permission VALUES (149, 'Can delete 通知', 28, 'delete_usernotification');
+INSERT INTO public.auth_permission VALUES (150, 'Can view 通知', 28, 'view_usernotification');
+INSERT INTO public.auth_permission VALUES (151, 'Can add user notification mapping', 29, 'add_usernotificationmapping');
+INSERT INTO public.auth_permission VALUES (152, 'Can change user notification mapping', 29, 'change_usernotificationmapping');
+INSERT INTO public.auth_permission VALUES (153, 'Can delete user notification mapping', 29, 'delete_usernotificationmapping');
+INSERT INTO public.auth_permission VALUES (154, 'Can view user notification mapping', 29, 'view_usernotificationmapping');
+INSERT INTO public.auth_permission VALUES (155, 'Can add 通知订阅', 30, 'add_usernotificationsubscription');
+INSERT INTO public.auth_permission VALUES (156, 'Can change 通知订阅', 30, 'change_usernotificationsubscription');
+INSERT INTO public.auth_permission VALUES (157, 'Can delete 通知订阅', 30, 'delete_usernotificationsubscription');
+INSERT INTO public.auth_permission VALUES (158, 'Can view 通知订阅', 30, 'view_usernotificationsubscription');
+INSERT INTO public.auth_permission VALUES (159, 'Can add 文章搜索索引', 31, 'add_articlesearchindex');
+INSERT INTO public.auth_permission VALUES (160, 'Can change 文章搜索索引', 31, 'change_articlesearchindex');
+INSERT INTO public.auth_permission VALUES (161, 'Can delete 文章搜索索引', 31, 'delete_articlesearchindex');
+INSERT INTO public.auth_permission VALUES (162, 'Can view 文章搜索索引', 31, 'view_articlesearchindex');
+INSERT INTO public.auth_permission VALUES (163, 'Can add 角色分类', 32, 'add_rolecategory');
+INSERT INTO public.auth_permission VALUES (164, 'Can change 角色分类', 32, 'change_rolecategory');
+INSERT INTO public.auth_permission VALUES (165, 'Can delete 角色分类', 32, 'delete_rolecategory');
+INSERT INTO public.auth_permission VALUES (166, 'Can view 角色分类', 32, 'view_rolecategory');
+INSERT INTO public.auth_permission VALUES (167, 'Can add 角色', 33, 'add_role');
+INSERT INTO public.auth_permission VALUES (168, 'Can change 角色', 33, 'change_role');
+INSERT INTO public.auth_permission VALUES (169, 'Can delete 角色', 33, 'delete_role');
+INSERT INTO public.auth_permission VALUES (170, 'Can view 角色', 33, 'view_role');
+INSERT INTO public.auth_permission VALUES (171, 'Can add role permissions override', 34, 'add_rolepermissionsoverride');
+INSERT INTO public.auth_permission VALUES (172, 'Can change role permissions override', 34, 'change_rolepermissionsoverride');
+INSERT INTO public.auth_permission VALUES (173, 'Can delete role permissions override', 34, 'delete_rolepermissionsoverride');
+INSERT INTO public.auth_permission VALUES (174, 'Can view role permissions override', 34, 'view_rolepermissionsoverride');
+INSERT INTO public.auth_permission VALUES (175, 'Can add 私信', 35, 'add_directmessage');
+INSERT INTO public.auth_permission VALUES (176, 'Can change 私信', 35, 'change_directmessage');
+INSERT INTO public.auth_permission VALUES (177, 'Can delete 私信', 35, 'delete_directmessage');
+INSERT INTO public.auth_permission VALUES (178, 'Can view 私信', 35, 'view_directmessage');
+INSERT INTO public.auth_permission VALUES (179, 'Can add 私信拉黑', 36, 'add_directmessageblock');
+INSERT INTO public.auth_permission VALUES (180, 'Can change 私信拉黑', 36, 'change_directmessageblock');
+INSERT INTO public.auth_permission VALUES (181, 'Can delete 私信拉黑', 36, 'delete_directmessageblock');
+INSERT INTO public.auth_permission VALUES (182, 'Can view 私信拉黑', 36, 'view_directmessageblock');
+INSERT INTO public.auth_permission VALUES (183, 'Can add 用户检举', 37, 'add_userreport');
+INSERT INTO public.auth_permission VALUES (184, 'Can change 用户检举', 37, 'change_userreport');
+INSERT INTO public.auth_permission VALUES (185, 'Can delete 用户检举', 37, 'delete_userreport');
+INSERT INTO public.auth_permission VALUES (186, 'Can view 用户检举', 37, 'view_userreport');
+INSERT INTO public.auth_permission VALUES (187, 'Can add 主题', 38, 'add_theme');
+INSERT INTO public.auth_permission VALUES (188, 'Can change 主题', 38, 'change_theme');
+INSERT INTO public.auth_permission VALUES (189, 'Can delete 主题', 38, 'delete_theme');
+INSERT INTO public.auth_permission VALUES (190, 'Can view 主题', 38, 'view_theme');
+INSERT INTO public.auth_permission VALUES (191, 'Can add 系统更新', 39, 'add_systemupdate');
+INSERT INTO public.auth_permission VALUES (192, 'Can change 系统更新', 39, 'change_systemupdate');
+INSERT INTO public.auth_permission VALUES (193, 'Can delete 系统更新', 39, 'delete_systemupdate');
+INSERT INTO public.auth_permission VALUES (194, 'Can view 系统更新', 39, 'view_systemupdate');
+INSERT INTO public.auth_permission VALUES (195, 'Can add 用户提交', 40, 'add_userticket');
+INSERT INTO public.auth_permission VALUES (196, 'Can change 用户提交', 40, 'change_userticket');
+INSERT INTO public.auth_permission VALUES (197, 'Can delete 用户提交', 40, 'delete_userticket');
+INSERT INTO public.auth_permission VALUES (198, 'Can view 用户提交', 40, 'view_userticket');
+INSERT INTO public.auth_permission VALUES (199, 'Can add 申请书', 41, 'add_membershipapplication');
+INSERT INTO public.auth_permission VALUES (200, 'Can change 申请书', 41, 'change_membershipapplication');
+INSERT INTO public.auth_permission VALUES (201, 'Can delete 申请书', 41, 'delete_membershipapplication');
+INSERT INTO public.auth_permission VALUES (202, 'Can view 申请书', 41, 'view_membershipapplication');
+INSERT INTO public.auth_permission VALUES (203, 'Can add 用户工单', 42, 'add_supportticket');
+INSERT INTO public.auth_permission VALUES (204, 'Can change 用户工单', 42, 'change_supportticket');
+INSERT INTO public.auth_permission VALUES (205, 'Can delete 用户工单', 42, 'delete_supportticket');
+INSERT INTO public.auth_permission VALUES (206, 'Can view 用户工单', 42, 'view_supportticket');
+INSERT INTO public.auth_permission VALUES (207, 'Can add 邀请链接', 43, 'add_invitelink');
+INSERT INTO public.auth_permission VALUES (208, 'Can change 邀请链接', 43, 'change_invitelink');
+INSERT INTO public.auth_permission VALUES (209, 'Can delete 邀请链接', 43, 'delete_invitelink');
+INSERT INTO public.auth_permission VALUES (210, 'Can view 邀请链接', 43, 'view_invitelink');
+INSERT INTO public.auth_permission VALUES (211, 'Can add 帖子点赞', 44, 'add_forumpostlike');
+INSERT INTO public.auth_permission VALUES (212, 'Can change 帖子点赞', 44, 'change_forumpostlike');
+INSERT INTO public.auth_permission VALUES (213, 'Can delete 帖子点赞', 44, 'delete_forumpostlike');
+INSERT INTO public.auth_permission VALUES (214, 'Can view 帖子点赞', 44, 'view_forumpostlike');
+INSERT INTO public.auth_permission VALUES (215, 'Can add 收藏', 45, 'add_articlefavourite');
+INSERT INTO public.auth_permission VALUES (216, 'Can change 收藏', 45, 'change_articlefavourite');
+INSERT INTO public.auth_permission VALUES (217, 'Can delete 收藏', 45, 'delete_articlefavourite');
+INSERT INTO public.auth_permission VALUES (218, 'Can view 收藏', 45, 'view_articlefavourite');
+
+INSERT INTO public.web_rolecategory VALUES (1, '用户状态');
+
+INSERT INTO public.web_role VALUES (3, 'reader', '读者', '', 2, false, true, '读者投票', 'hidden', 'status', '#000000', '', '', '#808080', '#ffffff', false, 1);
+INSERT INTO public.web_role VALUES (4, 'editor', '成员', '', 1, false, true, '成员投票', 'hidden', 'status', '#000000', '', '', '#808080', '#ffffff', false, 1);
+INSERT INTO public.web_role VALUES (2, 'registered', '', '', 3, false, false, '', 'hidden', 'hidden', '#000000', '', '', '#808080', '#ffffff', false, NULL);
+INSERT INTO public.web_role VALUES (1, 'everyone', '', '', 4, false, false, '', 'hidden', 'hidden', '#000000', '', '', '#808080', '#ffffff', false, NULL);
+
+INSERT INTO public.web_role_permissions VALUES (1, 1, 1);
+INSERT INTO public.web_role_permissions VALUES (2, 1, 12);
+INSERT INTO public.web_role_permissions VALUES (3, 1, 14);
+INSERT INTO public.web_role_permissions VALUES (4, 1, 18);
+INSERT INTO public.web_role_permissions VALUES (5, 1, 24);
+INSERT INTO public.web_role_permissions VALUES (6, 1, 26);
+INSERT INTO public.web_role_permissions VALUES (7, 3, 19);
+INSERT INTO public.web_role_permissions VALUES (8, 3, 2);
+INSERT INTO public.web_role_permissions VALUES (9, 3, 11);
+INSERT INTO public.web_role_permissions VALUES (10, 3, 15);
+INSERT INTO public.web_role_permissions VALUES (11, 4, 3);
+INSERT INTO public.web_role_permissions VALUES (12, 4, 4);
+INSERT INTO public.web_role_permissions VALUES (13, 4, 5);
+INSERT INTO public.web_role_permissions VALUES (14, 4, 6);
+INSERT INTO public.web_role_permissions VALUES (15, 4, 8);
+INSERT INTO public.web_role_permissions VALUES (16, 4, 10);
+INSERT INTO public.web_role_permissions VALUES (17, 4, 38);
+
+INSERT INTO public.web_theme VALUES (1, '默认主题', 'inline', '@charset "utf-8";
+
+@import ''fonts/font-bauhaus.css'';
+@import ''fonts/new-fonts.css'';
+@import url(''https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap'');
+@import url(''https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'');
+@import ''side-bar-redesign.css'';
+
+/*
+    Project Hana
+    [2026 ProjectWikit Theme]
+    Created for ProjectWikit by Kakushi
+*/
+
+:root {
+
+    --wk-primary:        #3b6fed;
+    --wk-primary-dark:   #274bbd;
+    --wk-primary-darker: #1c3690;
+    --wk-accent:         #16c6d4;
+    --wk-accent-dark:    #0e9aa6;
+
+    --wk-header-1:       #131a2b;
+    --wk-header-2:       #1d2b52;
+    --wk-header-3:       #2a3f7e;
+
+    --wk-bg:             #eef1f7;
+    --wk-surface:        #ffffff;
+    --wk-surface-alt:    #f6f8fc;
+    --wk-surface-sunken: #eaeef6;
+
+    --wk-ink:            #232a36;
+    --wk-ink-soft:       #4a5568;
+    --wk-ink-muted:      #78849a;
+    --wk-on-dark:        #e8edf7;
+    --wk-on-dark-soft:   #9fb0d4;
+
+    --wk-border:         #dce2ee;
+    --wk-border-strong:  #c2cbdd;
+    --wk-ring:           rgba(59,111,237,.28);
+    --wk-shadow-sm:      0 1px 2px rgba(20,30,60,.06), 0 1px 3px rgba(20,30,60,.08);
+    --wk-shadow-md:      0 4px 14px rgba(20,30,60,.10);
+    --wk-shadow-lg:      0 12px 34px rgba(20,30,60,.16);
+
+    --wk-beta:           #8b5cf6;
+    --wk-ok:             #12b886;
+    --wk-warn:           #f08c00;
+
+    --wk-radius:         10px;
+    --wk-radius-sm:      6px;
+    --wk-shell:          1240px;
+    --wk-sidebar-w:      17em;
+
+    --wk-cjk: ''PingFang SC'', ''Microsoft YaHei'', ''Noto Sans SC'',
+              ''Hiragino Sans GB'', ''Source Han Sans SC'', ''Nanum Gothic'', sans-serif;
+    --wk-font: Inter, -apple-system, BlinkMacSystemFont, ''Segoe UI'', Roboto,
+               ''Helvetica Neue'', Arial, var(--wk-cjk);
+    --wk-mono: ''JetBrains Mono'', ui-monospace, SFMono-Regular,
+               ''SF Mono'', Menlo, Consolas, var(--wk-cjk);
+}
+
+:root {
+    --new-side-bar-color: var(--wk-primary);
+}
+
+body {
+    background-color: var(--wk-bg);
+    background-image:
+        radial-gradient(1100px 620px at 82% -8%, rgba(59,111,237,.10), transparent 60%),
+        radial-gradient(900px 520px at -6% 4%, rgba(22,198,212,.09), transparent 55%);
+    background-attachment: fixed;
+    font-family: var(--wk-font);
+    font-size: .82em;
+    color: var(--wk-ink);
+    font-feature-settings: ''case'', ''ss01'', ''ss04'';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+div#container-wrap {
+    background: none;
+}
+
+div.class1 > div {
+    font-family: var(--wk-font) !important;
+}
+
+a {
+    color: var(--wk-primary);
+    text-decoration: none;
+    background: transparent;
+    transition: color .15s ease, background-color .15s ease;
+}
+a:visited { color: var(--wk-primary-dark); }
+a:hover {
+    color: var(--wk-primary-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    background-color: transparent;
+}
+a.newpage { color: var(--wk-warn); }
+
+#side-bar a:visited { color: var(--wk-primary); }
+
+h1, #page-title {
+    color: var(--wk-ink);
+    padding: 0 0 .3em;
+    margin: 0 0 .7em;
+    font-weight: 800;
+    letter-spacing: -.01em;
+}
+h1 { margin-top: .7em; padding: 0; }
+
+h2, h3, h4, h5, h6 {
+    margin: 1em 0 .45em;
+    padding: 0;
+    color: var(--wk-ink);
+    letter-spacing: -.005em;
+    font-weight: 700;
+}
+
+#page-title {
+    border-bottom: 1px solid var(--wk-border);
+    position: relative;
+}
+
+#page-title::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 68px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--wk-primary), var(--wk-accent));
+}
+
+.meta-title {
+    border-bottom: 1px solid var(--wk-border);
+    color: var(--wk-ink);
+    font-weight: 800;
+    margin: 0 0 .6em;
+    padding: 0 0 .25em;
+    font-size: 200%;
+}
+.meta-title p { margin: 0; }
+
+ul { list-style: square; }
+li, p { line-height: 1.55; }
+
+sup { vertical-align: top; position: relative; top: -.5em; }
+
+.form-control { width: 95%; }
+
+#content-wrap {
+    position: relative;
+    margin: 2em auto 0;
+    max-width: var(--wk-shell);
+    min-height: 1300px;
+    height: auto !important;
+}
+
+#header, #top-bar {
+    width: 100%;
+    max-width: var(--wk-shell);
+    margin: 0 auto;
+}
+
+#header {
+    height: 140px;
+    position: relative;
+    z-index: 30;
+    padding-bottom: 22px;
+    margin-top: 14px;
+    border-radius: 0;
+    background:
+        url(''/-/static/images/wikitHana.png'') 16px 43px / 96px 96px no-repeat,
+        linear-gradient(120deg, var(--wk-header-1) 0%, var(--wk-header-2) 55%, var(--wk-header-3) 100%);
+    box-shadow: var(--wk-shadow-md);
+}
+
+#header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 26px 26px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40%);
+            mask-image: linear-gradient(90deg, transparent, #000 40%);
+    pointer-events: none;
+    opacity: .6;
+    z-index: 0;
+}
+
+/*
+#header::after {
+    content: "演示站点";
+    position: absolute;
+    top: 48px;
+    right: 16px;
+    z-index: 5;
+    padding: 4px 10px;
+    font-family: var(--wk-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    white-space: nowrap;
+    color: var(--wk-accent);
+    background: rgba(11,18,38,.55);
+    border: 1px solid rgba(22,198,212,.45);
+    border-radius: 999px;
+    box-shadow: inset 0 0 12px rgba(22,198,212,.15);
+    text-shadow: 0 0 10px rgba(22,198,212,.5);
+}
+*/
+
+#header h1, #header h2 { position: relative; z-index: 2; }
+
+#header h1 {
+    margin-left: 112px;
+    padding: 0;
+    float: left;
+    max-height: 95px;
+    font-size: large;
+}
+#header h1 a {
+    display: block;
+    margin: 0;
+    padding: 74px 0 25px;
+    line-height: 0;
+    max-height: 0;
+    color: #fff;
+    background: transparent;
+    font-family: ''Sans Normalcy'', var(--wk-font);
+    font-size: 190%;
+    font-weight: 800;
+    letter-spacing: .3px;
+    text-decoration: none;
+    text-shadow: 0 2px 12px rgba(0,0,0,.45);
+}
+#header h1 a:hover { text-decoration: none; }
+
+#header h2 {
+    margin-left: 112px;
+    padding: 0;
+    clear: left;
+    float: left;
+    font-size: 105%;
+    max-height: 38px;
+}
+#header h2 span {
+    display: block;
+    margin: 0;
+    padding: 20px 0;
+    line-height: 0;
+    max-height: 0;
+    font-weight: 500;
+    color: var(--wk-on-dark-soft);
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+
+#search-top-box {
+    position: absolute;
+    top: 82px;
+    right: 14px;
+    width: 250px;
+    text-align: right;
+    z-index: 12;
+}
+#search-top-box-input {
+    border: solid 1px rgba(255,255,255,.18);
+    border-radius: 8px;
+    color: var(--wk-on-dark);
+    background-color: rgba(255,255,255,.07);
+    padding: 5px 9px;
+    transition: all .18s ease;
+}
+#search-top-box-input::placeholder { color: var(--wk-on-dark-soft); }
+#search-top-box-input:hover,
+#search-top-box-input:focus {
+    border: solid 1px var(--wk-accent);
+    color: #fff;
+    background-color: rgba(255,255,255,.12);
+    box-shadow: 0 0 0 3px rgba(22,198,212,.20);
+    outline: none;
+}
+#search-top-box-form input[type=submit] {
+    border: 0;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 90%;
+    font-weight: 700;
+    color: #fff;
+    background-image: linear-gradient(180deg, var(--wk-primary), var(--wk-primary-dark));
+    box-shadow: var(--wk-shadow-sm);
+    cursor: pointer;
+    transition: filter .15s ease, transform .05s ease;
+}
+#search-top-box-form input[type=submit]:hover,
+#search-top-box-form input[type=submit]:focus {
+    filter: brightness(1.08);
+    color: #fff;
+}
+#search-top-box-form input[type=submit]:active { transform: translateY(1px); }
+
+#login-status {
+    color: var(--wk-on-dark-soft);
+    font-size: 90%;
+    z-index: 30;
+}
+#login-status a { background: transparent; color: var(--wk-on-dark); }
+#login-status ul a { color: var(--wk-primary); background: transparent; }
+#account-topbutton {
+    background: rgba(255,255,255,.14);
+    color: #fff;
+    border-radius: 5px;
+}
+.printuser img.small { margin-right: 1px; }
+
+#top-bar {
+    position: absolute;
+    top: 140px;
+    height: 21px;
+    width: 100%;
+    line-height: 18px;
+    padding: 0;
+    margin: 0 auto;
+    z-index: 20;
+    font-size: 90%;
+}
+#top-bar ul { float: right; }
+#top-bar li { margin: 0; }
+#top-bar a { color: #fff; background: transparent; }
+
+#top-bar ul li { border: 0; position: relative; }
+
+#top-bar ul li a {
+    border-left: solid 1px rgba(255,255,255,.06);
+    border-right: solid 1px rgba(255,255,255,.06);
+    text-decoration: none;
+    padding: 10px 12px;
+    line-height: 1px;
+    max-height: 1px;
+    overflow: hidden;
+    font-weight: 600;
+    letter-spacing: .01em;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+#top-bar ul li.sfhover a,
+#top-bar ul li:hover a {
+    background: rgba(255,255,255,.14);
+    color: #fff;
+    border-left-color: rgba(255,255,255,.12);
+    border-right-color: rgba(255,255,255,.12);
+}
+
+#top-bar ul li ul {
+    border: 1px solid var(--wk-border);
+    border-top: 0;
+    border-radius: 0 0 10px 10px;
+    box-shadow: var(--wk-shadow-lg);
+    width: auto;
+    overflow: hidden;
+    background: var(--wk-surface);
+}
+#top-bar ul li.sfhover ul li a,
+#top-bar ul li:hover ul li a {
+    border-width: 0;
+    width: 160px;
+    border-top: 1px solid var(--wk-border);
+    line-height: 160%;
+    height: auto;
+    max-height: none;
+    padding: 3px 12px;
+    color: var(--wk-ink);
+    font-weight: 500;
+    background: var(--wk-surface);
+}
+#top-bar ul li.sfhover a:hover,
+#top-bar ul li:hover a:hover {
+    background: var(--wk-surface-alt);
+    color: var(--wk-primary);
+    text-decoration: none;
+}
+#top-bar ul li ul li,
+#top-bar ul li ul li.sfhover,
+#top-bar ul li ul li:hover { border-width: 0; }
+#top-bar ul li ul li a { border-width: 0; }
+#top-bar ul li ul a, #top-bar a:hover { color: var(--wk-primary); }
+.top-bar ul li:last-of-type ul { right: 0; }
+
+.mobile-top-bar {
+    display: none;
+    position: absolute;
+    left: 1em;
+    bottom: 0;
+    z-index: 0;
+}
+
+#side-bar {
+    clear: none;
+    float: none;
+    position: absolute;
+    top: .5em;
+    left: 2em;
+    width: var(--wk-sidebar-w);
+    padding: 0;
+    border: none;
+    display: block;
+    overscroll-behavior: none;
+}
+
+#side-bar .side-block, #interwiki .side-block {
+    padding: 12px 14px;
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    box-shadow: var(--wk-shadow-sm);
+    background: var(--wk-surface);
+    margin-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+#side-bar .side-block::before, #interwiki .side-block::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--wk-primary), var(--wk-accent));
+    opacity: .9;
+}
+
+#interwiki .side-block {
+    width: 217px;
+    margin-left: 5px;
+    box-sizing: border-box;
+}
+
+#side-bar .side-block.media, #interwiki .side-block.media {
+    background: linear-gradient(180deg, #eef7ff, var(--wk-surface));
+}
+#side-bar .side-block.resources, #interwiki .side-block.resources {
+    background: linear-gradient(180deg, #eefcfb, var(--wk-surface));
+}
+
+#side-bar .side-area, #interwiki .side-area { padding: 10px; }
+
+#side-bar .heading, #interwiki .heading {
+    color: var(--wk-ink-soft);
+    border-bottom: 1px solid var(--wk-border);
+    margin: 10px 0 6px;
+    padding-bottom: 4px;
+    font-size: 8pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+#side-bar p, #interwiki p { margin: 0; }
+
+#side-bar div.menu-item, #interwiki div.menu-item {
+    margin: 2px 0;
+    border-radius: var(--wk-radius-sm);
+}
+#side-bar div.menu-item img, #interwiki div.menu-item img {
+    width: 13px; height: 13px; border: 0;
+    margin-right: 4px; position: relative; bottom: -2px;
+}
+#side-bar div.menu-item a, #interwiki div.menu-item a {
+    font-weight: 600;
+    display: inline-block;
+}
+#side-bar div.menu-item.inactive img, #interwiki div.menu-item.inactive img { opacity: .25; }
+#side-bar div.menu-item.inactive a, #interwiki div.menu-item.inactive a { color: var(--wk-ink-muted); }
+#side-bar div.menu-item .sub-text, #interwiki div.menu-item .sub-text {
+    font-size: 80%; color: var(--wk-ink-muted);
+}
+#side-bar ul, #interwiki ul { list-style-type: none; padding: 0 5px 0; }
+
+#u-become-member {
+    padding: 12px;
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    box-shadow: var(--wk-shadow-sm);
+    background: linear-gradient(180deg, #eef3ff, var(--wk-surface));
+    margin-bottom: 15px;
+}
+
+#main-content {
+    margin: 0 2em 0 22em;
+    padding: 1.4em 1.6em;
+    position: relative;
+    background: var(--wk-surface);
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    box-shadow: var(--wk-shadow-md);
+    min-height: 40vh;
+}
+
+#page-content { min-height: 800px; }
+
+#main-content .page-tags a[href^=''/system:page-tags/tag/_''] { display: none; }
+
+#breadcrumbs,
+.pseudocrumbs {
+    margin: -.4em 0 1.2em;
+    font-family: var(--wk-mono);
+    font-size: 85%;
+    color: var(--wk-ink-muted);
+}
+#breadcrumbs a, .pseudocrumbs a { color: var(--wk-ink-soft); }
+
+#footer {
+    clear: both;
+    font-size: 78%;
+    background: linear-gradient(120deg, var(--wk-header-1), var(--wk-header-2));
+    color: var(--wk-on-dark-soft);
+    margin-top: 18px;
+    padding: 10px 14px;
+    border-radius: 0 0 14px 14px;
+    box-shadow: var(--wk-shadow-md);
+}
+#footer .options {
+    visibility: visible;
+    display: block;
+    float: right;
+    width: 50%;
+    font-size: 100%;
+    text-align: right;
+}
+#footer a { color: #fff; background: transparent; }
+#footer a:hover { color: var(--wk-accent); }
+
+.wikit-copyright-notice {
+    margin-top: 30px;
+    font-size: 11px;
+    color: var(--wk-ink-muted);
+    text-align: right;
+}
+.wikit-copyright-notice a { color: var(--wk-ink-muted); }
+
+.page-rate-widget-box {
+    display: inline-block;
+    border-radius: var(--wk-radius-sm);
+    box-shadow: var(--wk-shadow-sm);
+    margin-bottom: 10px;
+    margin-right: 2em;
+    overflow: hidden;
+}
+.page-rate-widget-box .rate-points {
+    background-color: var(--wk-primary) !important;
+    border: solid 1px var(--wk-primary);
+    border-right: 0;
+    border-radius: var(--wk-radius-sm) 0 0 var(--wk-radius-sm);
+    color: #fff;
+    font-weight: 700;
+}
+.page-rate-widget-box .rateup,
+.page-rate-widget-box .ratedown {
+    background-color: var(--wk-surface-alt);
+    border-top: solid 1px var(--wk-primary);
+    border-bottom: solid 1px var(--wk-primary);
+    font-weight: bold;
+}
+.page-rate-widget-box .rateup a,
+.page-rate-widget-box .ratedown a {
+    background: transparent;
+    color: var(--wk-primary);
+    padding: 0 6px;
+    margin: 0 1px;
+}
+.page-rate-widget-box .rateup a:hover,
+.page-rate-widget-box .ratedown a:hover {
+    background: var(--wk-primary);
+    color: #fff;
+    text-decoration: none;
+}
+.page-rate-widget-box .cancel {
+    background-color: var(--wk-primary);
+    border: solid 1px var(--wk-primary);
+    border-left: 0;
+    border-radius: 0 var(--wk-radius-sm) var(--wk-radius-sm) 0;
+}
+.page-rate-widget-box .cancel a { background: transparent; text-transform: uppercase; color: rgba(255,255,255,.8); }
+.page-rate-widget-box .cancel a:hover { background: var(--wk-primary-dark); color: #fff; text-decoration: none; }
+
+.heritage-rating-module {
+    float: right;
+    background-color: var(--wk-header-2);
+    padding: 2px 8px 2px 5px;
+    margin: 0 2em 10px 0;
+    border: solid 1px var(--wk-primary);
+    border-radius: 8px;
+    box-shadow: var(--wk-shadow-sm);
+}
+.heritage-rating-module .page-rate-widget-box { float: right; box-shadow: none; margin: 0; }
+.heritage-rating-module .heritage-emblem { float: right; position: relative; top: -2px; left: 2px; height: 16px; width: 16px; overflow: visible; margin-right: 2px; }
+.heritage-rating-module .heritage-emblem img { width: 20px; height: 20px; border: 0; }
+
+.scp-featured { display: flex; margin: 20px 0; gap: 24px; }
+.scp-featured__block {
+    width: 50%;
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    padding: 10px 20px 14px;
+    background: var(--wk-surface);
+    box-shadow: var(--wk-shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+.scp-featured__block::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--wk-primary), var(--wk-accent));
+}
+.scp-featured__block:first-child { margin-right: 0; }
+.scp-featured__block_type_daily { background: linear-gradient(180deg, #eefcfa, var(--wk-surface)); }
+.scp-featured__block_type_gold  { background: linear-gradient(180deg, #fff8e6, var(--wk-surface)); }
+.scp-featured__block_type_gold::before { background: linear-gradient(90deg, #f0ac00, #ffd43b); }
+
+.scp-featured__title {
+    font-size: 12px;
+    color: var(--wk-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    font-weight: 800;
+}
+.scp-featured__title p { margin-bottom: 0; }
+.scp-featured__title_type_secondary { margin-top: 25px; }
+.scp-featured__page-title a { font-weight: 700; font-size: 14px; }
+.scp-featured__content p { font-size: 13px; font-style: italic; color: var(--wk-ink-soft); }
+.scp-featured__previous { color: var(--wk-ink-muted); font-size: 12px; margin-top: 25px; }
+.scp-featured__previous-title { margin-bottom: 4px; display: inline-block; }
+.scp-featured__block_type_gold a { font-weight: normal; font-size: 1em; }
+
+.scp-other-branches {
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    padding: 8px 20px 18px;
+    background: var(--wk-surface);
+    text-align: center;
+    box-shadow: var(--wk-shadow-sm);
+}
+
+.welcome-warning { text-align: center; font-size: 16px; line-height: 1.25; }
+
+div.scpnet-interwiki-wrapper { width: 17em; margin-left: -5px; }
+iframe.scpnet-interwiki-frame { height: 400px; width: 17em; border: none; }
+@media (min-width: 768px) {
+    iframe.scpnet-interwiki-frame, div.scpnet-interwiki-wrapper { width: 18em; }
+}
+
+.content-panel {
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    background-color: var(--wk-surface);
+    margin: 10px 0 15px;
+    box-shadow: var(--wk-shadow-sm);
+    overflow: hidden;
+}
+.content-panel.standalone { background: var(--wk-surface); }
+.content-panel.series { padding: 0 20px; margin-bottom: 20px; }
+.content-panel.centered { text-align: center; }
+.content-panel.left-column { float: left; width: 48%; }
+.content-panel.right-column { float: right; width: 48%; }
+
+.content-panel .panel-heading {
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 90%;
+    font-weight: 700;
+    background: linear-gradient(120deg, var(--wk-primary), var(--wk-primary-dark));
+    text-shadow: none;
+}
+.content-panel .panel-heading > p,
+.content-panel .panel-footer > p { margin: 0; }
+.content-panel .panel-body {
+    padding: 10px 14px;
+    background: var(--wk-surface);
+}
+.content-panel .panel-footer {
+    padding: 4px 14px;
+    color: var(--wk-ink-muted);
+    font-size: 80%;
+    font-weight: 600;
+    text-align: right;
+    background: var(--wk-surface-alt);
+    border-top: 1px solid var(--wk-border);
+    text-shadow: none;
+}
+.content-panel .panel-footer a { color: var(--wk-primary); }
+.content-panel .content-toc {
+    float: right;
+    padding: 0 20px;
+    background-color: var(--wk-surface);
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    margin: 20px 0 5px 5px;
+    white-space: nowrap;
+    box-shadow: var(--wk-shadow-sm);
+}
+.alternate:nth-child(even) { background-color: var(--wk-surface-alt); }
+
+div.sexy-box {
+    background: var(--wk-surface-alt);
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    padding: 0 12px 12px;
+    margin: 7px 4px 12px;
+    overflow: hidden;
+}
+div.sexy-box div.image-container img {
+    margin: 5px; padding: 2px;
+    border: 1px solid var(--wk-border-strong);
+    border-radius: var(--wk-radius-sm);
+}
+
+.unmargined > p { margin: 0; line-height: 1; }
+
+.wk-image-block,
+.scp-image-block {
+    border: 1px solid var(--wk-border);
+    border-radius: var(--wk-radius);
+    box-shadow: var(--wk-shadow-sm);
+    width: 300px;
+    overflow: hidden;
+    background: var(--wk-surface);
+}
+
+.wk-image-block.block-right,
+.scp-image-block.block-right {
+    float: right;
+    clear: right;
+    margin: 0 0 1em 2em;
+}
+
+.wk-image-block.block-left,
+.scp-image-block.block-left {
+    float: left;
+    clear: left;
+    margin: 0 2em 1em 0;
+}
+
+.wk-image-block.block-center,
+.scp-image-block.block-center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.wk-image-block img,
+.scp-image-block img {
+    border: 0;
+    width: 100%;
+    display: block;
+}
+
+.wk-image-block .wk-image-caption,
+.scp-image-block .scp-image-caption {
+    background-color: var(--wk-surface-alt);
+    border-top: 1px solid var(--wk-border);
+    padding: 5px 0;
+    font-size: 80%;
+    font-weight: 600;
+    color: var(--wk-ink-soft);
+    text-align: center;
+    width: 100%;
+}
+
+.wk-image-block > p,
+.scp-image-block > p {
+    margin: 0;
+}
+
+.wk-image-block .wk-image-caption > p,
+.scp-image-block .scp-image-caption > p {
+    margin: 0;
+    padding: 0 10px;
+}
+
+.rimg { float: right; margin: 10px auto 5px 8px; }
+.limg { float: left;  margin: 10px 8px 5px auto; }
+.cimg { margin: 10px auto 5px auto; width: 600px; }
+.rimg, .limg, .cimg {
+    border: 1px solid var(--wk-border-strong);
+    border-radius: var(--wk-radius-sm);
+    text-align: center;
+    font-size: 8pt;
+    font-weight: bold;
+    background: var(--wk-surface-alt);
+    box-shadow: var(--wk-shadow-sm);
+    overflow: hidden;
+}
+.rimg img, .limg img, .cimg img { border: none; }
+.rimg span, .limg span, .cimg span {
+    display: block;
+    border-top: 1px solid var(--wk-border);
+    padding: 3px 0;
+}
+.rimg span > span, .limg span > span, .cimg span > span { display: inline; margin: 0; }
+
+.hover span { display: none; }
+.hover:hover span {
+    position: relative; bottom: 25px; right: 75px;
+    display: inline; margin: auto; height: auto; width: auto;
+    background: var(--wk-surface); border: 1px solid var(--wk-border-strong);
+    color: var(--wk-ink-soft); padding: 1em; font-size: 12px;
+    border-radius: var(--wk-radius-sm); box-shadow: var(--wk-shadow-md);
+}
+.hover:hover span span { position: relative; margin: auto; height: auto; width: auto; border: none; padding: 0; }
+
+#main-content .page-tags { margin: 1.4em 0 0; padding: .8em 0 0; border-top: 1px solid var(--wk-border); }
+#main-content .page-tags span { display: inline-block; padding: 0; max-width: 60%; }
+#main-content .page-tags a { display: inline-block; white-space: nowrap; }
+#main-content .page-tags a[href^="/system:page-tags/tag/_"] { display: none; }
+
+.tags {
+    display: inline-block;
+    margin: 0 4px 4px 0;
+    padding: 2px 9px;
+    line-height: 15px;
+    font-size: 11px;
+    font-family: var(--wk-mono);
+    background: var(--wk-surface-sunken);
+    color: var(--wk-ink-soft);
+    border: 1px solid var(--wk-border);
+    text-decoration: none;
+    border-radius: 999px;
+    transition: all .15s ease;
+}
+.tags:hover { background: var(--wk-primary); color: #fff; border-color: var(--wk-primary); text-decoration: none; }
+.tags::before, .tags::after { content: none; }
+
+.forum-thread-box .description-block {
+    padding: .6em 1em;
+    border-radius: var(--wk-radius);
+    background: var(--wk-surface);
+    border: 1px solid var(--wk-border);
+    box-shadow: var(--wk-shadow-sm);
+}
+.thread-container .post .head {
+    padding: .5em 1em;
+    background: var(--wk-surface-alt);
+    box-shadow: none;
+    border: 1px solid var(--wk-border);
+    border-bottom: 0;
+    border-radius: var(--wk-radius) var(--wk-radius) 0 0;
+}
+.thread-container .post .long .head .title { word-break: break-all; font-weight: 700; }
+.thread-container .post .long .head.op-post { background: linear-gradient(120deg, #eef3ff, #eefcfb); }
+.thread-container .post .long .head .vote { flex-grow: 1; text-align: right; color: var(--wk-ink-muted); }
+.thread-container .post .long .head .rate { font-weight: bold; }
+.thread-container .post .long .head .rate::before {
+    font-family: "Font Awesome 5 Free"; content: "\f005"; letter-spacing: 2px; color: var(--wk-warn);
+}
+.post-container .post-container { border-left: 2px solid var(--wk-border); padding-left: 1rem; }
+
+.signature { display: none !important; }
+
+.yui-navset .yui-content {
+    background-color: var(--wk-surface);
+    border: 1px solid var(--wk-border);
+    border-radius: 0 var(--wk-radius) var(--wk-radius) var(--wk-radius);
+}
+.yui-navset .yui-nav,
+.yui-navset .yui-navset-top .yui-nav { border-color: var(--wk-primary); }
+.yui-navset .yui-nav a,
+.yui-navset .yui-navset-top .yui-nav a {
+    background-color: var(--wk-surface-alt);
+    background-image: none;
+    border: 1px solid var(--wk-border);
+    border-bottom: 0;
+    color: var(--wk-ink-soft);
+    border-radius: var(--wk-radius-sm) var(--wk-radius-sm) 0 0;
+}
+.yui-navset .yui-nav .selected a,
+.yui-navset .yui-nav .selected a:focus,
+.yui-navset .yui-nav .selected a:hover {
+    background: var(--wk-primary);
+    background-image: none;
+    color: #fff;
+}
+.yui-navset .yui-nav a:hover,
+.yui-navset .yui-nav a:focus {
+    background: var(--wk-surface-sunken);
+    background-image: none;
+    color: var(--wk-primary);
+    text-decoration: none;
+}
+.yui-navset li { line-height: normal; }
+
+blockquote,
+div.blockquote {
+    border: 1px solid var(--wk-border);
+    border-left: 3px solid var(--wk-primary);
+    background-color: var(--wk-surface-alt);
+    padding: .4em 1em;
+    margin: 1em 3em;
+    border-radius: var(--wk-radius-sm);
+}
+div.curved { border-radius: var(--wk-radius); margin: 1em 3em; }
+
+@media (max-width: 479px) { div.blockquote, div.curved { margin: 1em 0; } }
+@media (min-width: 480px) and (max-width: 580px) { div.blockquote, div.curved { margin: .5em; } }
+
+.keycap {
+    border: 1px solid var(--wk-border-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background-color: var(--wk-surface-alt);
+    padding: 1px 5px;
+    font-family: var(--wk-mono);
+    font-size: .85em;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 var(--wk-border-strong);
+}
+
+.ruby, ruby { display: inline-table; text-align: center; white-space: nowrap; line-height: 1; height: 1em; vertical-align: text-bottom; }
+.rt, rt { display: table-header-group; font-size: .6em; line-height: 1.1; text-align: center; white-space: nowrap; }
+
+.bblock { color: #000; background-color: #000; transition: 2s; text-decoration: none; }
+.bblock:hover { background-color: #000; color: var(--wk-ok); text-decoration: none; }
+.dblock { color: #000; background-color: #000; transition: 2s; text-decoration: none; }
+.dblock:hover { background-color: transparent; text-decoration: none; }
+
+.emph { text-emphasis-style: dot; -webkit-text-emphasis-style: dot; }
+@-moz-document url-prefix() {
+    .emph { font-family: monospace; font-style: normal; font-weight: normal; background-repeat: repeat-x; padding: .5em 0 0; background-color: transparent; background-clip: padding-box, content-box; background-size: 1em 1.3em, auto; }
+}
+
+.footer-wikiwalk-nav { font-weight: 700; font-size: 90%; }
+
+.licensebox .collapsible-block-link {
+    margin-left: .25em; padding: .25em; font-weight: bold; opacity: .5; color: inherit;
+    transition: opacity .5s ease-in-out;
+}
+.licensebox .collapsible-block-link:hover,
+.licensebox .collapsible-block-link:active { opacity: 1; }
+
+.ny2017-link { text-align: center; }
+.ny2017-link a {
+    color: #fff; margin-bottom: 15px; display: block; font-size: 13px;
+    background: var(--wk-ok); padding: 4px; font-weight: normal !important; border-radius: var(--wk-radius-sm);
+}
+
+.scpnet-progress-bar { height: 17px; width: 100%; background: var(--wk-surface-sunken); border-radius: 999px; overflow: hidden; }
+.scpnet-progress-bar__tick { animation: scpnet-progress-bar 4s linear; background: linear-gradient(90deg, var(--wk-primary), var(--wk-accent)); height: 100%; }
+.scpnet-progress-bar_type_fast .scpnet-progress-bar__tick { animation-duration: 2s; }
+.scpnet-delayed-revealing { animation: scpnet-delayed-revealing 4.4s linear; }
+.scpnet-delayed-revealing_type_fast { animation-duration: 2.2s; }
+
+@keyframes scpnet-progress-bar {
+    0% { width: 0; } 10% { width: 10%; } 20% { width: 20%; } 30% { width: 30%; }
+    40% { width: 40%; } 50% { width: 50%; } 60% { width: 60%; } 70% { width: 70%; }
+    80% { width: 80%; } 90% { width: 90%; } 100% { width: 100%; }
+}
+@keyframes scpnet-delayed-revealing {
+    0% { visibility: hidden; opacity: 0; }
+    97% { visibility: visible; opacity: 0; }
+    100% { visibility: visible; opacity: 1; }
+}
+
+div#u-adult-warning {
+    width: fit-content;
+    margin: 0 auto 20px;
+    padding: .6rem 1.2rem;
+    border: 2px solid var(--wk-warn);
+    border-radius: var(--wk-radius);
+    background: #fff8ee;
+    color: var(--wk-ink);
+    text-align: center;
+    font-weight: bold;
+}
+div#u-adult-warning > div#u-adult-header { font-size: 300%; color: var(--wk-warn); text-shadow: none; }
+div#u-adult-warning > div#u-adult-header p { margin: 0; }
+div#u-adult-warning > .error-block { color: unset; padding: unset; margin: unset; border: unset; margin-bottom: 1em; }
+
+.changes-list-item td.title { min-width: 40%; }
+.changes-list-item .flags { text-align: center; width: 2em; }
+.changes-list-item .mod-date { text-align: center; }
+.changes-list-item .mod-by { width: 10em; }
+@media (max-width: 435px) { .changes-list-item .revision-no { display: none; } }
+
+.w-user-mention { color: var(--wk-primary) !important; background: rgba(59,111,237,.09); border-radius: 3px; }
+
+#odialog-shader-iframe, #odialog-shader { pointer-events: none; }
+
+div.preview { display: none; }
+.page-source { word-break: break-all; }
+
+img, embed, video, object, iframe, table { max-width: 100%; }
+#page-content div, #page-content div table { max-width: 100%; }
+#edit-page-comments { width: 100%; }
+
+@viewport   { width: device-width; zoom: 1; }
+@-ms-viewport { width: device-width; zoom: 1; }
+@-o-viewport  { width: device-width; zoom: 1; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--wk-surface-sunken); }
+::-webkit-scrollbar-thumb { background: var(--wk-border-strong); border-radius: 999px; border: 2px solid var(--wk-surface-sunken); }
+::-webkit-scrollbar-thumb:hover { background: var(--wk-primary); }
+
+@media (max-width: 767px) {
+    td, th { word-break: break-all; }
+    .owindow { min-width: 80%; max-width: 99%; }
+    .modal-body .table, .modal-body .table ~ div { float: left; }
+    .owindow .button-bar { float: right; }
+    .owindow div a.btn-primary { width: 100%; float: left; }
+    .mobile-top-bar ul li:last-of-type ul { right: 0; }
+    #page-content .pages-list, #page-content .pages-list div { clear: none; }
+    .scp-featured { display: block; }
+    .scp-featured__block { width: auto; }
+    .scp-featured__block:first-child { margin: 20px 0; }
+}
+
+@media (max-width: 479px) {
+    ul li ul li a { font-size: 150%; }
+    .mobile-top-bar { display: block; padding: 0; font-size: 58%; }
+    #header, .mobile-top-bar { max-width: 100%; }
+    #top-bar ul { float: left; padding-left: 10px; }
+    #search-top-box-input { display: none; }
+    #page-content { font-size: .9em; }
+    #main-content { margin: 0; border-radius: var(--wk-radius); }
+    #recent-posts-category { width: 100%; }
+    #header, .mobile-top-bar { max-width: 90%; margin: auto; }
+    #side-bar { width: 80%; position: relative; }
+    .top-bar { display: none; }
+    .page-options-bottom a { padding: 0 4px; }
+    #header h1 a { font-size: 150%; }
+    blockquote { margin: 1em 0; }
+    .license-area { font-size: .8em; }
+    #header { background-position: 14px 5.4em, 0 0; background-size: 52px 52px, cover; }
+    #header h1, #header h2 { margin-left: 78px; }
+    #header::after { font-size: 8px; letter-spacing: .08em; }
+    table.form td, table.form th { float: left; padding: 0; }
+    td.name { width: 15em; }
+    #edit-page-title { width: 90%; }
+    .content-panel.left-column, .content-panel.right-column { width: 99%; float: left; }
+    #page-content div, #page-content div table { clear: both; }
+    #page-content div.title { word-break: keep-all; }
+}
+
+@media (max-width: 385px) {
+    ul li ul li a { font-size: 150%; }
+    .mobile-top-bar { display: block; padding: 0; font-size: 58%; }
+    #header, .mobile-top-bar { max-width: 100%; }
+    #header h2 { font-size: 95%; }
+    #top-bar ul { float: left; padding-left: 10px; }
+    #header { background-position: 5% 5.4em, 0 0; }
+    #header h1, #header h2 { margin-left: calc(66px + 5%); }
+    #header, #top-bar { width: 100%; max-width: 100%; }
+    .mobile-top-bar { width: 100%; }
+    #top-bar li a { padding: 10px .5em; }
+}
+
+@media (min-width: 480px) and (max-width: 580px) {
+    ul li ul li a { font-size: 150%; }
+    .mobile-top-bar { display: block; padding: 0; font-size: 58%; }
+    #header, .mobile-top-bar { max-width: 100%; }
+    #top-bar ul { float: left; padding-left: 10px; }
+    #search-top-box-input { width: 7em; }
+    #main-content { margin: 0 2em; }
+    #header, .mobile-top-bar { max-width: 90%; }
+    #side-bar { width: 80%; position: relative; }
+    .top-bar { display: none; }
+    .mobile-top-bar { display: block; }
+    .page-options-bottom a { padding: 0 5px; }
+    #header h1 a { font-size: 170%; }
+    blockquote { margin: .5em; }
+    .license-area { font-size: .85em; }
+    #header { background-position: .6em 4.4em, 0 0; background-size: 64px 64px, cover; }
+    #header h1, #header h2 { margin-left: 90px; }
+    #page-content div.title { word-break: keep-all; }
+    td.name { width: 15em; }
+    .content-panel.left-column, .content-panel.right-column { width: 99%; float: left; }
+    #page-content div, #page-content div table { clear: both; }
+}
+
+@media (min-width: 581px) and (max-width: 767px) {
+    ul li ul li a { font-size: 150%; }
+    .mobile-top-bar { display: block; padding: 0; font-size: 58%; }
+    #header, .mobile-top-bar { max-width: 100%; }
+    #top-bar ul { float: left; padding-left: 10px; }
+    #search-top-box { top: 108px; }
+    #search-top-box-input { width: 8em; }
+    #side-bar { width: 80%; position: relative; }
+    #main-content { margin: 0 3em 0 2em; }
+    #header, .mobile-top-bar { max-width: 90%; }
+    .top-bar { display: none; }
+    .mobile-top-bar { display: block; }
+    .page-options-bottom a { padding: 0 6px; }
+    #header h1 a { font-size: 180%; }
+    .license-area { font-size: .9em; }
+    #header { background-position: 1em 3.8em, 0 0; background-size: 74px 74px, cover; }
+    #header h1, #header h2 { margin-left: 100px; }
+    td { word-break: break-all; }
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+    #main-content { margin: 0 4em 0 20em; }
+    #header, #top-bar #side-bar { max-width: 100%; }
+    .top-bar li { margin: 0; }
+    #top-bar ul li.sfhover ul li a,
+    #top-bar ul li:hover ul li a { width: 130px; }
+    .page-options-bottom a { padding: 0 7px; }
+    #header h1 a { font-size: 200%; }
+    .license-area { font-size: .95em; }
+    #header { background-position: 1em 3.6em, 0 0; background-size: 84px 84px, cover; }
+    #header h1, #header h2 { margin-left: 112px; }
+    .content-panel.left-column, .content-panel.right-column { width: 99%; float: left; }
+    #page-content div, #page-content div table { clear: both; }
+    #page-content .pages-list, #page-content .pages-list div { clear: none; }
+}
+
+.close-menu { display: none; }
+
+@media (max-width: 767px) {
+    ul li ul li a { font-size: 150%; }
+    .mobile-top-bar { display: block; padding: 0; font-size: 58%; }
+    #header, .mobile-top-bar { max-width: 100%; }
+    #top-bar ul { float: left; padding-left: 10px; }
+    .page-history tbody tr td:last-child { width: 35%; }
+    .owindow { min-width: 80%; max-width: 99%; }
+    .modal-body .table, .modal-body .table ~ div { float: left; }
+    .owindow .button-bar { float: right; }
+    .owindow div .btn-primary { width: 100%; float: left; }
+    .owindow div .btn-primary ~ div { width: 100%; }
+    .yui-navset { z-index: 1; }
+    #navi-bar, #navi-bar-shadow { display: none; }
+    #header::after {
+        top: auto;
+        bottom: 10px;
+        right: 12px;
+        font-size: 8px;
+        letter-spacing: .06em;
+        padding: 3px 8px;
+        z-index: 6;
+    }
+
+    #top-bar .open-menu a {
+        position: fixed;
+        top: .6em;
+        left: .6em;
+        z-index: 15;
+        font-family: var(--wk-font);
+        font-size: 26px;
+        font-weight: 700;
+        width: 40px;
+        height: 40px;
+        line-height: 38px;
+        text-align: center;
+        border: 0;
+        background: linear-gradient(120deg, var(--wk-primary), var(--wk-primary-dark));
+        border-radius: 12px;
+        color: #fff;
+        box-shadow: var(--wk-shadow-md);
+    }
+    #top-bar .open-menu a:hover {
+        text-decoration: none;
+        box-shadow: 0 0 0 4px var(--wk-ring), var(--wk-shadow-md);
+    }
+
+    #main-content {
+        max-width: 90%;
+        margin: 0 5%;
+        padding: 1em;
+        transition: .5s ease-in-out .1s;
+    }
+
+    #side-bar {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: -25em;
+        width: 17em;
+        height: 100%;
+        background-color: var(--wk-surface);
+        border-right: 1px solid var(--wk-border);
+        box-shadow: var(--wk-shadow-lg);
+        overflow-y: auto;
+        z-index: 60;
+        padding: 1em 1em 0;
+        transition: left .5s ease-in-out .1s;
+    }
+    #side-bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        width: 0;
+        height: 100%;
+        background-color: rgba(0,0,0,.2);
+    }
+    #header h2 { font-size: 65%; }
+
+    #side-bar:target {
+        display: block;
+        left: 0;
+        width: 17em;
+        margin: 0;
+        z-index: 60;
+    }
+    #side-bar:target + #main-content { left: 0; }
+    #side-bar:target .close-menu {
+        display: block;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: rgba(10,15,30,.45);
+        z-index: -1;
+    }
+}
+', '', '2026-09-06 02:52:57.277747+00', 'default');
+
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 218, true);
+
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 45, true);
+
+SELECT pg_catalog.setval('public.web_role_id_seq', 4, true);
+
+SELECT pg_catalog.setval('public.web_role_permissions_id_seq', 17, true);
+
+SELECT pg_catalog.setval('public.web_rolecategory_id_seq', 1, true);
+
+SELECT pg_catalog.setval('public.web_theme_id_seq', 1, true);
+

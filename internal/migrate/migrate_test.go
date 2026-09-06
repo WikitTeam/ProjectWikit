@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 )
 
 const envDSN = "PWIKIT_TEST_DSN"
@@ -294,4 +296,94 @@ func swapDatabase(t *testing.T, dsn, name string) string {
 		rest = dsn[cut+q:]
 	}
 	return dsn[:cut+1] + name + rest
+}
+
+var catalog = []string{
+	perms.ViewArticles, perms.RateArticles, perms.CreateArticles, perms.EditArticles,
+	perms.TagArticles, perms.MoveArticles, perms.LockArticles, perms.ManageArticleFiles,
+	perms.DeleteArticles, perms.ResetArticleVotes, perms.CommentArticles,
+	perms.ViewArticleComments, perms.ManageArticleAuthors,
+	perms.ViewForumPosts, perms.CreateForumPosts, perms.EditForumPosts, perms.DeleteForumPosts,
+	perms.ViewForumThreads, perms.CreateForumThreads, perms.EditForumThreads,
+	perms.PinForumThreads, perms.LockForumThreads, perms.MoveForumThreads,
+	perms.ViewForumSections, perms.ViewHiddenForumSections, perms.ViewForumCategories,
+	perms.ViewVotesTimestamp, perms.SendDirectMessage, perms.ViewUserReports,
+	perms.ViewReportedFullConversation, perms.ViewSensitiveInfo, perms.ManageUsers,
+}
+
+func TestBaselineCarriesThePermissionCatalog(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	conn := connect(t, fresh)
+
+	for _, codename := range catalog {
+		var found bool
+		if err := conn.QueryRow(ctx,
+			`SELECT EXISTS (SELECT 1 FROM auth_permission WHERE codename = $1)`, codename).Scan(&found); err != nil {
+			t.Fatal(err)
+		}
+		if !found {
+			t.Errorf("auth_permission has %q = false, want true", codename)
+		}
+	}
+}
+
+func TestBaselineCarriesTheBuiltInRoles(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	conn := connect(t, fresh)
+
+	for _, c := range []struct {
+		table string
+		want  int
+	}{
+		{"web_rolecategory", 1},
+		{"web_role", 4},
+		{"web_role_permissions", 17},
+		{"web_theme", 1},
+	} {
+		if got := count(t, conn, c.table); got != c.want {
+			t.Errorf("count(%s) = %d, want %d", c.table, got, c.want)
+		}
+	}
+
+	for _, table := range []string{"web_site", "web_settings", "web_category", "web_user", "django_migrations"} {
+		if got := count(t, conn, table); got != 0 {
+			t.Errorf("count(%s) = %d, want 0", table, got)
+		}
+	}
+}
+
+func TestBaselineLeavesTheSequencesUsable(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	conn := connect(t, fresh)
+
+	before := count(t, conn, "django_content_type")
+	var id int
+	if err := conn.QueryRow(ctx,
+		`INSERT INTO django_content_type (app_label, model) VALUES ('probe', 'probe') RETURNING id`).Scan(&id); err != nil {
+		t.Fatalf("insert without an id err = %v, want nil", err)
+	}
+	if id <= before {
+		t.Errorf("assigned id = %d, want it past the %d seeded rows", id, before)
+	}
+}
+
+func count(t *testing.T, conn *pgx.Conn, table string) int {
+	t.Helper()
+	var n int
+	if err := conn.QueryRow(context.Background(), `SELECT count(*) FROM `+table).Scan(&n); err != nil {
+		t.Fatalf("count(%s) err = %v, want nil", table, err)
+	}
+	return n
 }

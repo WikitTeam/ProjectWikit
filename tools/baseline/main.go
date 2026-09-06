@@ -8,9 +8,22 @@ import (
 	"strings"
 )
 
-const usage = `Usage: pg_dump --schema-only --no-owner --no-privileges --no-comments | go run ./tools/baseline > internal/migrate/sql/0001_baseline.sql
+const usage = `Usage: go run ./tools/baseline > internal/migrate/sql/0001_baseline.sql
 
-Strips what pgx cannot execute from a schema-only dump and leaves the rest verbatim.
+Reads pg_dump output on stdin, strips what pgx cannot execute, leaves the rest
+verbatim. Feed it two dumps in this order, from two different databases.
+
+  Schema, from a deployed database, because the baseline has to describe the
+  schema sites already run:
+
+    pg_dump --schema-only --no-owner --no-privileges --no-comments
+
+  Reference data, from a database built by migrating an empty one, because a
+  deployed database has years of edits in these tables:
+
+    pg_dump --data-only --inserts --no-owner --no-privileges --no-comments \
+      -t django_content_type -t auth_permission -t web_rolecategory \
+      -t web_role -t web_role_permissions -t web_theme
 `
 
 func main() {
