@@ -83,3 +83,37 @@ func (d *DB) RolesByUsers(ctx context.Context, userIDs []int64) (map[int64][]rol
 	}
 	return out, nil
 }
+
+var qAllRoles = register("AllRoles", `
+SELECT id, slug, name FROM web_role ORDER BY index, id`)
+
+type RoleChoice struct {
+	ID   int64
+	Slug string
+	Name string
+}
+
+func (d *DB) AllRoles(ctx context.Context) ([]RoleChoice, error) {
+	rows, err := d.pool.Query(ctx, qAllRoles)
+	if err != nil {
+		return nil, fmt.Errorf("list roles: %w", err)
+	}
+	defer rows.Close()
+
+	var out []RoleChoice
+	for rows.Next() {
+		var c RoleChoice
+		if err := rows.Scan(&c.ID, &c.Slug, &c.Name); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+func (c RoleChoice) Label() string {
+	if c.Name != "" {
+		return c.Name
+	}
+	return c.Slug
+}
