@@ -1,0 +1,19 @@
+{{define "tag_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  {{template "admin_text" dict "n" "name" "v" .Tag.Name}}
+  <div class="form-row">
+    <label class="label" for="id_category">category</label>
+    <select id="id_category" name="category">
+      <option value="">&mdash;</option>
+      {{range $.Categories}}<option value="{{.ID}}"{{if eq (deref $.Tag.CategoryID) .ID}} selected{{end}}>{{esc .Name}}</option>{{end}}
+    </select>
+  </div>
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    {{if .Tag.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

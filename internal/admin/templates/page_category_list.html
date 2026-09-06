@@ -1,0 +1,13 @@
+{{define "page_category_list.html"}}
+<div class="admin-list">
+  <p class="action-row"><a class="btn-primary" href="{{esc .New}}">+</a></p>
+  <table class="admin-table">
+    <thead><tr><th>name</th><th>indexed</th><th>articles</th></tr></thead>
+    <tbody>
+      {{range .Categories}}
+      <tr><td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td><td>{{if .IsIndexed}}yes{{end}}</td><td>{{.Articles}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

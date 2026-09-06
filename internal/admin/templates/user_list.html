@@ -1,0 +1,29 @@
+{{define "user_list.html"}}
+<div class="admin-list">
+  <form method="GET" action="{{esc .Action}}" class="action-row">
+    <input type="text" name="q" value="{{esc .Query}}" placeholder="search">
+    <button type="submit" class="btn-ghost">find</button>
+  </form>
+  <p class="meta">{{.Total}}</p>
+  <table class="admin-table">
+    <thead><tr><th>user</th>{{if .SeeEmail}}<th>email</th>{{end}}<th>active</th><th>super</th></tr></thead>
+    <tbody>
+      {{range .Users}}
+      <tr>
+        <td><a href="{{esc $.Base}}{{.ID}}">{{if eq .Type "wikidot"}}{{esc .WikidotUsername}}{{else}}{{esc .Username}}{{end}}</a></td>
+        {{if $.SeeEmail}}<td>{{esc .Email}}</td>{{end}}
+        <td>{{if .IsActive}}yes{{end}}</td>
+        <td>{{if .IsSuperuser}}yes{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{if gt .Pages 1}}
+  <p class="action-row">
+    {{if gt .Page 1}}<a class="link-muted" href="{{esc .Action}}?q={{esc .Query}}&page={{sub .Page 1}}">prev</a>{{end}}
+    <span class="meta">{{.Page}} / {{.Pages}}</span>
+    {{if lt .Page .Pages}}<a class="link-muted" href="{{esc .Action}}?q={{esc .Query}}&page={{add .Page 1}}">next</a>{{end}}
+  </p>
+  {{end}}
+</div>
+{{end}}

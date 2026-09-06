@@ -1,0 +1,19 @@
+{{define "role_list.html"}}
+<div class="admin-list">
+  <p class="action-row"><a class="btn-primary" href="{{esc .New}}">+</a></p>
+  <table class="admin-table">
+    <thead><tr><th>role</th><th>slug</th><th>index</th><th>staff</th><th>users</th></tr></thead>
+    <tbody>
+      {{range .Roles}}
+      <tr>
+        <td><a href="{{esc $.Base}}{{.ID}}">{{if .Name}}{{esc .Name}}{{else}}{{esc .Slug}}{{end}}</a></td>
+        <td><code>{{esc .Slug}}</code></td>
+        <td>{{.Index}}</td>
+        <td>{{if .IsStaff}}yes{{end}}</td>
+        <td>{{.Users}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

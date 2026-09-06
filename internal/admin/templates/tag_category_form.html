@@ -1,0 +1,15 @@
+{{define "tag_category_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  {{template "admin_text" dict "n" "name" "v" .Category.Name}}
+  {{template "admin_text" dict "n" "slug" "v" .Category.Slug}}
+  {{template "admin_area" dict "n" "description" "v" .Category.Description}}
+  <div class="form-row"><label class="label" for="id_priority">priority</label><input type="number" id="id_priority" name="priority" value="{{num .Category.Priority}}"></div>
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    {{if .Category.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

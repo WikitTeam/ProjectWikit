@@ -1,0 +1,100 @@
+{{define "site_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+
+  {{template "admin_text" dict "n" "slug" "v" .Site.Slug}}
+  {{template "admin_text" dict "n" "title" "v" .Site.Title}}
+  {{template "admin_text" dict "n" "headline" "v" .Site.Headline}}
+  {{template "admin_text" dict "n" "domain" "v" .Site.Domain}}
+  {{template "admin_text" dict "n" "media_domain" "v" .Site.MediaDomain}}
+  {{template "admin_text" dict "n" "home_page" "v" .Site.HomePage}}
+
+  <div class="form-row">
+    <label class="label" for="id_active_theme">active theme</label>
+    <select id="id_active_theme" name="active_theme">
+      <option value="">—</option>
+      {{range $.Themes}}<option value="{{.ID}}"{{if eq (deref $.Site.ThemeID) .ID}} selected{{end}}>{{esc .Name}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_system_theme">system theme</label>
+    <select id="id_system_theme" name="system_theme">
+      <option value="">—</option>
+      {{range $.Themes}}<option value="{{.ID}}"{{if eq (deref $.Site.SystemThemeID) .ID}} selected{{end}}>{{esc .Name}}</option>{{end}}
+    </select>
+  </div>
+
+  {{template "admin_text" dict "n" "icon" "v" .Site.Icon}}
+  {{template "admin_text" dict "n" "auth_icon" "v" .Site.AuthIcon}}
+  {{template "admin_area" dict "n" "footer_license" "v" .Site.FooterLicense}}
+  {{template "admin_area" dict "n" "signup_notice" "v" .Site.SignupNotice}}
+  {{template "admin_area" dict "n" "password_help" "v" .Site.PasswordHelp}}
+
+  <div class="form-row">
+    <label class="label" for="id_email_policy">email policy</label>
+    <select id="id_email_policy" name="email_policy">
+      {{range $.Policies}}<option value="{{esc .}}"{{if eq . $.Site.EmailPolicy}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_rating_mode">rating mode</label>
+    <select id="id_rating_mode" name="rating_mode">
+      {{range $.RatingModes}}<option value="{{esc .}}"{{if eq . $.Settings.RatingMode}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_can_user_create_tags">user tags</label>
+    <select id="id_can_user_create_tags" name="can_user_create_tags">
+      {{range $.TagModes}}<option value="{{esc .}}"{{if eq . $.Settings.CreateTags}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+
+  {{if .MayGrant}}
+  <div class="form-row">
+    <label class="label" for="id_default_role">default role</label>
+    <select id="id_default_role" name="default_role">
+      <option value="">—</option>
+      {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Site.DefaultRoleID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_verified_role">verified role</label>
+    <select id="id_verified_role" name="verified_role">
+      <option value="">—</option>
+      {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Site.VerifiedRoleID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_membership_password_enabled">
+      <input type="checkbox" id="id_membership_password_enabled" name="membership_password_enabled" value="1"{{if .Site.MembershipPasswordEnabled}} checked{{end}}>
+      membership password
+    </label>
+  </div>
+  {{template "admin_text" dict "n" "membership_password" "v" .Site.MembershipPassword}}
+  <div class="form-row">
+    <label class="label" for="id_membership_password_role">membership role</label>
+    <select id="id_membership_password_role" name="membership_password_role">
+      <option value="">—</option>
+      {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Site.MembershipPasswordRoleID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+    </select>
+  </div>
+  {{end}}
+
+  <div class="action-row"><button type="submit" class="btn-primary">save</button></div>
+</form>
+{{end}}
+
+{{define "admin_text"}}
+<div class="form-row">
+  <label class="label" for="id_{{esc .n}}">{{esc .n}}</label>
+  <input type="text" id="id_{{esc .n}}" name="{{esc .n}}" value="{{esc .v}}">
+</div>
+{{end}}
+
+{{define "admin_area"}}
+<div class="form-row">
+  <label class="label" for="id_{{esc .n}}">{{esc .n}}</label>
+  <textarea id="id_{{esc .n}}" name="{{esc .n}}" rows="4" style="width:100%">{{esc .v}}</textarea>
+</div>
+{{end}}

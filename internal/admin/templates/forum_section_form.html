@@ -1,0 +1,16 @@
+{{define "forum_section_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  {{template "admin_text" dict "n" "name" "v" .Section.Name}}
+  {{template "admin_area" dict "n" "description" "v" .Section.Description}}
+  <div class="form-row"><label class="label" for="id_order">order</label><input type="number" id="id_order" name="order" value="{{.Section.Order}}"></div>
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_hidden" value="1"{{if .Section.IsHidden}} checked{{end}}> hidden</label></div>
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_hidden_for_users" value="1"{{if .Section.IsHiddenForUser}} checked{{end}}> staff only</label></div>
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    {{if .Section.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

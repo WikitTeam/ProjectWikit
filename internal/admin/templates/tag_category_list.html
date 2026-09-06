@@ -1,0 +1,13 @@
+{{define "tag_category_list.html"}}
+<div class="admin-list">
+  <p class="action-row"><a class="btn-primary" href="{{esc .New}}">+</a></p>
+  <table class="admin-table">
+    <thead><tr><th>name</th><th>slug</th><th>priority</th><th>tags</th></tr></thead>
+    <tbody>
+      {{range .Categories}}
+      <tr><td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td><td><code>{{esc .Slug}}</code></td><td>{{num .Priority}}</td><td>{{.Tags}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

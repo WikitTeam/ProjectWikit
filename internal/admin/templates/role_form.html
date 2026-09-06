@@ -1,0 +1,67 @@
+{{define "role_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+
+  <div class="form-row">
+    <label class="label" for="id_slug">slug</label>
+    <input type="text" id="id_slug" name="slug" value="{{esc .Role.Slug}}"{{if .Builtin}} readonly{{end}}>
+  </div>
+  {{template "admin_text" dict "n" "name" "v" .Role.Name}}
+  {{template "admin_text" dict "n" "short_name" "v" .Role.ShortName}}
+  <div class="form-row">
+    <label class="label" for="id_category">category</label>
+    <select id="id_category" name="category">
+      <option value="">—</option>
+      {{range $.Categories}}<option value="{{.ID}}"{{if eq (deref $.Role.CategoryID) .ID}} selected{{end}}>{{esc .Name}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_index">index</label>
+    <input type="number" id="id_index" name="index" value="{{.Role.Index}}">
+  </div>
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_staff" value="1"{{if .Role.IsStaff}} checked{{end}}> is staff</label></div>
+  <div class="form-row"><label class="label"><input type="checkbox" name="group_votes" value="1"{{if .Role.GroupVotes}} checked{{end}}> group votes</label></div>
+  {{template "admin_text" dict "n" "votes_title" "v" .Role.VotesTitle}}
+  <div class="form-row">
+    <label class="label" for="id_inline_visual_mode">inline mode</label>
+    <select id="id_inline_visual_mode" name="inline_visual_mode">
+      {{range $.InlineModes}}<option value="{{esc .}}"{{if eq . $.Role.InlineVisualMode}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_profile_visual_mode">profile mode</label>
+    <select id="id_profile_visual_mode" name="profile_visual_mode">
+      {{range $.ProfileModes}}<option value="{{esc .}}"{{if eq . $.Role.ProfileVisualMode}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  {{template "admin_text" dict "n" "color" "v" .Role.Color}}
+  {{template "admin_text" dict "n" "icon" "v" .Role.Icon}}
+  {{template "admin_text" dict "n" "badge_text" "v" .Role.BadgeText}}
+  {{template "admin_text" dict "n" "badge_bg" "v" .Role.BadgeBg}}
+  {{template "admin_text" dict "n" "badge_text_color" "v" .Role.BadgeTextColor}}
+  <div class="form-row"><label class="label"><input type="checkbox" name="badge_show_border" value="1"{{if .Role.BadgeShowBorder}} checked{{end}}> badge border</label></div>
+
+  {{if .MayGrant}}
+  <table class="admin-table">
+    <thead><tr><th>permission</th><th>allow</th><th>deny</th><th>inherit</th></tr></thead>
+    <tbody>
+      {{range .Grants}}
+      <tr>
+        <td><code>{{esc .Name}}</code></td>
+        <td><input type="radio" name="perm_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
+        <td><input type="radio" name="perm_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
+        <td><input type="radio" name="perm_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{end}}
+
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    {{if and .Role.ID (not .Builtin)}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

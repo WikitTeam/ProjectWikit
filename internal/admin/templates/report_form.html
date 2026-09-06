@@ -1,0 +1,30 @@
+{{define "report_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+
+  <div class="form-row"><span class="label">reporter</span><span class="meta">{{esc .Report.Reporter}}</span></div>
+  <div class="form-row"><span class="label">reported</span><span class="meta">{{esc .Report.Reported}}</span></div>
+  <div class="form-row"><span class="label">created</span><span class="meta">{{.Report.CreatedAt.Format "2006-01-02 15:04"}}</span></div>
+  <div class="form-row"><span class="label">reason</span><pre class="meta">{{esc .Report.Reason}}</pre></div>
+  {{if .SeeAll}}
+  <div class="form-row"><span class="label">messages</span><pre class="meta">{{esc .Report.Messages}}</pre></div>
+  {{end}}
+  {{if .Report.ReviewedBy}}
+  <div class="form-row"><span class="label">reviewed by</span><span class="meta">{{esc .Report.ReviewedBy}}</span></div>
+  {{end}}
+
+  <div class="form-row">
+    <label class="label" for="id_status">status</label>
+    <select id="id_status" name="status">
+      {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Report.Status}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  {{template "admin_area" dict "n" "admin_notes" "v" .Report.AdminNotes}}
+
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

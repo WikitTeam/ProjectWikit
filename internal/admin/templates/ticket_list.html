@@ -1,0 +1,25 @@
+{{define "ticket_list.html"}}
+<div class="admin-list">
+  <form method="GET" action="{{esc .Action}}" class="action-row">
+    <select name="status"><option value="">all</option>
+      {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Status}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select><button type="submit" class="btn-ghost">filter</button>
+  </form>
+  <p class="meta">{{.Total}}</p>
+  <table class="admin-table">
+    <thead><tr><th>id</th><th>author</th><th>subject</th><th>status</th><th>created</th></tr></thead>
+    <tbody>
+      {{range .Tickets}}
+      <tr><td><a href="{{esc $.Base}}{{.ID}}">{{.ID}}</a></td><td>{{esc .Author}}</td><td>{{esc .Subject}}</td><td>{{esc .Status}}</td><td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{if gt .Pages 1}}
+  <p class="action-row">
+    {{if gt .Page 1}}<a class="link-muted" href="{{esc .Action}}?status={{esc .Status}}&page={{sub .Page 1}}">prev</a>{{end}}
+    <span class="meta">{{.Page}} / {{.Pages}}</span>
+    {{if lt .Page .Pages}}<a class="link-muted" href="{{esc .Action}}?status={{esc .Status}}&page={{add .Page 1}}">next</a>{{end}}
+  </p>
+  {{end}}
+</div>
+{{end}}

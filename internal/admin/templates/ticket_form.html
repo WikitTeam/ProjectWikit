@@ -1,0 +1,32 @@
+{{define "ticket_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  <div class="form-row"><span class="label">author</span><span class="meta">{{esc .Ticket.Author}}</span></div>
+  <div class="form-row"><span class="label">subject</span><span class="meta">{{esc .Ticket.Subject}}</span></div>
+  <div class="form-row"><span class="label">page</span><span class="meta">{{esc .Ticket.SourcePage}}</span></div>
+  <div class="form-row"><span class="label">created</span><span class="meta">{{.Ticket.CreatedAt.Format "2006-01-02 15:04"}}</span></div>
+  <div class="form-row"><span class="label">body</span><pre class="meta">{{esc .Ticket.Body}}</pre></div>
+  {{if .Ticket.ReviewedBy}}<div class="form-row"><span class="label">reviewed by</span><span class="meta">{{esc .Ticket.ReviewedBy}}</span></div>{{end}}
+  <div class="form-row">
+    <label class="label" for="id_status">status</label>
+    <select id="id_status" name="status">
+      {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Ticket.Status}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  {{if .MayGrant}}
+  <div class="form-row">
+    <label class="label" for="id_granted_role">grant role</label>
+    <select id="id_granted_role" name="granted_role">
+      <option value="">&mdash;</option>
+      {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Ticket.GrantedID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+    </select>
+  </div>
+  {{end}}
+  {{template "admin_area" dict "n" "admin_notes" "v" .Ticket.AdminNotes}}
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

@@ -1,0 +1,24 @@
+{{define "tag_list.html"}}
+<div class="admin-list">
+  <p class="action-row"><a class="btn-primary" href="{{esc .New}}">+</a></p>
+  <form method="GET" action="{{esc .Action}}" class="action-row">
+    <input type="text" name="q" value="{{esc .Query}}" placeholder="search"><button type="submit" class="btn-ghost">find</button>
+  </form>
+  <p class="meta">{{.Total}}</p>
+  <table class="admin-table">
+    <thead><tr><th>tag</th><th>category</th><th>articles</th></tr></thead>
+    <tbody>
+      {{range .Tags}}
+      <tr><td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td><td>{{esc .CategoryName}}</td><td>{{.Articles}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{if gt .Pages 1}}
+  <p class="action-row">
+    {{if gt .Page 1}}<a class="link-muted" href="{{esc .Action}}?q={{esc .Query}}&page={{sub .Page 1}}">prev</a>{{end}}
+    <span class="meta">{{.Page}} / {{.Pages}}</span>
+    {{if lt .Page .Pages}}<a class="link-muted" href="{{esc .Action}}?q={{esc .Query}}&page={{add .Page 1}}">next</a>{{end}}
+  </p>
+  {{end}}
+</div>
+{{end}}

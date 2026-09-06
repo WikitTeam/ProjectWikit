@@ -1,0 +1,35 @@
+{{define "role_category.html"}}
+<div class="admin-list">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  <table class="admin-table">
+    <thead><tr><th>name</th><th>roles</th><th></th></tr></thead>
+    <tbody>
+      {{range .Categories}}
+      <tr>
+        <td>
+          <form method="POST" action="{{esc $.Action}}" style="display:flex;gap:6px">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <input type="text" name="name" value="{{esc .Name}}">
+            <button type="submit" class="btn-ghost">save</button>
+            {{if not .Roles}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+          </form>
+        </td>
+        <td>{{.Roles}}</td>
+        <td></td>
+      </tr>
+      {{end}}
+      <tr>
+        <td>
+          <form method="POST" action="{{esc .Action}}" style="display:flex;gap:6px">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+            <input type="text" name="name" placeholder="new">
+            <button type="submit" class="btn-primary">+</button>
+          </form>
+        </td>
+        <td></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{{end}}

@@ -16,6 +16,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
+	"github.com/WikitTeam/ProjectWikit/internal/admin"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
@@ -205,7 +206,7 @@ func serve(args []string) error {
 	var allArticles http.Handler = proxy
 	var subscribeAPI, messageAPI, userAPI, adminAPI http.Handler = proxy, proxy, proxy, proxy
 	var login, logout, signup, accept, reset, tickets http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
-	var emailLinks, settings http.Handler = proxy, proxy
+	var emailLinks, settings, adminPages http.Handler = proxy, proxy, proxy
 	if conn != nil {
 		stack, err := newPageStack(conn, p, assets, proxy, trust, limits{soft: soft, hard: hard},
 			*sidecar, *secret, *timezone, log)
@@ -238,6 +239,7 @@ func serve(args []string) error {
 		tickets = served(stack.tickets)
 		emailLinks = served(stack.emailLinks)
 		settings = served(stack.settings)
+		adminPages = served(stack.adminPages)
 		favesAPI = served(stack.favesAPI)
 		ownRowsAPI = served(stack.ownRowsAPI)
 		articleAPI = served(stack.articleAPI)
@@ -271,6 +273,7 @@ func serve(args []string) error {
 		account.MembershipPath:          tickets,
 		account.EmailPrefix:             emailLinks,
 		account.SettingsPrefix:          settings,
+		admin.Prefix:                    adminPages,
 		userpage.FavouritesPrefix:       reactivePages,
 		webapi.NotificationsPath:        notifyAPI,
 		webapi.SubscribePath:            subscribeAPI,

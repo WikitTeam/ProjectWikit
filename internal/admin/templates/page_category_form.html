@@ -1,0 +1,48 @@
+{{define "page_category_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  {{template "admin_text" dict "n" "name" "v" .Category.Name}}
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_indexed" value="1"{{if .Category.IsIndexed}} checked{{end}}> indexed</label></div>
+  <div class="form-row">
+    <label class="label" for="id_rating_mode">rating mode</label>
+    <select id="id_rating_mode" name="rating_mode">
+      {{range $.RatingModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.RatingMode}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_can_user_create_tags">user tags</label>
+    <select id="id_can_user_create_tags" name="can_user_create_tags">
+      {{range $.TagModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.CreateTags}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+
+  {{if .MayGrant}}
+  {{range .Cells}}
+  {{$rid := .Role.ID}}
+  <fieldset class="form-row">
+    <label class="label"><input type="checkbox" name="override_{{$rid}}" value="1"{{if .Present}} checked{{end}}> override {{esc .Role.Label}}</label>
+    <table class="admin-table">
+      <thead><tr><th>permission</th><th>allow</th><th>deny</th><th>inherit</th></tr></thead>
+      <tbody>
+        {{range .Grants}}
+        <tr>
+          <td><code>{{esc .Name}}</code></td>
+          <td><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
+          <td><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
+          <td><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </fieldset>
+  {{end}}
+  {{end}}
+
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    {{if .Category.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

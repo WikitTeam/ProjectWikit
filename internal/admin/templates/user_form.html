@@ -1,0 +1,40 @@
+{{define "user_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+
+  {{template "admin_text" dict "n" "username" "v" .User.Username}}
+  {{template "admin_text" dict "n" "wikidot_username" "v" .User.WikidotUsername}}
+  {{template "admin_text" dict "n" "display_name" "v" .User.DisplayName}}
+  {{if .SeeEmail}}{{template "admin_text" dict "n" "email" "v" .User.Email}}{{end}}
+  {{template "admin_area" dict "n" "bio" "v" .User.Bio}}
+
+  <div class="form-row"><span class="label">type</span><span class="meta">{{esc .User.Type}}</span></div>
+  <div class="form-row"><span class="label">api key</span><span class="meta">{{esc .User.APIKey}}</span></div>
+  <div class="form-row"><span class="label">rank</span><span class="meta">{{.User.OperationIndex}}</span></div>
+
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_active" value="1"{{if .User.IsActive}} checked{{end}}> active</label></div>
+  {{template "admin_text" dict "n" "inactive_until" "v" (stamp .User.InactiveUntil)}}
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_forum_active" value="1"{{if .User.IsForumActive}} checked{{end}}> forum active</label></div>
+  {{template "admin_text" dict "n" "forum_inactive_until" "v" (stamp .User.ForumInactiveUntil)}}
+  <div class="form-row"><label class="label"><input type="checkbox" name="can_send_direct_messages" value="1"{{if .User.CanSendDM}} checked{{end}}> can send messages</label></div>
+
+  {{if .MaySuper}}
+  <div class="form-row"><label class="label"><input type="checkbox" name="is_superuser" value="1"{{if .User.IsSuperuser}} checked{{end}}> superuser</label></div>
+  {{end}}
+
+  {{if .MaySetRoles}}
+  <div class="form-row">
+    <span class="label">roles</span>
+    {{range $.Roles}}
+    <label class="label"><input type="checkbox" name="roles" value="{{.ID}}"{{if has $.Held .ID}} checked{{end}}> {{esc .Label}}</label>
+    {{end}}
+  </div>
+  {{end}}
+
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}

@@ -1,0 +1,18 @@
+{{define "forum_section_list.html"}}
+<div class="admin-list">
+  <p class="action-row"><a class="btn-primary" href="{{esc .New}}">+</a></p>
+  <table class="admin-table">
+    <thead><tr><th>name</th><th>order</th><th>hidden</th><th>categories</th></tr></thead>
+    <tbody>
+      {{range .Sections}}
+      <tr>
+        <td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td>
+        <td>{{.Order}}</td>
+        <td>{{if .IsHidden}}yes{{end}}</td>
+        <td>{{.Categories}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

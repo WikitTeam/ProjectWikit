@@ -1,0 +1,19 @@
+{{define "forum_category_list.html"}}
+<div class="admin-list">
+  <p class="action-row"><a class="btn-primary" href="{{esc .New}}">+</a></p>
+  <table class="admin-table">
+    <thead><tr><th>name</th><th>section</th><th>order</th><th>comments</th><th>threads</th></tr></thead>
+    <tbody>
+      {{range .Categories}}
+      <tr>
+        <td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td>
+        <td>{{esc .SectionName}}</td>
+        <td>{{.Order}}</td>
+        <td>{{if .IsForComments}}yes{{end}}</td>
+        <td>{{.Threads}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

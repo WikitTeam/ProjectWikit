@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
+	"github.com/WikitTeam/ProjectWikit/internal/admin"
 	"github.com/WikitTeam/ProjectWikit/internal/articlepage"
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -47,6 +48,7 @@ type pageStack struct {
 	tickets       http.Handler
 	emailLinks    http.Handler
 	settings      http.Handler
+	adminPages    http.Handler
 	allArticles   http.Handler
 	favesAPI      http.Handler
 	ownRowsAPI    http.Handler
@@ -123,6 +125,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		tickets:       upstream,
 		emailLinks:    upstream,
 		settings:      upstream,
+		adminPages:    upstream,
 		favesAPI:      webapi.NewFavourites(api, upstream),
 		ownRowsAPI:    webapi.NewOwnRows(api, upstream),
 		close:         closeEngine,
@@ -149,6 +152,14 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.emailLinks = account.NewEmail(accounts)
 	stack.settings = account.NewSettings(accounts)
 
+	adminPages, err := admin.New(admin.Deps{
+		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(), TimeZone: location, Log: log,
+	}, upstream)
+	if err != nil {
+		return nil, err
+	}
+	stack.adminPages = adminPages
+
 	resolver := auth.NewResolver(store, conn, conn, log)
 	stack.login = resolver.Middleware(stack.login)
 	stack.logout = resolver.Middleware(stack.logout)
@@ -158,6 +169,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.tickets = resolver.Middleware(stack.tickets)
 	stack.emailLinks = resolver.Middleware(stack.emailLinks)
 	stack.settings = resolver.Middleware(stack.settings)
+	stack.adminPages = resolver.Middleware(stack.adminPages)
 	stack.articleAPI = resolver.Middleware(stack.articleAPI)
 	stack.allArticles = resolver.Middleware(stack.allArticles)
 	stack.fileAPI = resolver.Middleware(stack.fileAPI)

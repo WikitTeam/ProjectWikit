@@ -1,0 +1,33 @@
+{{define "theme_form.html"}}
+<form method="POST" action="{{esc .Action}}" class="admin-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
+  <div class="form-row">
+    <label class="label" for="id_name">name</label>
+    <input type="text" id="id_name" name="name" value="{{esc .Theme.Name}}" required>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_slug">slug</label>
+    <input type="text" id="id_slug" name="slug" value="{{esc .Theme.Slug}}" required>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_mode">mode</label>
+    <select id="id_mode" name="mode">
+      {{range $.Modes}}<option value="{{esc .}}"{{if eq . $.Theme.Mode}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_external_url">external url</label>
+    <input type="text" id="id_external_url" name="external_url" value="{{esc .Theme.ExternalURL}}">
+  </div>
+  <div class="form-row">
+    <label class="label" for="id_css">css</label>
+    <textarea id="id_css" name="css" rows="24" style="font-family:var(--font-mono);width:100%">{{esc .Theme.CSS}}</textarea>
+  </div>
+  <div class="action-row">
+    <button type="submit" class="btn-primary">save</button>
+    {{if .Theme.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
+    <a class="link-muted" href="{{esc .Back}}">back</a>
+  </div>
+</form>
+{{end}}
