@@ -59,7 +59,6 @@ type Data struct {
 	SiteTitle    string
 	SiteIcon     string
 
-	// An empty one falls back to the built-in line.
 	License string
 
 	OGTitle       string
@@ -184,6 +183,8 @@ type System struct {
 	BodyClass string
 	BackLink  bool
 	Content   string
+
+	Stylesheets []string
 }
 
 type Reactive struct {
@@ -433,8 +434,6 @@ func (v profileView) Asset(name string) string        { return v.r.assets.URL(na
 
 func (v profileView) Initial() string { return initial(v.DisplayName) }
 
-// The letter the avatar box falls back to is the display name's first
-// character rather than its first byte.
 func initial(name string) string {
 	for _, r := range name {
 		return strings.ToUpper(string(r))
