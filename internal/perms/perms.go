@@ -39,6 +39,17 @@ const (
 	ViewReportedFullConversation = "view_reported_full_conversation"
 	ViewSensitiveInfo            = "view_sensitive_info"
 	ManageUsers                  = "manage_users"
+
+	ManageSite                   = "manage_site"
+	ManageRoles                  = "manage_roles"
+	ManagePermissions            = "manage_permissions"
+	ManageTags                   = "manage_tags"
+	ManageCategories             = "manage_categories"
+	ManageForum                  = "manage_forum"
+	ManageUpdates                = "manage_updates"
+	ReviewMembershipApplications = "review_membership_applications"
+	ViewActionsLog               = "view_actions_log"
+	ViewUserTickets              = "view_user_tickets"
 )
 
 // lockable is what a locked page takes away from anyone who cannot unlock it.
