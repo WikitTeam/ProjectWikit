@@ -127,6 +127,7 @@ func serve(args []string) error {
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
 	bareOrigin := fs.Bool("bare-origin", false, "drop the port from the Origin header before forwarding")
+	noMigrate := fs.Bool("no-migrate", false, "start without applying pending schema migrations")
 	uploadLimit := fs.String("upload-limit", envOr(envUploadLimit, "0"), "size the files still attached to pages may reach, such as 4GB; 0 for no ceiling")
 	storageLimit := fs.String("storage-limit", envOr(envStorageLimit, "0"), "size every file on disk may reach, deleted ones counted; 0 for no ceiling")
 	tlsMode := fs.String("tls", envOr(envTLS, string(entry.Off)), "off to serve plain HTTP behind a proxy, file to use a supplied certificate, auto to obtain one over ACME")
@@ -177,6 +178,18 @@ func serve(args []string) error {
 
 	var conn *db.DB
 	if *database != "" {
+		if !*noMigrate {
+			result, err := migrate.Run(context.Background(), *database)
+			if err != nil {
+				return err
+			}
+			if result.Adopted {
+				log.Info("pwikit adopted the schema", "baseline", migrate.BaselineName)
+			}
+			for _, name := range result.Applied {
+				log.Info("pwikit applied a migration", "name", name)
+			}
+		}
 		conn, err = db.Open(context.Background(), *database)
 		if err != nil {
 			return err
@@ -248,8 +261,6 @@ func serve(args []string) error {
 	}
 
 	goHandlers := map[string]http.Handler{
-		// The bundle is the one route answered above the session layer, so it
-		// is also the one that does not vary on the cookie.
 		static.Prefix:                   static.New(assets, proxy),
 		site.ThemePrefix:                respheader.VaryCookie(site.NewThemeFiles(p.Files())),
 		media.Prefix:                    respheader.VaryCookie(mediaHandler),
@@ -354,8 +365,6 @@ func listenPort(addr string) string {
 	return port
 }
 
-// Until the build produces a bundle, an empty path means every asset request
-// falls through to the upstream.
 func assetFS(dir string) (iofs.FS, error) {
 	if dir == "" {
 		return nil, nil
@@ -485,14 +494,19 @@ func createSite(args []string) error {
 }
 
 func migrateCommand(args []string) error {
-	if len(args) == 0 || args[0] != "status" {
-		fmt.Fprint(os.Stderr, `Usage: pwikit migrate status [-database <url>]
+	sub := ""
+	if len(args) > 0 {
+		sub = args[0]
+	}
+	if sub != "status" && sub != "up" {
+		fmt.Fprint(os.Stderr, `Usage: pwikit migrate <status|up> [-database <url>]
 
   status  print which schema migrations the database carries
+  up      apply the migrations the database is missing
 `)
 		return errors.New("unknown migrate subcommand")
 	}
-	fs := flag.NewFlagSet("migrate status", flag.ContinueOnError)
+	fs := flag.NewFlagSet("migrate "+sub, flag.ContinueOnError)
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	if err := fs.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -502,6 +516,9 @@ func migrateCommand(args []string) error {
 	}
 	if *database == "" {
 		return errors.New("no database, pass -database or set " + envDatabase)
+	}
+	if sub == "up" {
+		return migrateUp(*database)
 	}
 
 	state, err := migrate.Status(context.Background(), *database)
@@ -524,6 +541,23 @@ func migrateCommand(args []string) error {
 		fmt.Fprintf(w, "%s\t%s\n", status, name)
 	}
 	return w.Flush()
+}
+
+func migrateUp(dsn string) error {
+	result, err := migrate.Run(context.Background(), dsn)
+	if err != nil {
+		return err
+	}
+	if result.Adopted {
+		fmt.Printf("adopted %s\n", migrate.BaselineName)
+	}
+	for _, name := range result.Applied {
+		fmt.Printf("applied %s\n", name)
+	}
+	if !result.Adopted && len(result.Applied) == 0 {
+		fmt.Println("already up to date")
+	}
+	return nil
 }
 
 func printRoutes() error {
