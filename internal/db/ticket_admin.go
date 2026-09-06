@@ -140,6 +140,17 @@ FROM web_invitelink ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`)
 
 var qAdminInviteCount = register("AdminInviteCount", `SELECT count(*) FROM web_invitelink`)
 
+var qOpenInviteCount = register("OpenInviteCount", `
+SELECT count(*) FROM web_invitelink WHERE activated_at IS NULL`)
+
+func (d *DB) OpenInviteCount(ctx context.Context) (int, error) {
+	var total int
+	if err := d.pool.QueryRow(ctx, qOpenInviteCount).Scan(&total); err != nil {
+		return 0, fmt.Errorf("count open invite links: %w", err)
+	}
+	return total, nil
+}
+
 func (d *DB) AdminInvites(ctx context.Context, limit, offset int) ([]InviteRow, int, error) {
 	var total int
 	if err := d.pool.QueryRow(ctx, qAdminInviteCount).Scan(&total); err != nil {

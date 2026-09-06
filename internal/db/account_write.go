@@ -17,14 +17,35 @@ VALUES ($1, false, '', '', '', $2, $3, $4, $5, '', true, $6, true, '', '')
 RETURNING id`)
 
 func (d *DB) CreateUser(ctx context.Context, username, displayName, hash string, active bool, at time.Time) (int64, error) {
+	return d.CreateTypedUser(ctx, username, displayName, hash, UserTypeNormal, active, at)
+}
+
+func (d *DB) CreateTypedUser(ctx context.Context, username, displayName, hash, kind string, active bool, at time.Time) (int64, error) {
 	var display *string
 	if displayName != "" {
 		display = &displayName
 	}
 	var id int64
-	err := d.pool.QueryRow(ctx, qCreateUser, hash, at, username, display, UserTypeNormal, active).Scan(&id)
+	err := d.pool.QueryRow(ctx, qCreateUser, hash, at, username, display, kind, active).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("create user %q: %w", username, err)
+	}
+	return id, nil
+}
+
+var qCreateBot = register("CreateBot", `
+INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
+	username, display_name, type, api_key, bio, is_forum_active, is_active,
+	can_send_direct_messages, pending_email, previous_email)
+VALUES ('!', false, '', '', '', $1, $2, NULL, 'bot', $3, '', true, true, true, '', '')
+RETURNING id`)
+
+// A bot signs in with its key rather than a password, so the password column
+// holds the marker that makes every comparison fail.
+func (d *DB) CreateBot(ctx context.Context, username, apiKey string, at time.Time) (int64, error) {
+	var id int64
+	if err := d.pool.QueryRow(ctx, qCreateBot, at, username, apiKey).Scan(&id); err != nil {
+		return 0, fmt.Errorf("create bot %q: %w", username, err)
 	}
 	return id, nil
 }
