@@ -10,6 +10,8 @@
   "accept.username": "用户名",
   "admin.action-log": "动作日志",
   "admin.category-no-name": "分类名称不能为空",
+  "admin.denied": "您似乎不被允许访问管理面板。",
+  "admin.denied-title": "无法进入管理面板",
   "admin.forum-categories": "论坛分类",
   "admin.forum-no-name": "名称不能为空",
   "admin.forum-no-section": "必须选一个版块",

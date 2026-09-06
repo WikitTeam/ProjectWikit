@@ -158,6 +158,10 @@ func notFound(w http.ResponseWriter) {
 }
 
 func redirect(w http.ResponseWriter, to string) {
+	seeOther(w, to, http.StatusSeeOther)
+}
+
+func seeOther(w http.ResponseWriter, to string, status int) {
 	w.Header().Set("Location", to)
-	w.WriteHeader(http.StatusSeeOther)
+	w.WriteHeader(status)
 }

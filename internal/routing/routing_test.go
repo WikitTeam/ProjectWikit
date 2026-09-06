@@ -65,6 +65,7 @@ func TestMuxRouteLongestPrefixWins(t *testing.T) {
 		{"/", "/"},
 		{"/scp-173", "/"},
 		{"/forum:start", "/"},
+		{"/-/admin", "/-/admin"},
 		{"/-/admin/", "/-/admin/"},
 		{"/-/admin/web/user/", "/-/admin/"},
 		{"/-/preferences/", "/-/"},

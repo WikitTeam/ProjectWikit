@@ -273,6 +273,7 @@ func serve(args []string) error {
 		account.MembershipPath:          tickets,
 		account.EmailPrefix:             emailLinks,
 		account.SettingsPrefix:          settings,
+		admin.Bare:                      adminPages,
 		admin.Prefix:                    adminPages,
 		userpage.FavouritesPrefix:       reactivePages,
 		webapi.NotificationsPath:        notifyAPI,

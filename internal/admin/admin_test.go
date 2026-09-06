@@ -252,3 +252,26 @@ func TestOptionalInt(t *testing.T) {
 		t.Errorf("optionalInt(\" 7 \") = %v, want 7", got)
 	}
 }
+
+func TestSiteSignInReplacesTheAdminOne(t *testing.T) {
+	cases := map[string]string{
+		Prefix + "login/":                "/-/login?to=%2F-%2Fadmin%2F",
+		Prefix + "login/?next=/-/admin/": "/-/login?to=%2F-%2Fadmin%2F",
+		Prefix + "logout/":               "/-/logout",
+	}
+	for path, want := range cases {
+		got, ok := siteSignIn(path)
+		if !ok {
+			t.Errorf("siteSignIn(%q) = _, false, want true", path)
+			continue
+		}
+		if got != want {
+			t.Errorf("siteSignIn(%q) = %q, want %q", path, got, want)
+		}
+	}
+	for _, path := range []string{Prefix, Prefix + "users/", Prefix + "site/", "/-/loginish"} {
+		if got, ok := siteSignIn(path); ok {
+			t.Errorf("siteSignIn(%q) = %q, true, want false", path, got)
+		}
+	}
+}

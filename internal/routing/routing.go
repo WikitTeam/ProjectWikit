@@ -42,6 +42,7 @@ var Table = []Route{
 	{Prefix: "/-/signup", Owner: OwnerGo, Label: "sign up", Exact: true},
 	{Prefix: "/-/signup/", Owner: OwnerGo, Label: "sign up"},
 	{Prefix: "/-/accept/", Owner: OwnerGo, Label: "invitation"},
+	{Prefix: "/-/admin", Owner: OwnerGo, Label: "site administration", Exact: true},
 	{Prefix: "/-/admin/", Owner: OwnerGo, Label: "site administration"},
 	{Prefix: "/-/password_reset", Owner: OwnerGo, Label: "password reset", Exact: true},
 	{Prefix: "/-/password_reset/", Owner: OwnerGo, Label: "password reset"},

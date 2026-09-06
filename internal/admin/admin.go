@@ -6,12 +6,14 @@ import (
 	"embed"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
@@ -24,7 +26,10 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 )
 
-const Prefix = "/-/admin/"
+const (
+	Prefix = "/-/admin/"
+	Bare   = "/-/admin"
+)
 
 //go:embed templates/*.html
 var files embed.FS
@@ -73,6 +78,10 @@ func New(d Deps, upstream http.Handler) (*Handler, error) {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == Bare {
+		seeOther(w, Prefix, http.StatusMovedPermanently)
+		return
+	}
 	rest, ok := strings.CutPrefix(r.URL.Path, Prefix)
 	if !ok {
 		h.upstream.ServeHTTP(w, r)
@@ -85,18 +94,27 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if to, ownLogin := siteSignIn(r.URL.Path); ownLogin {
+		seeOther(w, to, http.StatusFound)
+		return
+	}
+
 	granted, staff, err := h.access(ctx)
 	if err != nil {
 		h.deps.logger().Error("resolve admin access", "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
 	if !staff {
-		h.upstream.ServeHTTP(w, r)
+		if auth.FromContext(ctx) == nil {
+			seeOther(w, account.LoginPath+"?to="+url.QueryEscape(r.URL.Path), http.StatusFound)
+			return
+		}
+		h.finish(w, r, loc, h.forbidden(w, r, loc))
 		return
 	}
 
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
 	head, _, _ := strings.Cut(rest, "/")
 	if head == "" {
 		h.finish(w, r, loc, h.index(w, r, loc, granted))
@@ -114,6 +132,36 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.upstream.ServeHTTP(w, r)
+}
+
+func siteSignIn(path string) (string, bool) {
+	switch {
+	case strings.HasPrefix(path, Prefix+"login"):
+		return account.LoginPath + "?to=" + url.QueryEscape(Prefix), true
+	case strings.HasPrefix(path, Prefix+"logout"):
+		return account.LogoutPath, true
+	}
+	return "", false
+}
+
+func (h *Handler) forbidden(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) error {
+	current := site.FromContext(r.Context())
+	icon := ""
+	if current.AuthIcon != "" {
+		icon = "/local--files/" + current.AuthIcon
+	}
+	body, err := shell.New(loc, h.deps.Assets, h.deps.TimeZone).Notice(shell.Notice{
+		AuthIcon:  icon,
+		SiteTitle: current.Title,
+		Heading:   loc.T("admin.denied-title"),
+		Body:      loc.T("admin.denied"),
+		LinkURL:   "/",
+		LinkText:  loc.T("system.back-home"),
+	})
+	if err != nil {
+		return err
+	}
+	return h.write(w, r, loc, loc.T("admin.denied-title"), body, http.StatusForbidden)
 }
 
 func (h *Handler) finish(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, err error) {
@@ -163,6 +211,10 @@ func (h *Handler) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 	if err := h.templates.ExecuteTemplate(&body, name, data); err != nil {
 		return err
 	}
+	return h.write(w, r, loc, title, body.String(), http.StatusOK)
+}
+
+func (h *Handler) write(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, title, body string, status int) error {
 	current := site.FromContext(r.Context())
 	theme, err := site.ThemeURLByID(r.Context(), h.deps.DB, current.SystemThemeID)
 	if err != nil {
@@ -175,17 +227,24 @@ func (h *Handler) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		ThemeURL:  theme,
 		BodyClass: "wikit-page admin",
 		Heading:   title,
-		Content:   body.String(),
+		Content:   body,
 	})
 	if err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	if r.Method != http.MethodHead {
 		_, _ = w.Write([]byte(out.String()))
 	}
 	return nil
+}
+
+func authIcon(s *db.Site) string {
+	if s == nil || s.AuthIcon == "" {
+		return ""
+	}
+	return "/local--files/" + s.AuthIcon
 }
 
 func funcs() template.FuncMap {
