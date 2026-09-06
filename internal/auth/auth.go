@@ -45,11 +45,11 @@ func (r *Resolver) Middleware(next http.Handler) http.Handler {
 		ctx := req.Context()
 		if bot := r.bearer(req); bot != nil {
 			ctx = csrf.Exempt(ctx)
-			next.ServeHTTP(w, req.WithContext(context.WithValue(ctx, contextKey{}, bot)))
+			next.ServeHTTP(w, req.WithContext(NewContext(ctx, bot)))
 			return
 		}
 		user := r.resolve(req)
-		next.ServeHTTP(w, req.WithContext(context.WithValue(ctx, contextKey{}, user)))
+		next.ServeHTTP(w, req.WithContext(NewContext(ctx, user)))
 	})
 }
 
@@ -71,6 +71,10 @@ func (r *Resolver) bearer(req *http.Request) *db.User {
 		return nil
 	}
 	return bot
+}
+
+func NewContext(ctx context.Context, user *db.User) context.Context {
+	return context.WithValue(ctx, contextKey{}, user)
 }
 
 // FromContext returns nil when nobody is signed in.
@@ -120,8 +124,6 @@ func (r *Resolver) resolve(req *http.Request) *db.User {
 
 	hash, _ := decoded[session.AuthUserHash].(string)
 	if !r.store.AuthHashMatches(password, hash) {
-		// The password changed under this session. Leaving the row would let the same
-		// dead cookie keep costing a query.
 		if err := r.sessions.DeleteSession(ctx, cookie.Value); err != nil {
 			r.log.Error("drop stale session", "err", err)
 		}
