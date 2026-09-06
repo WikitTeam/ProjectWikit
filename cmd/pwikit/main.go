@@ -13,11 +13,11 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/entry"
 	"github.com/WikitTeam/ProjectWikit/internal/forward"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
@@ -48,8 +48,16 @@ const (
 	envMailEngine   = "EMAIL_ENGINE"
 	envMailFrom     = "EMAIL_DEFAULT_FROM"
 	envStorageLimit = "ABSOLUTE_MEDIA_UPLOAD_LIMIT"
+	envTLS          = "PWIKIT_TLS"
+	envTLSCert      = "PWIKIT_TLS_CERT"
+	envTLSKey       = "PWIKIT_TLS_KEY"
+	envTLSListen    = "PWIKIT_TLS_LISTEN"
+	envACMEEmail    = "PWIKIT_ACME_EMAIL"
+	envACMEDir      = "PWIKIT_ACME_DIRECTORY"
 	defaultUpstream = "http://127.0.0.1:8000"
 	defaultListen   = "127.0.0.1:8080"
+	defaultTLSPlain = ":80"
+	defaultTLSAddr  = ":443"
 )
 
 func main() {
@@ -108,11 +116,25 @@ func serve(args []string) error {
 	bareOrigin := fs.Bool("bare-origin", false, "drop the port from the Origin header before forwarding")
 	uploadLimit := fs.String("upload-limit", envOr(envUploadLimit, "0"), "size the files still attached to pages may reach, such as 4GB; 0 for no ceiling")
 	storageLimit := fs.String("storage-limit", envOr(envStorageLimit, "0"), "size every file on disk may reach, deleted ones counted; 0 for no ceiling")
+	tlsMode := fs.String("tls", envOr(envTLS, string(entry.Off)), "off to serve plain HTTP behind a proxy, file to use a supplied certificate, auto to obtain one over ACME")
+	tlsListen := fs.String("tls-listen", envOr(envTLSListen, defaultTLSAddr), "listen address for HTTPS")
+	tlsCert := fs.String("tls-cert", os.Getenv(envTLSCert), "certificate chain in PEM form, for -tls=file")
+	tlsKey := fs.String("tls-key", os.Getenv(envTLSKey), "private key in PEM form, for -tls=file")
+	acmeEmail := fs.String("acme-email", os.Getenv(envACMEEmail), "address the certificate authority sends expiry warnings to")
+	acmeDirectory := fs.String("acme-directory", os.Getenv(envACMEDir), "ACME directory URL; empty uses Let's Encrypt")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
+	}
+
+	mode, err := entry.ParseMode(*tlsMode)
+	if err != nil {
+		return err
+	}
+	if mode != entry.Off && !given(fs, "listen") {
+		*listen = defaultTLSPlain
 	}
 
 	p, err := paths.New(*dataDir)
@@ -267,12 +289,45 @@ func serve(args []string) error {
 	log.Info("pwikit serve", "listen", *listen, "upstream", proxy.Target(), "root", p.Root(),
 		"root_source", string(p.Source()), "static_dir", *staticDir, "database", *database != "")
 
-	srv := &http.Server{
-		Addr:              *listen,
-		Handler:           respheader.OriginPolicy(mux),
-		ReadHeaderTimeout: 20 * time.Second,
+	var hosts entry.Hosts
+	if conn != nil {
+		hosts = func(ctx context.Context, host string) error {
+			known, err := conn.SiteHostExists(ctx, host)
+			if err != nil {
+				return err
+			}
+			if !known {
+				return fmt.Errorf("host %q is not a site on this server", host)
+			}
+			return nil
+		}
+	} else if mode == entry.Auto {
+		return errors.New("-tls=auto needs -database to know which hosts to obtain certificates for")
 	}
-	return srv.ListenAndServe()
+
+	return entry.Serve(context.Background(), entry.Config{
+		Mode:      mode,
+		Plain:     *listen,
+		Secure:    *tlsListen,
+		CertFile:  *tlsCert,
+		KeyFile:   *tlsKey,
+		CacheDir:  p.Certs(),
+		Email:     *acmeEmail,
+		Directory: *acmeDirectory,
+		Hosts:     hosts,
+		Handler:   respheader.OriginPolicy(mux),
+		Logger:    log,
+	})
+}
+
+func given(fs *flag.FlagSet, name string) bool {
+	found := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }
 
 func listenPort(addr string) string {

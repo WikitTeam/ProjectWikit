@@ -59,3 +59,26 @@ func TestAnySite(t *testing.T) {
 		t.Error("AnySite() = false, want true")
 	}
 }
+
+func TestSiteHostExistsAcceptsBothDomainsAndRejectsStrangers(t *testing.T) {
+	d := newTestDB(t)
+	ctx := context.Background()
+
+	for _, host := range []string{"localhost", "media.localhost", "LOCALHOST"} {
+		got, err := d.SiteHostExists(ctx, host)
+		if err != nil {
+			t.Fatalf("SiteHostExists(%q) err = %v, want nil", host, err)
+		}
+		if !got {
+			t.Errorf("SiteHostExists(%q) = false, want true", host)
+		}
+	}
+
+	got, err := d.SiteHostExists(ctx, "someone-elses-domain.example")
+	if err != nil {
+		t.Fatalf("SiteHostExists() err = %v, want nil", err)
+	}
+	if got {
+		t.Error("SiteHostExists(\"someone-elses-domain.example\") = true, want false")
+	}
+}

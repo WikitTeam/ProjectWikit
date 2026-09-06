@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -77,6 +78,17 @@ func (d *DB) AnySite(ctx context.Context) (bool, error) {
 	var exists bool
 	if err := d.pool.QueryRow(ctx, qAnySite).Scan(&exists); err != nil {
 		return false, fmt.Errorf("check any site exists: %w", err)
+	}
+	return exists, nil
+}
+
+var qSiteHostExists = register("SiteHostExists", `
+SELECT EXISTS(SELECT 1 FROM web_site WHERE lower(domain) = $1 OR lower(media_domain) = $1)`)
+
+func (d *DB) SiteHostExists(ctx context.Context, host string) (bool, error) {
+	var exists bool
+	if err := d.pool.QueryRow(ctx, qSiteHostExists, strings.ToLower(host)).Scan(&exists); err != nil {
+		return false, fmt.Errorf("check host %q belongs to a site: %w", host, err)
 	}
 	return exists, nil
 }

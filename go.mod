@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/tdewolff/minify/v2 v2.24.17
+	golang.org/x/crypto v0.46.0
 	golang.org/x/text v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -16,5 +17,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
 	github.com/tdewolff/parse/v2 v2.8.16 // indirect
+	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 )
