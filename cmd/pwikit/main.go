@@ -78,8 +78,6 @@ func run(args []string) error {
 		return serve(args[1:])
 	case "modules":
 		return printModules()
-	case "routes":
-		return printRoutes()
 	case "render":
 		return render(args[1:])
 	case "migrate":
@@ -104,7 +102,6 @@ Commands:
   serve       start the HTTP server
   createsite  create the site this database serves
   seed        write the pages a new site starts with
-  routes      print the static route table
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
   modules     print the wikidot module list
@@ -239,7 +236,11 @@ func serve(args []string) error {
 	allArticles := served(stack.allArticles)
 	fileAPI := served(stack.fileAPI)
 
+	// A system path nobody claims is a mistyped URL, not a page name, so these
+	// two answer before the article handler sees them.
 	goHandlers := map[string]http.Handler{
+		"/-/":                           notFound,
+		"/pw-api/":                      notFound,
 		static.Prefix:                   static.New(assets, notFound),
 		site.ThemePrefix:                respheader.VaryCookie(site.NewThemeFiles(p.Files())),
 		media.Prefix:                    respheader.VaryCookie(mediaHandler),
@@ -287,7 +288,7 @@ func serve(args []string) error {
 		"/":                             articles,
 	}
 
-	mux, err := routing.New(routing.Table, notFound, goHandlers)
+	mux, err := routing.New(goHandlers)
 	if err != nil {
 		return err
 	}
@@ -537,18 +538,6 @@ func migrateUp(dsn string) error {
 		fmt.Println("already up to date")
 	}
 	return nil
-}
-
-func printRoutes() error {
-	if err := routing.Validate(routing.Table); err != nil {
-		return err
-	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ROUTE\tOWNER\tLABEL")
-	for _, r := range routing.Table {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", r.Prefix, r.Owner, r.Label)
-	}
-	return w.Flush()
 }
 
 func printModules() error {

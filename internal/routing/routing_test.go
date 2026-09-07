@@ -12,161 +12,124 @@ func stub(body string) http.Handler {
 	})
 }
 
-func TestValidateAcceptsTable(t *testing.T) {
-	if err := Validate(Table); err != nil {
-		t.Errorf("Validate(Table) err = %v, want nil", err)
+func table() map[string]http.Handler {
+	prefixes := []string{
+		"/", "/-/", "/-/admin", "/-/admin/", "/-/login", "/-/signup/", "/-/static/",
+		"/pw-api/", "/pw-api/modules", "/pw-api/articles/", "/pw-api/notifications",
+		"/local--files/", "/local--theme/",
 	}
-}
-
-func TestValidateRejectsBadTable(t *testing.T) {
-	tests := []struct {
-		name  string
-		table []Route
-	}{
-		{"prefix does not start with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "api/", Owner: OwnerUpstream}}},
-		{"prefix does not end with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/api", Owner: OwnerUpstream}}},
-		{"duplicate prefix", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerGo}}},
-		{"invalid owner", []Route{{Prefix: "/", Owner: "rust"}}},
-		{"missing fallback prefix", []Route{{Prefix: "/pw-api/", Owner: OwnerUpstream}}},
-		{"exact route ends with slash", []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream, Exact: true}}},
-		{"exact fallback", []Route{{Prefix: "/", Owner: OwnerUpstream, Exact: true}}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := Validate(tt.table); err == nil {
-				t.Error("Validate() err = nil, want non-nil")
-			}
-		})
-	}
-}
-
-// goHandlers supplies a stub for every route the table gives to Go, so this
-// file does not have to be edited each time one changes hands.
-func goHandlers() map[string]http.Handler {
-	out := make(map[string]http.Handler)
-	for _, r := range Table {
-		if r.Owner == OwnerGo {
-			out[r.Prefix] = stub("go " + r.Prefix)
-		}
+	out := make(map[string]http.Handler, len(prefixes))
+	for _, prefix := range prefixes {
+		out[prefix] = stub(prefix)
 	}
 	return out
 }
 
-func TestMuxRouteLongestPrefixWins(t *testing.T) {
-	m, err := New(Table, stub("upstream"), goHandlers())
+func TestRouteLongestPrefixWins(t *testing.T) {
+	m, err := New(table())
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
-
-	tests := []struct {
-		path string
-		want string
-	}{
-		{"/", "/"},
-		{"/scp-173", "/"},
-		{"/forum:start", "/"},
-		{"/-/admin", "/-/admin"},
-		{"/-/admin/", "/-/admin/"},
-		{"/-/admin/web/user/", "/-/admin/"},
-		{"/-/preferences/", "/-/"},
-		{"/-/login", "/-/login"},
-		{"/-/signup/check-wikidot", "/-/signup/"},
-		{"/-/static/app.js", "/-/static/"},
-		{"/pw-api/articles/scp-173/votes", "/pw-api/articles/"},
-		{"/pw-api/notifications", "/pw-api/notifications"},
-		{"/pw-api/notify", "/pw-api/"},
-		{"/local--files/a/b.png", "/local--files/"},
-		{"/local--theme/12/style.css", "/local--theme/"},
-		{"/-", "/"},
-		{"/pw-apidocs", "/"},
+	tests := map[string]string{
+		"/":                              "/",
+		"/scp-173":                       "/",
+		"/forum:start":                   "/",
+		"/-":                             "/",
+		"/pw-apidocs":                    "/",
+		"/-/admin":                       "/-/admin",
+		"/-/admin/":                      "/-/admin/",
+		"/-/admin/users/7":               "/-/admin/",
+		"/-/preferences/":                "/-/",
+		"/-/login":                       "/-/login",
+		"/-/signup/check-wikidot":        "/-/signup/",
+		"/-/static/app.js":               "/-/static/",
+		"/pw-api/articles/scp-173/votes": "/pw-api/articles/",
+		"/pw-api/notifications":          "/pw-api/notifications",
+		"/pw-api/notify":                 "/pw-api/",
+		"/local--files/a/b.png":          "/local--files/",
+		"/local--theme/12/style.css":     "/local--theme/",
 	}
-	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
-			if got := m.Route(tt.path).Prefix; got != tt.want {
-				t.Errorf("Route(%q).Prefix = %q, want %q", tt.path, got, tt.want)
+	for path, want := range tests {
+		t.Run(path, func(t *testing.T) {
+			if got := m.Route(path); got != want {
+				t.Errorf("Route(%q) = %q, want %q", path, got, want)
 			}
 		})
 	}
 }
 
-func TestMuxRouteExactMatchesOnlyTheWholePath(t *testing.T) {
-	m, err := New(Table, stub("upstream"), goHandlers())
+func TestRouteExactMatchesOnlyTheWholePath(t *testing.T) {
+	m, err := New(table())
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
-
-	tests := []struct {
-		path string
-		want string
-	}{
-		{"/pw-api/modules", "/pw-api/modules"},
-		{"/pw-api/modules/", "/pw-api/"},
-		{"/pw-api/modules/1", "/pw-api/"},
-		{"/pw-api/module", "/pw-api/"},
+	tests := map[string]string{
+		"/pw-api/modules":   "/pw-api/modules",
+		"/pw-api/modules/":  "/pw-api/",
+		"/pw-api/modules/1": "/pw-api/",
+		"/pw-api/module":    "/pw-api/",
 	}
-	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
-			if got := m.Route(tt.path).Prefix; got != tt.want {
-				t.Errorf("Route(%q).Prefix = %q, want %q", tt.path, got, tt.want)
+	for path, want := range tests {
+		t.Run(path, func(t *testing.T) {
+			if got := m.Route(path); got != want {
+				t.Errorf("Route(%q) = %q, want %q", path, got, want)
 			}
 		})
 	}
 }
 
-func TestNewRejectsNilUpstream(t *testing.T) {
-	if _, err := New(Table, nil, nil); err == nil {
-		t.Error("New(upstream=nil) err = nil, want non-nil")
+func TestNewRejectsBadHandlers(t *testing.T) {
+	tests := map[string]map[string]http.Handler{
+		"no fallback":            {"/pw-api/": stub("api")},
+		"prefix without a slash": {"/": stub("root"), "pw-api/": stub("api")},
+		"nil handler":            {"/": stub("root"), "/pw-api/": nil},
+		"nil fallback":           {"/": nil},
+		"empty":                  {},
+	}
+	for name, handlers := range tests {
+		t.Run(name, func(t *testing.T) {
+			if _, err := New(handlers); err == nil {
+				t.Error("New() err = nil, want an error")
+			}
+		})
 	}
 }
 
-func TestNewRejectsGoRouteWithoutHandler(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerGo}}
-	if _, err := New(table, stub("upstream"), nil); err == nil {
-		t.Error("New() err = nil, want non-nil")
-	}
-}
-
-func TestNewRejectsUpstreamRouteWithHandler(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerUpstream}, {Prefix: "/pw-api/", Owner: OwnerUpstream}}
-	handlers := map[string]http.Handler{"/pw-api/": stub("go")}
-	if _, err := New(table, stub("upstream"), handlers); err == nil {
-		t.Error("New() err = nil, want non-nil")
-	}
-}
-
-func TestNewRejectsHandlerOutsideTable(t *testing.T) {
-	table := []Route{{Prefix: "/", Owner: OwnerUpstream}}
-	handlers := map[string]http.Handler{"/forum/": stub("go")}
-	if _, err := New(table, stub("upstream"), handlers); err == nil {
-		t.Error("New() err = nil, want non-nil")
-	}
-}
-
-func TestMuxServeHTTPDispatches(t *testing.T) {
-	table := []Route{
-		{Prefix: "/", Owner: OwnerUpstream},
-		{Prefix: "/pw-api/", Owner: OwnerUpstream},
-		{Prefix: "/pw-api/modules", Owner: OwnerGo, Exact: true},
-	}
-	m, err := New(table, stub("upstream"), map[string]http.Handler{"/pw-api/modules": stub("go")})
+func TestNewCopiesTheHandlers(t *testing.T) {
+	handlers := map[string]http.Handler{"/": stub("root")}
+	m, err := New(handlers)
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
+	handlers["/"] = stub("replaced")
 
-	tests := []struct {
-		path string
-		want string
-	}{
-		{"/pw-api/modules", "go"},
-		{"/pw-api/articles", "upstream"},
-		{"/scp-173", "upstream"},
+	rec := httptest.NewRecorder()
+	m.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/scp-173", nil))
+	if got := rec.Body.String(); got != "root" {
+		t.Errorf("ServeHTTP(/scp-173) = %q, want %q", got, "root")
 	}
-	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
+}
+
+func TestServeHTTPDispatches(t *testing.T) {
+	m, err := New(map[string]http.Handler{
+		"/":               stub("articles"),
+		"/pw-api/":        stub("not found"),
+		"/pw-api/modules": stub("modules"),
+	})
+	if err != nil {
+		t.Fatalf("New() err = %v, want nil", err)
+	}
+	tests := map[string]string{
+		"/pw-api/modules":  "modules",
+		"/pw-api/articles": "not found",
+		"/scp-173":         "articles",
+	}
+	for path, want := range tests {
+		t.Run(path, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			m.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tt.path, nil))
-			if got := rec.Body.String(); got != tt.want {
-				t.Errorf("ServeHTTP(%q) = %q, want %q", tt.path, got, tt.want)
+			m.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+			if got := rec.Body.String(); got != want {
+				t.Errorf("ServeHTTP(%q) = %q, want %q", path, got, want)
 			}
 		})
 	}

@@ -4,8 +4,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-
-	"github.com/WikitTeam/ProjectWikit/internal/routing"
 )
 
 var split = Site{Domain: "wiki.example", MediaDomain: "media.example"}
@@ -139,18 +137,6 @@ func TestDecideIgnoresPortInHost(t *testing.T) {
 	got := Decide(split, "media.example:8000", mustURL(t, "/local--files/a.png"))
 	if got.Action != Serve {
 		t.Errorf("Decide().Action = %v, want Serve", got.Action)
-	}
-}
-
-func TestMediaPrefixesAreInRouteTable(t *testing.T) {
-	inTable := make(map[string]bool, len(routing.Table))
-	for _, r := range routing.Table {
-		inTable[r.Prefix] = true
-	}
-	for _, prefix := range MediaPrefixes {
-		if !inTable[prefix] {
-			t.Errorf("routing.Table has no media prefix %q", prefix)
-		}
 	}
 }
 
