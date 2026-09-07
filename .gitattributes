@@ -1,2 +1,3 @@
 *.golden -text
 *.go text eol=lf
+internal/htmlsource/testdata/cases.html -text

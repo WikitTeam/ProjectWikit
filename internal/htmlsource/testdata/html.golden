@@ -1,0 +1,156 @@
+=== text ===
+plain text with anewline in it
+=== paragraph ===
+one
+
+two
+
+
+=== emphasis ===
+//a// **b** **c** __d__ --e-- --f--
+
+
+=== superscript ===
+^^up^^ ,,down,,
+
+
+=== line break ===
+a
+b
+
+
+=== iframe ===
+[[iframe https://example.test/x width="300" class="frame"]]
+=== printuser ===
+[[user probe-author]]
+=== printuser with avatar ===
+[[*user probe-author]]
+=== inline math ===
+[[$ x^2 $]]
+=== equation number ===
+
+=== plain span ===
+[[span style="color: red" class="fancy"]]red[[/span]]
+=== blockquote ===
+> one
+> 
+> two
+
+=== div with an allowed class ===
+[[div class="rimg"]]
+inner[[/div]]
+
+=== collapsible ===
+[[collapsible show="show me" hide="hide me"]]
+inside
+
+[[/collapsible]]
+
+=== tabview ===
+[[tabview]]
+[[tab title="first"]]
+one
+
+[[/tab]]
+[[tab title="second"]]
+two
+
+[[/tab]]
+[[/tabview]]
+
+=== code block ===
+[[code]]
+print(1)
+[[/code]]
+
+=== highlighted code block ===
+[[code]]
+print(2)
+[[/code]]
+
+=== footnote ===
+text[[footnote]]the note[[/footnote]]
+
+[[footnoteblock title="Footnotes"]]
+
+=== bibliography ===
+[[bibliography title="Bibliography"]]
+: cite1 : first item
+: cite2 : second item
+[[/bibliography]]
+
+=== image container ===
+[[f>image /local--files/a.png width="50"]]
+=== image container aligned ===
+[[=image /local--files/b.png]]
+=== content separator ===
+====
+
+=== math equation ===
+[[math]]
+x = 1
+[[/math]]
+
+=== wiki note ===
+[[note]]
+noted
+
+[[/note]]
+
+=== unknown div ===
+[[div class="whatever" id="x"]]
+fallback[[/div]]
+
+=== anchor ===
+[[a href="/scp-173" class="link"]]SCP-173[[/a]]
+=== image ===
+[[image /local--files/c.png width="20"]]
+=== horizontal rule ===
+----
+
+=== lists ===
+[[ul]]
+[[li]]
+one[[/li]]
+[[li]]
+two[[/li]]
+[[/ul]]
+[[ol]]
+[[li]]
+three[[/li]]
+[[/ol]]
+
+=== headings ===
++ one
++++ three
+
+=== teletype ===
+{{code}}
+=== table ===
+[[table class="wiki-content-table"]]
+[[row]]
+[[hcell]]
+head[[/hcell]]
+[[/row]]
+[[row]]
+[[cell]]
+cell[[/cell]]
+[[/row]]
+[[/table]]
+
+=== script ===
+
+=== definition list ===
+: term : meaning
+: other : second
+
+=== quotes in attributes ===
+[[span title="a \"quoted\" word"]]x[[/span]]
+=== backslash in attributes ===
+[[div class="rimg" data-path="a\\b"]]
+x[[/div]]
+
+=== nested markup ===
+**bold //and italic//**
+
+
