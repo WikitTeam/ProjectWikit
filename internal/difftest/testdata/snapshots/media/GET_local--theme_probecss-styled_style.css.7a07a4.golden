@@ -1,0 +1,11 @@
+200
+Access-Control-Allow-Origin: *
+Content-Length: 86
+Content-Type: text/css; charset=utf-8
+Cross-Origin-Opener-Policy: same-origin
+Date: Mon, 07 Sep 2026 08:06:33 GMT
+Referrer-Policy: same-origin
+Vary: Cookie
+
+#page-content { color : red ; }
+@media (max-width: 767px) { #main { padding : 0 ; } }

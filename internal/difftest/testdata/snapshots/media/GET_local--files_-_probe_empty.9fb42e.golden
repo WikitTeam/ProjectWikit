@@ -1,0 +1,14 @@
+416
+Accept-Ranges: bytes
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Content-Length, Content-Range
+Content-Disposition: inline
+Content-Length: 0
+Content-Range: bytes */0
+Content-Type: text/html; charset=utf-8
+Cross-Origin-Opener-Policy: same-origin
+Date: Mon, 07 Sep 2026 08:06:33 GMT
+Last-Modified: Sun, 23 Aug 2026 05:05:52 GMT
+Referrer-Policy: same-origin
+Vary: Cookie
+

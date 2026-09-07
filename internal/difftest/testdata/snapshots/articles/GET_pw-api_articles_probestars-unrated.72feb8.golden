@@ -1,0 +1,10 @@
+200
+Content-Type: application/json
+Cross-Origin-Opener-Policy: same-origin
+Date: Mon, 07 Sep 2026 08:06:30 GMT
+Referrer-Policy: same-origin
+Vary: Cookie, Accept-Encoding
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+
+{"uid": 135, "pageId": "probestars:unrated", "title": "Probe Unrated", "source": "unrated source\n[[[probe:no-such-one|first]]] [[[probe:no-such-two]]] [[[wanted:alpha|alpha]]]", "tags": ["_staff", "alpha"], "author": {"type": "normal", "id": 30, "name": "Probe Author", "username": "probe-author", "urlName": "probe-author", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "authors": [{"type": "normal", "id": 30, "name": "Probe Author", "username": "probe-author", "urlName": "probe-author", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}], "parent": null, "locked": false}

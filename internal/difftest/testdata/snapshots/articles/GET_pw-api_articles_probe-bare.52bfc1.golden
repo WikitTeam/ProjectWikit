@@ -1,0 +1,10 @@
+200
+Content-Type: application/json
+Cross-Origin-Opener-Policy: same-origin
+Date: Mon, 07 Sep 2026 08:06:30 GMT
+Referrer-Policy: same-origin
+Vary: Cookie, Accept-Encoding
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+
+{"uid": 13, "pageId": "probe:bare", "title": "Probe Bare", "source": "bare source", "tags": [], "author": {"type": "system", "id": null, "name": null, "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": false, "admin": false, "staff": false, "editor": false, "roles": null}, "authors": [{"type": "system", "id": null, "name": null, "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": false, "admin": false, "staff": false, "editor": false, "roles": null}], "parent": null, "locked": false}

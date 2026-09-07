@@ -1,0 +1,10 @@
+200
+Content-Type: application/json
+Cross-Origin-Opener-Policy: same-origin
+Date: Mon, 07 Sep 2026 08:06:30 GMT
+Referrer-Policy: same-origin
+Vary: Cookie, Accept-Encoding
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+
+{"uid": 12, "pageId": "probe:full", "title": "Probe Full", "source": "full source\nsecond line", "tags": ["alpha", "lang:en", "zeta"], "author": {"type": "normal", "id": 30, "name": "Probe Author", "username": "probe-author", "urlName": "probe-author", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "authors": [{"type": "normal", "id": 30, "name": "Probe Author", "username": "probe-author", "urlName": "probe-author", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, {"type": "wikidot", "id": 31, "name": "wd:Probe WD", "username": "576c0df3-8a28-4468-9770-ede851d88c67", "urlName": "probe-wd-original", "isActive": false, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}], "parent": "probe:parent", "locked": false}
