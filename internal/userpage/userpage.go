@@ -306,7 +306,7 @@ func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, site *db.Site,
 	var ids []int64
 	var comments bool
 	if perms.Resolve(subject, nil).Has(perms.ViewForumCategories) {
-		categories, err := h.deps.DB.ForumCategories(ctx)
+		categories, err := h.deps.DB.ForumCategories(ctx, siteID(ctx))
 		if err != nil {
 			return shell.ProfileFeed{}, err
 		}

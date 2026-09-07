@@ -17,6 +17,7 @@ var perSiteTables = []string{
 	"web_role",
 	"web_rolecategory",
 	"web_forumsection",
+	"web_forumcategory",
 	"web_forumthread",
 	"web_theme",
 	"web_invitelink",

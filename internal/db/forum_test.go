@@ -25,7 +25,7 @@ func forumDB(t *testing.T) (*DB, context.Context) {
 
 func TestForumSectionsComeBackInOrder(t *testing.T) {
 	d, ctx := forumDB(t)
-	sections, err := d.ForumSections(ctx)
+	sections, err := d.ForumSections(ctx, seedSiteID(t, d))
 	if err != nil {
 		t.Fatalf("ForumSections() err = %v, want nil", err)
 	}
@@ -57,7 +57,7 @@ func TestForumSectionsComeBackInOrder(t *testing.T) {
 
 func TestForumSectionByID(t *testing.T) {
 	d, ctx := forumDB(t)
-	sections, err := d.ForumSections(ctx)
+	sections, err := d.ForumSections(ctx, seedSiteID(t, d))
 	if err != nil {
 		t.Fatalf("ForumSections() err = %v, want nil", err)
 	}
@@ -79,7 +79,7 @@ func TestForumSectionOfAnUnknownID(t *testing.T) {
 
 func TestForumCategoriesComeBackInOrder(t *testing.T) {
 	d, ctx := forumDB(t)
-	categories, err := d.ForumCategories(ctx)
+	categories, err := d.ForumCategories(ctx, seedSiteID(t, d))
 	if err != nil {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}
@@ -97,7 +97,7 @@ func TestForumCategoriesComeBackInOrder(t *testing.T) {
 
 func categoryNamed(t *testing.T, d *DB, ctx context.Context, name string) ForumCategory {
 	t.Helper()
-	categories, err := d.ForumCategories(ctx)
+	categories, err := d.ForumCategories(ctx, seedSiteID(t, d))
 	if err != nil {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}
@@ -178,7 +178,7 @@ func TestForumCommentCountsReachEveryArticle(t *testing.T) {
 		t.Errorf("ForumCategoryCounts(comments) = %+v, want zeroes", byCategory)
 	}
 
-	got, err := d.ForumCommentCounts(ctx)
+	got, err := d.ForumCommentCounts(ctx, seedSiteID(t, d))
 	if err != nil {
 		t.Fatalf("ForumCommentCounts() err = %v, want nil", err)
 	}
@@ -192,7 +192,7 @@ func TestForumCommentCountsReachEveryArticle(t *testing.T) {
 
 func TestForumCommentLastPostComesFromAnArticleThread(t *testing.T) {
 	d, ctx := forumDB(t)
-	got, err := d.ForumCommentLastPost(ctx)
+	got, err := d.ForumCommentLastPost(ctx, seedSiteID(t, d))
 	if err != nil {
 		t.Fatalf("ForumCommentLastPost() err = %v, want nil", err)
 	}

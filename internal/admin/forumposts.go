@@ -55,7 +55,7 @@ func (h *Handler) forumPosts(w http.ResponseWriter, r *http.Request, loc *i18n.L
 }
 
 func (h *Handler) recentPosts(ctx context.Context, comments bool, offset, limit int) ([]recentPostRow, error) {
-	categories, err := h.deps.DB.ForumCategories(ctx)
+	categories, err := h.deps.DB.ForumCategories(ctx, siteID(ctx))
 	if err != nil {
 		return nil, err
 	}

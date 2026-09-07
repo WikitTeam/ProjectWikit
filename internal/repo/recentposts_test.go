@@ -70,7 +70,7 @@ func TestRecentPostsMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:recent-posts) err = %v, want nil", err)
 	}
-	categories, err := d.ForumCategories(ctx)
+	categories, err := d.ForumCategories(ctx, onlySiteID(ctx, d))
 	if err != nil {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}

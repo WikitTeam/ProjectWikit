@@ -51,7 +51,7 @@ func TestForumNewThreadMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:new-thread) err = %v, want nil", err)
 	}
-	categories, err := d.ForumCategories(ctx)
+	categories, err := d.ForumCategories(ctx, onlySiteID(ctx, d))
 	if err != nil {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}

@@ -173,7 +173,7 @@ func (h *Handler) userVotes(ctx context.Context, id int64, offset int) ([]userVo
 }
 
 func (h *Handler) userPosts(ctx context.Context, id int64, offset int) ([]userPostRow, error) {
-	categories, err := h.deps.DB.ForumCategories(ctx)
+	categories, err := h.deps.DB.ForumCategories(ctx, siteID(ctx))
 	if err != nil {
 		return nil, err
 	}

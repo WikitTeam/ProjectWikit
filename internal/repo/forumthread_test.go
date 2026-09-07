@@ -160,7 +160,7 @@ func forumThreadPath(t *testing.T, ctx context.Context, d *db.DB, c forumThreadC
 
 func threadIDByName(t *testing.T, ctx context.Context, d *db.DB, name string) int64 {
 	t.Helper()
-	categories, err := d.ForumCategories(ctx)
+	categories, err := d.ForumCategories(ctx, onlySiteID(ctx, d))
 	if err != nil {
 		t.Fatalf("ForumCategories() err = %v, want nil", err)
 	}

@@ -47,10 +47,11 @@ const forumSectionColumns = `id, name, description, is_hidden, is_hidden_for_use
 var qForumSections = register("ForumSections", `
 SELECT `+forumSectionColumns+`
 FROM web_forumsection
+WHERE site_id = $1
 ORDER BY "order", id`)
 
-func (d *DB) ForumSections(ctx context.Context) ([]ForumSection, error) {
-	rows, err := d.pool.Query(ctx, qForumSections)
+func (d *DB) ForumSections(ctx context.Context, siteID int64) ([]ForumSection, error) {
+	rows, err := d.pool.Query(ctx, qForumSections, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query forum sections: %w", err)
 	}
@@ -86,12 +87,14 @@ func (d *DB) ForumSection(ctx context.Context, id int64) (*ForumSection, error) 
 }
 
 var qForumCategories = register("ForumCategories", `
-SELECT id, section_id, name, description, is_for_comments
-FROM web_forumcategory
-ORDER BY "order", id`)
+SELECT c.id, c.section_id, c.name, c.description, c.is_for_comments
+FROM web_forumcategory c
+JOIN web_forumsection s ON s.id = c.section_id
+WHERE s.site_id = $1
+ORDER BY c."order", c.id`)
 
-func (d *DB) ForumCategories(ctx context.Context) ([]ForumCategory, error) {
-	rows, err := d.pool.Query(ctx, qForumCategories)
+func (d *DB) ForumCategories(ctx context.Context, siteID int64) ([]ForumCategory, error) {
+	rows, err := d.pool.Query(ctx, qForumCategories, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query forum categories: %w", err)
 	}
@@ -125,14 +128,14 @@ func (d *DB) ForumCategoryCounts(ctx context.Context, categoryID int64) (ForumCo
 // A category marked for comments counts every article's thread, whichever
 // category the reader is looking at.
 var qForumCommentCounts = register("ForumCommentCounts", `
-SELECT (SELECT count(*) FROM web_forumthread WHERE article_id IS NOT NULL),
+SELECT (SELECT count(*) FROM web_forumthread WHERE site_id = $1 AND article_id IS NOT NULL),
        (SELECT count(*) FROM web_forumpost p
         JOIN web_forumthread t ON t.id = p.thread_id
-        WHERE t.article_id IS NOT NULL)`)
+        WHERE t.site_id = $1 AND t.article_id IS NOT NULL)`)
 
-func (d *DB) ForumCommentCounts(ctx context.Context) (ForumCounts, error) {
+func (d *DB) ForumCommentCounts(ctx context.Context, siteID int64) (ForumCounts, error) {
 	var c ForumCounts
-	if err := d.pool.QueryRow(ctx, qForumCommentCounts).Scan(&c.Threads, &c.Posts); err != nil {
+	if err := d.pool.QueryRow(ctx, qForumCommentCounts, siteID).Scan(&c.Threads, &c.Posts); err != nil {
 		return ForumCounts{}, fmt.Errorf("count forum comments: %w", err)
 	}
 	return c, nil
@@ -156,12 +159,12 @@ var qForumCommentLastPost = register("ForumCommentLastPost", `
 SELECT `+forumLastPostColumns+`
 FROM web_forumpost p
 JOIN web_forumthread t ON t.id = p.thread_id
-WHERE t.article_id IS NOT NULL
+WHERE t.site_id = $1 AND t.article_id IS NOT NULL
 ORDER BY p.created_at DESC
 LIMIT 1`)
 
-func (d *DB) ForumCommentLastPost(ctx context.Context) (*ForumLastPost, error) {
-	return d.scanLastPost(ctx, qForumCommentLastPost)
+func (d *DB) ForumCommentLastPost(ctx context.Context, siteID int64) (*ForumLastPost, error) {
+	return d.scanLastPost(ctx, qForumCommentLastPost, siteID)
 }
 
 func (d *DB) scanLastPost(ctx context.Context, sql string, args ...any) (*ForumLastPost, error) {
@@ -215,16 +218,16 @@ OFFSET $2 LIMIT $3`)
 var qForumCommentThreadsByReply = register("ForumCommentThreadsByReply", `
 SELECT `+forumThreadColumns+`
 FROM web_forumthread
-WHERE article_id IS NOT NULL
+WHERE site_id = $1 AND article_id IS NOT NULL
 ORDER BY is_pinned DESC, updated_at DESC
-OFFSET $1 LIMIT $2`)
+OFFSET $2 LIMIT $3`)
 
 var qForumCommentThreadsByStart = register("ForumCommentThreadsByStart", `
 SELECT `+forumThreadColumns+`
 FROM web_forumthread
-WHERE article_id IS NOT NULL
+WHERE site_id = $1 AND article_id IS NOT NULL
 ORDER BY is_pinned DESC, created_at DESC
-OFFSET $1 LIMIT $2`)
+OFFSET $2 LIMIT $3`)
 
 func (d *DB) ForumThreads(ctx context.Context, categoryID int64, sort ForumThreadSort, offset, limit int) ([]ForumThread, error) {
 	sql, args := qForumThreadsByReply, []any{categoryID, offset, limit}
@@ -234,12 +237,12 @@ func (d *DB) ForumThreads(ctx context.Context, categoryID int64, sort ForumThrea
 	return d.scanThreads(ctx, sql, args...)
 }
 
-func (d *DB) ForumCommentThreads(ctx context.Context, sort ForumThreadSort, offset, limit int) ([]ForumThread, error) {
+func (d *DB) ForumCommentThreads(ctx context.Context, siteID int64, sort ForumThreadSort, offset, limit int) ([]ForumThread, error) {
 	sql := qForumCommentThreadsByReply
 	if sort == ForumThreadsByStart {
 		sql = qForumCommentThreadsByStart
 	}
-	return d.scanThreads(ctx, sql, offset, limit)
+	return d.scanThreads(ctx, sql, siteID, offset, limit)
 }
 
 func (d *DB) scanThreads(ctx context.Context, sql string, args ...any) ([]ForumThread, error) {

@@ -162,7 +162,7 @@ func (m moduleData) RenderUserByID(id *int64) (string, error) {
 }
 
 func (m moduleData) ForumSections() ([]db.ForumSection, error) {
-	return m.repo.db.ForumSections(m.repo.ctx)
+	return m.repo.db.ForumSections(m.repo.ctx, m.repo.siteID())
 }
 
 func (m moduleData) ForumSection(id int64) (*db.ForumSection, error) {
@@ -170,7 +170,7 @@ func (m moduleData) ForumSection(id int64) (*db.ForumSection, error) {
 }
 
 func (m moduleData) ForumCategories() ([]db.ForumCategory, error) {
-	return m.repo.db.ForumCategories(m.repo.ctx)
+	return m.repo.db.ForumCategories(m.repo.ctx, m.repo.siteID())
 }
 
 func (m moduleData) ForumCategoryCounts(categoryID int64) (db.ForumCounts, error) {
@@ -178,7 +178,7 @@ func (m moduleData) ForumCategoryCounts(categoryID int64) (db.ForumCounts, error
 }
 
 func (m moduleData) ForumCommentCounts() (db.ForumCounts, error) {
-	return m.repo.db.ForumCommentCounts(m.repo.ctx)
+	return m.repo.db.ForumCommentCounts(m.repo.ctx, m.repo.siteID())
 }
 
 func (m moduleData) ForumCategoryLastPost(categoryID int64) (*db.ForumLastPost, error) {
@@ -186,7 +186,7 @@ func (m moduleData) ForumCategoryLastPost(categoryID int64) (*db.ForumLastPost, 
 }
 
 func (m moduleData) ForumCommentLastPost() (*db.ForumLastPost, error) {
-	return m.repo.db.ForumCommentLastPost(m.repo.ctx)
+	return m.repo.db.ForumCommentLastPost(m.repo.ctx, m.repo.siteID())
 }
 
 func (m moduleData) Subject(user *db.User) (perms.Subject, error) {
@@ -206,7 +206,7 @@ func (m moduleData) ForumThreads(categoryID int64, sort db.ForumThreadSort, offs
 }
 
 func (m moduleData) ForumCommentThreads(sort db.ForumThreadSort, offset, limit int) ([]db.ForumThread, error) {
-	return m.repo.db.ForumCommentThreads(m.repo.ctx, sort, offset, limit)
+	return m.repo.db.ForumCommentThreads(m.repo.ctx, m.repo.siteID(), sort, offset, limit)
 }
 
 func (m moduleData) ForumThreadPostCount(threadID int64) (int, error) {

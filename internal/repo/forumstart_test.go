@@ -60,7 +60,7 @@ func TestForumStartMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:start) err = %v, want nil", err)
 	}
-	sections, err := d.ForumSections(ctx)
+	sections, err := d.ForumSections(ctx, onlySiteID(ctx, d))
 	if err != nil {
 		t.Fatalf("ForumSections() err = %v, want nil", err)
 	}

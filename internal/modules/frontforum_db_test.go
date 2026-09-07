@@ -26,7 +26,7 @@ func (l forumLiveData) Subject(*db.User) (perms.Subject, error) {
 }
 
 func (l forumLiveData) ForumCategories() ([]db.ForumCategory, error) {
-	return l.d.ForumCategories(l.ctx)
+	return l.d.ForumCategories(l.ctx, onlySiteID(l.ctx, l.d))
 }
 
 func (l forumLiveData) ForumThreadsInCategories(ids []int64, offset, limit int) ([]db.ForumThread, error) {
