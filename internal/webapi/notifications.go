@@ -32,19 +32,19 @@ var notificationKinds = []string{
 }
 
 type Notifications struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Notifications)(nil)
 
-func NewNotifications(d Deps, upstream http.Handler) *Notifications {
-	return &Notifications{deps: d, upstream: upstream}
+func NewNotifications(d Deps, next http.Handler) *Notifications {
+	return &Notifications{deps: d, next: next}
 }
 
 func (h *Notifications) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != NotificationsPath {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
@@ -60,7 +60,7 @@ func (h *Notifications) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		h.clear(w, r, loc, user)
 	default:
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	}
 }
 

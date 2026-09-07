@@ -23,14 +23,14 @@ const (
 )
 
 type Users struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Users)(nil)
 
-func NewUsers(d Deps, upstream http.Handler) *Users {
-	return &Users{deps: d, upstream: upstream}
+func NewUsers(d Deps, next http.Handler) *Users {
+	return &Users{deps: d, next: next}
 }
 
 func (h *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +41,7 @@ func (h *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rest, ok := strings.CutPrefix(r.URL.Path, UsersPrefix)
 	if !ok {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	head, tail, _ := strings.Cut(rest, "/")
@@ -53,7 +53,7 @@ func (h *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case tail == "block" && (r.Method == http.MethodPost || r.Method == http.MethodDelete):
 		h.block(w, r, loc, head)
 	default:
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	}
 }
 

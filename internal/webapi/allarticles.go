@@ -19,19 +19,19 @@ import (
 const AllArticlesPath = "/pw-api/articles"
 
 type AllArticles struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*AllArticles)(nil)
 
-func NewAllArticles(d Deps, upstream http.Handler) *AllArticles {
-	return &AllArticles{deps: d, upstream: upstream}
+func NewAllArticles(d Deps, next http.Handler) *AllArticles {
+	return &AllArticles{deps: d, next: next}
 }
 
 func (h *AllArticles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != AllArticlesPath || r.Method != http.MethodGet {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	ctx := r.Context()

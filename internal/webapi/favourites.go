@@ -15,25 +15,25 @@ const FavouritesPath = "/pw-api/favourites"
 const favouritesPerPage = 20
 
 type Favourites struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Favourites)(nil)
 
-func NewFavourites(d Deps, upstream http.Handler) *Favourites {
-	return &Favourites{deps: d, upstream: upstream}
+func NewFavourites(d Deps, next http.Handler) *Favourites {
+	return &Favourites{deps: d, next: next}
 }
 
 // A reader only ever gets their own rows. Nothing in the request names a user,
 // so there is nothing to authorise beyond being signed in.
 func (h *Favourites) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != FavouritesPath {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	if r.Method != http.MethodGet {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)

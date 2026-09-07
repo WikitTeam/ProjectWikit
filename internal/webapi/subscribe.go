@@ -20,14 +20,14 @@ import (
 const SubscribePath = "/pw-api/notifications/subscribe"
 
 type Subscriptions struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Subscriptions)(nil)
 
-func NewSubscriptions(d Deps, upstream http.Handler) *Subscriptions {
-	return &Subscriptions{deps: d, upstream: upstream}
+func NewSubscriptions(d Deps, next http.Handler) *Subscriptions {
+	return &Subscriptions{deps: d, next: next}
 }
 
 type subscribeRequest struct {
@@ -37,11 +37,11 @@ type subscribeRequest struct {
 
 func (h *Subscriptions) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != SubscribePath {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	if r.Method != http.MethodPost && r.Method != http.MethodDelete {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	ctx := r.Context()

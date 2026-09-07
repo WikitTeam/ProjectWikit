@@ -118,18 +118,18 @@ func grantsFrom(ctx context.Context) perms.Set {
 
 type Handler struct {
 	deps      Deps
-	upstream  http.Handler
+	next      http.Handler
 	templates *template.Template
 }
 
 var _ http.Handler = (*Handler)(nil)
 
-func New(d Deps, upstream http.Handler) (*Handler, error) {
+func New(d Deps, next http.Handler) (*Handler, error) {
 	t, err := template.New("admin").Funcs(funcs()).ParseFS(files, "templates/*.html")
 	if err != nil {
 		return nil, err
 	}
-	return &Handler{deps: d, upstream: upstream, templates: t}, nil
+	return &Handler{deps: d, next: next, templates: t}, nil
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +139,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rest, ok := strings.CutPrefix(r.URL.Path, Prefix)
 	if !ok {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	ctx := r.Context()
@@ -181,13 +181,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		if !granted.Has(s.need) {
-			h.upstream.ServeHTTP(w, r)
+			h.next.ServeHTTP(w, r)
 			return
 		}
 		h.finish(w, r, loc, s.serve(h, w, r, loc))
 		return
 	}
-	h.upstream.ServeHTTP(w, r)
+	h.next.ServeHTTP(w, r)
 }
 
 func siteSignIn(path string) (string, bool) {

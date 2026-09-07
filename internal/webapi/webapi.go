@@ -55,14 +55,14 @@ type Deps struct {
 }
 
 type Handler struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Handler)(nil)
 
-func New(d Deps, upstream http.Handler) *Handler {
-	return &Handler{deps: d, upstream: upstream}
+func New(d Deps, next http.Handler) *Handler {
+	return &Handler{deps: d, next: next}
 }
 
 func (d Deps) log() *slog.Logger {
@@ -83,7 +83,7 @@ type call struct {
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 
@@ -135,8 +135,6 @@ func (h *Handler) safe(parsed call) bool {
 	return safe
 }
 
-// A method the module never registered goes upstream, which is what keeps the
-// unported half working.
 func (h *Handler) answers(parsed call) bool {
 	if parsed.Method == renderMethod {
 		return true
@@ -216,7 +214,7 @@ func (h *Handler) forward(w http.ResponseWriter, r *http.Request, raw []byte, re
 		body = io.MultiReader(body, rest)
 	}
 	r.Body = io.NopCloser(body)
-	h.upstream.ServeHTTP(w, r)
+	h.next.ServeHTTP(w, r)
 }
 
 func params(raw json.RawMessage) map[string]string {

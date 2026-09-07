@@ -29,20 +29,20 @@ const (
 )
 
 type Messages struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Messages)(nil)
 
-func NewMessages(d Deps, upstream http.Handler) *Messages {
-	return &Messages{deps: d, upstream: upstream}
+func NewMessages(d Deps, next http.Handler) *Messages {
+	return &Messages{deps: d, next: next}
 }
 
 func (h *Messages) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rest, ok := strings.CutPrefix(r.URL.Path, MessagesPrefix)
 	if !ok {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
@@ -61,7 +61,7 @@ func (h *Messages) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case head == "report" && tail == "" && r.Method == http.MethodPost:
 		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.report(r, loc, user) })
 	default:
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	}
 }
 

@@ -39,8 +39,8 @@ type FileItems struct {
 
 var _ http.Handler = (*FileItems)(nil)
 
-func NewFileItems(d Deps, upstream http.Handler) *FileItems {
-	return &FileItems{articles: NewArticles(d, upstream)}
+func NewFileItems(d Deps, next http.Handler) *FileItems {
+	return &FileItems{articles: NewArticles(d, next)}
 }
 
 func (h *FileItems) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +49,7 @@ func (h *FileItems) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.ParseInt(strings.TrimPrefix(r.URL.Path, FilesPrefix), 10, 64)
 	if err != nil {
-		a.upstream.ServeHTTP(w, r)
+		a.next.ServeHTTP(w, r)
 		return
 	}
 	switch r.Method {
@@ -58,7 +58,7 @@ func (h *FileItems) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		a.answerFile(w, r, loc, id, a.renameFile)
 	default:
-		a.upstream.ServeHTTP(w, r)
+		a.next.ServeHTTP(w, r)
 	}
 }
 

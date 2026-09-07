@@ -32,14 +32,14 @@ const (
 )
 
 type Articles struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Articles)(nil)
 
-func NewArticles(d Deps, upstream http.Handler) *Articles {
-	return &Articles{deps: d, upstream: upstream}
+func NewArticles(d Deps, next http.Handler) *Articles {
+	return &Articles{deps: d, next: next}
 }
 
 func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +55,7 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if name == "" {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 
@@ -77,14 +77,14 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case tail == tailFiles && r.Method == http.MethodPost:
 		h.answer(w, r, loc, name, h.upload)
 	default:
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	}
 }
 
 func (h *Articles) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, name string) {
 	switch {
 	case name == "":
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	case r.Method == http.MethodGet:
 		h.answer(w, r, loc, name, h.fetch)
 	case r.Method == http.MethodPut:
@@ -92,7 +92,7 @@ func (h *Articles) page(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 	case r.Method == http.MethodDelete:
 		h.answer(w, r, loc, name, h.remove)
 	default:
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	}
 }
 

@@ -112,10 +112,10 @@ func TestAnUnregisteredMethodGoesUpstreamWithItsBody(t *testing.T) {
 	New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), post(body))
 
 	if !up.called {
-		t.Fatal("upstream called = false, want true")
+		t.Fatal("next called = false, want true")
 	}
 	if string(up.body) != body {
-		t.Errorf("upstream body = %q, want %q", up.body, body)
+		t.Errorf("next body = %q, want %q", up.body, body)
 	}
 }
 
@@ -127,7 +127,7 @@ func TestABodyTooLargeToReadGoesUpstreamWhole(t *testing.T) {
 	New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), post(body))
 
 	if string(up.body) != body {
-		t.Errorf("len(upstream body) = %d, want %d", len(up.body), len(body))
+		t.Errorf("len(next body) = %d, want %d", len(up.body), len(body))
 	}
 }
 
@@ -138,7 +138,7 @@ func TestWhatIsNotAPostGoesUpstream(t *testing.T) {
 	New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), r)
 
 	if up.method != http.MethodGet {
-		t.Errorf("upstream method = %q, want %q", up.method, http.MethodGet)
+		t.Errorf("next method = %q, want %q", up.method, http.MethodGet)
 	}
 }
 
@@ -147,7 +147,7 @@ func TestABodyThatIsNotACallGoesUpstream(t *testing.T) {
 		up := &recorder{}
 		New(Deps{}, up).ServeHTTP(httptest.NewRecorder(), post(body))
 		if !up.called {
-			t.Errorf("upstream called for %q = false, want true", body)
+			t.Errorf("next called for %q = false, want true", body)
 		}
 	}
 }

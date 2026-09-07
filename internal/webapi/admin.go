@@ -18,20 +18,20 @@ import (
 const AdminPrefix = "/pw-api/admin/"
 
 type Admin struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*Admin)(nil)
 
-func NewAdmin(d Deps, upstream http.Handler) *Admin {
-	return &Admin{deps: d, upstream: upstream}
+func NewAdmin(d Deps, next http.Handler) *Admin {
+	return &Admin{deps: d, next: next}
 }
 
 func (h *Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rest, ok := strings.CutPrefix(r.URL.Path, AdminPrefix)
 	if !ok || r.Method != http.MethodGet {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
@@ -42,7 +42,7 @@ func (h *Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case head == "reports" && strings.HasSuffix(tail, "/full-conversation"):
 		h.conversation(w, r, loc, strings.TrimSuffix(tail, "/full-conversation"))
 	default:
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 	}
 }
 

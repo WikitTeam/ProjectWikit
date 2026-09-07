@@ -62,7 +62,7 @@ type limits struct {
 	hard int64
 }
 
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
@@ -104,30 +104,30 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		code:          localitem.NewCode(items),
 		html:          localitem.NewHTML(items),
 		theme:         localitem.NewTheme(items),
-		moduleAPI:     webapi.New(api, upstream),
+		moduleAPI:     webapi.New(api, next),
 		preview:       webapi.NewPreview(api),
-		articleAPI:    webapi.NewArticles(api, upstream),
-		allArticles:   webapi.NewAllArticles(api, upstream),
-		fileAPI:       webapi.NewFileItems(api, upstream),
+		articleAPI:    webapi.NewArticles(api, next),
+		allArticles:   webapi.NewAllArticles(api, next),
+		fileAPI:       webapi.NewFileItems(api, next),
 		profile:       userpage.New(profiles),
 		profileForm:   userpage.NewEdit(profiles),
 		reactivePages: userpage.NewReactive(profiles),
-		notifyAPI:     webapi.NewNotifications(api, upstream),
-		subscribeAPI:  webapi.NewSubscriptions(api, upstream),
-		messageAPI:    webapi.NewMessages(api, upstream),
-		userAPI:       webapi.NewUsers(api, upstream),
-		adminAPI:      webapi.NewAdmin(api, upstream),
-		login:         upstream,
-		logout:        upstream,
-		signup:        upstream,
-		accept:        upstream,
-		reset:         upstream,
-		tickets:       upstream,
-		emailLinks:    upstream,
-		settings:      upstream,
-		adminPages:    upstream,
-		favesAPI:      webapi.NewFavourites(api, upstream),
-		ownRowsAPI:    webapi.NewOwnRows(api, upstream),
+		notifyAPI:     webapi.NewNotifications(api, next),
+		subscribeAPI:  webapi.NewSubscriptions(api, next),
+		messageAPI:    webapi.NewMessages(api, next),
+		userAPI:       webapi.NewUsers(api, next),
+		adminAPI:      webapi.NewAdmin(api, next),
+		login:         next,
+		logout:        next,
+		signup:        next,
+		accept:        next,
+		reset:         next,
+		tickets:       next,
+		emailLinks:    next,
+		settings:      next,
+		adminPages:    next,
+		favesAPI:      webapi.NewFavourites(api, next),
+		ownRowsAPI:    webapi.NewOwnRows(api, next),
 		close:         closeEngine,
 	}
 
@@ -156,7 +156,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(), TimeZone: location,
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
 		Mail: mail.New(mailConfig()), Log: log,
-	}, upstream)
+	}, next)
 	if err != nil {
 		return nil, err
 	}

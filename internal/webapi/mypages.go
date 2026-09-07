@@ -20,19 +20,19 @@ const (
 const ownRowsPerPage = 20
 
 type OwnRows struct {
-	deps     Deps
-	upstream http.Handler
+	deps Deps
+	next http.Handler
 }
 
 var _ http.Handler = (*OwnRows)(nil)
 
-func NewOwnRows(d Deps, upstream http.Handler) *OwnRows {
-	return &OwnRows{deps: d, upstream: upstream}
+func NewOwnRows(d Deps, next http.Handler) *OwnRows {
+	return &OwnRows{deps: d, next: next}
 }
 
 func (h *OwnRows) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet || (r.URL.Path != RatingsPath && r.URL.Path != LikedPostsPath) {
-		h.upstream.ServeHTTP(w, r)
+		h.next.ServeHTTP(w, r)
 		return
 	}
 	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
