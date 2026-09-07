@@ -18,12 +18,14 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/mail"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/token"
 )
 
 const (
@@ -40,7 +42,12 @@ type Deps struct {
 	Assets   *static.Assets
 	Files    string
 	TimeZone *time.Location
-	Log      *slog.Logger
+	Tokens   token.Generator
+
+	Articles http.Handler
+	Mail     mail.Sender
+
+	Log *slog.Logger
 }
 
 func (d Deps) logger() *slog.Logger {
@@ -60,6 +67,54 @@ type screen struct {
 var screens []screen
 
 func register(s screen) { screens = append(screens, s) }
+
+type railEntry struct {
+	slug string
+	icon string
+}
+
+var groups = []struct {
+	key     string
+	label   string
+	icon    string
+	entries []railEntry
+}{
+	{"site", "admin.group-site", "fa-cog", []railEntry{
+		{pageSlug, "fa-file-alt"},
+		{siteSlug, "fa-cog"},
+		{themeSlug, "fa-palette"},
+		{pageCategorySlug, "fa-folder-open"},
+		{tagSlug, "fa-tag"},
+		{tagCategorySlug, "fa-tags"},
+	}},
+	{"members", "admin.group-members", "fa-users", []railEntry{
+		{userSlug, "fa-user"},
+		{roleSlug, "fa-shield-alt"},
+		{roleCategorySlug, "fa-sitemap"},
+		{inviteSlug, "fa-envelope"},
+	}},
+	{"forum", "admin.group-forum", "fa-comments", []railEntry{
+		{sectionSlug, "fa-list-alt"},
+		{categorySlug, "fa-th-list"},
+		{recentPostSlug, "fa-comment-dots"},
+	}},
+	{"queue", "admin.group-queue", "fa-flag", []railEntry{
+		{reportSlug, "fa-exclamation-triangle"},
+		{ticketSlug, "fa-life-ring"},
+		{membershipSlug, "fa-check-circle"},
+	}},
+	{"records", "admin.group-records", "fa-clipboard-list", []railEntry{
+		{adminLogSlug, "fa-clock"},
+		{suspiciousSlug, "fa-eye"},
+	}},
+}
+
+type grantKey struct{}
+
+func grantsFrom(ctx context.Context) perms.Set {
+	got, _ := ctx.Value(grantKey{}).(perms.Set)
+	return got
+}
 
 type Handler struct {
 	deps      Deps
@@ -115,6 +170,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r = r.WithContext(context.WithValue(ctx, grantKey{}, granted))
 	head, _, _ := strings.Cut(rest, "/")
 	if head == "" {
 		h.finish(w, r, loc, h.index(w, r, loc, granted))
@@ -191,27 +247,45 @@ func (h *Handler) access(ctx context.Context) (perms.Set, bool, error) {
 	return perms.Resolve(subject, nil), true, nil
 }
 
-func (h *Handler) index(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, granted perms.Set) error {
-	type entry struct {
-		Href  string
-		Label string
-	}
-	list := make([]entry, 0, len(screens))
-	for _, s := range screens {
-		if !granted.Has(s.need) {
-			continue
-		}
-		list = append(list, entry{Href: Prefix + s.slug + "/", Label: loc.T(s.label)})
-	}
-	return h.page(w, r, loc, loc.T("admin.title"), "index.html", map[string]any{"Screens": list})
-}
-
 func (h *Handler) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, title, name string, data any) error {
-	var body strings.Builder
-	if err := h.templates.ExecuteTemplate(&body, name, data); err != nil {
+	tpl, err := h.bind(loc)
+	if err != nil {
 		return err
 	}
-	return h.write(w, r, loc, title, body.String(), http.StatusOK)
+	var body strings.Builder
+	if err := tpl.ExecuteTemplate(&body, name, data); err != nil {
+		return err
+	}
+	var out strings.Builder
+	if err := tpl.ExecuteTemplate(&out, "layout.html", h.layout(r, loc, title, body.String())); err != nil {
+		return err
+	}
+	return h.write(w, r, loc, title, out.String(), http.StatusOK)
+}
+
+// Cloned per request rather than bound once at startup, because the language
+// will eventually come from the request and a bound one would have to be undone.
+func (h *Handler) bind(loc *i18n.Localizer) (*template.Template, error) {
+	tpl, err := h.templates.Clone()
+	if err != nil {
+		return nil, err
+	}
+	return tpl.Funcs(template.FuncMap{
+		"t": loc.T,
+		"enum": func(prefix, value string) string {
+			id := prefix + value
+			if text := loc.T(id); text != id {
+				return text
+			}
+			return value
+		},
+		"screen": func(slug string) string {
+			if label := screenLabel(slug); label != "" {
+				return loc.T(label)
+			}
+			return slug
+		},
+	}), nil
 }
 
 func (h *Handler) write(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, title, body string, status int) error {
@@ -222,12 +296,13 @@ func (h *Handler) write(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 	}
 	var out strings.Builder
 	err = shell.New(loc, h.deps.Assets, h.deps.TimeZone).SystemPage(&out, shell.System{
-		Title:     title,
-		SiteTitle: current.Title,
-		ThemeURL:  theme,
-		BodyClass: "wikit-page admin",
-		Heading:   title,
-		Content:   body,
+		Title:       title,
+		SiteTitle:   current.Title,
+		ThemeURL:    theme,
+		BodyClass:   "wikit-page admin",
+		Heading:     title,
+		Content:     body,
+		Stylesheets: []string{"wikit-admin.css"},
 	})
 	if err != nil {
 		return err
@@ -249,7 +324,11 @@ func authIcon(s *db.Site) string {
 
 func funcs() template.FuncMap {
 	return template.FuncMap{
-		"esc": escape.HTML,
+		"esc":    escape.HTML,
+		"urlq":   url.QueryEscape,
+		"t":      func(id string, _ ...any) string { return id },
+		"enum":   func(_, value string) string { return value },
+		"screen": func(slug string) string { return slug },
 		"dict": func(pairs ...any) map[string]any {
 			out := make(map[string]any, len(pairs)/2)
 			for i := 0; i+1 < len(pairs); i += 2 {

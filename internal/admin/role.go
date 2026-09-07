@@ -91,23 +91,9 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return err
 	}
 
-	type grant struct {
-		Name  string
-		Allow bool
-		Deny  bool
-	}
-	grants := make([]grant, 0, len(catalog))
-	for _, name := range catalog {
-		grants = append(grants, grant{
-			Name:  name,
-			Allow: slices.Contains(row.Allow, name),
-			Deny:  slices.Contains(row.Deny, name),
-		})
-	}
-
 	return h.page(w, r, loc, loc.T("admin.roles"), "role_form.html", map[string]any{
 		"Role":         row,
-		"Grants":       grants,
+		"Grants":       grantGroups(catalog, row.Allow, row.Deny),
 		"Categories":   categories,
 		"InlineModes":  inlineModes,
 		"ProfileModes": profileModes,
@@ -165,6 +151,7 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		if err := h.deps.DB.DeleteRole(ctx, stored.ID); err != nil {
 			return err
 		}
+		h.noteID(r, db.AdminDeleted, roleSlug, stored.ID, stored.Slug)
 		redirect(w, Prefix+roleSlug+"/")
 		return nil
 	}
@@ -184,7 +171,10 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.InlineVisualMode = r.PostFormValue("inline_visual_mode")
 	next.ProfileVisualMode = r.PostFormValue("profile_visual_mode")
 	next.Color = strings.TrimSpace(r.PostFormValue("color"))
-	next.Icon = strings.TrimSpace(r.PostFormValue("icon"))
+	next.Icon, err = h.pickIcon(r, "icon", stored.Icon, roleIcon)
+	if err != nil {
+		return h.roleForm(w, r, loc, rest, iconMessage(loc, err))
+	}
 	next.BadgeText = strings.TrimSpace(r.PostFormValue("badge_text"))
 	next.BadgeBg = strings.TrimSpace(r.PostFormValue("badge_bg"))
 	next.BadgeTextColor = strings.TrimSpace(r.PostFormValue("badge_text_color"))
@@ -214,9 +204,14 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if problem := checkRole(loc, next); problem != "" {
 		return h.roleForm(w, r, loc, rest, problem)
 	}
+	did := db.AdminChanged
+	if next.ID == 0 {
+		did = db.AdminCreated
+	}
 	if _, err := h.deps.DB.SaveRole(ctx, next, mayGrant); err != nil {
 		return err
 	}
+	h.noteID(r, did, roleSlug, next.ID, next.Slug)
 	redirect(w, Prefix+roleSlug+"/")
 	return nil
 }
@@ -266,6 +261,7 @@ func (h *Handler) roleCategories(w http.ResponseWriter, r *http.Request, loc *i1
 			if err := h.deps.DB.DeleteRoleCategory(ctx, *id); err != nil {
 				return err
 			}
+			h.noteID(r, db.AdminDeleted, roleCategorySlug, *id, "")
 			redirect(w, Prefix+roleCategorySlug+"/")
 			return nil
 		}
@@ -277,9 +273,14 @@ func (h *Handler) roleCategories(w http.ResponseWriter, r *http.Request, loc *i1
 		if id != nil {
 			row.ID = *id
 		}
+		did := db.AdminChanged
+		if row.ID == 0 {
+			did = db.AdminCreated
+		}
 		if err := h.deps.DB.SaveRoleCategory(ctx, row); err != nil {
 			return err
 		}
+		h.noteID(r, did, roleCategorySlug, row.ID, row.Name)
 		redirect(w, Prefix+roleCategorySlug+"/")
 		return nil
 	}

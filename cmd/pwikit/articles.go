@@ -141,7 +141,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 		Tokens:   token.Generator{Secret: secret},
 		Verifier: account.NewVerifier(),
 		Mail:     mail.New(mailConfig()),
-		Assets:   static.NewAssets(assets), TimeZone: location, Log: log,
+		Assets:   static.NewAssets(assets), TimeZone: location, Trust: trust, Log: log,
 	}
 	stack.login = account.NewLogin(accounts)
 	stack.logout = account.NewLogout(accounts)
@@ -153,7 +153,9 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, upstream http.Handl
 	stack.settings = account.NewSettings(accounts)
 
 	adminPages, err := admin.New(admin.Deps{
-		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(), TimeZone: location, Log: log,
+		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(), TimeZone: location,
+		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
+		Mail: mail.New(mailConfig()), Log: log,
 	}, upstream)
 	if err != nil {
 		return nil, err

@@ -84,14 +84,21 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	}
 
 	next := *current
+
 	next.Slug = strings.TrimSpace(r.PostFormValue("slug"))
 	next.Title = strings.TrimSpace(r.PostFormValue("title"))
 	next.Headline = strings.TrimSpace(r.PostFormValue("headline"))
 	next.Domain = strings.TrimSpace(r.PostFormValue("domain"))
 	next.MediaDomain = strings.TrimSpace(r.PostFormValue("media_domain"))
 	next.HomePage = strings.TrimSpace(r.PostFormValue("home_page"))
-	next.Icon = strings.TrimSpace(r.PostFormValue("icon"))
-	next.AuthIcon = strings.TrimSpace(r.PostFormValue("auth_icon"))
+	next.Icon, err = h.pickIcon(r, "icon", current.Icon, siteIcons)
+	if err != nil {
+		return h.iconProblem(w, r, loc, err)
+	}
+	next.AuthIcon, err = h.pickIcon(r, "auth_icon", current.AuthIcon, siteIcons)
+	if err != nil {
+		return h.iconProblem(w, r, loc, err)
+	}
 	next.FooterLicense = r.PostFormValue("footer_license")
 	next.SignupNotice = r.PostFormValue("signup_notice")
 	next.PasswordHelp = r.PostFormValue("password_help")
@@ -117,6 +124,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err := h.deps.DB.SaveSite(ctx, &next, settings, granted.Has(perms.ManagePermissions)); err != nil {
 		return err
 	}
+	h.note(r, db.AdminChanged, siteSlug, "", next.Title)
 	redirect(w, Prefix+siteSlug+"/")
 	return nil
 }

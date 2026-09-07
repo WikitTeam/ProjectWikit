@@ -1,0 +1,11 @@
+{{define "user_reset_votes.html"}}
+<div class="alert alert-block alert-error">
+  <h4><i class="fas fa-exclamation-triangle"></i> {{t "admin.reset-votes-confirm" "name" .User.Username}}</h4>
+  <p>{{t "admin.reset-votes-warning"}}</p>
+  <form method="POST" action="{{esc .Action}}" class="inline-form">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i>{{t "admin.reset-votes"}}</button>
+    <a class="btn" href="{{esc .Back}}">{{t "admin.cancel"}}</a>
+  </form>
+</div>
+{{end}}

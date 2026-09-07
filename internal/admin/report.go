@@ -124,6 +124,7 @@ func (h *Handler) saveReport(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	if err != nil {
 		return err
 	}
+	h.noteID(r, db.AdminChanged, reportSlug, id, status)
 	redirect(w, Prefix+reportSlug+"/")
 	return nil
 }

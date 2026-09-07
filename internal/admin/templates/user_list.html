@@ -1,29 +1,54 @@
 {{define "user_list.html"}}
-<div class="admin-list">
-  <form method="GET" action="{{esc .Action}}" class="action-row">
-    <input type="text" name="q" value="{{esc .Query}}" placeholder="search">
-    <button type="submit" class="btn-ghost">find</button>
-  </form>
-  <p class="meta">{{.Total}}</p>
-  <table class="admin-table">
-    <thead><tr><th>user</th>{{if .SeeEmail}}<th>email</th>{{end}}<th>active</th><th>super</th></tr></thead>
-    <tbody>
-      {{range .Users}}
-      <tr>
-        <td><a href="{{esc $.Base}}{{.ID}}">{{if eq .Type "wikidot"}}{{esc .WikidotUsername}}{{else}}{{esc .Username}}{{end}}</a></td>
-        {{if $.SeeEmail}}<td>{{esc .Email}}</td>{{end}}
-        <td>{{if .IsActive}}yes{{end}}</td>
-        <td>{{if .IsSuperuser}}yes{{end}}</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
-  {{if gt .Pages 1}}
-  <p class="action-row">
-    {{if gt .Page 1}}<a class="link-muted" href="{{esc .Action}}?q={{esc .Query}}&page={{sub .Page 1}}">prev</a>{{end}}
-    <span class="meta">{{.Page}} / {{.Pages}}</span>
-    {{if lt .Page .Pages}}<a class="link-muted" href="{{esc .Action}}?q={{esc .Query}}&page={{add .Page 1}}">next</a>{{end}}
-  </p>
-  {{end}}
+<div class="btn-toolbar">
+  <div class="btn-group"><a class="btn btn-primary" href="{{esc .Action}}new"><i class="fas fa-plus"></i>{{t "admin.new-user"}}</a></div>
+  <div class="btn-group">
+    <a class="btn" href="{{esc .Action}}invite"><i class="fas fa-envelope"></i>{{t "admin.mail-invite"}}</a>
+    <a class="btn" href="{{esc .Action}}invite-link"><i class="fas fa-link"></i>{{t "admin.new-invite-link"}}</a>
+    <a class="btn" href="{{esc .Action}}claim-link"><i class="fas fa-flag"></i>{{t "admin.new-claim-link"}}</a>
+    <a class="btn" href="{{esc .Action}}bot"><i class="fas fa-cogs"></i>{{t "admin.new-bot"}}</a>
+  </div>
 </div>
+<form class="form-search" method="GET" action="{{esc .Action}}">
+  <div class="input-append">
+    <input type="hidden" name="type" value="{{esc .Kind}}">
+    <input type="text" class="search-query" name="q" value="{{esc .Query}}" placeholder="{{t "admin.search-users"}}">
+    <button type="submit" class="btn"><i class="fas fa-search"></i>{{t "admin.search"}}</button>
+  </div>
+</form>
+<ul class="nav nav-pills">
+  <li{{if not .Kind}} class="active"{{end}}><a href="{{esc .Action}}{{if .Query}}?q={{urlq .Query}}{{end}}">{{t "admin.all"}}</a></li>
+  {{range $.Types}}
+  <li{{if eq . $.Kind}} class="active"{{end}}><a href="{{esc $.Action}}?type={{urlq .}}{{if $.Query}}&q={{urlq $.Query}}{{end}}">{{enum "admin.user-type-" .}}</a></li>
+  {{end}}
+</ul>
+<p class="stamp">{{t "admin.count" "n" .Total}}</p>
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>{{t "admin.f-user"}}</th>
+      <th>{{t "admin.f-user-type"}}</th>
+      {{if .SeeEmail}}<th>{{t "admin.f-email"}}</th>{{end}}
+      <th>{{t "admin.f-state"}}</th>
+      <th class="right"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Users}}
+    <tr>
+      <td><span class="printuser"><a href="{{esc $.Base}}{{.ID}}">{{if eq .Type "wikidot"}}{{esc .WikidotUsername}}{{else}}{{esc .Username}}{{end}}</a></span></td>
+      <td>{{enum "admin.user-type-" .Type}}</td>
+      {{if $.SeeEmail}}<td class="stamp">{{if .Email}}{{esc .Email}}{{else}}&mdash;{{end}}</td>{{end}}
+      <td>
+        {{if .IsSuperuser}}<span class="state strong">{{t "admin.superuser"}}</span>
+        {{else if .IsActive}}<span class="state on">{{t "admin.active"}}</span>
+        {{else}}<span class="state">{{t "admin.inactive"}}</span>{{end}}
+      </td>
+      <td class="right"><a class="btn btn-mini" href="{{esc $.Base}}{{.ID}}"><i class="fas fa-pen"></i>{{t "admin.edit"}}</a></td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{template "pager" dict "Base" (printf "%s?q=%s&type=%s&" .Action (urlq .Query) (urlq .Kind)) "Page" .Page "Pages" .Pages}}
 {{end}}

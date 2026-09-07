@@ -1,21 +1,16 @@
 package webapi
 
 import (
-	"encoding/json"
 	"net/http"
-	"net/netip"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
-	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
-// Every log entry a save writes is announced on its own, so an edit that both
-// renames and retitles arrives as two.
 func (h *Articles) notifyRevision(r *http.Request, article *db.Article, rev db.Revision) error {
 	ctx := r.Context()
 	if rev.EntryID == 0 {
@@ -26,7 +21,7 @@ func (h *Articles) notifyRevision(r *http.Request, article *db.Article, rev db.R
 		return err
 	}
 	editor := auth.FromContext(ctx)
-	if err := h.logEdit(r, article, entry, editor); err != nil {
+	if err := h.seen(r, editor); err != nil {
 		return err
 	}
 	readers, err := h.revisionReaders(r, article, editor)
@@ -94,63 +89,13 @@ func (h *Articles) revisionReaders(r *http.Request, article *db.Article, editor 
 	return out, nil
 }
 
-// The revision that created the page is left out, since the page's own entry
-// already says it was created.
-func (h *Articles) logEdit(r *http.Request, article *db.Article, entry db.LogEntry, editor *db.User) error {
-	if entry.Type == db.LogNew {
+func (h *Articles) seen(r *http.Request, user *db.User) error {
+	if user == nil || h.deps.Trust == nil {
 		return nil
 	}
-	meta, err := decodeMeta(entry.Meta)
-	if err != nil {
-		return err
+	addr, ok := h.deps.Trust.ClientIP(r)
+	if !ok {
+		return nil
 	}
-	body, err := wikijson.Marshal(wikijson.Object{
-		{Key: "article", Value: article.FullName()},
-		{Key: "comment", Value: entry.Comment},
-		{Key: "edit_type", Value: entry.Type},
-		{Key: "rev_number", Value: entry.RevNumber},
-		{Key: "log_entry_meta", Value: fromJSON(meta)},
-	})
-	if err != nil {
-		return err
-	}
-	return h.act(r, editor, db.ActionEditArticle, body)
-}
-
-func (h *Articles) logCreate(r *http.Request, article *db.Article, editor *db.User) error {
-	body, err := json.Marshal(map[string]any{"article": article.FullName()})
-	if err != nil {
-		return err
-	}
-	return h.act(r, editor, db.ActionCreateArticle, string(body))
-}
-
-func (h *Articles) logDelete(r *http.Request, article *db.Article, editor *db.User, rating page.Rating) error {
-	body, err := json.Marshal(map[string]any{
-		"article":    article.FullName(),
-		"rating":     rating.Value,
-		"votes":      rating.Votes,
-		"popularity": rating.Popularity,
-	})
-	if err != nil {
-		return err
-	}
-	return h.act(r, editor, db.ActionRemoveArticle, string(body))
-}
-
-// The address is the one the entry layer trusted, not whatever the request
-// claimed, so a reverse proxy cannot be talked into logging a made-up client.
-func (h *Articles) act(r *http.Request, user *db.User, kind, meta string) error {
-	var id *int64
-	name := ""
-	if user != nil {
-		id, name = &user.ID, user.Username
-	}
-	var ip *netip.Addr
-	if h.deps.Trust != nil {
-		if addr, ok := h.deps.Trust.ClientIP(r); ok {
-			ip = &addr
-		}
-	}
-	return h.deps.DB.AddActionLog(r.Context(), id, name, kind, meta, ip, time.Now().UTC())
+	return h.deps.DB.SeenAddress(r.Context(), user.ID, &addr, time.Now().UTC())
 }

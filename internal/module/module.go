@@ -53,7 +53,7 @@ type Data interface {
 	ArticleVotes(articleID int64) ([]db.ArticleVote, error)
 	ReplaceVote(articleID, userID int64, rate *float64, roleID *int64) (*db.Vote, error)
 	VoteGroupRole(userID *int64) (*int64, error)
-	AddActionLog(user *db.User, kind, meta string) error
+	SeenAddress(user *db.User) error
 	ArticleObject(article *db.Article, viewer *db.User) (*perms.Object, error)
 	UserJSON(u *db.User) (wikijson.Object, error)
 

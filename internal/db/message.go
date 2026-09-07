@@ -218,10 +218,10 @@ type SuspiciousUser struct {
 }
 
 var qSuspiciousUsers = register("SuspiciousUsers", `
-SELECT DISTINCT ON (l.user_id, l.origin_ip) l.user_id, u.username, host(l.origin_ip)
-FROM web_actionlogentry l
-JOIN web_user u ON u.id = l.user_id
-ORDER BY l.user_id, l.origin_ip`)
+SELECT a.user_id, u.username, host(a.address)
+FROM pwikit_user_address a
+JOIN web_user u ON u.id = a.user_id
+ORDER BY a.user_id, a.address`)
 
 func (d *DB) SuspiciousUsers(ctx context.Context) ([]SuspiciousUser, error) {
 	rows, err := d.pool.Query(ctx, qSuspiciousUsers)

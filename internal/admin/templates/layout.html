@@ -1,0 +1,81 @@
+{{define "layout.html"}}
+<div class="wikit-scope admin-shell">
+
+  <div id="admin-header" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="/">ProjectWikit</a>
+        <div class="title">
+          <a href="/">{{esc .SiteTitle}}</a>
+          <span class="admin-panel">{{.T "admin.title"}}</span>
+        </div>
+        <div id="admin-login-status">
+          {{if .User}}<span class="stamp">{{esc .User}}</span>{{end}}
+          <a class="btn btn-mini" href="{{esc .AdminURL}}logout">{{.T "admin.sign-out"}}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+
+      <div id="site-manager-menu" class="span3">
+        <div class="menu-container normal-container">
+
+          <div class="menu-box first-level" data-level="first"{{if .Open}} hidden{{end}}>
+            <ul class="nav nav-tabs nav-stacked">
+              <li{{if .Dashboard.Active}} class="selected"{{end}}>
+                <a href="{{esc .Dashboard.Href}}"><i class="fas {{esc .Dashboard.Icon}}"></i>{{esc .Dashboard.Label}}</a>
+              </li>
+              {{range .Groups}}
+              <li>
+                <a class="first-button" href="{{esc $.Here}}?g={{esc .Key}}" data-open="{{esc .Key}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}</a>
+              </li>
+              {{end}}
+            </ul>
+          </div>
+
+          {{range .Groups}}
+          <div class="menu-box second-level" id="second-{{esc .Key}}" data-level="{{esc .Key}}"{{if not .Open}} hidden{{end}}>
+            <ul class="nav nav-tabs nav-stacked">
+              <li><a class="back" href="{{esc $.Here}}?g=" data-back><i class="fas fa-chevron-left"></i>{{$.T "admin.back"}}</a></li>
+            </ul>
+            <ul class="nav nav-tabs nav-stacked">
+              <li class="group-name"><a href="{{esc $.Here}}?g={{esc .Key}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}</a></li>
+              {{range .Items}}
+              <li{{if .Active}} class="selected"{{end}}>
+                <a href="{{esc .Href}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}</a>
+              </li>
+              {{end}}
+            </ul>
+          </div>
+          {{end}}
+
+        </div>
+      </div>
+
+      <div id="sm-action-area" class="span9">
+        <div class="page-header"><h1>{{esc .Title}}</h1></div>
+        {{.Body}}
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var boxes = document.querySelectorAll('#site-manager-menu .menu-box');
+  if (!boxes.length) { return; }
+  function open(level) {
+    boxes.forEach(function (b) { b.hidden = b.dataset.level !== level; });
+  }
+  document.querySelector('#site-manager-menu').addEventListener('click', function (e) {
+    var a = e.target.closest('a');
+    if (!a) { return; }
+    if (a.dataset.open) { e.preventDefault(); open(a.dataset.open); return; }
+    if (a.hasAttribute('data-back')) { e.preventDefault(); open('first'); }
+  });
+})();
+</script>
+{{end}}

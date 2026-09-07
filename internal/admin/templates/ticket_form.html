@@ -1,32 +1,46 @@
 {{define "ticket_form.html"}}
-<form method="POST" action="{{esc .Action}}" class="admin-form">
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
-  <div class="form-row"><span class="label">author</span><span class="meta">{{esc .Ticket.Author}}</span></div>
-  <div class="form-row"><span class="label">subject</span><span class="meta">{{esc .Ticket.Subject}}</span></div>
-  <div class="form-row"><span class="label">page</span><span class="meta">{{esc .Ticket.SourcePage}}</span></div>
-  <div class="form-row"><span class="label">created</span><span class="meta">{{.Ticket.CreatedAt.Format "2006-01-02 15:04"}}</span></div>
-  <div class="form-row"><span class="label">body</span><pre class="meta">{{esc .Ticket.Body}}</pre></div>
-  {{if .Ticket.ReviewedBy}}<div class="form-row"><span class="label">reviewed by</span><span class="meta">{{esc .Ticket.ReviewedBy}}</span></div>{{end}}
-  <div class="form-row">
-    <label class="label" for="id_status">status</label>
-    <select id="id_status" name="status">
-      {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Ticket.Status}} selected{{end}}>{{esc .}}</option>{{end}}
-    </select>
+
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-life-ring"></i><h5>{{t "admin.ticket-content"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_static" dict "k" "admin.f-author" "v" .Ticket.Author}}
+      {{template "row_static" dict "k" "admin.f-subject" "v" .Ticket.Subject}}
+      {{template "row_static" dict "k" "admin.f-source-page" "v" .Ticket.SourcePage}}
+      {{template "row_static" dict "k" "admin.f-created" "v" (.Ticket.CreatedAt.Format "2006-01-02 15:04")}}
+      {{template "row_pre" dict "k" "admin.f-body" "v" .Ticket.Body}}
+    </div>
   </div>
-  {{if .MayGrant}}
-  <div class="form-row">
-    <label class="label" for="id_granted_role">grant role</label>
-    <select id="id_granted_role" name="granted_role">
-      <option value="">&mdash;</option>
-      {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Ticket.GrantedID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
-    </select>
-  </div>
-  {{end}}
-  {{template "admin_area" dict "n" "admin_notes" "v" .Ticket.AdminNotes}}
-  <div class="action-row">
-    <button type="submit" class="btn-primary">save</button>
-    <a class="link-muted" href="{{esc .Back}}">back</a>
+
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-check-circle"></i><h5>{{t "admin.review"}}</h5></div>
+    <div class="widget-content">
+      <div class="control-group">
+        <label class="control-label" for="id_status">{{t "admin.f-status"}}</label>
+        <div class="controls">
+          <select id="id_status" name="status" class="narrow-3">
+            {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Ticket.Status}} selected{{end}}>{{enum "admin.ticket-status-" .}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+      {{if .MayGrant}}
+      <div class="control-group">
+        <label class="control-label" for="id_granted_role">{{t "admin.f-granted-role"}}</label>
+        <div class="controls">
+          <select id="id_granted_role" name="granted_role" class="narrow-3">
+            <option value="">&mdash;</option>
+            {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Ticket.GrantedID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+          </select>
+          <span class="hint">{{t "admin.h-granted-role"}}</span>
+        </div>
+      </div>
+      {{end}}
+      {{template "row_area" dict "n" "admin_notes" "k" "admin.f-admin-notes" "v" .Ticket.AdminNotes}}
+      {{if .Ticket.ReviewedBy}}{{template "row_static" dict "k" "admin.f-reviewed-by" "v" .Ticket.ReviewedBy}}{{end}}
+      {{template "save_row" dict "back" .Back}}
+    </div>
   </div>
 </form>
 {{end}}

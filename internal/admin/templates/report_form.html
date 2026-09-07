@@ -1,30 +1,34 @@
 {{define "report_form.html"}}
-<form method="POST" action="{{esc .Action}}" class="admin-form">
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
 
-  <div class="form-row"><span class="label">reporter</span><span class="meta">{{esc .Report.Reporter}}</span></div>
-  <div class="form-row"><span class="label">reported</span><span class="meta">{{esc .Report.Reported}}</span></div>
-  <div class="form-row"><span class="label">created</span><span class="meta">{{.Report.CreatedAt.Format "2006-01-02 15:04"}}</span></div>
-  <div class="form-row"><span class="label">reason</span><pre class="meta">{{esc .Report.Reason}}</pre></div>
-  {{if .SeeAll}}
-  <div class="form-row"><span class="label">messages</span><pre class="meta">{{esc .Report.Messages}}</pre></div>
-  {{end}}
-  {{if .Report.ReviewedBy}}
-  <div class="form-row"><span class="label">reviewed by</span><span class="meta">{{esc .Report.ReviewedBy}}</span></div>
-  {{end}}
-
-  <div class="form-row">
-    <label class="label" for="id_status">status</label>
-    <select id="id_status" name="status">
-      {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Report.Status}} selected{{end}}>{{esc .}}</option>{{end}}
-    </select>
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-exclamation-triangle"></i><h5>{{t "admin.report-content"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_static" dict "k" "admin.f-reporter" "v" .Report.Reporter}}
+      {{template "row_static" dict "k" "admin.f-reported" "v" .Report.Reported}}
+      {{template "row_static" dict "k" "admin.f-created" "v" (.Report.CreatedAt.Format "2006-01-02 15:04")}}
+      {{template "row_pre" dict "k" "admin.f-reason" "v" .Report.Reason}}
+      {{if .SeeAll}}{{template "row_pre" dict "k" "admin.f-messages" "v" .Report.Messages}}{{end}}
+    </div>
   </div>
-  {{template "admin_area" dict "n" "admin_notes" "v" .Report.AdminNotes}}
 
-  <div class="action-row">
-    <button type="submit" class="btn-primary">save</button>
-    <a class="link-muted" href="{{esc .Back}}">back</a>
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-check-circle"></i><h5>{{t "admin.review"}}</h5></div>
+    <div class="widget-content">
+      <div class="control-group">
+        <label class="control-label" for="id_status">{{t "admin.f-status"}}</label>
+        <div class="controls">
+          <select id="id_status" name="status" class="narrow-3">
+            {{range $.Statuses}}<option value="{{esc .}}"{{if eq . $.Report.Status}} selected{{end}}>{{enum "admin.report-status-" .}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+      {{template "row_area" dict "n" "admin_notes" "k" "admin.f-admin-notes" "v" .Report.AdminNotes}}
+      {{if .Report.ReviewedBy}}{{template "row_static" dict "k" "admin.f-reviewed-by" "v" .Report.ReviewedBy}}{{end}}
+      {{template "save_row" dict "back" .Back}}
+    </div>
   </div>
 </form>
 {{end}}

@@ -1,19 +1,22 @@
 {{define "tag_form.html"}}
-<form method="POST" action="{{esc .Action}}" class="admin-form">
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
-  {{template "admin_text" dict "n" "name" "v" .Tag.Name}}
-  <div class="form-row">
-    <label class="label" for="id_category">category</label>
-    <select id="id_category" name="category">
-      <option value="">&mdash;</option>
-      {{range $.Categories}}<option value="{{.ID}}"{{if eq (deref $.Tag.CategoryID) .ID}} selected{{end}}>{{esc .Name}}</option>{{end}}
-    </select>
-  </div>
-  <div class="action-row">
-    <button type="submit" class="btn-primary">save</button>
-    {{if .Tag.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
-    <a class="link-muted" href="{{esc .Back}}">back</a>
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-tag"></i><h5>{{t "admin.tags"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_text" dict "n" "name" "k" "admin.f-name" "v" .Tag.Name "w" "narrow-4"}}
+      <div class="control-group">
+        <label class="control-label" for="id_category">{{t "admin.f-category"}}</label>
+        <div class="controls">
+          <select id="id_category" name="category" class="narrow-3">
+            <option value="">&mdash;</option>
+            {{range $.Categories}}<option value="{{.ID}}"{{if eq (deref $.Tag.CategoryID) .ID}} selected{{end}}>{{esc .Name}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+      {{template "save_row" dict "back" .Back "del" .Tag.ID}}
+    </div>
   </div>
 </form>
 {{end}}

@@ -129,11 +129,10 @@ func rateVote(env module.Env, params map[string]string) (wikijson.Object, error)
 	if err != nil {
 		return nil, err
 	}
-	old, err := env.Data.ReplaceVote(article.ID, userID, value, role)
-	if err != nil {
+	if _, err := env.Data.ReplaceVote(article.ID, userID, value, role); err != nil {
 		return nil, err
 	}
-	if err := logVote(env, article, old, value); err != nil {
+	if err := env.Data.SeenAddress(env.User); err != nil {
 		return nil, err
 	}
 	return rateGetRating(env, params)
@@ -160,28 +159,6 @@ func voteValue(env module.Env, raw, mode string) (*float64, error) {
 		}
 	}
 	return &value, nil
-}
-
-func logVote(env module.Env, article *db.Article, old *db.Vote, value *float64) error {
-	var was, now any
-	if old != nil {
-		was = old.Rate
-	}
-	if value != nil {
-		now = *value
-	}
-	meta, err := wikijson.Marshal(wikijson.Object{
-		{Key: "article", Value: article.FullName()},
-		{Key: "old_vote", Value: was},
-		{Key: "new_vote", Value: now},
-		{Key: "is_new", Value: value != nil && old == nil},
-		{Key: "is_change", Value: value != nil && old != nil},
-		{Key: "is_remove", Value: value == nil && old != nil},
-	})
-	if err != nil {
-		return err
-	}
-	return env.Data.AddActionLog(env.User, db.ActionVote, meta)
 }
 
 func ratedArticle(env module.Env) (*db.Article, error) {

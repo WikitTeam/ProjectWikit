@@ -22,12 +22,44 @@ const (
 	perPage  = 50
 )
 
+var userTypes = []string{"normal", "wikidot", "bot", "system"}
+
 func init() {
 	register(screen{slug: userSlug, label: "admin.users", need: perms.ManageUsers, serve: (*Handler).users})
 }
 
 func (h *Handler) users(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) error {
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, Prefix+userSlug), "/")
+	if id, tail, ok := strings.Cut(rest, "/"); ok {
+		switch tail {
+		case actionResetVote:
+			return h.resetVotes(w, r, loc, id)
+		case actionActivate:
+			return h.activate(w, r, loc, id)
+		}
+		notFound(w)
+		return nil
+	}
+	if contains(userActions, rest) {
+		if r.Method != http.MethodPost {
+			return h.userAction(w, r, loc, rest)
+		}
+		if !h.verified(w, r) {
+			return nil
+		}
+		switch rest {
+		case actionNew:
+			return h.saveNewUser(w, r, loc)
+		case actionInvite:
+			return h.saveInviteLink(w, r, loc)
+		case actionClaim:
+			return h.saveClaimLink(w, r, loc)
+		case actionBot:
+			return h.saveBot(w, r, loc)
+		case actionMail:
+			return h.sendInvite(w, r, loc, nil)
+		}
+	}
 	if r.Method == http.MethodPost {
 		return h.saveUser(w, r, loc, rest)
 	}
@@ -40,11 +72,15 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 func (h *Handler) userList(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) error {
 	ctx := r.Context()
 	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	kind := r.URL.Query().Get("type")
+	if !contains(userTypes, kind) {
+		kind = ""
+	}
 	page := atoi(r.URL.Query().Get("page"))
 	if page < 1 {
 		page = 1
 	}
-	found, total, err := h.deps.DB.AdminUsers(ctx, query, perPage, (page-1)*perPage)
+	found, total, err := h.deps.DB.AdminUsers(ctx, query, kind, perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}
@@ -55,6 +91,8 @@ func (h *Handler) userList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	return h.page(w, r, loc, loc.T("admin.users"), "user_list.html", map[string]any{
 		"Users":    found,
 		"Query":    query,
+		"Kind":     kind,
+		"Types":    userTypes,
 		"Page":     page,
 		"Pages":    (total + perPage - 1) / perPage,
 		"Total":    total,
@@ -109,6 +147,8 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Roles":       choices,
 		"Held":        row.Roles,
 		"MaySetRoles": h.maySetRoles(mine, granted, row),
+		"ResetVotes":  Prefix + userSlug + "/" + rest + "/" + actionResetVote,
+		"Activate":    Prefix + userSlug + "/" + rest + "/" + actionActivate,
 		"MaySuper":    mine != nil && mine.IsSuperuser,
 		"SeeEmail":    granted.Has(perms.ViewSensitiveInfo),
 		"CSRF":        csrf.Issue(w, r),
@@ -191,6 +231,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
+	h.noteID(r, db.AdminChanged, userSlug, next.ID, next.Username)
 	redirect(w, Prefix+userSlug+"/")
 	return nil
 }

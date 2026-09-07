@@ -5,12 +5,14 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
@@ -38,7 +40,18 @@ type Deps struct {
 	Bundle   *i18n.Bundle
 	Assets   *static.Assets
 	TimeZone *time.Location
+	Trust    *proxyheader.Trust
 	Log      *slog.Logger
+}
+
+func (d Deps) clientIP(r *http.Request) *netip.Addr {
+	if d.Trust == nil {
+		return nil
+	}
+	if addr, ok := d.Trust.ClientIP(r); ok {
+		return &addr
+	}
+	return nil
 }
 
 func (d Deps) logger() *slog.Logger {

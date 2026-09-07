@@ -1,0 +1,92 @@
+{{define "form_error"}}{{if .}}<div class="alert alert-error">{{esc .}}</div>{{end}}{{end}}
+
+{{define "row_text"}}
+<div class="control-group">
+  <label class="control-label" for="id_{{esc .n}}">{{t .k}}</label>
+  <div class="controls">
+    <input type="text" id="id_{{esc .n}}" name="{{esc .n}}" value="{{esc .v}}"{{if .w}} class="{{esc .w}}"{{end}}>
+    {{if .h}}<span class="hint">{{t .h}}</span>{{end}}
+  </div>
+</div>
+{{end}}
+
+{{define "row_area"}}
+<div class="control-group">
+  <label class="control-label" for="id_{{esc .n}}">{{t .k}}</label>
+  <div class="controls">
+    <textarea id="id_{{esc .n}}" name="{{esc .n}}" rows="{{if .rows}}{{.rows}}{{else}}4{{end}}">{{esc .v}}</textarea>
+    {{if .h}}<span class="hint">{{t .h}}</span>{{end}}
+  </div>
+</div>
+{{end}}
+
+{{define "row_number"}}
+<div class="control-group">
+  <label class="control-label" for="id_{{esc .n}}">{{t .k}}</label>
+  <div class="controls"><input type="number" id="id_{{esc .n}}" name="{{esc .n}}" value="{{.v}}" class="narrow-2"></div>
+</div>
+{{end}}
+
+{{define "row_check"}}
+<div class="control-group">
+  <span class="control-label">{{t .k}}</span>
+  <div class="controls">
+    <label class="checkbox"><input type="checkbox" name="{{esc .n}}" value="1"{{if .v}} checked{{end}}> {{t .l}}</label>
+    {{if .h}}<span class="hint">{{t .h}}</span>{{end}}
+  </div>
+</div>
+{{end}}
+
+{{define "row_static"}}
+<div class="control-group">
+  <span class="control-label">{{t .k}}</span>
+  <div class="controls"><span class="stamp">{{if .v}}{{esc .v}}{{else}}—{{end}}</span></div>
+</div>
+{{end}}
+
+{{define "row_pre"}}
+<div class="control-group">
+  <span class="control-label">{{t .k}}</span>
+  <div class="controls"><pre class="pre">{{esc .v}}</pre></div>
+</div>
+{{end}}
+
+{{define "yes"}}{{if .}}<span class="state on">{{t "admin.yes"}}</span>{{end}}{{end}}
+
+{{define "pager"}}
+{{if gt .Pages 1}}
+<div class="pagination">
+  <ul>
+    {{if gt .Page 1}}<li><a href="{{esc .Base}}page={{sub .Page 1}}">&lsaquo;</a></li>{{end}}
+    <li class="active"><span>{{.Page}}</span></li>
+    <li><span>/&nbsp;{{.Pages}}</span></li>
+    {{if lt .Page .Pages}}<li><a href="{{esc .Base}}page={{add .Page 1}}">&rsaquo;</a></li>{{end}}
+  </ul>
+</div>
+{{end}}
+{{end}}
+
+{{define "save_row"}}
+<div class="form-actions">
+  <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
+  {{if .back}}<a class="btn" href="{{esc .back}}">{{t "admin.back-to-list"}}</a>{{end}}
+  {{if .del}}<button type="submit" name="delete" value="1" class="btn btn-danger pull-right"><i class="fas fa-trash"></i>{{t "admin.delete"}}</button>{{end}}
+</div>
+{{end}}
+
+{{define "row_image"}}
+<div class="control-group">
+  <label class="control-label" for="id_{{esc .n}}">{{t .k}}</label>
+  <div class="controls">
+    <div class="upload-row">
+      {{if .v}}<img class="icon-preview" src="/local--files/{{esc .v}}" alt="">{{end}}
+      <input type="file" id="id_{{esc .n}}" name="{{esc .n}}" accept="{{if .accept}}{{esc .accept}}{{else}}image/*{{end}}">
+    </div>
+    {{if .v}}
+    <label class="checkbox"><input type="checkbox" name="clear_{{esc .n}}" value="1"> {{t "admin.clear-icon"}}</label>
+    <span class="stamp">{{esc .v}}</span>
+    {{end}}
+    {{if .h}}<span class="hint">{{t .h}}</span>{{end}}
+  </div>
+</div>
+{{end}}

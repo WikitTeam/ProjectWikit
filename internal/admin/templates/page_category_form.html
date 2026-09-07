@@ -1,48 +1,72 @@
 {{define "page_category_form.html"}}
-<form method="POST" action="{{esc .Action}}" class="admin-form">
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
-  {{template "admin_text" dict "n" "name" "v" .Category.Name}}
-  <div class="form-row"><label class="label"><input type="checkbox" name="is_indexed" value="1"{{if .Category.IsIndexed}} checked{{end}}> indexed</label></div>
-  <div class="form-row">
-    <label class="label" for="id_rating_mode">rating mode</label>
-    <select id="id_rating_mode" name="rating_mode">
-      {{range $.RatingModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.RatingMode}} selected{{end}}>{{esc .}}</option>{{end}}
-    </select>
-  </div>
-  <div class="form-row">
-    <label class="label" for="id_can_user_create_tags">user tags</label>
-    <select id="id_can_user_create_tags" name="can_user_create_tags">
-      {{range $.TagModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.CreateTags}} selected{{end}}>{{esc .}}</option>{{end}}
-    </select>
+
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-folder-open"></i><h5>{{t "admin.page-categories"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_text" dict "n" "name" "k" "admin.f-name" "v" .Category.Name "w" "narrow-4"}}
+      {{template "row_check" dict "n" "is_indexed" "k" "admin.f-indexed" "l" "admin.l-indexed" "v" .Category.IsIndexed}}
+      <div class="control-group">
+        <label class="control-label" for="id_rating_mode">{{t "admin.f-rating-mode"}}</label>
+        <div class="controls">
+          <select id="id_rating_mode" name="rating_mode" class="narrow-3">
+            {{range $.RatingModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.RatingMode}} selected{{end}}>{{enum "admin.rating-" .}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="id_can_user_create_tags">{{t "admin.f-user-tags"}}</label>
+        <div class="controls">
+          <select id="id_can_user_create_tags" name="can_user_create_tags" class="narrow-3">
+            {{range $.TagModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.CreateTags}} selected{{end}}>{{enum "admin.tagmode-" .}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+    </div>
   </div>
 
   {{if .MayGrant}}
   {{range .Cells}}
   {{$rid := .Role.ID}}
-  <fieldset class="form-row">
-    <label class="label"><input type="checkbox" name="override_{{$rid}}" value="1"{{if .Present}} checked{{end}}> override {{esc .Role.Label}}</label>
-    <table class="admin-table">
-      <thead><tr><th>permission</th><th>allow</th><th>deny</th><th>inherit</th></tr></thead>
-      <tbody>
-        {{range .Grants}}
-        <tr>
-          <td><code>{{esc .Name}}</code></td>
-          <td><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
-          <td><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
-          <td><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </fieldset>
+  <div class="widget-box">
+    <div class="widget-title"><i class="fas fa-key"></i><h5>{{esc .Role.Label}}</h5></div>
+    <div class="widget-content">
+      <div class="control-group">
+        <span class="control-label">{{t "admin.f-override"}}</span>
+        <div class="controls">
+          <label class="checkbox"><input type="checkbox" name="override_{{$rid}}" value="1"{{if .Present}} checked{{end}}> {{t "admin.l-override"}}</label>
+        </div>
+      </div>
+      <table class="table table-condensed perm-matrix">
+        <thead>
+          <tr>
+            <th>{{t "admin.f-permission"}}</th>
+            <th class="opt">{{t "admin.perm-allow"}}</th>
+            <th class="opt">{{t "admin.perm-inherit"}}</th>
+            <th class="opt">{{t "admin.perm-deny"}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Grants}}
+          <tr class="perm-group"><td colspan="4">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</td></tr>
+          {{range .Rows}}
+          <tr>
+            <td>{{enum "admin.perm-" .Name}}<span class="perm-code">{{esc .Name}}</span></td>
+            <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
+            <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
+            <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
+          </tr>
+          {{end}}
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
   {{end}}
   {{end}}
 
-  <div class="action-row">
-    <button type="submit" class="btn-primary">save</button>
-    {{if .Category.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
-    <a class="link-muted" href="{{esc .Back}}">back</a>
-  </div>
+  {{template "save_row" dict "back" .Back "del" .Category.ID}}
 </form>
 {{end}}

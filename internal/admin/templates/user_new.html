@@ -1,0 +1,26 @@
+{{define "user_new.html"}}
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-user"></i><h5>{{t "admin.new-user"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_text" dict "n" "username" "k" "admin.f-username" "v" "" "w" "narrow-4"}}
+      {{template "row_text" dict "n" "display_name" "k" "admin.f-display-name" "v" "" "w" "narrow-4"}}
+      <div class="control-group">
+        <label class="control-label" for="id_password">{{t "admin.f-password"}}</label>
+        <div class="controls">
+          <input type="password" id="id_password" name="password" class="narrow-4" autocomplete="new-password">
+          <span class="hint">{{t "admin.h-new-password"}}</span>
+        </div>
+      </div>
+      {{template "row_check" dict "n" "is_active" "k" "admin.f-active" "l" "admin.l-active" "v" true}}
+      {{template "role_picks" .}}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i>{{t "admin.create"}}</button>
+        <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
+      </div>
+    </div>
+  </div>
+</form>
+{{end}}

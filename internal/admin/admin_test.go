@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"regexp"
 	"slices"
 	"testing"
 
@@ -36,12 +37,35 @@ func TestRegisteredScreensAreReachable(t *testing.T) {
 	}
 }
 
+func TestEveryScreenIsOnTheRail(t *testing.T) {
+	placed := make(map[string]string)
+	for _, g := range groups {
+		for _, e := range g.entries {
+			if was, ok := placed[e.slug]; ok {
+				t.Errorf("rail lists %q under both %q and %q, want one group", e.slug, was, g.key)
+			}
+			placed[e.slug] = g.key
+			if e.icon == "" {
+				t.Errorf("rail entry %q icon = \"\", want an icon", e.slug)
+			}
+			if !slices.ContainsFunc(screens, func(s screen) bool { return s.slug == e.slug }) {
+				t.Errorf("rail lists %q, want a registered screen", e.slug)
+			}
+		}
+	}
+	for _, s := range screens {
+		if _, ok := placed[s.slug]; !ok {
+			t.Errorf("rail has no entry for screen %q, want one", s.slug)
+		}
+	}
+}
+
 func TestTemplatesParse(t *testing.T) {
 	h, err := New(Deps{}, nil)
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
-	for _, name := range []string{"index.html", "theme_list.html", "theme_form.html"} {
+	for _, name := range []string{"layout.html", "dashboard.html", "suspicious.html", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html"} {
 		if h.templates.Lookup(name) == nil {
 			t.Errorf("Lookup(%q) = nil, want the template", name)
 		}
@@ -201,12 +225,12 @@ func TestOptionalTime(t *testing.T) {
 	}
 }
 
-func TestAllSixteenScreensAreRegistered(t *testing.T) {
+func TestEveryScreenIsRegistered(t *testing.T) {
 	want := []string{
 		"themes", "site", "roles", "role-categories", "users", "reports",
-		"forum-sections", "forum-categories", "action-log",
+		"forum-sections", "forum-categories", "admin-log",
 		"tags", "tag-categories", "page-categories",
-		"tickets", "membership-applications", "invite-links",
+		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages",
 	}
 	got := make([]string, 0, len(screens))
 	for _, s := range screens {
@@ -228,11 +252,11 @@ func TestEveryScreenHasItsTemplates(t *testing.T) {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
 	for _, name := range []string{
-		"index.html", "theme_list.html", "theme_form.html", "site_form.html",
+		"dashboard.html", "suspicious.html", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html", "site_form.html",
 		"role_list.html", "role_form.html", "role_category.html",
 		"user_list.html", "user_form.html", "report_list.html", "report_form.html",
 		"forum_section_list.html", "forum_section_form.html",
-		"forum_category_list.html", "forum_category_form.html", "action_log.html",
+		"forum_category_list.html", "forum_category_form.html", "admin_log.html",
 		"tag_list.html", "tag_form.html", "tag_category_list.html", "tag_category_form.html",
 		"page_category_list.html", "page_category_form.html",
 		"ticket_list.html", "ticket_form.html", "invite_list.html",
@@ -272,6 +296,50 @@ func TestSiteSignInReplacesTheAdminOne(t *testing.T) {
 	for _, path := range []string{Prefix, Prefix + "users/", Prefix + "site/", "/-/loginish"} {
 		if got, ok := siteSignIn(path); ok {
 			t.Errorf("siteSignIn(%q) = %q, true, want false", path, got)
+		}
+	}
+}
+
+func TestEveryTemplateKeyIsInTheCatalog(t *testing.T) {
+	bundle, err := i18n.Load("")
+	if err != nil {
+		t.Fatalf("Load() err = %v, want nil", err)
+	}
+	loc := bundle.Localizer(i18n.DefaultLanguage)
+
+	patterns := []*regexp.Regexp{
+		regexp.MustCompile(`\{\{t "([^"]+)"`),
+		regexp.MustCompile(`"[klh]" "(admin\.[^"]+)"`),
+	}
+	entries, err := files.ReadDir("templates")
+	if err != nil {
+		t.Fatalf("ReadDir() err = %v, want nil", err)
+	}
+	for _, entry := range entries {
+		raw, err := files.ReadFile("templates/" + entry.Name())
+		if err != nil {
+			t.Fatalf("ReadFile(%q) err = %v, want nil", entry.Name(), err)
+		}
+		for _, pattern := range patterns {
+			for _, found := range pattern.FindAllStringSubmatch(string(raw), -1) {
+				if loc.T(found[1]) == found[1] {
+					t.Errorf("%s uses %q, want a key the catalog holds", entry.Name(), found[1])
+				}
+			}
+		}
+	}
+}
+
+func TestEveryScreenLabelIsInTheCatalog(t *testing.T) {
+	loc := testLocalizer(t)
+	for _, s := range screens {
+		if loc.T(s.label) == s.label {
+			t.Errorf("screen %q label %q is not in the catalog, want it there", s.slug, s.label)
+		}
+	}
+	for _, g := range groups {
+		if loc.T(g.label) == g.label {
+			t.Errorf("group %q label %q is not in the catalog, want it there", g.key, g.label)
 		}
 	}
 }

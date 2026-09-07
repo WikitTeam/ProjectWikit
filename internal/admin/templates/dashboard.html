@@ -1,0 +1,111 @@
+{{define "dashboard.html"}}
+<div class="row-fluid">
+
+  <div class="span6">
+    <div class="widget-box">
+      <div class="widget-title">
+        <i class="fas fa-star"></i><h5>{{t "admin.dash-site"}}</h5>
+        {{if .MaySite}}<a class="pull-right link" href="{{esc .SiteHref}}">{{t "admin.settings"}}</a>{{end}}
+      </div>
+      <div class="widget-content">
+        <table class="table table-spec">
+          <tbody>
+            <tr><td>{{t "admin.f-site-title"}}</td><td><strong>{{esc .Site.Title}}</strong></td></tr>
+            <tr><td>{{t "admin.f-site-slug"}}</td><td class="stamp">{{esc .Site.Slug}}</td></tr>
+            <tr><td>{{t "admin.f-domain"}}</td><td class="stamp">{{esc .Site.Domain}}</td></tr>
+            <tr><td>{{t "admin.f-media-domain"}}</td><td class="stamp">{{esc .Site.MediaDomain}}</td></tr>
+            <tr><td>{{t "admin.f-home-page"}}</td><td class="stamp">{{esc .Site.HomePage}}</td></tr>
+            <tr><td>{{t "admin.f-rating-mode"}}</td><td>{{enum "admin.rating-" .Settings.RatingMode}}</td></tr>
+            <tr><td>{{t "admin.f-user-tags"}}</td><td>{{enum "admin.tagmode-" .Settings.CreateTags}}</td></tr>
+            <tr>
+              <td>{{t "admin.f-membership-password"}}</td>
+              <td>{{if .Site.MembershipPasswordEnabled}}<span class="state on">{{t "admin.on"}}</span>{{else}}<span class="state">{{t "admin.off"}}</span>{{end}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="span6">
+    <div class="widget-box">
+      <div class="widget-title"><i class="fas fa-flag"></i><h5>{{t "admin.dash-queue"}}</h5></div>
+      <div class="widget-content">
+        <table class="table table-hover">
+          <tbody>
+            {{range .Queue}}
+            <tr>
+              <td><a href="{{esc .Href}}">{{esc .Label}}</a></td>
+              <td class="num{{if not .Count}} zero{{end}}">{{.Count}}</td>
+            </tr>
+            {{else}}
+            <tr><td class="muted">{{t "admin.queue-none"}}</td></tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="row-fluid">
+
+  <div class="span6">
+    <div class="widget-box">
+      <div class="widget-title">
+        <i class="fas fa-file-alt"></i><h5>{{t "admin.dash-changes"}}</h5>
+      </div>
+      <div class="widget-content">
+        <div class="site-changes-box">
+          <table class="table changes-list">
+            <tbody>
+              {{range .Changes}}
+              <tr>
+                <td class="date">{{.CreatedAt.Format "2006-01-02"}}<br><strong>{{.CreatedAt.Format "15:04:05"}}</strong></td>
+                <td>
+                  <span class="printuser">{{if .User}}{{esc .User}}{{else}}<span class="muted">&mdash;</span>{{end}}</span>
+                  {{range .Flags}}<span class="state" title="{{esc .Desc}}">{{esc .Desc}}</span>{{end}}
+                  <div><a class="title" href="{{esc .Href}}">{{esc .Title}}</a></div>
+                  {{if .Comment}}<div class="comment">{{esc .Comment}}</div>{{end}}
+                </td>
+              </tr>
+              {{else}}
+              <tr><td class="muted">{{t "admin.empty"}}</td></tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="span6">
+    {{if .Actions}}
+    <div class="widget-box">
+      <div class="widget-title">
+        <i class="fas fa-clock"></i><h5>{{t "admin.dash-actions"}}</h5>
+        <a class="pull-right link" href="{{esc .ActionsHref}}">{{t "admin.view-all"}}</a>
+      </div>
+      <div class="widget-content">
+        <table class="table changes-list">
+          <tbody>
+            {{range .Actions}}
+            <tr>
+              <td class="date">{{.CreatedAt.Format "2006-01-02"}}<br><strong>{{.CreatedAt.Format "15:04:05"}}</strong></td>
+              <td>
+                <span class="printuser">{{if .User}}{{esc .User}}{{else}}<span class="muted">&mdash;</span>{{end}}</span>
+                <span class="state{{if eq .Action "delete"}} bad{{end}}">{{enum "admin.did-" .Action}}</span>
+                <div class="comment">{{screen .Screen}}{{if .Label}} &middot; {{esc .Label}}{{end}}</div>
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {{end}}
+  </div>
+
+</div>
+{{end}}

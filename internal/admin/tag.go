@@ -46,15 +46,21 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 			if err := h.deps.DB.DeleteTag(ctx, row.ID); err != nil {
 				return err
 			}
+			h.noteID(r, db.AdminDeleted, tagSlug, row.ID, row.Name)
 			redirect(w, Prefix+tagSlug+"/")
 			return nil
 		}
 		if row.Name == "" {
 			return h.tagForm(w, r, loc, rest, loc.T("admin.tag-no-name"))
 		}
+		did := db.AdminChanged
+		if row.ID == 0 {
+			did = db.AdminCreated
+		}
 		if err := h.deps.DB.SaveTag(ctx, row); err != nil {
 			return err
 		}
+		h.noteID(r, did, tagSlug, row.ID, row.Name)
 		redirect(w, Prefix+tagSlug+"/")
 		return nil
 	}
@@ -141,6 +147,7 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 			if err := h.deps.DB.DeleteTagCategory(ctx, row.ID); err != nil {
 				return err
 			}
+			h.noteID(r, db.AdminDeleted, tagCategorySlug, row.ID, row.Name)
 			redirect(w, Prefix+tagCategorySlug+"/")
 			return nil
 		}
@@ -150,9 +157,14 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 		if !slugPattern.MatchString(row.Slug) {
 			return h.tagCategoryForm(w, r, loc, rest, loc.T("admin.tag-bad-slug"))
 		}
+		did := db.AdminChanged
+		if row.ID == 0 {
+			did = db.AdminCreated
+		}
 		if err := h.deps.DB.SaveTagCategory(ctx, row); err != nil {
 			return err
 		}
+		h.noteID(r, did, tagCategorySlug, row.ID, row.Name)
 		redirect(w, Prefix+tagCategorySlug+"/")
 		return nil
 	}

@@ -82,6 +82,7 @@ func (h *Handler) ticketScreen(w http.ResponseWriter, r *http.Request, loc *i18n
 		if err != nil {
 			return err
 		}
+		h.noteID(r, db.AdminChanged, slug, id, status)
 		redirect(w, Prefix+slug+"/")
 		return nil
 	}
@@ -162,6 +163,7 @@ func (h *Handler) invites(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 			if err := h.deps.DB.DeleteInvite(ctx, *id); err != nil {
 				return err
 			}
+			h.noteID(r, db.AdminDeleted, inviteSlug, *id, "")
 		}
 		redirect(w, Prefix+inviteSlug+"/")
 		return nil

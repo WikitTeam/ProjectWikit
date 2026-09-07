@@ -160,7 +160,7 @@ func (h *Articles) writeNewArticle(r *http.Request, current *db.Site, name strin
 	if err != nil {
 		return err
 	}
-	if err := h.logCreate(r, fresh, user); err != nil {
+	if err := h.seen(r, user); err != nil {
 		return err
 	}
 	if err := h.notifyRevision(r, fresh, rev); err != nil {

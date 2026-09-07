@@ -3,7 +3,6 @@ package admin
 import (
 	"errors"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -74,7 +73,7 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 
 	type cell struct {
 		Role    db.RoleChoice
-		Grants  []grantState
+		Grants  []grantGroup
 		Present bool
 	}
 	byRole := map[int64]db.CategoryOverride{}
@@ -84,15 +83,11 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 	cells := make([]cell, 0, len(roleList))
 	for _, one := range roleList {
 		override, present := byRole[one.ID]
-		states := make([]grantState, 0, len(catalog))
-		for _, name := range catalog {
-			states = append(states, grantState{
-				Name:  name,
-				Allow: slices.Contains(override.Allow, name),
-				Deny:  slices.Contains(override.Deny, name),
-			})
-		}
-		cells = append(cells, cell{Role: one, Grants: states, Present: present})
+		cells = append(cells, cell{
+			Role:    one,
+			Grants:  grantGroups(catalog, override.Allow, override.Deny),
+			Present: present,
+		})
 	}
 
 	return h.page(w, r, loc, loc.T("admin.page-categories"), "page_category_form.html", map[string]any{
@@ -106,12 +101,6 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 		"Action":      Prefix + pageCategorySlug + "/" + rest,
 		"Back":        Prefix + pageCategorySlug + "/",
 	})
-}
-
-type grantState struct {
-	Name  string
-	Allow bool
-	Deny  bool
 }
 
 func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest string) error {
@@ -136,6 +125,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 		row.ID = id
 	}
 	if r.PostFormValue("delete") != "" && row.ID != 0 {
+		h.noteID(r, db.AdminDeleted, pageCategorySlug, row.ID, row.Name)
 		if err := h.deps.DB.DeleteCategory(ctx, row.ID); err != nil {
 			return err
 		}
@@ -147,6 +137,10 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	}
 	if !contains(ratingModes, row.Settings.RatingMode) || !contains(tagModes, row.Settings.CreateTags) {
 		return h.pageCategoryForm(w, r, loc, rest, loc.T("admin.site-bad-mode"))
+	}
+	did := db.AdminChanged
+	if row.ID == 0 {
+		did = db.AdminCreated
 	}
 	if err := h.deps.DB.SaveCategory(ctx, row); err != nil {
 		return err
@@ -198,6 +192,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	if err := h.deps.DB.SaveCategoryOverrides(ctx, row.ID, overrides); err != nil {
 		return err
 	}
+	h.noteID(r, did, pageCategorySlug, row.ID, row.Name)
 	redirect(w, Prefix+pageCategorySlug+"/")
 	return nil
 }

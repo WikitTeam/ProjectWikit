@@ -1,0 +1,20 @@
+{{define "user_mail.html"}}
+{{template "form_error" .Error}}
+{{if .Done}}<div class="alert">{{t "admin.invite-sent" "email" .Done}}</div>{{end}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-envelope"></i><h5>{{if .Target}}{{t "admin.activate"}}{{else}}{{t "admin.mail-invite"}}{{end}}</h5></div>
+    <div class="widget-content">
+      <p class="hint">{{if .Target}}{{t "admin.h-activate"}}{{else}}{{t "admin.h-mail-invite"}}{{end}}</p>
+      {{if .Target}}{{template "row_static" dict "k" "admin.f-user" "v" .Target}}{{end}}
+      {{template "row_text" dict "n" "email" "k" "admin.f-email" "v" .Email "w" "narrow-5"}}
+      {{template "role_picks" .}}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-envelope"></i>{{t "admin.send"}}</button>
+        <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
+      </div>
+    </div>
+  </div>
+</form>
+{{end}}

@@ -1,0 +1,19 @@
+{{define "suspicious.html"}}
+{{if .Cleared}}<div class="alert">{{t "admin.addresses-cleared" "n" .Cleared}}</div>{{end}}
+<div class="widget-box">
+  <div class="widget-title">
+    <i class="fas fa-eye"></i><h5>{{t "admin.suspicious"}}</h5>
+    <span class="pull-right stamp">{{t "admin.count" "n" .Total}}</span>
+  </div>
+  <div class="widget-content">
+    <p class="hint">{{t "admin.h-suspicious"}}</p>
+    <div class="sus-users"><div class="w-admin-sus-users"></div></div>
+    <form method="POST" action="{{esc .Action}}" class="form-actions">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      <input type="hidden" name="confirm" value="1">
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i>{{t "admin.clear-addresses"}}</button>
+      <span class="hint">{{t "admin.h-clear-addresses"}}</span>
+    </form>
+  </div>
+</div>
+{{end}}

@@ -1,15 +1,16 @@
 {{define "tag_category_form.html"}}
-<form method="POST" action="{{esc .Action}}" class="admin-form">
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-  {{if .Error}}<div class="error-inline"><span class="marker">ERR</span><span>{{esc .Error}}</span></div>{{end}}
-  {{template "admin_text" dict "n" "name" "v" .Category.Name}}
-  {{template "admin_text" dict "n" "slug" "v" .Category.Slug}}
-  {{template "admin_area" dict "n" "description" "v" .Category.Description}}
-  <div class="form-row"><label class="label" for="id_priority">priority</label><input type="number" id="id_priority" name="priority" value="{{num .Category.Priority}}"></div>
-  <div class="action-row">
-    <button type="submit" class="btn-primary">save</button>
-    {{if .Category.ID}}<button type="submit" name="delete" value="1" class="btn-ghost">delete</button>{{end}}
-    <a class="link-muted" href="{{esc .Back}}">back</a>
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-tags"></i><h5>{{t "admin.tag-categories"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_text" dict "n" "name" "k" "admin.f-name" "v" .Category.Name "w" "narrow-4"}}
+      {{template "row_text" dict "n" "slug" "k" "admin.f-slug" "v" .Category.Slug "w" "narrow-3"}}
+      {{template "row_area" dict "n" "description" "k" "admin.f-description" "v" .Category.Description}}
+      {{template "row_number" dict "n" "priority" "k" "admin.f-priority" "v" (num .Category.Priority)}}
+      {{template "save_row" dict "back" .Back "del" .Category.ID}}
+    </div>
   </div>
 </form>
 {{end}}

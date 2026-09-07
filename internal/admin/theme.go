@@ -104,12 +104,17 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 		if err := h.deps.DB.DeleteTheme(r.Context(), row.ID); err != nil {
 			return err
 		}
+		h.noteID(r, db.AdminDeleted, themeSlug, row.ID, row.Name)
 		redirect(w, Prefix+themeSlug+"/")
 		return nil
 	}
 
 	if problem := h.checkTheme(loc, row); problem != "" {
 		return h.themeForm(w, r, loc, rest, problem)
+	}
+	did := db.AdminChanged
+	if row.ID == 0 {
+		did = db.AdminCreated
 	}
 	id, err := h.deps.DB.SaveTheme(r.Context(), row)
 	if err != nil {
@@ -119,6 +124,7 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 	if err := h.writeThemeCSS(row); err != nil {
 		return err
 	}
+	h.noteID(r, did, themeSlug, row.ID, row.Name)
 	redirect(w, Prefix+themeSlug+"/")
 	return nil
 }

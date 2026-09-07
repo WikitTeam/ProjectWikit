@@ -50,15 +50,21 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 			if err := h.deps.DB.DeleteForumSection(ctx, row.ID); err != nil {
 				return err
 			}
+			h.noteID(r, db.AdminDeleted, sectionSlug, row.ID, row.Name)
 			redirect(w, Prefix+sectionSlug+"/")
 			return nil
 		}
 		if row.Name == "" {
 			return h.forumSectionForm(w, r, loc, rest, loc.T("admin.forum-no-name"))
 		}
+		did := db.AdminChanged
+		if row.ID == 0 {
+			did = db.AdminCreated
+		}
 		if err := h.deps.DB.SaveForumSection(ctx, row); err != nil {
 			return err
 		}
+		h.noteID(r, did, sectionSlug, row.ID, row.Name)
 		redirect(w, Prefix+sectionSlug+"/")
 		return nil
 	}
@@ -133,6 +139,7 @@ func (h *Handler) forumCategories(w http.ResponseWriter, r *http.Request, loc *i
 			if err := h.deps.DB.DeleteForumCategory(ctx, row.ID); err != nil {
 				return err
 			}
+			h.noteID(r, db.AdminDeleted, categorySlug, row.ID, row.Name)
 			redirect(w, Prefix+categorySlug+"/")
 			return nil
 		}
@@ -142,9 +149,14 @@ func (h *Handler) forumCategories(w http.ResponseWriter, r *http.Request, loc *i
 		if row.SectionID == 0 {
 			return h.forumCategoryForm(w, r, loc, rest, loc.T("admin.forum-no-section"))
 		}
+		did := db.AdminChanged
+		if row.ID == 0 {
+			did = db.AdminCreated
+		}
 		if err := h.deps.DB.SaveForumCategory(ctx, row); err != nil {
 			return err
 		}
+		h.noteID(r, did, categorySlug, row.ID, row.Name)
 		redirect(w, Prefix+categorySlug+"/")
 		return nil
 	}

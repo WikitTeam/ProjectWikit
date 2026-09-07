@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/netip"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -144,30 +143,6 @@ func (d *DB) VoteGroupRole(ctx context.Context, userID *int64) (*int64, error) {
 		return nil, fmt.Errorf("query vote role: %w", err)
 	}
 	return &id, nil
-}
-
-// The action log's own vocabulary, which is not the article log's.
-const (
-	ActionVote          = "vote"
-	ActionCreateArticle = "create_article"
-	ActionEditArticle   = "edit_article"
-	ActionRemoveArticle = "remove_article"
-)
-
-var qAddActionLog = register("AddActionLog", `
-INSERT INTO web_actionlogentry (user_id, stale_username, type, meta, created_at, origin_ip)
-VALUES ($1, $2, $3, $4, $5, $6)`)
-
-func (d *DB) AddActionLog(ctx context.Context, userID *int64, username, kind, meta string, ip *netip.Addr, at time.Time) error {
-	var origin *string
-	if ip != nil {
-		text := ip.String()
-		origin = &text
-	}
-	if _, err := d.pool.Exec(ctx, qAddActionLog, userID, username, kind, meta, at, origin); err != nil {
-		return fmt.Errorf("write action log: %w", err)
-	}
-	return nil
 }
 
 const (

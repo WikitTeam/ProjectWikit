@@ -36,18 +36,19 @@ const adminUserColumns = `id, type, username, coalesce(wikidot_username, ''), co
 	is_active, inactive_until, is_forum_active, forum_inactive_until,
 	can_send_direct_messages, is_superuser`
 
+const adminUserWhere = `
+WHERE ($1 = '' OR username ILIKE '%' || $1 || '%' OR wikidot_username ILIKE '%' || $1 || '%'
+	OR display_name ILIKE '%' || $1 || '%' OR email ILIKE '%' || $1 || '%')
+	AND ($2 = '' OR type = $2)`
+
 var qAdminUsers = register("AdminUsers", `
 SELECT `+adminUserColumns+`
-FROM web_user
-WHERE $1 = '' OR username ILIKE '%' || $1 || '%' OR wikidot_username ILIKE '%' || $1 || '%'
-	OR display_name ILIKE '%' || $1 || '%' OR email ILIKE '%' || $1 || '%'
+FROM web_user`+adminUserWhere+`
 ORDER BY CASE WHEN type = 'wikidot' THEN wikidot_username ELSE username END, id
-LIMIT $2 OFFSET $3`)
+LIMIT $3 OFFSET $4`)
 
 var qAdminUserCount = register("AdminUserCount", `
-SELECT count(*) FROM web_user
-WHERE $1 = '' OR username ILIKE '%' || $1 || '%' OR wikidot_username ILIKE '%' || $1 || '%'
-	OR display_name ILIKE '%' || $1 || '%' OR email ILIKE '%' || $1 || '%'`)
+SELECT count(*) FROM web_user`+adminUserWhere)
 
 func scanAdminUser(row pgx.Row, u *AdminUserRow) error {
 	return row.Scan(&u.ID, &u.Type, &u.Username, &u.WikidotUsername, &u.DisplayName,
@@ -55,12 +56,12 @@ func scanAdminUser(row pgx.Row, u *AdminUserRow) error {
 		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDM, &u.IsSuperuser)
 }
 
-func (d *DB) AdminUsers(ctx context.Context, query string, limit, offset int) ([]AdminUserRow, int, error) {
+func (d *DB) AdminUsers(ctx context.Context, query, kind string, limit, offset int) ([]AdminUserRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminUserCount, query).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminUserCount, query, kind).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count users: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminUsers, query, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminUsers, query, kind, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list users: %w", err)
 	}
@@ -153,4 +154,43 @@ func (d *DB) SaveAdminUser(ctx context.Context, u AdminUserRow, builtin []string
 		}
 	}
 	return tx.Commit(ctx)
+}
+
+var qResetUserVotes = register("ResetUserVotes", `DELETE FROM web_vote WHERE user_id = $1`)
+
+func (d *DB) ResetUserVotes(ctx context.Context, userID int64) (int64, error) {
+	tag, err := d.pool.Exec(ctx, qResetUserVotes, userID)
+	if err != nil {
+		return 0, fmt.Errorf("reset votes of user %d: %w", userID, err)
+	}
+	return tag.RowsAffected(), nil
+}
+
+var qUnclaimedWikidotUsers = register("UnclaimedWikidotUsers", `
+SELECT id, coalesce(wikidot_username, '')
+FROM web_user
+WHERE type = 'wikidot' AND NOT is_active
+ORDER BY wikidot_username, id`)
+
+type UserChoice struct {
+	ID   int64
+	Name string
+}
+
+func (d *DB) UnclaimedWikidotUsers(ctx context.Context) ([]UserChoice, error) {
+	rows, err := d.pool.Query(ctx, qUnclaimedWikidotUsers)
+	if err != nil {
+		return nil, fmt.Errorf("list unclaimed wikidot users: %w", err)
+	}
+	defer rows.Close()
+
+	var out []UserChoice
+	for rows.Next() {
+		var one UserChoice
+		if err := rows.Scan(&one.ID, &one.Name); err != nil {
+			return nil, err
+		}
+		out = append(out, one)
+	}
+	return out, rows.Err()
 }

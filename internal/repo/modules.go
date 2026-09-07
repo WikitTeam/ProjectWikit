@@ -27,8 +27,6 @@ func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
 	return HiddenCategories(m.repo.ctx, m.repo.db, user)
 }
 
-// HiddenCategories asks the same question once per category, the way the page
-// list does. There is no query for it because permissions are resolved in Go.
 func HiddenCategories(ctx context.Context, d *db.DB, user *db.User) ([]string, error) {
 	names, err := d.CategoryNames(ctx)
 	if err != nil {
@@ -152,8 +150,6 @@ func (m moduleData) RenderUser(u db.User) (string, error) {
 	return m.repo.renderUser(&u, printuser.Options{Avatar: true, Hover: true})
 }
 
-// A post with no author is one the site itself made, which is what the system
-// chip stands for.
 func (m moduleData) RenderUserByID(id *int64) (string, error) {
 	if id == nil {
 		return m.repo.users.System(printuser.Options{Hover: true}), nil
@@ -297,15 +293,11 @@ func (m moduleData) VoteGroupRole(userID *int64) (*int64, error) {
 	return m.repo.db.VoteGroupRole(m.repo.ctx, userID)
 }
 
-// The address is the one the entry layer trusted, not whatever the request
-// claimed, so a reverse proxy cannot be talked into logging a made-up client.
-func (m moduleData) AddActionLog(user *db.User, kind, meta string) error {
-	var id *int64
-	name := ""
-	if user != nil {
-		id, name = &user.ID, user.Username
+func (m moduleData) SeenAddress(user *db.User) error {
+	if user == nil {
+		return nil
 	}
-	return m.repo.db.AddActionLog(m.repo.ctx, id, name, kind, meta, m.repo.opts.ClientIP, time.Now().UTC())
+	return m.repo.db.SeenAddress(m.repo.ctx, user.ID, m.repo.opts.ClientIP, time.Now().UTC())
 }
 
 func (m moduleData) ArticleObject(article *db.Article, viewer *db.User) (*perms.Object, error) {

@@ -1,9 +1,0 @@
-{{define "index.html"}}
-<div class="admin-index">
-  <ul class="admin-sections">
-    {{range .Screens}}
-    <li><a href="{{esc .Href}}">{{esc .Label}}</a></li>
-    {{end}}
-  </ul>
-</div>
-{{end}}

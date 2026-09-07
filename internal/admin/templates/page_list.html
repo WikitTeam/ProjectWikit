@@ -1,0 +1,63 @@
+{{define "page_list.html"}}
+{{template "form_error" .Error}}
+<form class="form-search" method="GET" action="{{esc .Action}}">
+  <div class="input-append">
+    <input type="hidden" name="c" value="{{esc .Category}}">
+    <input type="text" class="search-query" name="q" value="{{esc .Query}}" placeholder="{{t "admin.search-pages"}}">
+    <button type="submit" class="btn"><i class="fas fa-search"></i>{{t "admin.search"}}</button>
+  </div>
+</form>
+
+<ul class="nav nav-pills">
+  <li{{if not .Category}} class="active"{{end}}><a href="{{esc .Action}}{{if .Query}}?q={{urlq .Query}}{{end}}">{{t "admin.all"}}</a></li>
+  {{range $.Categories}}
+  <li{{if eq .Category $.Category}} class="active"{{end}}>
+    <a href="{{esc $.Action}}?c={{urlq .Category}}{{if $.Query}}&q={{urlq $.Query}}{{end}}">{{esc .Category}} <span class="count">{{.Pages}}</span></a>
+  </li>
+  {{end}}
+</ul>
+
+<p class="stamp">{{t "admin.count" "n" .Total}}</p>
+
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th class="pick"></th>
+        <th>{{t "admin.f-page"}}</th>
+        <th>{{t "admin.f-title"}}</th>
+        <th>{{t "admin.f-revisions"}}</th>
+        <th>{{t "admin.f-updated"}}</th>
+        <th class="right"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Pages}}
+      <tr>
+        <td class="pick"><input type="checkbox" name="id" value="{{.ID}}"></td>
+        <td><a class="name" href="{{esc $.Base}}{{.ID}}">{{esc .FullName}}</a></td>
+        <td>{{if .Title}}{{esc .Title}}{{else}}<span class="muted">&mdash;</span>{{end}}</td>
+        <td class="num">{{.Revisions}}</td>
+        <td class="stamp">{{.UpdatedAt.Format "2006-01-02 15:04"}}</td>
+        <td class="right"><a class="btn btn-mini" href="{{esc $.Base}}{{.ID}}"><i class="fas fa-pen"></i>{{t "admin.edit"}}</a></td>
+      </tr>
+      {{else}}
+      <tr><td colspan="6" class="muted">{{t "admin.empty"}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <div class="batch-bar">
+    <span class="label">{{t "admin.batch"}}</span>
+    <button type="submit" class="btn btn-danger" name="action" value="delete"><i class="fas fa-trash"></i>{{t "admin.batch-delete"}}</button>
+    <span class="batch-revert">
+      <button type="submit" class="btn" name="action" value="revert"><i class="fas fa-undo"></i>{{t "admin.batch-revert"}}</button>
+      <input type="number" name="steps" value="1" min="1" max="50" class="narrow-2">
+      <span class="hint">{{t "admin.h-steps"}}</span>
+    </span>
+  </div>
+</form>
+
+{{template "pager" dict "Base" (printf "%s?q=%s&c=%s&" .Action (urlq .Query) (urlq .Category)) "Page" .Page "Pages" .Pages_}}
+{{end}}

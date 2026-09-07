@@ -43,14 +43,10 @@ func (h *Articles) remove(r *http.Request, loc *i18n.Localizer, name string) (st
 		return "", 0, errForbidden
 	}
 
-	rating, err := h.rating(r, article)
-	if err != nil {
-		return "", 0, err
-	}
 	if err := h.deps.DB.DeleteArticle(ctx, article.ID, article.FullName()); err != nil {
 		return "", 0, err
 	}
-	if err := h.logDelete(r, article, user, rating); err != nil {
+	if err := h.seen(r, user); err != nil {
 		return "", 0, err
 	}
 	h.dropMedia(article.MediaName)

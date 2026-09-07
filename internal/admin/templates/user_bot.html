@@ -1,0 +1,17 @@
+{{define "user_bot.html"}}
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-cogs"></i><h5>{{t "admin.new-bot"}}</h5></div>
+    <div class="widget-content">
+      <p class="hint">{{t "admin.h-bot"}}</p>
+      {{template "row_text" dict "n" "username" "k" "admin.f-username" "v" "" "w" "narrow-4"}}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i>{{t "admin.create"}}</button>
+        <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
+      </div>
+    </div>
+  </div>
+</form>
+{{end}}
