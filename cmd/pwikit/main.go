@@ -20,7 +20,6 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
-	"github.com/WikitTeam/ProjectWikit/internal/forward"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
@@ -38,7 +37,6 @@ import (
 
 const (
 	envDatabase     = "DATABASE_URL"
-	envUpstream     = "PWIKIT_UPSTREAM"
 	envSecretKey    = "SECRET_KEY"
 	envTimeZone     = "PWIKIT_TIMEZONE"
 	envGoogleTag    = "GOOGLE_TAG_ID"
@@ -58,7 +56,6 @@ const (
 	envTLSListen    = "PWIKIT_TLS_LISTEN"
 	envACMEEmail    = "PWIKIT_ACME_EMAIL"
 	envACMEDir      = "PWIKIT_ACME_DIRECTORY"
-	defaultUpstream = "http://127.0.0.1:8000"
 	defaultListen   = "127.0.0.1:8080"
 	defaultTLSPlain = ":80"
 	defaultTLSAddr  = ":443"
@@ -118,15 +115,13 @@ Commands:
 func serve(args []string) error {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	listen := fs.String("listen", defaultListen, "listen address")
-	upstream := fs.String("upstream", envOr(envUpstream, defaultUpstream), "upstream address for requests pwikit does not handle")
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	trusted := fs.String("trusted-proxies", "", "trusted reverse proxy addresses or CIDRs, comma separated; empty trusts no X-Forwarded-* header")
-	staticDir := fs.String("static-dir", "", "directory holding the frontend asset bundle; without it every asset request goes upstream")
-	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string; without it every request needing the database goes upstream")
+	staticDir := fs.String("static-dir", "", "directory holding the frontend asset bundle")
+	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	secret := fs.String("secret-key", os.Getenv(envSecretKey), "key the session cookie is signed with; without it every visitor is anonymous")
 	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
 	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
-	bareOrigin := fs.Bool("bare-origin", false, "drop the port from the Origin header before forwarding")
 	noMigrate := fs.Bool("no-migrate", false, "start without applying pending schema migrations")
 	uploadLimit := fs.String("upload-limit", envOr(envUploadLimit, "0"), "size the files still attached to pages may reach, such as 4GB; 0 for no ceiling")
 	storageLimit := fs.String("storage-limit", envOr(envStorageLimit, "0"), "size every file on disk may reach, deleted ones counted; 0 for no ceiling")
@@ -141,6 +136,10 @@ func serve(args []string) error {
 			return nil
 		}
 		return err
+	}
+
+	if *database == "" {
+		return errors.New("serve needs -database or " + envDatabase)
 	}
 
 	mode, err := entry.ParseMode(*tlsMode)
@@ -166,43 +165,32 @@ func serve(args []string) error {
 		return err
 	}
 
-	proxy, err := forward.New(*upstream, trust, log)
-	if err != nil {
-		return err
-	}
-	proxy.BareOrigin = *bareOrigin
 	assets, err := assetFS(*staticDir)
 	if err != nil {
 		return err
 	}
 
-	var conn *db.DB
-	if *database != "" {
-		if !*noMigrate {
-			result, err := migrate.Run(context.Background(), *database)
-			if err != nil {
-				return err
-			}
-			if result.Adopted {
-				log.Info("pwikit adopted the schema", "baseline", migrate.BaselineName)
-			}
-			for _, name := range result.Applied {
-				log.Info("pwikit applied a migration", "name", name)
-			}
-		}
-		conn, err = db.Open(context.Background(), *database)
+	if !*noMigrate {
+		result, err := migrate.Run(context.Background(), *database)
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		if result.Adopted {
+			log.Info("pwikit adopted the schema", "baseline", migrate.BaselineName)
+		}
+		for _, name := range result.Applied {
+			log.Info("pwikit applied a migration", "name", name)
+		}
 	}
+	conn, err := db.Open(context.Background(), *database)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
 
-	var mediaHandler http.Handler = proxy
-	var resizedHandler http.Handler = proxy
-	if conn != nil {
-		mediaHandler = site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), proxy)
-		resizedHandler = site.NewHostRules(conn, listenPort(*listen), media.NewResized(p.Files(), conn), proxy)
-	}
+	notFound := http.NotFoundHandler()
+	mediaHandler := site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), notFound)
+	resizedHandler := site.NewHostRules(conn, listenPort(*listen), media.NewResized(p.Files(), conn), notFound)
 
 	soft, err := parseSize(*uploadLimit)
 	if err != nil {
@@ -213,55 +201,46 @@ func serve(args []string) error {
 		return fmt.Errorf("parse -storage-limit: %w", err)
 	}
 
-	var articles, codeHandler, htmlHandler, themeHandler http.Handler = proxy, proxy, proxy, proxy
-	var moduleAPI, preview, profile, articleAPI http.Handler = proxy, proxy, proxy, proxy
-	var profileForm, fileAPI, reactivePages, notifyAPI, favesAPI, ownRowsAPI http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
-	var allArticles http.Handler = proxy
-	var subscribeAPI, messageAPI, userAPI, adminAPI http.Handler = proxy, proxy, proxy, proxy
-	var login, logout, signup, accept, reset, tickets http.Handler = proxy, proxy, proxy, proxy, proxy, proxy
-	var emailLinks, settings, adminPages http.Handler = proxy, proxy, proxy
-	if conn != nil {
-		stack, err := newPageStack(conn, p, assets, proxy, trust, limits{soft: soft, hard: hard},
-			*sidecar, *secret, *timezone, log)
-		if err != nil {
-			return err
-		}
-		defer stack.close()
-		served := func(h http.Handler) http.Handler {
-			return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), h, proxy)))
-		}
-		articles = served(stack.articles)
-		codeHandler = served(stack.code)
-		htmlHandler = served(stack.html)
-		themeHandler = served(stack.theme)
-		moduleAPI = served(stack.moduleAPI)
-		preview = served(stack.preview)
-		profile = served(stack.profile)
-		profileForm = served(stack.profileForm)
-		reactivePages = served(stack.reactivePages)
-		notifyAPI = served(stack.notifyAPI)
-		subscribeAPI = served(stack.subscribeAPI)
-		messageAPI = served(stack.messageAPI)
-		userAPI = served(stack.userAPI)
-		adminAPI = served(stack.adminAPI)
-		login = served(stack.login)
-		logout = served(stack.logout)
-		signup = served(stack.signup)
-		accept = served(stack.accept)
-		reset = served(stack.reset)
-		tickets = served(stack.tickets)
-		emailLinks = served(stack.emailLinks)
-		settings = served(stack.settings)
-		adminPages = served(stack.adminPages)
-		favesAPI = served(stack.favesAPI)
-		ownRowsAPI = served(stack.ownRowsAPI)
-		articleAPI = served(stack.articleAPI)
-		allArticles = served(stack.allArticles)
-		fileAPI = served(stack.fileAPI)
+	stack, err := newPageStack(conn, p, assets, notFound, trust, limits{soft: soft, hard: hard},
+		*sidecar, *secret, *timezone, log)
+	if err != nil {
+		return err
 	}
+	defer stack.close()
+	served := func(h http.Handler) http.Handler {
+		return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), h, notFound)))
+	}
+	articles := served(stack.articles)
+	codeHandler := served(stack.code)
+	htmlHandler := served(stack.html)
+	themeHandler := served(stack.theme)
+	moduleAPI := served(stack.moduleAPI)
+	preview := served(stack.preview)
+	profile := served(stack.profile)
+	profileForm := served(stack.profileForm)
+	reactivePages := served(stack.reactivePages)
+	notifyAPI := served(stack.notifyAPI)
+	subscribeAPI := served(stack.subscribeAPI)
+	messageAPI := served(stack.messageAPI)
+	userAPI := served(stack.userAPI)
+	adminAPI := served(stack.adminAPI)
+	login := served(stack.login)
+	logout := served(stack.logout)
+	signup := served(stack.signup)
+	accept := served(stack.accept)
+	reset := served(stack.reset)
+	tickets := served(stack.tickets)
+	emailLinks := served(stack.emailLinks)
+	settings := served(stack.settings)
+	adminPages := served(stack.adminPages)
+	favesAPI := served(stack.favesAPI)
+	ownRowsAPI := served(stack.ownRowsAPI)
+	articleAPI := served(stack.articleAPI)
+	allArticles := served(stack.allArticles)
+	fileAPI := served(stack.fileAPI)
 
 	goHandlers := map[string]http.Handler{
-		static.Prefix:                   static.New(assets, proxy),
+		static.Prefix:                   static.New(assets, notFound),
 		site.ThemePrefix:                respheader.VaryCookie(site.NewThemeFiles(p.Files())),
 		media.Prefix:                    respheader.VaryCookie(mediaHandler),
 		media.ResizedPrefix:             respheader.VaryCookie(resizedHandler),
@@ -308,13 +287,13 @@ func serve(args []string) error {
 		"/":                             articles,
 	}
 
-	mux, err := routing.New(routing.Table, proxy, goHandlers)
+	mux, err := routing.New(routing.Table, notFound, goHandlers)
 	if err != nil {
 		return err
 	}
 
-	log.Info("pwikit serve", "listen", *listen, "upstream", proxy.Target(), "root", p.Root(),
-		"root_source", string(p.Source()), "static_dir", *staticDir, "database", *database != "")
+	log.Info("pwikit serve", "listen", *listen, "root", p.Root(),
+		"root_source", string(p.Source()), "static_dir", *staticDir)
 
 	var hosts entry.Hosts
 	if conn != nil {
