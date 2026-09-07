@@ -91,7 +91,7 @@ func (h *AllArticles) listing(ctx context.Context, current *db.Site, viewer *db.
 	if err != nil {
 		return "", err
 	}
-	categoryModes, err := h.deps.DB.CategoryRatingModes(ctx)
+	categoryModes, err := h.deps.DB.CategoryRatingModes(ctx, siteID(ctx))
 	if err != nil {
 		return "", err
 	}

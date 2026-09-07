@@ -115,7 +115,7 @@ func (h *Handler) permsObject(req *request, perm *repo.Perms) (*perms.Object, bo
 		return object, true, err
 	}
 	category, _ := wikidot.Split(req.name)
-	exists, err := h.deps.DB.CategoryExists(req.ctx, category)
+	exists, err := h.deps.DB.CategoryExists(req.ctx, req.site.ID, category)
 	if err != nil {
 		return nil, false, err
 	}
@@ -126,10 +126,10 @@ func (h *Handler) permsObject(req *request, perm *repo.Perms) (*perms.Object, bo
 	return object, true, err
 }
 
-// This only reads, so a page nobody has commented on gets no thread written for
-// it.
+// Asking for the discussion is what opens the thread, so the link always lands
+// on one even for a page nobody has commented on.
 func (h *Handler) commentsRedirect(req *request) (string, error) {
-	id, err := h.deps.DB.CommentThreadFor(req.ctx, req.article.ID)
+	id, err := h.deps.DB.CommentThreadFor(req.ctx, req.site.ID, req.article.ID)
 	if err != nil {
 		return "", err
 	}

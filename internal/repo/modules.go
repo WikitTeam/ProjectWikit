@@ -28,7 +28,7 @@ func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
 }
 
 func HiddenCategories(ctx context.Context, d *db.DB, user *db.User) ([]string, error) {
-	names, err := d.CategoryNames(ctx)
+	names, err := d.CategoryNames(ctx, ctxSiteID(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (m moduleData) SiteRatingMode() (string, error) {
 }
 
 func (m moduleData) CategoryRatingMode(category string) (string, error) {
-	return m.repo.db.CategoryRatingMode(m.repo.ctx, category)
+	return m.repo.db.CategoryRatingMode(m.repo.ctx, m.repo.siteID(), category)
 }
 
 func (m moduleData) VoteStats(articleID int64) (db.VoteStats, error) {

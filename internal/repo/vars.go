@@ -61,7 +61,7 @@ func (s *VarSource) SiteName() string {
 }
 
 func (s *VarSource) CategoryRatingMode(category string) (string, error) {
-	return s.db.CategoryRatingMode(s.ctx, category)
+	return s.db.CategoryRatingMode(s.ctx, s.siteID(), category)
 }
 
 func (s *VarSource) HasVoted(articleID int64, userID *int64) (bool, error) {
@@ -115,4 +115,11 @@ func (s *VarSource) SiteDomain() string {
 
 func (s *VarSource) CategoryForm(category string) (*form.Definition, error) {
 	return s.forms.CategoryForm(category)
+}
+
+func (s *VarSource) siteID() int64 {
+	if s.site == nil {
+		return 0
+	}
+	return s.site.ID
 }

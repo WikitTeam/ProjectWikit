@@ -48,7 +48,7 @@ LEFT JOIN (
     FROM web_rolepermissionsoverride_restrictions x
     JOIN auth_permission p ON p.id = x.permission_id
 ) op ON op.override_id = o.id
-WHERE c.name = $1
+WHERE c.site_id = $1 AND c.name = $2
 ORDER BY o.id`)
 
 var qArticleHasAuthor = register("ArticleHasAuthor", `
@@ -140,8 +140,8 @@ func (d *DB) RolePermissions(ctx context.Context, ids []int64) ([]perms.Role, er
 	return out, nil
 }
 
-func (d *DB) CategoryOverrides(ctx context.Context, category string) ([]perms.Override, error) {
-	rows, err := d.pool.Query(ctx, qCategoryOverrides, category)
+func (d *DB) CategoryOverrides(ctx context.Context, siteID int64, category string) ([]perms.Override, error) {
+	rows, err := d.pool.Query(ctx, qCategoryOverrides, siteID, category)
 	if err != nil {
 		return nil, fmt.Errorf("list permission overrides of category %q: %w", category, err)
 	}

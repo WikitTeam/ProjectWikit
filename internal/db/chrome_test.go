@@ -122,7 +122,7 @@ func TestLatestRevNumber(t *testing.T) {
 func TestCategoryIndexedOfUnknownCategory(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.CategoryIndexed(context.Background(), "no-such-category")
+	got, err := d.CategoryIndexed(context.Background(), seedSiteID(t, d), "no-such-category")
 	if err != nil {
 		t.Fatalf("CategoryIndexed() err = %v, want nil", err)
 	}
@@ -185,7 +185,7 @@ func TestArticleTagNamesOfUntaggedPage(t *testing.T) {
 func TestCategoryExists(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.CategoryExists(context.Background(), "probestars")
+	got, err := d.CategoryExists(context.Background(), seedSiteID(t, d), "probestars")
 	if err != nil {
 		t.Fatalf("CategoryExists() err = %v, want nil", err)
 	}
@@ -197,7 +197,7 @@ func TestCategoryExists(t *testing.T) {
 func TestCategoryExistsOfUnknownCategory(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.CategoryExists(context.Background(), "no-such-category")
+	got, err := d.CategoryExists(context.Background(), seedSiteID(t, d), "no-such-category")
 	if err != nil {
 		t.Fatalf("CategoryExists() err = %v, want nil", err)
 	}

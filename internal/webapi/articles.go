@@ -391,7 +391,7 @@ func (h *Articles) rating(r *http.Request, article *db.Article) (page.Rating, er
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return page.Rating{}, err
 	}
-	categoryMode, err := h.deps.DB.CategoryRatingMode(ctx, article.Category)
+	categoryMode, err := h.deps.DB.CategoryRatingMode(ctx, siteID(ctx), article.Category)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return page.Rating{}, err
 	}

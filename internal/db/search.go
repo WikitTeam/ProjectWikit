@@ -306,10 +306,11 @@ func (d *DB) LatestEditorsOfArticles(ctx context.Context, ids []int64) (map[int6
 var qCategoryRatingModes = register("CategoryRatingModes", `
 SELECT c.name, s.rating_mode
 FROM web_settings s
-JOIN web_category c ON c.id = s.category_id`)
+JOIN web_category c ON c.id = s.category_id
+WHERE c.site_id = $1`)
 
-func (d *DB) CategoryRatingModes(ctx context.Context) (map[string]string, error) {
-	rows, err := d.pool.Query(ctx, qCategoryRatingModes)
+func (d *DB) CategoryRatingModes(ctx context.Context, siteID int64) (map[string]string, error) {
+	rows, err := d.pool.Query(ctx, qCategoryRatingModes, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query category rating modes: %w", err)
 	}

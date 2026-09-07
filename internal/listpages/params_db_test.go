@@ -152,7 +152,7 @@ func (s dbSource) SiteRatingMode() (string, error) {
 }
 
 func (s dbSource) CategoryRatingMode(category string) (string, error) {
-	return s.d.CategoryRatingMode(s.ctx, category)
+	return s.d.CategoryRatingMode(s.ctx, onlySiteID(s.ctx, s.d), category)
 }
 
 func (s dbSource) VoteStats(articleID int64) (db.VoteStats, error) {

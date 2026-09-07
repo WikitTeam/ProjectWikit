@@ -37,13 +37,13 @@ var qCategoryCanCreateTags = register("CategoryCanCreateTags", `
 SELECT s.can_user_create_tags
 FROM web_settings s
 JOIN web_category c ON c.id = s.category_id
-WHERE c.name = $1`)
+WHERE c.site_id = $1 AND c.name = $2`)
 
 // A category with no row of its own reads the same as one left on default. Both
 // hand the question back to the site.
-func (d *DB) CategoryCanCreateTags(ctx context.Context, category string) (string, error) {
+func (d *DB) CategoryCanCreateTags(ctx context.Context, siteID int64, category string) (string, error) {
 	var mode string
-	err := d.pool.QueryRow(ctx, qCategoryCanCreateTags, category).Scan(&mode)
+	err := d.pool.QueryRow(ctx, qCategoryCanCreateTags, siteID, category).Scan(&mode)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrNotFound
 	}
@@ -150,10 +150,10 @@ func (d *DB) TagCategoryBySlug(ctx context.Context, slug string) (TagCategory, e
 	return c, nil
 }
 
-var qCategoryNames = register("CategoryNames", `SELECT name FROM web_category`)
+var qCategoryNames = register("CategoryNames", `SELECT name FROM web_category WHERE site_id = $1`)
 
-func (d *DB) CategoryNames(ctx context.Context) ([]string, error) {
-	rows, err := d.pool.Query(ctx, qCategoryNames)
+func (d *DB) CategoryNames(ctx context.Context, siteID int64) ([]string, error) {
+	rows, err := d.pool.Query(ctx, qCategoryNames, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list categories: %w", err)
 	}
@@ -213,8 +213,8 @@ var qCommentThreadFor = register("CommentThreadFor", `
 WITH existing AS (
     SELECT id FROM web_forumthread WHERE article_id = $1
 ), created AS (
-    INSERT INTO web_forumthread (name, description, article_id, is_pinned, is_locked, created_at, updated_at)
-    SELECT '', '', $1, false, false, now(), now()
+    INSERT INTO web_forumthread (site_id, name, description, article_id, is_pinned, is_locked, created_at, updated_at)
+    SELECT $2, '', '', $1, false, false, now(), now()
     WHERE NOT EXISTS (SELECT 1 FROM existing)
     RETURNING id
 )
@@ -222,9 +222,9 @@ SELECT id FROM existing UNION ALL SELECT id FROM created`)
 
 // A page gets its comment thread the first time a reader asks for the
 // discussion, so reading the page never writes and the link still lands.
-func (d *DB) CommentThreadFor(ctx context.Context, articleID int64) (int64, error) {
+func (d *DB) CommentThreadFor(ctx context.Context, siteID, articleID int64) (int64, error) {
 	var id int64
-	if err := d.pool.QueryRow(ctx, qCommentThreadFor, articleID).Scan(&id); err != nil {
+	if err := d.pool.QueryRow(ctx, qCommentThreadFor, articleID, siteID).Scan(&id); err != nil {
 		return 0, fmt.Errorf("open comment thread of article %d: %w", articleID, err)
 	}
 	return id, nil

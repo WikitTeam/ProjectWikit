@@ -69,7 +69,7 @@ func (h *ResizedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string, size thumb.Size) ([]byte, error) {
-	file, err := h.files.ArticleFile(ctx, articleRef, fileName)
+	file, err := h.files.ArticleFile(ctx, siteID(ctx), articleRef, fileName)
 	if err != nil {
 		return nil, err
 	}

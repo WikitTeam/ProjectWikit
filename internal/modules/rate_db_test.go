@@ -69,7 +69,7 @@ func (r rateData) SiteRatingMode() (string, error) {
 }
 
 func (r rateData) CategoryRatingMode(category string) (string, error) {
-	return r.d.CategoryRatingMode(r.ctx, category)
+	return r.d.CategoryRatingMode(r.ctx, onlySiteID(r.ctx, r.d), category)
 }
 
 func (r rateData) VoteStats(articleID int64) (db.VoteStats, error) {

@@ -42,15 +42,20 @@ func TestEveryPerSiteQueryNamesTheSite(t *testing.T) {
 		pending[name] = true
 	}
 
-	var missing, stale []string
+	byKey := map[string]bool{}
+	for _, name := range siteScopeByKey {
+		byKey[name] = true
+	}
+
+	var missing, stale, both []string
 	for _, q := range queries {
-		if len(touchedTables(q.sql)) == 0 {
-			if pending[q.name] {
-				stale = append(stale, q.name)
-			}
-			continue
+		if pending[q.name] && byKey[q.name] {
+			both = append(both, q.name)
 		}
-		if strings.Contains(q.sql, "site_id") {
+		settled := len(touchedTables(q.sql)) == 0 ||
+			strings.Contains(q.sql, "site_id") ||
+			byKey[q.name]
+		if settled {
 			if pending[q.name] {
 				stale = append(stale, q.name)
 			}
@@ -59,6 +64,10 @@ func TestEveryPerSiteQueryNamesTheSite(t *testing.T) {
 		if !pending[q.name] {
 			missing = append(missing, q.name)
 		}
+	}
+
+	for _, name := range both {
+		t.Errorf("query %q is in both siteScopeByKey and siteScopePending, want one", name)
 	}
 
 	for _, name := range missing {
@@ -80,14 +89,19 @@ func TestEveryPerSiteQueryNamesTheSite(t *testing.T) {
 	}
 }
 
-func TestSiteScopePendingHasNoUnknownNames(t *testing.T) {
+func TestSiteScopeListsHoldOnlyKnownNames(t *testing.T) {
 	known := make([]string, 0, len(queries))
 	for _, q := range queries {
 		known = append(known, q.name)
 	}
-	for _, name := range siteScopePending {
-		if !slices.Contains(known, name) {
-			t.Errorf("siteScopePending has %q, want a registered query name", name)
+	for list, names := range map[string][]string{
+		"siteScopePending": siteScopePending,
+		"siteScopeByKey":   siteScopeByKey,
+	} {
+		for _, name := range names {
+			if !slices.Contains(known, name) {
+				t.Errorf("%s has %q, want a registered query name", list, name)
+			}
 		}
 	}
 }

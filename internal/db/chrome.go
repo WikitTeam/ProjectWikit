@@ -126,13 +126,13 @@ func (d *DB) LatestRevNumber(ctx context.Context, articleID int64) (int, error) 
 }
 
 var qCategoryExists = register("CategoryExists", `
-SELECT EXISTS(SELECT 1 FROM web_category WHERE name = $1)`)
+SELECT EXISTS(SELECT 1 FROM web_category WHERE site_id = $1 AND name = $2)`)
 
 // The page skips the permission check entirely when neither it nor its category
 // has a row, which is how a 404 wins over a 403 there.
-func (d *DB) CategoryExists(ctx context.Context, name string) (bool, error) {
+func (d *DB) CategoryExists(ctx context.Context, siteID int64, name string) (bool, error) {
 	var exists bool
-	if err := d.pool.QueryRow(ctx, qCategoryExists, name).Scan(&exists); err != nil {
+	if err := d.pool.QueryRow(ctx, qCategoryExists, siteID, name).Scan(&exists); err != nil {
 		return false, fmt.Errorf("check category %q: %w", name, err)
 	}
 	return exists, nil
@@ -141,11 +141,11 @@ func (d *DB) CategoryExists(ctx context.Context, name string) (bool, error) {
 var qCategoryIndexed = register("CategoryIndexed", `
 SELECT is_indexed
 FROM web_category
-WHERE name = $1`)
+WHERE site_id = $1 AND name = $2`)
 
-func (d *DB) CategoryIndexed(ctx context.Context, name string) (bool, error) {
+func (d *DB) CategoryIndexed(ctx context.Context, siteID int64, name string) (bool, error) {
 	var indexed bool
-	err := d.pool.QueryRow(ctx, qCategoryIndexed, name).Scan(&indexed)
+	err := d.pool.QueryRow(ctx, qCategoryIndexed, siteID, name).Scan(&indexed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return true, nil
 	}

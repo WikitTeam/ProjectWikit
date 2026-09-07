@@ -493,7 +493,7 @@ func (h *Handler) themeURL(req *request) (string, error) {
 
 func (h *Handler) indexed(req *request) (bool, error) {
 	category, _ := wikidot.Split(req.name)
-	return h.deps.DB.CategoryIndexed(req.ctx, category)
+	return h.deps.DB.CategoryIndexed(req.ctx, req.site.ID, category)
 }
 
 func (h *Handler) breadcrumbs(req *request) ([]shell.Breadcrumb, error) {
@@ -620,7 +620,7 @@ func (h *Handler) rating(req *request) (page.Rating, error) {
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return page.Rating{}, err
 	}
-	categoryMode, err := h.deps.DB.CategoryRatingMode(req.ctx, req.article.Category)
+	categoryMode, err := h.deps.DB.CategoryRatingMode(req.ctx, req.site.ID, req.article.Category)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return page.Rating{}, err
 	}

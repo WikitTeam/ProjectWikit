@@ -307,7 +307,7 @@ func (e *editor) mayCreateTags() (bool, error) {
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return false, err
 	}
-	own, err := e.handler.deps.DB.CategoryCanCreateTags(ctx, e.article.Category)
+	own, err := e.handler.deps.DB.CategoryCanCreateTags(ctx, siteID(ctx), e.article.Category)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return false, err
 	}

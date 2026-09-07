@@ -16,6 +16,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
 
 const (
@@ -27,7 +28,7 @@ const (
 
 // Attachments resolves an article attachment's on-disk names.
 type Attachments interface {
-	ArticleFile(ctx context.Context, articleRef, fileName string) (*db.ArticleFile, error)
+	ArticleFile(ctx context.Context, siteID int64, articleRef, fileName string) (*db.ArticleFile, error)
 }
 
 type Handler struct {
@@ -145,7 +146,7 @@ func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType strin
 		// Uploads live under a pair of UUIDs, so a two-segment path that
 		// resolves to nothing is read as article and attachment names.
 		if len(segments) == 2 && !exists(filepath.Join(root, rest)) {
-			if f, err := h.files.ArticleFile(ctx, segments[0], segments[1]); err == nil {
+			if f, err := h.files.ArticleFile(ctx, siteID(ctx), segments[0], segments[1]); err == nil {
 				segments = []string{f.ArticleMediaName, f.MediaName}
 				mimeType, size = f.MimeType, f.Size
 			} else if !errors.Is(err, db.ErrNotFound) {
@@ -257,4 +258,11 @@ func notFound(w http.ResponseWriter) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(notFoundBody)))
 	w.WriteHeader(http.StatusNotFound)
 	_, _ = w.Write([]byte(notFoundBody))
+}
+
+func siteID(ctx context.Context) int64 {
+	if current := site.FromContext(ctx); current != nil {
+		return current.ID
+	}
+	return 0
 }

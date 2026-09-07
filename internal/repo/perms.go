@@ -76,7 +76,7 @@ func unverified(current *db.Site, u *db.User) bool {
 // Article is the object side for a page that exists. Its category is the only
 // step taken before the page's own overrides.
 func (p *Perms) Article(a *db.Article, u *db.User) (*perms.Object, error) {
-	overrides, err := p.db.CategoryOverrides(p.ctx, a.Category)
+	overrides, err := p.db.CategoryOverrides(p.ctx, ctxSiteID(p.ctx), a.Category)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (p *Perms) Article(a *db.Article, u *db.User) (*perms.Object, error) {
 // Category is the object side for a page that does not exist. A category with
 // no row of its own answers the same as no object at all.
 func (p *Perms) Category(name string) (*perms.Object, error) {
-	overrides, err := p.db.CategoryOverrides(p.ctx, name)
+	overrides, err := p.db.CategoryOverrides(p.ctx, ctxSiteID(p.ctx), name)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (p *Perms) ForumThread(t *db.ForumThread, u *db.User) (*perms.Object, error
 		if err != nil {
 			return nil, err
 		}
-		overrides, err := p.db.CategoryOverrides(p.ctx, article.Category)
+		overrides, err := p.db.CategoryOverrides(p.ctx, ctxSiteID(p.ctx), article.Category)
 		if err != nil {
 			return nil, err
 		}

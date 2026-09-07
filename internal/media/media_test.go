@@ -14,7 +14,7 @@ import (
 
 type fakeFiles map[string]*db.ArticleFile
 
-func (f fakeFiles) ArticleFile(_ context.Context, articleRef, fileName string) (*db.ArticleFile, error) {
+func (f fakeFiles) ArticleFile(_ context.Context, _ int64, articleRef, fileName string) (*db.ArticleFile, error) {
 	if af, ok := f[articleRef+"/"+fileName]; ok {
 		return af, nil
 	}

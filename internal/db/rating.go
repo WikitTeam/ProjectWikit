@@ -29,14 +29,14 @@ var qCategoryRatingMode = register("CategoryRatingMode", `
 SELECT s.rating_mode
 FROM web_settings s
 JOIN web_category c ON c.id = s.category_id
-WHERE c.name = $1`)
+WHERE c.site_id = $1 AND c.name = $2`)
 
 // CategoryRatingMode reports ErrNotFound for a category that has no row of its
 // own as well as for one that exists without settings; both fall back to the
 // site.
-func (d *DB) CategoryRatingMode(ctx context.Context, category string) (string, error) {
+func (d *DB) CategoryRatingMode(ctx context.Context, siteID int64, category string) (string, error) {
 	var mode string
-	err := d.pool.QueryRow(ctx, qCategoryRatingMode, category).Scan(&mode)
+	err := d.pool.QueryRow(ctx, qCategoryRatingMode, siteID, category).Scan(&mode)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrNotFound
 	}
