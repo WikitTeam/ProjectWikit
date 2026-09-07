@@ -112,8 +112,12 @@ func TestRunAdoptsASchemaBuiltBeforeGoOwnedIt(t *testing.T) {
 	if !result.Adopted {
 		t.Error("Run().Adopted = false, want true")
 	}
-	if len(result.Applied) != 0 {
-		t.Errorf("Run().Applied = %v, want [] because the tables are already there", result.Applied)
+	if slices.Contains(result.Applied, BaselineName) {
+		t.Errorf("Run().Applied = %v, want it without %s because those tables are already there",
+			result.Applied, BaselineName)
+	}
+	if len(result.Applied) != len(Names())-1 {
+		t.Errorf("len(Run().Applied) = %d, want %d", len(result.Applied), len(Names())-1)
 	}
 }
 
