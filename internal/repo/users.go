@@ -16,11 +16,11 @@ func UsersJSON(ctx context.Context, d *db.DB, users []db.User, now time.Time) (w
 	for i := range users {
 		ids = append(ids, users[i].ID)
 	}
-	byUser, err := d.RolesByUsers(ctx, ids)
+	byUser, err := d.RolesByUsers(ctx, ctxSiteID(ctx), ids)
 	if err != nil {
 		return nil, err
 	}
-	bySlug, err := d.RoleIDsBySlug(ctx, []string{slugEveryone, slugRegistered})
+	bySlug, err := d.RoleIDsBySlug(ctx, ctxSiteID(ctx), []string{slugEveryone, slugRegistered})
 	if err != nil {
 		return nil, err
 	}

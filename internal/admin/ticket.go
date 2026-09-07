@@ -136,7 +136,7 @@ func (h *Handler) ticketForm(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 	mayGrant := grants && granted.Has(perms.ManagePermissions)
 	if mayGrant {
-		roleList, err = h.deps.DB.AllRoles(ctx)
+		roleList, err = h.deps.DB.AllRoles(ctx, siteID(ctx))
 		if err != nil {
 			return err
 		}

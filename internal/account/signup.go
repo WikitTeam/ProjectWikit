@@ -264,7 +264,7 @@ func (h *SignupHandler) grant(ctx context.Context, configured *int64, userID int
 	if configured != nil {
 		return h.deps.DB.GrantRole(ctx, userID, *configured)
 	}
-	id, err := h.deps.DB.RoleIDBySlug(ctx, defaultRoleRef)
+	id, err := h.deps.DB.RoleIDBySlug(ctx, siteID(ctx), defaultRoleRef)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil
 	}

@@ -58,7 +58,7 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 			row.Settings = db.SiteSettings{RatingMode: "default", CreateTags: "default"}
 		}
 	}
-	roleList, err := h.deps.DB.AllRoles(ctx)
+	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 			}
 		}
 	}
-	roleList, err := h.deps.DB.AllRoles(ctx)
+	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

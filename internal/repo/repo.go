@@ -171,7 +171,7 @@ func (r *Repository) RenderUser(username string, avatar bool) (string, error) {
 }
 
 func (r *Repository) renderUser(user *db.User, opts printuser.Options) (string, error) {
-	roleList, err := r.db.RolesByUser(r.ctx, user.ID)
+	roleList, err := r.db.RolesByUser(r.ctx, r.siteID(), user.ID)
 	if err != nil {
 		return "", err
 	}
@@ -191,4 +191,11 @@ func cutPrefixFold(s, prefix string) (string, bool) {
 		return "", false
 	}
 	return s[len(prefix):], true
+}
+
+func (r *Repository) siteID() int64 {
+	if r.opts.Site == nil {
+		return 0
+	}
+	return r.opts.Site.ID
 }

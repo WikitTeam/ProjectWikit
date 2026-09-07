@@ -71,7 +71,7 @@ func TestMembersFilteredByRole(t *testing.T) {
 	d := newTestDB(t)
 	ctx := context.Background()
 
-	role, err := d.RoleByRef(ctx, "everyone")
+	role, err := d.RoleByRef(ctx, seedSiteID(t, d), "everyone")
 	if err != nil {
 		t.Fatalf("RoleByRef(\"everyone\") err = %v, want nil", err)
 	}
@@ -92,11 +92,11 @@ func TestRoleByRefMatchesTheNumber(t *testing.T) {
 	d := newTestDB(t)
 	ctx := context.Background()
 
-	bySlug, err := d.RoleByRef(ctx, "everyone")
+	bySlug, err := d.RoleByRef(ctx, seedSiteID(t, d), "everyone")
 	if err != nil {
 		t.Fatalf("RoleByRef(\"everyone\") err = %v, want nil", err)
 	}
-	byID, err := d.RoleByRef(ctx, itoa(bySlug.ID))
+	byID, err := d.RoleByRef(ctx, seedSiteID(t, d), itoa(bySlug.ID))
 	if err != nil {
 		t.Fatalf("RoleByRef(%q) err = %v, want nil", itoa(bySlug.ID), err)
 	}
@@ -108,7 +108,7 @@ func TestRoleByRefMatchesTheNumber(t *testing.T) {
 func TestRoleByRefUnknown(t *testing.T) {
 	d := newTestDB(t)
 
-	_, err := d.RoleByRef(context.Background(), "no-such-role")
+	_, err := d.RoleByRef(context.Background(), seedSiteID(t, d), "no-such-role")
 	if !errors.Is(err, ErrNotFound) {
 		t.Errorf("RoleByRef(\"no-such-role\") err = %v, want ErrNotFound", err)
 	}

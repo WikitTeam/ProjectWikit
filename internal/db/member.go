@@ -68,13 +68,13 @@ SELECT r.id, r.slug, r.name, r.short_name, r.category_id, r.index,
        r.is_staff, r.group_votes, r.inline_visual_mode, r.profile_visual_mode,
        r.color, r.icon, r.badge_text, r.badge_bg, r.badge_text_color, r.badge_show_border
 FROM web_role r
-WHERE lower(r.slug) = lower($1) OR r.id::text = $1
+WHERE r.site_id = $1 AND (lower(r.slug) = lower($2) OR r.id::text = $2)
 ORDER BY r.index, r.id
 LIMIT 1`)
 
-func (d *DB) RoleByRef(ctx context.Context, ref string) (*roles.Role, error) {
+func (d *DB) RoleByRef(ctx context.Context, siteID int64, ref string) (*roles.Role, error) {
 	var role roles.Role
-	err := d.pool.QueryRow(ctx, qRoleByRef, ref).Scan(
+	err := d.pool.QueryRow(ctx, qRoleByRef, siteID, ref).Scan(
 		&role.ID, &role.Slug, &role.Name, &role.ShortName, &role.CategoryID, &role.Index,
 		&role.IsStaff, &role.GroupVotes, &role.InlineVisualMode, &role.ProfileVisualMode,
 		&role.Color, &role.Icon, &role.BadgeText, &role.BadgeBg, &role.BadgeTextColor,

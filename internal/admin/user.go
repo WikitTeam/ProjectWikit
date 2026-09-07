@@ -128,7 +128,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return nil
 	}
 
-	roleList, err := h.deps.DB.AllRoles(ctx)
+	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

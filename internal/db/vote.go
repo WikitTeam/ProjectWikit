@@ -120,13 +120,13 @@ var qVoteGroupRole = register("VoteGroupRole", `
 SELECT r.id
 FROM web_role r
 LEFT JOIN web_user_roles link ON link.role_id = r.id AND link.user_id = $1
-WHERE r.group_votes AND (r.slug = ANY($2) OR link.user_id IS NOT NULL)
+WHERE r.site_id = $3 AND r.group_votes AND (r.slug = ANY($2) OR link.user_id IS NOT NULL)
 ORDER BY CASE r.slug WHEN 'registered' THEN 0 WHEN 'everyone' THEN 1 ELSE 2 END, r.index
 LIMIT 1`)
 
 // VoteGroupRole answers which role a vote is filed under. The two built-in
 // roles outrank the user's own, and for an anonymous reader only everyone can.
-func (d *DB) VoteGroupRole(ctx context.Context, userID *int64) (*int64, error) {
+func (d *DB) VoteGroupRole(ctx context.Context, siteID int64, userID *int64) (*int64, error) {
 	slugs := []string{"everyone"}
 	var of int64
 	if userID != nil {
@@ -135,7 +135,7 @@ func (d *DB) VoteGroupRole(ctx context.Context, userID *int64) (*int64, error) {
 	}
 
 	var id int64
-	err := d.pool.QueryRow(ctx, qVoteGroupRole, of, slugs).Scan(&id)
+	err := d.pool.QueryRow(ctx, qVoteGroupRole, of, slugs, siteID).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}

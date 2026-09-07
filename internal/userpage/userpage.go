@@ -343,7 +343,7 @@ func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, site *db.Site,
 }
 
 func (h *Handler) roles(ctx context.Context, site *db.Site, profile *db.Profile) ([]shell.ProfileRoles, error) {
-	rs, err := h.deps.DB.RolesByUser(ctx, profile.ID)
+	rs, err := h.deps.DB.RolesByUser(ctx, site.ID, profile.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -412,7 +412,7 @@ func (h *Handler) titles(ctx context.Context, loc *i18n.Localizer, profile *db.P
 	case profile.Type == printuser.TypeBot:
 		return []string{loc.T("user-bot-title")}, nil
 	}
-	rs, err := h.deps.DB.RolesByUser(ctx, profile.ID)
+	rs, err := h.deps.DB.RolesByUser(ctx, siteID(ctx), profile.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -474,4 +474,11 @@ func notFound(w http.ResponseWriter, body string) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(http.StatusNotFound)
 	_, _ = w.Write([]byte(body))
+}
+
+func siteID(ctx context.Context) int64 {
+	if current := site.FromContext(ctx); current != nil {
+		return current.ID
+	}
+	return 0
 }

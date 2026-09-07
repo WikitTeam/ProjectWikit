@@ -233,7 +233,7 @@ func (h *Handler) access(ctx context.Context) (perms.Set, bool, error) {
 	if user == nil {
 		return perms.Set{}, false, nil
 	}
-	own, err := h.deps.DB.RolesByUser(ctx, user.ID)
+	own, err := h.deps.DB.RolesByUser(ctx, siteID(ctx), user.ID)
 	if err != nil {
 		return perms.Set{}, false, err
 	}
@@ -358,4 +358,11 @@ func funcs() template.FuncMap {
 			return *p
 		},
 	}
+}
+
+func siteID(ctx context.Context) int64 {
+	if current := site.FromContext(ctx); current != nil {
+		return current.ID
+	}
+	return 0
 }

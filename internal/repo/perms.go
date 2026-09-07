@@ -31,7 +31,7 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 	if u != nil {
 		slugs = append(slugs, slugRegistered)
 	}
-	bySlug, err := p.db.RoleIDsBySlug(p.ctx, slugs)
+	bySlug, err := p.db.RoleIDsBySlug(p.ctx, ctxSiteID(p.ctx), slugs)
 	if err != nil {
 		return perms.Subject{}, err
 	}
@@ -44,7 +44,7 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 		if id, ok := bySlug[slugRegistered]; ok {
 			ids = append(ids, id)
 		}
-		own, err := p.db.RoleIDsForUser(p.ctx, u.ID)
+		own, err := p.db.RoleIDsForUser(p.ctx, ctxSiteID(p.ctx), u.ID)
 		if err != nil {
 			return perms.Subject{}, err
 		}
@@ -134,4 +134,13 @@ func (p *Perms) ForumPost(post *db.ForumThreadPost, thread *perms.Object, u *db.
 		object.Author = *post.AuthorID == u.ID
 	}
 	return object
+}
+
+// A request that carries no site resolves no roles, which leaves a caller that
+// forgot one with nothing rather than with another site's rows.
+func ctxSiteID(ctx context.Context) int64 {
+	if current := site.FromContext(ctx); current != nil {
+		return current.ID
+	}
+	return 0
 }

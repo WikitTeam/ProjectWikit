@@ -57,7 +57,7 @@ func (h *Handler) userAction(w http.ResponseWriter, r *http.Request, loc *i18n.L
 }
 
 func (h *Handler) newUser(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, problem string) error {
-	roleList, err := h.deps.DB.AllRoles(r.Context())
+	roleList, err := h.deps.DB.AllRoles(r.Context(), siteID(r.Context()))
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (h *Handler) saveBot(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 }
 
 func (h *Handler) inviteLink(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, problem, made string) error {
-	roleList, err := h.deps.DB.AllRoles(r.Context())
+	roleList, err := h.deps.DB.AllRoles(r.Context(), siteID(r.Context()))
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (h *Handler) claimLink(w http.ResponseWriter, r *http.Request, loc *i18n.Lo
 	if err != nil {
 		return err
 	}
-	roleList, err := h.deps.DB.AllRoles(ctx)
+	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func scheme(r *http.Request) string {
 func (h *Handler) mailInvite(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer,
 	target *db.AdminUserRow, problem, done string) error {
 
-	roleList, err := h.deps.DB.AllRoles(r.Context())
+	roleList, err := h.deps.DB.AllRoles(r.Context(), siteID(r.Context()))
 	if err != nil {
 		return err
 	}

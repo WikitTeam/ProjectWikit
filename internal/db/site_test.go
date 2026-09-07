@@ -82,3 +82,12 @@ func TestSiteHostExistsAcceptsBothDomainsAndRejectsStrangers(t *testing.T) {
 		t.Error("SiteHostExists(\"someone-elses-domain.example\") = true, want false")
 	}
 }
+
+func seedSiteID(t *testing.T, d *DB) int64 {
+	t.Helper()
+	found, err := d.SiteByHosts(context.Background(), []string{"localhost"})
+	if err != nil {
+		t.Fatalf("SiteByHosts(localhost) err = %v, want nil", err)
+	}
+	return found.ID
+}

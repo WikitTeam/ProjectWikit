@@ -9,7 +9,7 @@ import (
 func TestRolesByUserWithoutRoles(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.RolesByUser(context.Background(), 1)
+	got, err := d.RolesByUser(context.Background(), seedSiteID(t, d), 1)
 	if err != nil {
 		t.Fatalf("RolesByUser(1) err = %v, want nil", err)
 	}

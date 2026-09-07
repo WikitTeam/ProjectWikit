@@ -270,7 +270,7 @@ func (m moduleData) ArticleHasAuthor(articleID, userID int64) (bool, error) {
 }
 
 func (m moduleData) RolesByUser(id int64) ([]roles.Role, error) {
-	return m.repo.db.RolesByUser(m.repo.ctx, id)
+	return m.repo.db.RolesByUser(m.repo.ctx, m.repo.siteID(), id)
 }
 
 func (m moduleData) ForumThreadObject(t *db.ForumThread, u *db.User) (*perms.Object, error) {
@@ -290,7 +290,7 @@ func (m moduleData) ReplaceVote(articleID, userID int64, rate *float64, roleID *
 }
 
 func (m moduleData) VoteGroupRole(userID *int64) (*int64, error) {
-	return m.repo.db.VoteGroupRole(m.repo.ctx, userID)
+	return m.repo.db.VoteGroupRole(m.repo.ctx, m.repo.siteID(), userID)
 }
 
 func (m moduleData) SeenAddress(user *db.User) error {
@@ -312,7 +312,7 @@ func UserJSON(ctx context.Context, d *db.DB, u *db.User) (wikijson.Object, error
 	if u == nil {
 		return pageconfig.SystemUserJSON().Object(), nil
 	}
-	userRoles, err := d.RolesByUser(ctx, u.ID)
+	userRoles, err := d.RolesByUser(ctx, ctxSiteID(ctx), u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func (m moduleData) MemberCount(roleID *int64) (int, error) {
 }
 
 func (m moduleData) RoleByRef(ref string) (*roles.Role, error) {
-	return m.repo.db.RoleByRef(m.repo.ctx, ref)
+	return m.repo.db.RoleByRef(m.repo.ctx, m.repo.siteID(), ref)
 }
 
 func (m moduleData) ForumPostVersions(postID int64) ([]db.ForumPostVersion, error) {

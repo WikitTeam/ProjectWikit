@@ -114,7 +114,7 @@ func (h *ReactiveHandler) page(r *http.Request, current *db.Site, viewer *db.Use
 
 func (h *ReactiveHandler) config(r *http.Request, viewer *db.User) (string, error) {
 	ctx := r.Context()
-	userRoles, err := h.deps.DB.RolesByUser(ctx, viewer.ID)
+	userRoles, err := h.deps.DB.RolesByUser(ctx, siteID(ctx), viewer.ID)
 	if err != nil {
 		return "", err
 	}

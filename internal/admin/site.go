@@ -42,7 +42,7 @@ func (h *Handler) siteForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
-	roleList, err := h.deps.DB.AllRoles(ctx)
+	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

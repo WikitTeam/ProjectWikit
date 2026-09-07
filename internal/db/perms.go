@@ -10,7 +10,7 @@ import (
 var qRoleIDsBySlug = register("RoleIDsBySlug", `
 SELECT slug, id
 FROM web_role
-WHERE slug = ANY($1)`)
+WHERE site_id = $1 AND slug = ANY($2)`)
 
 // Nothing downstream depends on the order. Each role's permissions are settled
 // on their own and then merged.
@@ -18,7 +18,7 @@ var qRoleIDsForUser = register("RoleIDsForUser", `
 SELECT ur.role_id
 FROM web_user_roles ur
 JOIN web_role r ON r.id = ur.role_id
-WHERE ur.user_id = $1
+WHERE ur.user_id = $1 AND r.site_id = $2
 ORDER BY r.index DESC, r.id`)
 
 var qRolePermissions = register("RolePermissions", `
@@ -58,8 +58,8 @@ SELECT EXISTS (
 
 // A slug with no row is left out rather than created, because a read path must
 // not write.
-func (d *DB) RoleIDsBySlug(ctx context.Context, slugs []string) (map[string]int64, error) {
-	rows, err := d.pool.Query(ctx, qRoleIDsBySlug, slugs)
+func (d *DB) RoleIDsBySlug(ctx context.Context, siteID int64, slugs []string) (map[string]int64, error) {
+	rows, err := d.pool.Query(ctx, qRoleIDsBySlug, siteID, slugs)
 	if err != nil {
 		return nil, fmt.Errorf("look up roles %v: %w", slugs, err)
 	}
@@ -80,8 +80,8 @@ func (d *DB) RoleIDsBySlug(ctx context.Context, slugs []string) (map[string]int6
 	return out, nil
 }
 
-func (d *DB) RoleIDsForUser(ctx context.Context, userID int64) ([]int64, error) {
-	rows, err := d.pool.Query(ctx, qRoleIDsForUser, userID)
+func (d *DB) RoleIDsForUser(ctx context.Context, siteID, userID int64) ([]int64, error) {
+	rows, err := d.pool.Query(ctx, qRoleIDsForUser, userID, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list role ids of user %d: %w", userID, err)
 	}

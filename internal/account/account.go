@@ -102,3 +102,10 @@ func authIcon(s *db.Site) string {
 	}
 	return "/local--files/" + s.AuthIcon
 }
+
+func siteID(ctx context.Context) int64 {
+	if current := site.FromContext(ctx); current != nil {
+		return current.ID
+	}
+	return 0
+}

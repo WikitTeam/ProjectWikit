@@ -13,13 +13,13 @@ SELECT r.id, r.slug, r.name, r.short_name, r.category_id, r.index,
        r.color, r.icon, r.badge_text, r.badge_bg, r.badge_text_color, r.badge_show_border
 FROM web_role r
 JOIN web_user_roles ur ON ur.role_id = r.id
-WHERE ur.user_id = $1
+WHERE ur.user_id = $1 AND r.site_id = $2
 ORDER BY r.index, r.id`)
 
 // Ordered the way the name tail and showcase queries both consume it. The tie-
 // break on id covers the rows whose index is not unique.
-func (d *DB) RolesByUser(ctx context.Context, userID int64) ([]roles.Role, error) {
-	rows, err := d.pool.Query(ctx, qRolesByUser, userID)
+func (d *DB) RolesByUser(ctx context.Context, siteID, userID int64) ([]roles.Role, error) {
+	rows, err := d.pool.Query(ctx, qRolesByUser, userID, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list roles of user %d: %w", userID, err)
 	}
@@ -50,15 +50,15 @@ SELECT ur.user_id, r.id, r.slug, r.name, r.short_name, r.category_id, r.index,
        r.color, r.icon, r.badge_text, r.badge_bg, r.badge_text_color, r.badge_show_border
 FROM web_role r
 JOIN web_user_roles ur ON ur.role_id = r.id
-WHERE ur.user_id = ANY($1)
+WHERE ur.user_id = ANY($1) AND r.site_id = $2
 ORDER BY ur.user_id, r.index, r.id`)
 
-func (d *DB) RolesByUsers(ctx context.Context, userIDs []int64) (map[int64][]roles.Role, error) {
+func (d *DB) RolesByUsers(ctx context.Context, siteID int64, userIDs []int64) (map[int64][]roles.Role, error) {
 	out := map[int64][]roles.Role{}
 	if len(userIDs) == 0 {
 		return out, nil
 	}
-	rows, err := d.pool.Query(ctx, qRolesByUsers, userIDs)
+	rows, err := d.pool.Query(ctx, qRolesByUsers, userIDs, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list roles of %d users: %w", len(userIDs), err)
 	}
@@ -85,7 +85,7 @@ func (d *DB) RolesByUsers(ctx context.Context, userIDs []int64) (map[int64][]rol
 }
 
 var qAllRoles = register("AllRoles", `
-SELECT id, slug, name FROM web_role ORDER BY index, id`)
+SELECT id, slug, name FROM web_role WHERE site_id = $1 ORDER BY index, id`)
 
 type RoleChoice struct {
 	ID   int64
@@ -93,8 +93,8 @@ type RoleChoice struct {
 	Name string
 }
 
-func (d *DB) AllRoles(ctx context.Context) ([]RoleChoice, error) {
-	rows, err := d.pool.Query(ctx, qAllRoles)
+func (d *DB) AllRoles(ctx context.Context, siteID int64) ([]RoleChoice, error) {
+	rows, err := d.pool.Query(ctx, qAllRoles, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list roles: %w", err)
 	}
