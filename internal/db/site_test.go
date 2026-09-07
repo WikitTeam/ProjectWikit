@@ -48,18 +48,6 @@ func TestSiteByHostsUnknownHost(t *testing.T) {
 	}
 }
 
-func TestAnySite(t *testing.T) {
-	d := newTestDB(t)
-
-	got, err := d.AnySite(context.Background())
-	if err != nil {
-		t.Fatalf("AnySite() err = %v, want nil", err)
-	}
-	if !got {
-		t.Error("AnySite() = false, want true")
-	}
-}
-
 func TestSiteHostExistsAcceptsBothDomainsAndRejectsStrangers(t *testing.T) {
 	d := newTestDB(t)
 	ctx := context.Background()

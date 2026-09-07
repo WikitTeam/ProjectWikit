@@ -70,18 +70,6 @@ func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 	return nil, ErrNotFound
 }
 
-var qAnySite = register("AnySite", `SELECT EXISTS(SELECT 1 FROM web_site)`)
-
-// AnySite separates "this domain is not configured" from "nothing is set up
-// yet"; the two lead to different responses.
-func (d *DB) AnySite(ctx context.Context) (bool, error) {
-	var exists bool
-	if err := d.pool.QueryRow(ctx, qAnySite).Scan(&exists); err != nil {
-		return false, fmt.Errorf("check any site exists: %w", err)
-	}
-	return exists, nil
-}
-
 var qSiteHostExists = register("SiteHostExists", `
 SELECT EXISTS(SELECT 1 FROM web_site WHERE lower(domain) = $1 OR lower(media_domain) = $1)`)
 
