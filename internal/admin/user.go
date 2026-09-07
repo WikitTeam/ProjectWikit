@@ -36,6 +36,8 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 			return h.resetVotes(w, r, loc, id)
 		case actionActivate:
 			return h.activate(w, r, loc, id)
+		case actionActivity:
+			return h.userActivity(w, r, loc, id)
 		}
 		notFound(w)
 		return nil
@@ -148,6 +150,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Held":        row.Roles,
 		"MaySetRoles": h.maySetRoles(mine, granted, row),
 		"ResetVotes":  Prefix + userSlug + "/" + rest + "/" + actionResetVote,
+		"Activity":    Prefix + userSlug + "/" + rest + "/" + actionActivity,
 		"Activate":    Prefix + userSlug + "/" + rest + "/" + actionActivate,
 		"MaySuper":    mine != nil && mine.IsSuperuser,
 		"SeeEmail":    granted.Has(perms.ViewSensitiveInfo),
