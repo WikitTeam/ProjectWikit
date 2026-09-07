@@ -25,7 +25,7 @@ func TestDumbName(t *testing.T) {
 func TestArticleTitlesKeysByCallerRef(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.ArticleTitles(context.Background(), []string{"main", "NAV:Top", "no-such-page"})
+	got, err := d.ArticleTitles(context.Background(), seedSiteID(t, d), []string{"main", "NAV:Top", "no-such-page"})
 	if err != nil {
 		t.Fatalf("ArticleTitles() err = %v, want nil", err)
 	}
@@ -46,7 +46,7 @@ func TestArticleTitlesKeysByCallerRef(t *testing.T) {
 func TestArticleTitlesEmptyRefs(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.ArticleTitles(context.Background(), nil)
+	got, err := d.ArticleTitles(context.Background(), seedSiteID(t, d), nil)
 	if err != nil {
 		t.Fatalf("ArticleTitles(nil) err = %v, want nil", err)
 	}
@@ -58,7 +58,7 @@ func TestArticleTitlesEmptyRefs(t *testing.T) {
 func TestArticleSourcesReturnsSource(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.ArticleSources(context.Background(), []string{"main", "nav:top"})
+	got, err := d.ArticleSources(context.Background(), seedSiteID(t, d), []string{"main", "nav:top"})
 	if err != nil {
 		t.Fatalf("ArticleSources() err = %v, want nil", err)
 	}
@@ -74,7 +74,7 @@ func TestSourceAtRevisionMatchesLatestOnTheOnlyRevision(t *testing.T) {
 	ctx := context.Background()
 	d := newTestDB(t)
 
-	article, err := d.ArticleByName(ctx, "probeoff:unratable")
+	article, err := d.ArticleByName(ctx, seedSiteID(t, d), "probeoff:unratable")
 	if err != nil {
 		t.Fatalf("ArticleByName(probeoff:unratable) err = %v, want nil", err)
 	}
@@ -95,7 +95,7 @@ func TestSourceAtRevisionOfRevisionThatIsNotThere(t *testing.T) {
 	ctx := context.Background()
 	d := newTestDB(t)
 
-	article, err := d.ArticleByName(ctx, "probeoff:unratable")
+	article, err := d.ArticleByName(ctx, seedSiteID(t, d), "probeoff:unratable")
 	if err != nil {
 		t.Fatalf("ArticleByName(probeoff:unratable) err = %v, want nil", err)
 	}

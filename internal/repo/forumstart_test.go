@@ -56,7 +56,7 @@ func TestForumStartMatchesGolden(t *testing.T) {
 	users, loc := testUsers(t)
 	cases := forumStartCases()
 
-	article, err := d.ArticleByName(ctx, "forum:start")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "forum:start")
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:start) err = %v, want nil", err)
 	}

@@ -91,7 +91,7 @@ func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	user := auth.FromContext(ctx)
 	params := page.ParsePathParams(string(parsed.PathParams))
 
-	found, err := h.deps.DB.ArticleByName(ctx, parsed.PageID)
+	found, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), parsed.PageID)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return "", "", err
 	}
@@ -131,7 +131,7 @@ func (h *Preview) template(ctx context.Context, found *db.Article) (string, erro
 	if found == nil || found.Name == templateName {
 		return "%%content%%", nil
 	}
-	template, err := h.deps.DB.ArticleByName(ctx, found.Category+":"+templateName)
+	template, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), found.Category+":"+templateName)
 	if errors.Is(err, db.ErrNotFound) {
 		return "%%content%%", nil
 	}

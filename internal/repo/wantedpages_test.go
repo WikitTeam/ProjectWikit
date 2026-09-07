@@ -55,7 +55,7 @@ func TestWantedPagesMatchesGolden(t *testing.T) {
 	users, loc := testUsers(t)
 	cases := wantedPagesCases()
 
-	article, err := d.ArticleByName(ctx, "main")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "main")
 	if err != nil {
 		t.Fatalf("ArticleByName(main) err = %v, want nil", err)
 	}

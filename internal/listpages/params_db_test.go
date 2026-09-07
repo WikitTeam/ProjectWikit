@@ -136,7 +136,7 @@ func (s dbSource) ArticleTagIDs(articleID int64) ([]int64, error) {
 }
 
 func (s dbSource) ArticleByRef(ref string) (*db.Article, error) {
-	return s.d.ArticleByName(s.ctx, ref)
+	return s.d.ArticleByName(s.ctx, onlySiteID(s.ctx, s.d), ref)
 }
 
 func (s dbSource) UserByUsername(name string) (*db.User, error) {

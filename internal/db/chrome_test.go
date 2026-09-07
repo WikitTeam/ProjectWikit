@@ -7,7 +7,7 @@ import (
 
 func articleID(t *testing.T, d *DB, ref string) int64 {
 	t.Helper()
-	a, err := d.ArticleByName(context.Background(), ref)
+	a, err := d.ArticleByName(context.Background(), seedSiteID(t, d), ref)
 	if err != nil {
 		t.Fatalf("ArticleByName(%q) err = %v, want nil", ref, err)
 	}

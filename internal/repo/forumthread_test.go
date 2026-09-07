@@ -79,7 +79,7 @@ func TestForumThreadMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SiteByHosts(localhost) err = %v, want nil", err)
 	}
-	article, err := d.ArticleByName(ctx, "forum:thread")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "forum:thread")
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:thread) err = %v, want nil", err)
 	}
@@ -137,7 +137,7 @@ func forumThreadPath(t *testing.T, ctx context.Context, d *db.DB, c forumThreadC
 	case c.Thread != "":
 		path = path.Put(page.PathParam{Key: "t", Value: fmt.Sprint(threadIDByName(t, ctx, d, c.Thread))})
 	case c.Article != "":
-		found, err := d.ArticleByName(ctx, c.Article)
+		found, err := d.ArticleByName(ctx, onlySiteID(ctx, d), c.Article)
 		if err != nil {
 			t.Fatalf("ArticleByName(%q) err = %v, want nil", c.Article, err)
 		}

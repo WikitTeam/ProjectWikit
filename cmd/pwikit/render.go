@@ -85,7 +85,11 @@ func render(args []string) error {
 		}
 		users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), roles.FileIcons(p.Files()))
 		store.data = repo.New(ctx, conn, users, repo.Options{Loc: bundle.Localizer(i18n.DefaultLanguage)})
-		vars, article, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), *category, *pageName, *domain)
+		current, err := resolveSite(ctx, conn, *siteSlug)
+		if err != nil {
+			return err
+		}
+		vars, article, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), current, *category, *pageName)
 		if err != nil {
 			return err
 		}
@@ -114,23 +118,19 @@ func render(args []string) error {
 
 // cliPageVars resolves the page being rendered to a real row when there is one,
 // so %%this|x%% answers with that page rather than staying put.
-func cliPageVars(ctx context.Context, conn *db.DB, loc *i18n.Localizer, category, name, domain string) (*page.Vars, *db.Article, error) {
+func cliPageVars(ctx context.Context, conn *db.DB, loc *i18n.Localizer, current *db.Site, category, name string) (*page.Vars, *db.Article, error) {
 	ref := name
 	if category != db.DefaultCategory {
 		ref = category + ":" + name
 	}
-	article, err := conn.ArticleByName(ctx, ref)
+	article, err := conn.ArticleByName(ctx, current.ID, ref)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil, nil, nil
 	}
 	if err != nil {
 		return nil, nil, err
 	}
-	site, err := conn.SiteByHosts(ctx, []string{domain})
-	if err != nil {
-		site = nil
-	}
-	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, site), loc), article, nil
+	return page.NewVars(article, nil, repo.NewVarSource(ctx, conn, current), loc), article, nil
 }
 
 func readSource(file string) (string, error) {

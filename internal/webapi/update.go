@@ -189,7 +189,7 @@ func (e *editor) rename() (*refusal, error) {
 	}
 
 	forced, _ := e.body.flag("forcePageId")
-	taken, err := e.handler.deps.DB.ArticleByName(e.req.Context(), wanted)
+	taken, err := e.handler.deps.DB.ArticleByName(e.req.Context(), siteID(e.req.Context()), wanted)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (e *editor) free(wanted string) (string, error) {
 		if i > 1 {
 			candidate = wanted + "-" + strconv.Itoa(i)
 		}
-		found, err := e.handler.deps.DB.ArticleByName(e.req.Context(), candidate)
+		found, err := e.handler.deps.DB.ArticleByName(e.req.Context(), siteID(e.req.Context()), candidate)
 		if errors.Is(err, db.ErrNotFound) {
 			return candidate, nil
 		}
@@ -326,7 +326,7 @@ func (e *editor) reparent() (*refusal, error) {
 	wanted, _ := e.body.text("parent")
 	var parentID *int64
 	if wanted != "" {
-		parent, err := e.handler.deps.DB.ArticleByName(ctx, wikidot.Normalize(wanted))
+		parent, err := e.handler.deps.DB.ArticleByName(ctx, siteID(ctx), wikidot.Normalize(wanted))
 		if err != nil && !errors.Is(err, db.ErrNotFound) {
 			return nil, err
 		}

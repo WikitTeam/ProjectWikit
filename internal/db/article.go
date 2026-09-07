@@ -27,17 +27,17 @@ func dumbNames(refs []string) []string {
 var qArticleTitles = register("ArticleTitles", `
 SELECT complete_full_name, title
 FROM web_article
-WHERE complete_full_name = ANY($1)`)
+WHERE site_id = $1 AND complete_full_name = ANY($2)`)
 
 // ArticleTitles keys its result by the caller's own ref strings. Refs with no
 // article are absent from the map rather than present-and-empty: fetch_internal_links
 // drops missing pages instead of reporting them as non-existent.
-func (d *DB) ArticleTitles(ctx context.Context, refs []string) (map[string]string, error) {
+func (d *DB) ArticleTitles(ctx context.Context, siteID int64, refs []string) (map[string]string, error) {
 	if len(refs) == 0 {
 		return map[string]string{}, nil
 	}
 
-	rows, err := d.pool.Query(ctx, qArticleTitles, dumbNames(refs))
+	rows, err := d.pool.Query(ctx, qArticleTitles, siteID, dumbNames(refs))
 	if err != nil {
 		return nil, fmt.Errorf("query article titles: %w", err)
 	}
@@ -68,17 +68,17 @@ var qArticleSources = register("ArticleSources", `
 SELECT DISTINCT ON (a.id) a.complete_full_name, v.source
 FROM web_articleversion v
 JOIN web_article a ON a.id = v.article_id
-WHERE a.complete_full_name = ANY($1)
+WHERE a.site_id = $1 AND a.complete_full_name = ANY($2)
 ORDER BY a.id, v.created_at DESC`)
 
 // ArticleSources returns the newest version's source per article, keyed by the
 // caller's own ref strings.
-func (d *DB) ArticleSources(ctx context.Context, refs []string) (map[string]string, error) {
+func (d *DB) ArticleSources(ctx context.Context, siteID int64, refs []string) (map[string]string, error) {
 	if len(refs) == 0 {
 		return map[string]string{}, nil
 	}
 
-	rows, err := d.pool.Query(ctx, qArticleSources, dumbNames(refs))
+	rows, err := d.pool.Query(ctx, qArticleSources, siteID, dumbNames(refs))
 	if err != nil {
 		return nil, fmt.Errorf("query article sources: %w", err)
 	}

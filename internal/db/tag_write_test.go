@@ -34,7 +34,7 @@ ORDER BY c.slug, t.name`, articleID)
 
 func scratchTagged(t *testing.T, d *DB) int64 {
 	t.Helper()
-	id, err := d.CreateArticle(context.Background(), "_default",
+	id, err := d.CreateArticle(context.Background(), seedSiteID(t, d), "_default",
 		"probe-tags-"+time.Now().Format("20060102150405.000000"), "Probe", nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)

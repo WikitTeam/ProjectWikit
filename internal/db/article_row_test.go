@@ -42,7 +42,7 @@ func TestArticleDisplayName(t *testing.T) {
 func TestArticleByName(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.ArticleByName(context.Background(), "main")
+	got, err := d.ArticleByName(context.Background(), seedSiteID(t, d), "main")
 	if err != nil {
 		t.Fatalf("ArticleByName(%q) err = %v, want nil", "main", err)
 	}
@@ -60,7 +60,7 @@ func TestArticleByName(t *testing.T) {
 func TestArticleByNameIsCaseInsensitive(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.ArticleByName(context.Background(), "NAV:Top")
+	got, err := d.ArticleByName(context.Background(), seedSiteID(t, d), "NAV:Top")
 	if err != nil {
 		t.Fatalf("ArticleByName(%q) err = %v, want nil", "NAV:Top", err)
 	}
@@ -72,7 +72,7 @@ func TestArticleByNameIsCaseInsensitive(t *testing.T) {
 func TestArticleByNameMissing(t *testing.T) {
 	d := newTestDB(t)
 
-	_, err := d.ArticleByName(context.Background(), "no-such-page")
+	_, err := d.ArticleByName(context.Background(), seedSiteID(t, d), "no-such-page")
 	if !errors.Is(err, ErrNotFound) {
 		t.Errorf("ArticleByName(%q) err = %v, want ErrNotFound", "no-such-page", err)
 	}

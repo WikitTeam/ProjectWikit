@@ -51,7 +51,7 @@ func TestForumCategoryMatchesGolden(t *testing.T) {
 	users, loc := testUsers(t)
 	cases := forumCategoryCases()
 
-	article, err := d.ArticleByName(ctx, "forum:category")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "forum:category")
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:category) err = %v, want nil", err)
 	}

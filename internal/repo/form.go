@@ -37,7 +37,7 @@ func (l *formLoader) CategoryForm(category string) (*form.Definition, error) {
 }
 
 func (l *formLoader) load(category string) (*form.Definition, error) {
-	article, err := l.db.ArticleByName(l.ctx, category+":"+templateName)
+	article, err := l.db.ArticleByName(l.ctx, ctxSiteID(l.ctx), category+":"+templateName)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil, nil
 	}

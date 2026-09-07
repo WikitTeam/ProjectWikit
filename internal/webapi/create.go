@@ -72,7 +72,7 @@ func (h *Articles) createArticle(r *http.Request, loc *i18n.Localizer) (string, 
 	if bad := h.mayCreate(r, name, user); bad != nil {
 		return field("error", loc.T(bad.key)), bad.status, nil
 	}
-	if _, err := h.deps.DB.ArticleByName(ctx, name); err == nil {
+	if _, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), name); err == nil {
 		return field("error", loc.T("api-page-exists")), http.StatusConflict, nil
 	} else if !errors.Is(err, db.ErrNotFound) {
 		return "", 0, err
@@ -141,7 +141,7 @@ func (h *Articles) writeNewArticle(r *http.Request, current *db.Site, name strin
 		userID = &user.ID
 	}
 
-	id, err := h.deps.DB.CreateArticle(ctx, category, bare, *input.Title, userID, at)
+	id, err := h.deps.DB.CreateArticle(ctx, siteID(ctx), category, bare, *input.Title, userID, at)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (h *Articles) setParent(r *http.Request, current *db.Site, id int64,
 	}
 	ctx := r.Context()
 	wanted := wikidot.Normalize(*input.Parent)
-	parent, err := h.deps.DB.ArticleByName(ctx, wanted)
+	parent, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), wanted)
 	if errors.Is(err, db.ErrNotFound) {
 		parent = nil
 	} else if err != nil {

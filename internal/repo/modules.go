@@ -60,7 +60,7 @@ func (m moduleData) ArticleTagIDs(articleID int64) ([]int64, error) {
 }
 
 func (m moduleData) ArticleByRef(ref string) (*db.Article, error) {
-	return m.repo.db.ArticleByName(m.repo.ctx, ref)
+	return m.repo.db.ArticleByName(m.repo.ctx, m.repo.siteID(), ref)
 }
 
 func (m moduleData) ForumThreadsInCategories(categoryIDs []int64, offset, limit int) ([]db.ForumThread, error) {

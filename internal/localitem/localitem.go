@@ -198,7 +198,7 @@ func (h *handler) load(r *http.Request, name string) (*request, item, error) {
 	}
 	user := auth.FromContext(ctx)
 
-	article, err := h.deps.DB.ArticleByName(ctx, name)
+	article, err := h.deps.DB.ArticleByName(ctx, current.ID, name)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil, missing(noArticle), nil
 	}

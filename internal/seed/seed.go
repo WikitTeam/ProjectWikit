@@ -23,8 +23,8 @@ const (
 )
 
 type Store interface {
-	ArticleByName(ctx context.Context, ref string) (*db.Article, error)
-	CreateArticle(ctx context.Context, category, name, title string, authorID *int64, at time.Time) (int64, error)
+	ArticleByName(ctx context.Context, siteID int64, ref string) (*db.Article, error)
+	CreateArticle(ctx context.Context, siteID int64, category, name, title string, authorID *int64, at time.Time) (int64, error)
 	CreateArticleVersion(ctx context.Context, w db.VersionWrite) (db.Revision, error)
 }
 
@@ -45,7 +45,7 @@ func pageName(p string) string {
 	return strings.ReplaceAll(rel, "/", ":")
 }
 
-func Run(ctx context.Context, store Store) ([]string, error) {
+func Run(ctx context.Context, store Store, siteID int64) ([]string, error) {
 	var written []string
 	err := fs.WalkDir(pages, dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || !strings.HasSuffix(p, suffix) {
@@ -59,7 +59,7 @@ func Run(ctx context.Context, store Store) ([]string, error) {
 			return nil
 		}
 		name := pageName(p)
-		added, err := write(ctx, store, name, string(source))
+		added, err := write(ctx, store, siteID, name, string(source))
 		if err != nil {
 			return err
 		}
@@ -71,8 +71,8 @@ func Run(ctx context.Context, store Store) ([]string, error) {
 	return written, err
 }
 
-func write(ctx context.Context, store Store, full, source string) (bool, error) {
-	if _, err := store.ArticleByName(ctx, full); err == nil {
+func write(ctx context.Context, store Store, siteID int64, full, source string) (bool, error) {
+	if _, err := store.ArticleByName(ctx, siteID, full); err == nil {
 		return false, nil
 	} else if !errors.Is(err, db.ErrNotFound) {
 		return false, err
@@ -80,7 +80,7 @@ func write(ctx context.Context, store Store, full, source string) (bool, error) 
 
 	category, name := split(full)
 
-	id, err := store.CreateArticle(ctx, category, name, "", nil, time.Now())
+	id, err := store.CreateArticle(ctx, siteID, category, name, "", nil, time.Now())
 	if err != nil {
 		return false, err
 	}

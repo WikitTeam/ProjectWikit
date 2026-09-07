@@ -151,7 +151,7 @@ func (h *Articles) viewable(r *http.Request, name string) error {
 }
 
 func (h *Articles) article(r *http.Request, name string) (*db.Article, error) {
-	found, err := h.deps.DB.ArticleByName(r.Context(), name)
+	found, err := h.deps.DB.ArticleByName(r.Context(), siteID(r.Context()), name)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil, errNotFound
 	}
@@ -182,7 +182,7 @@ func (h *Articles) links(r *http.Request, _ *i18n.Localizer, name string) (strin
 	for _, link := range links {
 		refs = append(refs, strings.ToLower(link.From))
 	}
-	titles, err := h.deps.DB.ArticleTitles(ctx, refs)
+	titles, err := h.deps.DB.ArticleTitles(ctx, siteID(ctx), refs)
 	if err != nil {
 		return "", 0, err
 	}

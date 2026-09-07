@@ -29,7 +29,7 @@ func TestListPagesRendersAListUsersInItsBody(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SiteByHosts(localhost) err = %v, want nil", err)
 	}
-	article, err := d.ArticleByName(ctx, "main")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "main")
 	if err != nil {
 		t.Fatalf("ArticleByName(main) err = %v, want nil", err)
 	}

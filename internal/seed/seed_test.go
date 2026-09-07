@@ -16,14 +16,14 @@ type fakeStore struct {
 	nextID   int64
 }
 
-func (f *fakeStore) ArticleByName(_ context.Context, ref string) (*db.Article, error) {
+func (f *fakeStore) ArticleByName(_ context.Context, _ int64, ref string) (*db.Article, error) {
 	if f.existing[ref] {
 		return &db.Article{}, nil
 	}
 	return nil, db.ErrNotFound
 }
 
-func (f *fakeStore) CreateArticle(_ context.Context, category, name, _ string, _ *int64, _ time.Time) (int64, error) {
+func (f *fakeStore) CreateArticle(_ context.Context, _ int64, category, name, _ string, _ *int64, _ time.Time) (int64, error) {
 	f.nextID++
 	f.created = append(f.created, category+":"+name)
 	return f.nextID, nil
@@ -53,7 +53,7 @@ func TestNamesTurnDirectoriesIntoCategories(t *testing.T) {
 
 func TestRunWritesEveryPageOnce(t *testing.T) {
 	store := &fakeStore{existing: map[string]bool{}}
-	written, err := Run(context.Background(), store)
+	written, err := Run(context.Background(), store, 1)
 	if err != nil {
 		t.Fatalf("Run() err = %v, want nil", err)
 	}
@@ -69,7 +69,7 @@ func TestRunWritesEveryPageOnce(t *testing.T) {
 
 func TestRunSkipsPagesThatAreAlreadyThere(t *testing.T) {
 	store := &fakeStore{existing: map[string]bool{"main": true, "nav:top": true}}
-	written, err := Run(context.Background(), store)
+	written, err := Run(context.Background(), store, 1)
 	if err != nil {
 		t.Fatalf("Run() err = %v, want nil", err)
 	}

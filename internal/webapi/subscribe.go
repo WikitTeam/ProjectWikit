@@ -107,7 +107,7 @@ func (h *Subscriptions) apply(r *http.Request, user *db.User, input subscribeReq
 	ctx := r.Context()
 	switch {
 	case input.PageID != "":
-		article, err := h.deps.DB.ArticleByName(ctx, input.PageID)
+		article, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), input.PageID)
 		if errors.Is(err, db.ErrNotFound) {
 			return 0, errNotFound
 		}

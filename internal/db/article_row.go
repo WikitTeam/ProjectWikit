@@ -49,13 +49,13 @@ const prefixedArticleColumns = `a.id, a.category, a.name, a.title, a.parent_id, 
 var qArticleByName = register("ArticleByName", `
 SELECT `+articleColumns+`
 FROM web_article
-WHERE complete_full_name = $1`)
+WHERE site_id = $1 AND complete_full_name = $2`)
 
 // ArticleByName takes a page reference the way a URL spells it; dumbName puts
 // the implicit category back so the generated column can match.
-func (d *DB) ArticleByName(ctx context.Context, ref string) (*Article, error) {
+func (d *DB) ArticleByName(ctx context.Context, siteID int64, ref string) (*Article, error) {
 	var a Article
-	err := d.pool.QueryRow(ctx, qArticleByName, dumbName(ref)).Scan(
+	err := d.pool.QueryRow(ctx, qArticleByName, siteID, dumbName(ref)).Scan(
 		&a.ID, &a.Category, &a.Name, &a.Title, &a.ParentID, &a.Locked,
 		&a.CreatedAt, &a.UpdatedAt, &a.MediaName)
 	if errors.Is(err, pgx.ErrNoRows) {

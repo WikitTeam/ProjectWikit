@@ -158,7 +158,7 @@ func (h *Handler) source(req *request) (string, error) {
 	if req.article.Name == templateName {
 		return "%%content%%", nil
 	}
-	found, err := h.deps.DB.ArticleByName(req.ctx, req.article.Category+":"+templateName)
+	found, err := h.deps.DB.ArticleByName(req.ctx, req.site.ID, req.article.Category+":"+templateName)
 	if errors.Is(err, db.ErrNotFound) {
 		return "%%content%%", nil
 	}
@@ -219,7 +219,7 @@ func (h *Handler) notFoundPage(req *request) (*body, error) {
 	}
 
 	for _, name := range notFoundNames(req.name) {
-		found, err := h.deps.DB.ArticleByName(req.ctx, name)
+		found, err := h.deps.DB.ArticleByName(req.ctx, req.site.ID, name)
 		if errors.Is(err, db.ErrNotFound) {
 			continue
 		}
@@ -309,7 +309,7 @@ func missingName(fullName string) func(string) (string, bool) {
 // nav renders one of the two navigation pages. It gets its own callbacks and
 // its own PageInfo, since the page it decorates is a different row.
 func (h *Handler) nav(req *request, name string) (string, string, error) {
-	found, err := h.deps.DB.ArticleByName(req.ctx, name)
+	found, err := h.deps.DB.ArticleByName(req.ctx, req.site.ID, name)
 	if errors.Is(err, db.ErrNotFound) {
 		return "", "", nil
 	}

@@ -80,7 +80,7 @@ func TestListUsersMatchesGolden(t *testing.T) {
 		if name == "" {
 			name = "main"
 		}
-		article, err := d.ArticleByName(ctx, name)
+		article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), name)
 		if err != nil {
 			t.Fatalf("ArticleByName(%q) err = %v, want nil", name, err)
 		}

@@ -321,7 +321,7 @@ func TestCreateArticleCreditsTheAuthor(t *testing.T) {
 	}
 	name := "probe-new-" + time.Now().Format("20060102150405.000000")
 
-	id, err := d.CreateArticle(ctx, "_default", name, "Probe", &author, time.Now().UTC())
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", name, "Probe", &author, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
 	}
@@ -343,7 +343,7 @@ func TestCreateArticleWithoutAnAuthor(t *testing.T) {
 	ctx := context.Background()
 	name := "probe-new-" + time.Now().Format("20060102150405.000000")
 
-	id, err := d.CreateArticle(ctx, "_default", name, "Probe", nil, time.Now().UTC())
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", name, "Probe", nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
 	}
@@ -366,12 +366,12 @@ func TestCreateArticleNamesTheMediaDirectoryApart(t *testing.T) {
 	ctx := context.Background()
 	stamp := time.Now().Format("20060102150405.000000")
 
-	first, err := d.CreateArticle(ctx, "_default", "probe-media-a-"+stamp, "A", nil, time.Now().UTC())
+	first, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", "probe-media-a-"+stamp, "A", nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle(a) err = %v, want nil", err)
 	}
 	dropArticle(t, d, first)
-	second, err := d.CreateArticle(ctx, "_default", "probe-media-b-"+stamp, "B", nil, time.Now().UTC())
+	second, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", "probe-media-b-"+stamp, "B", nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle(b) err = %v, want nil", err)
 	}
@@ -398,12 +398,12 @@ func TestSetArticleParentRecordsTheMove(t *testing.T) {
 	at := time.Now().UTC().Truncate(time.Second)
 	stamp := time.Now().Format("20060102150405.000000")
 
-	parent, err := d.CreateArticle(ctx, "_default", "probe-parent-"+stamp, "Parent", nil, at)
+	parent, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", "probe-parent-"+stamp, "Parent", nil, at)
 	if err != nil {
 		t.Fatalf("CreateArticle(parent) err = %v, want nil", err)
 	}
 	dropArticle(t, d, parent)
-	child, err := d.CreateArticle(ctx, "_default", "probe-child-"+stamp, "Child", nil, at)
+	child, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", "probe-child-"+stamp, "Child", nil, at)
 	if err != nil {
 		t.Fatalf("CreateArticle(child) err = %v, want nil", err)
 	}
@@ -445,7 +445,7 @@ func TestSubscribeToArticleOnlyOnce(t *testing.T) {
 	if err := d.pool.QueryRow(ctx, `SELECT id FROM web_user ORDER BY id LIMIT 1`).Scan(&user); err != nil {
 		t.Fatalf("read a user err = %v, want nil", err)
 	}
-	id, err := d.CreateArticle(ctx, "_default",
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default",
 		"probe-sub-"+time.Now().Format("20060102150405.000000"), "Probe", nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
@@ -480,7 +480,7 @@ func TestUpdateArticleTitleRecordsWhatItWas(t *testing.T) {
 	ctx := context.Background()
 	at := time.Now().UTC().Truncate(time.Second)
 
-	id, err := d.CreateArticle(ctx, "_default",
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default",
 		"probe-title-"+time.Now().Format("20060102150405.000000"), "Before", nil, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
@@ -529,7 +529,7 @@ func TestSetArticleLockLeavesNoRevision(t *testing.T) {
 	d := writeTestDB(t)
 	ctx := context.Background()
 
-	id, err := d.CreateArticle(ctx, "_default",
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default",
 		"probe-lock-"+time.Now().Format("20060102150405.000000"), "Probe", nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
@@ -605,7 +605,7 @@ func TestSetArticleAuthorsReplacesTheCredit(t *testing.T) {
 	first, second := twoUsers(t, d)
 	at := time.Now().UTC().Truncate(time.Second)
 
-	id, err := d.CreateArticle(ctx, "_default",
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default",
 		"probe-authors-"+time.Now().Format("20060102150405.000000"), "Probe", &first, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
@@ -651,7 +651,7 @@ func TestSetArticleAuthorsKeepsQuietWhenNothingMoves(t *testing.T) {
 	first, _ := twoUsers(t, d)
 	at := time.Now().UTC().Truncate(time.Second)
 
-	id, err := d.CreateArticle(ctx, "_default",
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default",
 		"probe-samecredit-"+time.Now().Format("20060102150405.000000"), "Probe", &first, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
@@ -673,7 +673,7 @@ func TestSetArticleAuthorsIgnoresAnEmptyList(t *testing.T) {
 	first, _ := twoUsers(t, d)
 	at := time.Now().UTC().Truncate(time.Second)
 
-	id, err := d.CreateArticle(ctx, "_default",
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default",
 		"probe-nocredit-"+time.Now().Format("20060102150405.000000"), "Probe", &first, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
@@ -696,7 +696,7 @@ func TestRenameArticleTakesItsLinksAlong(t *testing.T) {
 	from := "probe-from-" + stamp
 	to := "probe-to-" + stamp
 
-	id, err := d.CreateArticle(ctx, "_default", from, "Probe", nil, at)
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", from, "Probe", nil, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
 	}
@@ -763,7 +763,7 @@ func TestRenameArticleClearsWhatSatUnderTheNewName(t *testing.T) {
 	from := "probe-old-" + stamp
 	to := "probe-new-" + stamp
 
-	id, err := d.CreateArticle(ctx, "_default", from, "Probe", nil, at)
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", from, "Probe", nil, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
 	}
@@ -807,7 +807,7 @@ func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
 	if err := d.pool.QueryRow(ctx, `SELECT id FROM web_user ORDER BY id LIMIT 1`).Scan(&author); err != nil {
 		t.Fatalf("read a user err = %v, want nil", err)
 	}
-	id, err := d.CreateArticle(ctx, "_default", name, "Probe", &author, at)
+	id, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", name, "Probe", &author, at)
 	if err != nil {
 		t.Fatalf("CreateArticle() err = %v, want nil", err)
 	}
@@ -823,7 +823,7 @@ func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
 		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
 	}
 
-	child, err := d.CreateArticle(ctx, "_default", "probe-orphan-"+stamp, "Child", nil, at)
+	child, err := d.CreateArticle(ctx, seedSiteID(t, d), "_default", "probe-orphan-"+stamp, "Child", nil, at)
 	if err != nil {
 		t.Fatalf("CreateArticle(child) err = %v, want nil", err)
 	}

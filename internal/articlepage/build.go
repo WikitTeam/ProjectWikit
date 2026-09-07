@@ -85,7 +85,7 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 // A page the visitor may not see is dropped here, which is what leaves every
 // layer below working on nothing at all.
 func (h *Handler) load(req *request) error {
-	found, err := h.deps.DB.ArticleByName(req.ctx, req.name)
+	found, err := h.deps.DB.ArticleByName(req.ctx, req.site.ID, req.name)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return err
 	}

@@ -66,7 +66,7 @@ func TestRecentPostsMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SiteByHosts(localhost) err = %v, want nil", err)
 	}
-	article, err := d.ArticleByName(ctx, "forum:recent-posts")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "forum:recent-posts")
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:recent-posts) err = %v, want nil", err)
 	}

@@ -388,6 +388,7 @@ func envOr(key, fallback string) string {
 func seedPages(args []string) error {
 	fs := flag.NewFlagSet("seed", flag.ContinueOnError)
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	slug := fs.String("site", "", "slug of the site to write into; needed once a database holds more than one")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -405,7 +406,12 @@ func seedPages(args []string) error {
 	}
 	defer conn.Close()
 
-	written, err := seed.Run(ctx, conn)
+	current, err := resolveSite(ctx, conn, *slug)
+	if err != nil {
+		return err
+	}
+
+	written, err := seed.Run(ctx, conn, current.ID)
 	for _, name := range written {
 		fmt.Println("wrote " + name)
 	}
@@ -546,4 +552,25 @@ func printModules() error {
 		fmt.Fprintf(w, "%s\t%t\t%s\n", info.Name, info.HasContent, status)
 	}
 	return w.Flush()
+}
+
+func resolveSite(ctx context.Context, conn *db.DB, slug string) (*db.Site, error) {
+	if slug != "" {
+		found, err := conn.SiteBySlug(ctx, slug)
+		if errors.Is(err, db.ErrNotFound) {
+			return nil, fmt.Errorf("no site with slug %q", slug)
+		}
+		return found, err
+	}
+	slugs, err := conn.SiteSlugs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	switch len(slugs) {
+	case 0:
+		return nil, errors.New("this database holds no site, make one with createsite")
+	case 1:
+		return conn.SiteBySlug(ctx, slugs[0])
+	}
+	return nil, fmt.Errorf("this database holds %d sites, name one with -site", len(slugs))
 }

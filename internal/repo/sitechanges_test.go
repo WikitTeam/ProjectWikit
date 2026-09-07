@@ -82,7 +82,7 @@ func TestSiteChangesMatchesGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SiteByHosts(localhost) err = %v, want nil", err)
 	}
-	article, err := d.ArticleByName(ctx, "probe:changes")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "probe:changes")
 	if err != nil {
 		t.Fatalf("ArticleByName(probe:changes) err = %v, want nil", err)
 	}

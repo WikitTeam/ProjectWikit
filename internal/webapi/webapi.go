@@ -3,6 +3,7 @@ package webapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -153,7 +154,7 @@ func (h *Handler) answer(r *http.Request, loc *i18n.Localizer, parsed call) (str
 
 	var article *db.Article
 	if parsed.PageID != "" {
-		found, err := h.deps.DB.ArticleByName(ctx, parsed.PageID)
+		found, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), parsed.PageID)
 		if errors.Is(err, db.ErrNotFound) {
 			return field("error", loc.T("api-page-not-found")), http.StatusNotFound, nil
 		}
@@ -263,4 +264,11 @@ func writeJSON(w http.ResponseWriter, status int, body string) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(status)
 	_, _ = io.WriteString(w, body)
+}
+
+func siteID(ctx context.Context) int64 {
+	if current := site.FromContext(ctx); current != nil {
+		return current.ID
+	}
+	return 0
 }

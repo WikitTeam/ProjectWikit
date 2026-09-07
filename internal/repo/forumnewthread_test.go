@@ -47,7 +47,7 @@ func TestForumNewThreadMatchesGolden(t *testing.T) {
 	users, loc := testUsers(t)
 	cases := forumNewThreadCases()
 
-	article, err := d.ArticleByName(ctx, "forum:new-thread")
+	article, err := d.ArticleByName(ctx, onlySiteID(ctx, d), "forum:new-thread")
 	if err != nil {
 		t.Fatalf("ArticleByName(forum:new-thread) err = %v, want nil", err)
 	}

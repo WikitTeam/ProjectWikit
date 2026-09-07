@@ -106,7 +106,7 @@ func TestRenderRateMatchesGolden(t *testing.T) {
 
 	var b strings.Builder
 	for _, c := range cases {
-		article, err := src.d.ArticleByName(src.ctx, c.Page)
+		article, err := src.d.ArticleByName(src.ctx, onlySiteID(src.ctx, src.d), c.Page)
 		if err != nil {
 			t.Fatalf("ArticleByName(%q) err = %v, want nil", c.Page, err)
 		}

@@ -142,8 +142,8 @@ func (d *DB) ReplaceArticleLinks(ctx context.Context, from string, links []Artic
 
 var (
 	qInsertArticle = register("InsertArticle", `
-INSERT INTO web_article (category, name, title, locked, created_at, updated_at, media_name)
-VALUES ($1, $2, $3, false, $4, $4, $5)
+INSERT INTO web_article (site_id, category, name, title, locked, created_at, updated_at, media_name)
+VALUES ($1, $2, $3, $4, false, $5, $5, $6)
 RETURNING id`)
 
 	qInsertArticleAuthor = register("InsertArticleAuthor", `
@@ -152,7 +152,7 @@ VALUES ($1, $2)
 ON CONFLICT DO NOTHING`)
 )
 
-func (d *DB) CreateArticle(ctx context.Context, category, name, title string, authorID *int64, at time.Time) (int64, error) {
+func (d *DB) CreateArticle(ctx context.Context, siteID int64, category, name, title string, authorID *int64, at time.Time) (int64, error) {
 	media, err := mediaName()
 	if err != nil {
 		return 0, err
@@ -165,7 +165,7 @@ func (d *DB) CreateArticle(ctx context.Context, category, name, title string, au
 	defer tx.Rollback(ctx)
 
 	var id int64
-	if err := tx.QueryRow(ctx, qInsertArticle, category, name, title, at, media).Scan(&id); err != nil {
+	if err := tx.QueryRow(ctx, qInsertArticle, siteID, category, name, title, at, media).Scan(&id); err != nil {
 		return 0, fmt.Errorf("write article %q: %w", name, err)
 	}
 	if authorID != nil {

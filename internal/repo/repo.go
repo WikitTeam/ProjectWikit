@@ -59,7 +59,7 @@ func New(ctx context.Context, d *db.DB, users *printuser.Renderer, opts Options)
 }
 
 func (r *Repository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error) {
-	titles, err := r.db.ArticleTitles(r.ctx, refs)
+	titles, err := r.db.ArticleTitles(r.ctx, r.siteID(), refs)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetc
 	for i, ref := range refs {
 		names[i] = ref.FullName
 	}
-	sources, err := r.db.ArticleSources(r.ctx, names)
+	sources, err := r.db.ArticleSources(r.ctx, r.siteID(), names)
 	if err != nil {
 		return nil, err
 	}
