@@ -454,14 +454,6 @@ func createSite(args []string) error {
 	}
 	defer conn.Close()
 
-	taken, err := conn.AnySite(ctx)
-	if err != nil {
-		return err
-	}
-	if taken {
-		return errors.New("this database already holds a site, and one database serves one site")
-	}
-
 	id, err := conn.CreateSite(ctx, db.NewSite{
 		Slug: *slug, Title: *title, Headline: *headline,
 		Domain: *domain, MediaDomain: *mediaDomain,
