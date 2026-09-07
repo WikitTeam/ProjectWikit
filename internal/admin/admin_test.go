@@ -254,7 +254,8 @@ func TestEveryScreenHasItsTemplates(t *testing.T) {
 	for _, name := range []string{
 		"dashboard.html", "suspicious.html", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html", "site_form.html",
 		"role_list.html", "role_form.html", "role_category.html",
-		"user_list.html", "user_form.html", "report_list.html", "report_form.html",
+		"user_list.html", "user_form.html", "user_activity.html",
+		"report_list.html", "report_form.html",
 		"forum_section_list.html", "forum_section_form.html",
 		"forum_category_list.html", "forum_category_form.html", "admin_log.html",
 		"tag_list.html", "tag_form.html", "tag_category_list.html", "tag_category_form.html",
@@ -340,6 +341,32 @@ func TestEveryScreenLabelIsInTheCatalog(t *testing.T) {
 	for _, g := range groups {
 		if loc.T(g.label) == g.label {
 			t.Errorf("group %q label %q is not in the catalog, want it there", g.key, g.label)
+		}
+	}
+}
+
+func TestUserLabelPrefersTheWikidotName(t *testing.T) {
+	cases := map[string]struct {
+		row  db.AdminUserRow
+		want string
+	}{
+		"wikidot": {db.AdminUserRow{Type: db.UserTypeWikidot, Username: "u-1", WikidotUsername: "old"}, "old"},
+		"claimed": {db.AdminUserRow{Type: db.UserTypeNormal, Username: "new", WikidotUsername: "old"}, "new"},
+		"unnamed": {db.AdminUserRow{Type: db.UserTypeWikidot, Username: "u-1"}, "u-1"},
+	}
+	for name, c := range cases {
+		if got := userLabel(c.row); got != c.want {
+			t.Errorf("userLabel(%s) = %q, want %q", name, got, c.want)
+		}
+	}
+}
+
+func TestEveryActivityTabIsInTheCatalog(t *testing.T) {
+	loc := testLocalizer(t)
+	for _, tab := range activityTabs {
+		id := "admin.activity-" + tab
+		if loc.T(id) == id {
+			t.Errorf("T(%q) = %q, want a translation", id, id)
 		}
 	}
 }
