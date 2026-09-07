@@ -58,7 +58,7 @@ func (h *OwnRows) ratings(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 	}
 	page, pages := pageOf(r, total)
 
-	found, err := h.deps.DB.RatedBy(ctx, user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
+	found, err := h.deps.DB.RatedBy(ctx, siteID(ctx), user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
 	if err != nil {
 		h.deps.log().Error("list ratings", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
@@ -95,7 +95,7 @@ func (h *OwnRows) likedPosts(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 	page, pages := pageOf(r, total)
 
-	found, err := h.deps.DB.LikedPostsOf(ctx, user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
+	found, err := h.deps.DB.LikedPostsOf(ctx, siteID(ctx), user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
 	if err != nil {
 		h.deps.log().Error("list liked posts", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))

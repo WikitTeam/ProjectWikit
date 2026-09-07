@@ -245,7 +245,7 @@ func TestCreateTicket(t *testing.T) {
 	ctx := context.Background()
 	author := scratchUser(t, d, "probe-ticket")
 
-	id, err := d.CreateTicket(ctx, TicketKind, "subject", "body", "main", author, time.Now().UTC())
+	id, err := d.CreateTicket(ctx, seedSiteID(t, d), TicketKind, "subject", "body", "main", author, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateTicket() err = %v, want nil", err)
 	}

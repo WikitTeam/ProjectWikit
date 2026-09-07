@@ -60,7 +60,7 @@ func (h *Messages) report(r *http.Request, loc *i18n.Localizer, user *db.User) (
 		return "", 0, err
 	}
 
-	recent, err := h.deps.DB.ReportsSince(ctx, user.ID, reported.ID, time.Now().Add(-reportRateLimitScope))
+	recent, err := h.deps.DB.ReportsSince(ctx, siteID(ctx), user.ID, reported.ID, time.Now().Add(-reportRateLimitScope))
 	if err != nil {
 		return "", 0, err
 	}
@@ -80,7 +80,7 @@ func (h *Messages) report(r *http.Request, loc *i18n.Localizer, user *db.User) (
 	if err != nil {
 		return "", 0, err
 	}
-	id, err := h.deps.DB.CreateReport(ctx, user.ID, reported.ID, reason, snapshot, time.Now())
+	id, err := h.deps.DB.CreateReport(ctx, siteID(ctx), user.ID, reported.ID, reason, snapshot, time.Now())
 	if err != nil {
 		return "", 0, err
 	}

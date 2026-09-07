@@ -40,24 +40,24 @@ LEFT JOIN web_user rev ON rev.id = t.reviewed_by_id`
 
 var qAdminTickets = register("AdminTickets", `
 SELECT `+ticketColumns+ticketJoins+`
-WHERE t.kind = $1 AND ($2 = '' OR t.status = $2)
+WHERE t.kind = $1 AND ($2 = '' OR t.status = $2) AND t.site_id = $5
 ORDER BY t.created_at DESC, t.id DESC
 LIMIT $3 OFFSET $4`)
 
 var qAdminTicketCount = register("AdminTicketCount", `
-SELECT count(*) FROM web_userticket t WHERE t.kind = $1 AND ($2 = '' OR t.status = $2)`)
+SELECT count(*) FROM web_userticket t WHERE t.kind = $1 AND ($2 = '' OR t.status = $2) AND t.site_id = $3`)
 
 func scanTicket(row pgx.Row, t *TicketRow) error {
 	return row.Scan(&t.ID, &t.Kind, &t.Author, &t.Subject, &t.Body, &t.SourcePage,
 		&t.Status, &t.AdminNotes, &t.CreatedAt, &t.ReviewedAt, &t.ReviewedBy, &t.GrantedID)
 }
 
-func (d *DB) AdminTickets(ctx context.Context, kind, status string, limit, offset int) ([]TicketRow, int, error) {
+func (d *DB) AdminTickets(ctx context.Context, siteID int64, kind, status string, limit, offset int) ([]TicketRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminTicketCount, kind, status).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminTicketCount, kind, status, siteID).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count tickets: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminTickets, kind, status, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminTickets, kind, status, limit, offset, siteID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list tickets: %w", err)
 	}
@@ -136,27 +136,27 @@ type InviteRow struct {
 var qAdminInvites = register("AdminInvites", `
 SELECT id, kind, delivery, email, wikidot_username, token, uidb64,
        created_at, activated_at, activated_username
-FROM web_invitelink ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`)
+FROM web_invitelink WHERE site_id = $3 ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`)
 
-var qAdminInviteCount = register("AdminInviteCount", `SELECT count(*) FROM web_invitelink`)
+var qAdminInviteCount = register("AdminInviteCount", `SELECT count(*) FROM web_invitelink WHERE site_id = $1`)
 
 var qOpenInviteCount = register("OpenInviteCount", `
-SELECT count(*) FROM web_invitelink WHERE activated_at IS NULL`)
+SELECT count(*) FROM web_invitelink WHERE activated_at IS NULL AND site_id = $1`)
 
-func (d *DB) OpenInviteCount(ctx context.Context) (int, error) {
+func (d *DB) OpenInviteCount(ctx context.Context, siteID int64) (int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qOpenInviteCount).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qOpenInviteCount, siteID).Scan(&total); err != nil {
 		return 0, fmt.Errorf("count open invite links: %w", err)
 	}
 	return total, nil
 }
 
-func (d *DB) AdminInvites(ctx context.Context, limit, offset int) ([]InviteRow, int, error) {
+func (d *DB) AdminInvites(ctx context.Context, siteID int64, limit, offset int) ([]InviteRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminInviteCount).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminInviteCount, siteID).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count invite links: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminInvites, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminInvites, limit, offset, siteID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list invite links: %w", err)
 	}

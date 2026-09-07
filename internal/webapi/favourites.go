@@ -62,7 +62,7 @@ func (h *Favourites) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		page = pages
 	}
 
-	found, err := h.deps.DB.FavouritesOf(ctx, user.ID, (page-1)*favouritesPerPage, favouritesPerPage)
+	found, err := h.deps.DB.FavouritesOf(ctx, siteID(ctx), user.ID, (page-1)*favouritesPerPage, favouritesPerPage)
 	if err != nil {
 		h.deps.log().Error("list favourites", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))

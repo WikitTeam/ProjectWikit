@@ -248,6 +248,7 @@ func (h *Handler) edits(r *http.Request, loc *i18n.Localizer, site *db.Site,
 		return shell.ProfileFeed{}, err
 	}
 	filter := db.SiteChangeFilter{
+		SiteID:  siteID(ctx),
 		Hidden:  hidden,
 		HasUser: true,
 		UserIDs: []int64{profile.ID},

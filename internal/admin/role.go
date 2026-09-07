@@ -38,7 +38,7 @@ func (h *Handler) roles(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		return h.saveRole(w, r, loc, rest)
 	}
 	if rest == "" {
-		found, err := h.deps.DB.AdminRoles(r.Context())
+		found, err := h.deps.DB.AdminRoles(r.Context(), siteID(r.Context()))
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
-	categories, err := h.deps.DB.RoleCategories(ctx)
+	categories, err := h.deps.DB.RoleCategories(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if next.ID == 0 {
 		did = db.AdminCreated
 	}
-	if _, err := h.deps.DB.SaveRole(ctx, next, mayGrant); err != nil {
+	if _, err := h.deps.DB.SaveRole(ctx, siteID(ctx), next, mayGrant); err != nil {
 		return err
 	}
 	h.noteID(r, did, roleSlug, next.ID, next.Slug)
@@ -227,7 +227,7 @@ func (h *Handler) outranked(ctx context.Context, row db.RoleRow) (bool, error) {
 	if user.IsSuperuser {
 		return false, nil
 	}
-	mine, err := h.deps.DB.OperationIndex(ctx, user.ID)
+	mine, err := h.deps.DB.OperationIndex(ctx, siteID(ctx), user.ID)
 	if err != nil {
 		return false, err
 	}
@@ -277,7 +277,7 @@ func (h *Handler) roleCategories(w http.ResponseWriter, r *http.Request, loc *i1
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveRoleCategory(ctx, row); err != nil {
+		if err := h.deps.DB.SaveRoleCategory(ctx, siteID(ctx), row); err != nil {
 			return err
 		}
 		h.noteID(r, did, roleCategorySlug, row.ID, row.Name)
@@ -288,7 +288,7 @@ func (h *Handler) roleCategories(w http.ResponseWriter, r *http.Request, loc *i1
 }
 
 func (h *Handler) roleCategoryList(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, problem string) error {
-	found, err := h.deps.DB.RoleCategories(r.Context())
+	found, err := h.deps.DB.RoleCategories(r.Context(), siteID(r.Context()))
 	if err != nil {
 		return err
 	}

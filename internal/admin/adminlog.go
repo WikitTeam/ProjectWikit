@@ -52,7 +52,7 @@ func (h *Handler) adminLog(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if page < 1 {
 		page = 1
 	}
-	found, err := h.deps.DB.AdminNotes(ctx, screen, adminLogPerPage+1, (page-1)*adminLogPerPage)
+	found, err := h.deps.DB.AdminNotes(ctx, siteID(ctx), screen, adminLogPerPage+1, (page-1)*adminLogPerPage)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (h *Handler) adminLog(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if more {
 		found = found[:adminLogPerPage]
 	}
-	screens, err := h.deps.DB.AdminNoteScreens(ctx)
+	screens, err := h.deps.DB.AdminNoteScreens(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

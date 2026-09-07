@@ -9,6 +9,8 @@ import (
 )
 
 type SiteChangeFilter struct {
+	SiteID int64
+
 	Hidden []string
 
 	Types []string
@@ -37,6 +39,7 @@ type SiteChange struct {
 // A revert carries the types it undid in meta rather than in the type column,
 // so asking for one type has to reach both places.
 func (f SiteChangeFilter) build(b *listBuilder) string {
+	b.where = append(b.where, "a.site_id = "+b.arg(f.SiteID))
 	if len(f.Hidden) > 0 {
 		b.where = append(b.where, "NOT (a.category = ANY("+b.arg(f.Hidden)+"))")
 	}
@@ -119,13 +122,13 @@ func (d *DB) SiteChangeCount(ctx context.Context, f SiteChangeFilter) (int, erro
 var qArticleCategories = register("ArticleCategories", `
 SELECT DISTINCT category
 FROM web_article
-WHERE NOT (category = ANY($1))`)
+WHERE NOT (category = ANY($1)) AND site_id = $2`)
 
-func (d *DB) ArticleCategories(ctx context.Context, hidden []string) ([]string, error) {
+func (d *DB) ArticleCategories(ctx context.Context, siteID int64, hidden []string) ([]string, error) {
 	if hidden == nil {
 		hidden = []string{}
 	}
-	rows, err := d.pool.Query(ctx, qArticleCategories, hidden)
+	rows, err := d.pool.Query(ctx, qArticleCategories, hidden, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query article categories: %w", err)
 	}

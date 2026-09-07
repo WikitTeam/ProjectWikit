@@ -36,7 +36,7 @@ func (h *Handler) themes(w http.ResponseWriter, r *http.Request, loc *i18n.Local
 }
 
 func (h *Handler) themeList(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) error {
-	found, err := h.deps.DB.Themes(r.Context())
+	found, err := h.deps.DB.Themes(r.Context(), siteID(r.Context()))
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 	if row.ID == 0 {
 		did = db.AdminCreated
 	}
-	id, err := h.deps.DB.SaveTheme(r.Context(), row)
+	id, err := h.deps.DB.SaveTheme(r.Context(), siteID(r.Context()), row)
 	if err != nil {
 		return err
 	}

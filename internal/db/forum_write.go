@@ -188,13 +188,13 @@ type ForumThreadWrite struct {
 }
 
 var qInsertForumThread = register("InsertForumThread", `
-INSERT INTO web_forumthread (category_id, name, description, author_id, created_at, updated_at, is_pinned, is_locked)
-VALUES ($1, $2, $3, $4, $5, $5, false, false)
+INSERT INTO web_forumthread (category_id, name, description, author_id, created_at, updated_at, is_pinned, is_locked, site_id)
+VALUES ($1, $2, $3, $4, $5, $5, false, false, $6)
 RETURNING id`)
 
 // The thread and its first post go in together, so a thread that fails halfway
 // does not show up empty in the category listing.
-func (d *DB) CreateForumThread(ctx context.Context, w ForumThreadWrite, source string) (int64, int64, error) {
+func (d *DB) CreateForumThread(ctx context.Context, siteID int64, w ForumThreadWrite, source string) (int64, int64, error) {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return 0, 0, fmt.Errorf("begin thread: %w", err)
@@ -203,7 +203,7 @@ func (d *DB) CreateForumThread(ctx context.Context, w ForumThreadWrite, source s
 
 	var threadID int64
 	if err := tx.QueryRow(ctx, qInsertForumThread, w.CategoryID, w.Name, w.Description,
-		w.AuthorID, w.At).Scan(&threadID); err != nil {
+		w.AuthorID, w.At, siteID).Scan(&threadID); err != nil {
 		return 0, 0, fmt.Errorf("write thread in category %d: %w", w.CategoryID, err)
 	}
 	var postID int64

@@ -178,7 +178,7 @@ func TestCreateReport(t *testing.T) {
 	reporter := scratchUser(t, d, "probe-report-a")
 	reported := scratchUser(t, d, "probe-report-b")
 
-	id, err := d.CreateReport(ctx, reporter, reported, "spam", `[{"id":1}]`, time.Now().UTC())
+	id, err := d.CreateReport(ctx, seedSiteID(t, d), reporter, reported, "spam", `[{"id":1}]`, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("CreateReport() err = %v, want nil", err)
 	}
@@ -193,7 +193,7 @@ func TestCreateReport(t *testing.T) {
 		t.Errorf("Report().Status = %q, want %q", got.Status, ReportPending)
 	}
 
-	count, err := d.ReportsSince(ctx, reporter, reported, time.Now().Add(-time.Hour))
+	count, err := d.ReportsSince(ctx, seedSiteID(t, d), reporter, reported, time.Now().Add(-time.Hour))
 	if err != nil {
 		t.Fatalf("ReportsSince() err = %v, want nil", err)
 	}

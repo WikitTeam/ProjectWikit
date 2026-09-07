@@ -61,6 +61,8 @@ type Sort struct {
 }
 
 type ListFilter struct {
+	SiteID int64
+
 	Hidden []string
 
 	PageType      string
@@ -170,6 +172,7 @@ LEFT JOIN (
 ) au ON au.article_id = a.id`
 
 func (f ListFilter) build(b *listBuilder) string {
+	b.where = append(b.where, "a.site_id = "+b.arg(f.SiteID))
 	if len(f.Hidden) > 0 {
 		b.where = append(b.where, "NOT (a.category = ANY("+b.arg(f.Hidden)+"))")
 	}

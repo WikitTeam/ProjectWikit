@@ -61,7 +61,7 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveForumSection(ctx, row); err != nil {
+		if err := h.deps.DB.SaveForumSection(ctx, siteID(ctx), row); err != nil {
 			return err
 		}
 		h.noteID(r, did, sectionSlug, row.ID, row.Name)
@@ -70,7 +70,7 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 	}
 
 	if rest == "" {
-		found, err := h.deps.DB.AdminForumSections(ctx)
+		found, err := h.deps.DB.AdminForumSections(ctx, siteID(ctx))
 		if err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ func (h *Handler) forumCategories(w http.ResponseWriter, r *http.Request, loc *i
 	}
 
 	if rest == "" {
-		found, err := h.deps.DB.AdminForumCategories(ctx)
+		found, err := h.deps.DB.AdminForumCategories(ctx, siteID(ctx))
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func (h *Handler) forumCategoryForm(w http.ResponseWriter, r *http.Request, loc 
 			return err
 		}
 	}
-	sections, err := h.deps.DB.AdminForumSections(ctx)
+	sections, err := h.deps.DB.AdminForumSections(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

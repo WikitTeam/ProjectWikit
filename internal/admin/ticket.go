@@ -96,7 +96,7 @@ func (h *Handler) ticketScreen(w http.ResponseWriter, r *http.Request, loc *i18n
 		if page < 1 {
 			page = 1
 		}
-		found, total, err := h.deps.DB.AdminTickets(ctx, kind, status, perPage, (page-1)*perPage)
+		found, total, err := h.deps.DB.AdminTickets(ctx, siteID(ctx), kind, status, perPage, (page-1)*perPage)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func (h *Handler) invites(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 	if page < 1 {
 		page = 1
 	}
-	found, total, err := h.deps.DB.AdminInvites(ctx, perPage, (page-1)*perPage)
+	found, total, err := h.deps.DB.AdminInvites(ctx, siteID(ctx), perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}

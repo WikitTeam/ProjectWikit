@@ -42,16 +42,17 @@ type AdminNote struct {
 	Screen string
 	Target string
 	Label  string
+	SiteID int64
 	At     time.Time
 }
 
 var qWriteAdminNote = register("WriteAdminNote", `
-INSERT INTO pwikit_admin_log (user_id, stale_name, action, screen, target, label, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)`)
+INSERT INTO pwikit_admin_log (user_id, stale_name, action, screen, target, label, created_at, site_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`)
 
 func (d *DB) WriteAdminNote(ctx context.Context, n AdminNote) error {
 	_, err := d.pool.Exec(ctx, qWriteAdminNote,
-		n.UserID, n.Name, n.Action, n.Screen, n.Target, n.Label, n.At)
+		n.UserID, n.Name, n.Action, n.Screen, n.Target, n.Label, n.At, n.SiteID)
 	if err != nil {
 		return fmt.Errorf("record admin action %q on %q: %w", n.Action, n.Screen, err)
 	}
@@ -73,15 +74,15 @@ var qAdminNotes = register("AdminNotes", `
 SELECT l.id, coalesce(u.username, ''), l.stale_name, l.action, l.screen, l.target, l.label, l.created_at
 FROM pwikit_admin_log l
 LEFT JOIN web_user u ON u.id = l.user_id
-WHERE $1 = '' OR l.screen = $1
+WHERE ($1 = '' OR l.screen = $1) AND l.site_id = $4
 ORDER BY l.created_at DESC, l.id DESC
 LIMIT $2 OFFSET $3`)
 
 var qAdminNoteScreens = register("AdminNoteScreens", `
-SELECT DISTINCT screen FROM pwikit_admin_log ORDER BY 1`)
+SELECT DISTINCT screen FROM pwikit_admin_log WHERE site_id = $1 ORDER BY 1`)
 
-func (d *DB) AdminNotes(ctx context.Context, screen string, limit, offset int) ([]AdminNoteRow, error) {
-	rows, err := d.pool.Query(ctx, qAdminNotes, screen, limit, offset)
+func (d *DB) AdminNotes(ctx context.Context, siteID int64, screen string, limit, offset int) ([]AdminNoteRow, error) {
+	rows, err := d.pool.Query(ctx, qAdminNotes, screen, limit, offset, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list admin actions: %w", err)
 	}
@@ -99,8 +100,8 @@ func (d *DB) AdminNotes(ctx context.Context, screen string, limit, offset int) (
 	return out, rows.Err()
 }
 
-func (d *DB) AdminNoteScreens(ctx context.Context) ([]string, error) {
-	rows, err := d.pool.Query(ctx, qAdminNoteScreens)
+func (d *DB) AdminNoteScreens(ctx context.Context, siteID int64) ([]string, error) {
+	rows, err := d.pool.Query(ctx, qAdminNoteScreens, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list admin action screens: %w", err)
 	}

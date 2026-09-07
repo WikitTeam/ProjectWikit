@@ -54,7 +54,7 @@ func (h *Handler) userActivity(w http.ResponseWriter, r *http.Request, loc *i18n
 		notFound(w)
 		return nil
 	}
-	row, err := h.deps.DB.AdminUser(ctx, id)
+	row, err := h.deps.DB.AdminUser(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -123,6 +123,7 @@ func (h *Handler) userEdits(ctx context.Context, loc *i18n.Localizer, id int64, 
 		return nil, err
 	}
 	found, err := h.deps.DB.SiteChanges(ctx, db.SiteChangeFilter{
+		SiteID:  siteID(ctx),
 		Hidden:  hidden,
 		HasUser: true,
 		UserIDs: []int64{id},
@@ -155,7 +156,7 @@ func (h *Handler) userEdits(ctx context.Context, loc *i18n.Localizer, id int64, 
 }
 
 func (h *Handler) userVotes(ctx context.Context, id int64, offset int) ([]userVoteRow, error) {
-	found, err := h.deps.DB.RatedBy(ctx, id, offset, activityPerPage)
+	found, err := h.deps.DB.RatedBy(ctx, siteID(ctx), id, offset, activityPerPage)
 	if err != nil {
 		return nil, err
 	}

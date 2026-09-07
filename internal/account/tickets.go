@@ -77,7 +77,7 @@ func (h *TicketHandler) submit(w http.ResponseWriter, r *http.Request) {
 	subject := clip(strings.TrimSpace(r.PostFormValue("subject")), maxTicketSubject)
 	page := strings.TrimSpace(r.PostFormValue("page"))
 
-	if _, err := h.deps.DB.CreateTicket(ctx, kind, subject, body, page, user.ID, time.Now()); err != nil {
+	if _, err := h.deps.DB.CreateTicket(ctx, siteID(ctx), kind, subject, body, page, user.ID, time.Now()); err != nil {
 		h.deps.logger().Error("submit ticket", "user", user.ID, "err", err)
 		back(w, r, "applied", "failed")
 		return

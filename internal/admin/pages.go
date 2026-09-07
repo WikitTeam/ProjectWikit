@@ -54,11 +54,11 @@ func (h *Handler) pageList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if page < 1 {
 		page = 1
 	}
-	found, total, err := h.deps.DB.AdminPages(ctx, query, category, perPage, (page-1)*perPage)
+	found, total, err := h.deps.DB.AdminPages(ctx, siteID(ctx), query, category, perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}
-	categories, err := h.deps.DB.AdminPageCategories(ctx)
+	categories, err := h.deps.DB.AdminPageCategories(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

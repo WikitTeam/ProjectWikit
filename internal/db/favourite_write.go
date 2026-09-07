@@ -59,14 +59,14 @@ var qFavouritesOf = register("FavouritesOf", `
 SELECT `+prefixedArticleColumns+`, f.created_at
 FROM web_articlefavourite f
 JOIN web_article a ON a.id = f.article_id
-WHERE f.user_id = $1
+WHERE f.user_id = $1 AND a.site_id = $4
 ORDER BY f.created_at DESC, f.id DESC
 OFFSET $2 LIMIT $3`)
 
 // Only the owner ever reads this, so no permission filter runs here. Whoever
 // calls it has already established that the rows belong to the reader.
-func (d *DB) FavouritesOf(ctx context.Context, userID int64, offset, limit int) ([]Favourite, error) {
-	rows, err := d.pool.Query(ctx, qFavouritesOf, userID, offset, limit)
+func (d *DB) FavouritesOf(ctx context.Context, siteID, userID int64, offset, limit int) ([]Favourite, error) {
+	rows, err := d.pool.Query(ctx, qFavouritesOf, userID, offset, limit, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list favourites of user %d: %w", userID, err)
 	}

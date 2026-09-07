@@ -21,10 +21,10 @@ type ForumSectionRow struct {
 var qAdminForumSections = register("AdminForumSections", `
 SELECT s.id, s.name, s.description, s."order", s.is_hidden, s.is_hidden_for_users,
        (SELECT count(*) FROM web_forumcategory c WHERE c.section_id = s.id)
-FROM web_forumsection s ORDER BY s."order", s.id`)
+FROM web_forumsection s WHERE s.site_id = $1 ORDER BY s."order", s.id`)
 
-func (d *DB) AdminForumSections(ctx context.Context) ([]ForumSectionRow, error) {
-	rows, err := d.pool.Query(ctx, qAdminForumSections)
+func (d *DB) AdminForumSections(ctx context.Context, siteID int64) ([]ForumSectionRow, error) {
+	rows, err := d.pool.Query(ctx, qAdminForumSections, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list forum sections: %w", err)
 	}
@@ -60,8 +60,8 @@ func (d *DB) AdminForumSection(ctx context.Context, id int64) (ForumSectionRow, 
 
 var (
 	qInsertForumSection = register("InsertForumSection", `
-INSERT INTO web_forumsection (name, description, "order", is_hidden, is_hidden_for_users)
-VALUES ($1, $2, $3, $4, $5) RETURNING id`)
+INSERT INTO web_forumsection (name, description, "order", is_hidden, is_hidden_for_users, site_id)
+VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`)
 
 	qUpdateForumSection = register("UpdateForumSection", `
 UPDATE web_forumsection SET name=$2, description=$3, "order"=$4, is_hidden=$5, is_hidden_for_users=$6
@@ -70,10 +70,10 @@ WHERE id=$1`)
 	qDeleteForumSection = register("DeleteForumSection", `DELETE FROM web_forumsection WHERE id = $1`)
 )
 
-func (d *DB) SaveForumSection(ctx context.Context, s ForumSectionRow) error {
+func (d *DB) SaveForumSection(ctx context.Context, siteID int64, s ForumSectionRow) error {
 	if s.ID == 0 {
 		var id int64
-		err := d.pool.QueryRow(ctx, qInsertForumSection, s.Name, s.Description, s.Order, s.IsHidden, s.IsHiddenForUser).Scan(&id)
+		err := d.pool.QueryRow(ctx, qInsertForumSection, s.Name, s.Description, s.Order, s.IsHidden, s.IsHiddenForUser, siteID).Scan(&id)
 		if err != nil {
 			return fmt.Errorf("create forum section %q: %w", s.Name, err)
 		}
@@ -108,10 +108,11 @@ var qAdminForumCategories = register("AdminForumCategories", `
 SELECT c.id, c.name, c.description, c."order", c.is_for_comments, c.section_id, s.name,
        (SELECT count(*) FROM web_forumthread t WHERE t.category_id = c.id)
 FROM web_forumcategory c JOIN web_forumsection s ON s.id = c.section_id
+WHERE s.site_id = $1
 ORDER BY s."order", c."order", c.id`)
 
-func (d *DB) AdminForumCategories(ctx context.Context) ([]ForumCategoryRow, error) {
-	rows, err := d.pool.Query(ctx, qAdminForumCategories)
+func (d *DB) AdminForumCategories(ctx context.Context, siteID int64) ([]ForumCategoryRow, error) {
+	rows, err := d.pool.Query(ctx, qAdminForumCategories, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list forum categories: %w", err)
 	}

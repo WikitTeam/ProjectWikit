@@ -16,11 +16,11 @@ import (
 type moduleData struct{ repo *Repository }
 
 func (m moduleData) TagCategory(slug string) (db.TagCategory, error) {
-	return m.repo.db.TagCategoryBySlug(m.repo.ctx, slug)
+	return m.repo.db.TagCategoryBySlug(m.repo.ctx, m.repo.siteID(), slug)
 }
 
 func (m moduleData) TagArticles(categorySlug, name string, hidden []string) ([]db.Article, error) {
-	return m.repo.db.ArticlesByTag(m.repo.ctx, categorySlug, name, hidden)
+	return m.repo.db.ArticlesByTag(m.repo.ctx, m.repo.siteID(), categorySlug, name, hidden)
 }
 
 func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
@@ -52,7 +52,7 @@ func HiddenCategories(ctx context.Context, d *db.DB, user *db.User) ([]string, e
 }
 
 func (m moduleData) TagIDsByName(categorySlug, name string) ([]int64, error) {
-	return m.repo.db.TagIDsByName(m.repo.ctx, categorySlug, name)
+	return m.repo.db.TagIDsByName(m.repo.ctx, m.repo.siteID(), categorySlug, name)
 }
 
 func (m moduleData) ArticleTagIDs(articleID int64) ([]int64, error) {
@@ -110,11 +110,15 @@ func (m moduleData) HasVoted(articleID int64, userID *int64) (bool, error) {
 	return m.repo.db.HasVoted(m.repo.ctx, articleID, userID)
 }
 
+// The filter is stamped here rather than where a module builds it, so no
+// module can ask for another site's pages by leaving the field alone.
 func (m moduleData) ListArticles(f db.ListFilter, offset int, limit *int) ([]db.Article, error) {
+	f.SiteID = m.repo.siteID()
 	return m.repo.db.ListArticles(m.repo.ctx, f, offset, limit)
 }
 
 func (m moduleData) CountArticles(f db.ListFilter, offset int, limit *int) (int, error) {
+	f.SiteID = m.repo.siteID()
 	return m.repo.db.CountArticles(m.repo.ctx, f, offset, limit)
 }
 
@@ -135,7 +139,7 @@ func (m moduleData) CommentInfo(articleID int64) (db.CommentInfo, error) {
 }
 
 func (m moduleData) TagCloud(limit *int) ([]db.CloudTag, error) {
-	return m.repo.db.TagCloud(m.repo.ctx, limit)
+	return m.repo.db.TagCloud(m.repo.ctx, m.repo.siteID(), limit)
 }
 
 func (m moduleData) WantedLinks(f db.WantedFilter, offset, limit int) ([]db.WantedLink, error) {
@@ -325,15 +329,17 @@ func UserJSON(ctx context.Context, d *db.DB, u *db.User) (wikijson.Object, error
 }
 
 func (m moduleData) SearchArticles(f db.SearchFilter, offset, limit int) ([]db.SearchHit, error) {
+	f.SiteID = m.repo.siteID()
 	return m.repo.db.SearchArticles(m.repo.ctx, f, offset, limit)
 }
 
 func (m moduleData) SearchCount(f db.SearchFilter) (int, error) {
+	f.SiteID = m.repo.siteID()
 	return m.repo.db.SearchCount(m.repo.ctx, f)
 }
 
 func (m moduleData) TagIDsByFullName(category, name string) ([]int64, error) {
-	return m.repo.db.TagIDsByFullName(m.repo.ctx, category, name)
+	return m.repo.db.TagIDsByFullName(m.repo.ctx, m.repo.siteID(), category, name)
 }
 
 func (m moduleData) AuthorsOfArticles(ids []int64) (map[int64][]db.User, error) {
@@ -357,15 +363,17 @@ func (m moduleData) UserByDisplayName(name string) (*db.User, error) {
 }
 
 func (m moduleData) SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error) {
+	f.SiteID = m.repo.siteID()
 	return m.repo.db.SiteChanges(m.repo.ctx, f, offset, limit)
 }
 
 func (m moduleData) SiteChangeCount(f db.SiteChangeFilter) (int, error) {
+	f.SiteID = m.repo.siteID()
 	return m.repo.db.SiteChangeCount(m.repo.ctx, f)
 }
 
 func (m moduleData) ArticleCategories(hidden []string) ([]string, error) {
-	return m.repo.db.ArticleCategories(m.repo.ctx, hidden)
+	return m.repo.db.ArticleCategories(m.repo.ctx, m.repo.siteID(), hidden)
 }
 
 func (m moduleData) UserIDsByName(name string, partial bool) ([]int64, error) {
@@ -401,7 +409,7 @@ func (m moduleData) CreateForumPost(w db.ForumPostWrite) (int64, error) {
 }
 
 func (m moduleData) CreateForumThread(w db.ForumThreadWrite, source string) (int64, int64, error) {
-	return m.repo.db.CreateForumThread(m.repo.ctx, w, source)
+	return m.repo.db.CreateForumThread(m.repo.ctx, m.repo.siteID(), w, source)
 }
 
 func (m moduleData) UpdateForumPost(postID int64, name, source, previous string, authorID *int64) error {
@@ -433,11 +441,11 @@ func (m moduleData) ActiveUsersByNames(names []string) ([]db.User, error) {
 }
 
 func (m moduleData) TagsCategories() ([]db.TagsCategory, error) {
-	return m.repo.db.TagsCategories(m.repo.ctx)
+	return m.repo.db.TagsCategories(m.repo.ctx, m.repo.siteID())
 }
 
 func (m moduleData) AllTags() ([]db.NamedTag, error) {
-	return m.repo.db.AllTags(m.repo.ctx)
+	return m.repo.db.AllTags(m.repo.ctx, m.repo.siteID())
 }
 
 func (m moduleData) PostLikeCounts(postIDs []int64) (map[int64]int, error) {

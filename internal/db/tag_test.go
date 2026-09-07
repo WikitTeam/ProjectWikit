@@ -10,11 +10,11 @@ func TestTagCloudSQLMatchesSchema(t *testing.T) {
 	ctx := context.Background()
 	limit := 2
 
-	all, err := d.TagCloud(ctx, nil)
+	all, err := d.TagCloud(ctx, seedSiteID(t, d), nil)
 	if err != nil {
 		t.Fatalf("TagCloud(nil) err = %v, want nil", err)
 	}
-	limited, err := d.TagCloud(ctx, &limit)
+	limited, err := d.TagCloud(ctx, seedSiteID(t, d), &limit)
 	if err != nil {
 		t.Fatalf("TagCloud(2) err = %v, want nil", err)
 	}
@@ -29,7 +29,7 @@ func TestTagCloudSQLMatchesSchema(t *testing.T) {
 func TestTagCloudSkipsUnderscoreNames(t *testing.T) {
 	d := newTestDB(t)
 
-	tags, err := d.TagCloud(context.Background(), nil)
+	tags, err := d.TagCloud(context.Background(), seedSiteID(t, d), nil)
 	if err != nil {
 		t.Fatalf("TagCloud(nil) err = %v, want nil", err)
 	}
@@ -43,7 +43,7 @@ func TestTagCloudSkipsUnderscoreNames(t *testing.T) {
 func TestTagCloudOrdersByArticleCount(t *testing.T) {
 	d := newTestDB(t)
 
-	tags, err := d.TagCloud(context.Background(), nil)
+	tags, err := d.TagCloud(context.Background(), seedSiteID(t, d), nil)
 	if err != nil {
 		t.Fatalf("TagCloud(nil) err = %v, want nil", err)
 	}

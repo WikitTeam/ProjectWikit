@@ -38,7 +38,7 @@ func (h *Handler) siteForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
-	themes, err := h.deps.DB.Themes(ctx)
+	themes, err := h.deps.DB.Themes(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}

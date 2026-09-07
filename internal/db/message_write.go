@@ -86,13 +86,13 @@ func (d *DB) UnblockUser(ctx context.Context, blockerID, blockedID int64) (bool,
 }
 
 var qCreateReport = register("CreateReport", `
-INSERT INTO web_userreport (reporter_id, reported_id, reason, reported_messages, status, admin_notes, created_at)
-VALUES ($1, $2, $3, $4, $5, '', $6)
+INSERT INTO web_userreport (reporter_id, reported_id, reason, reported_messages, status, admin_notes, created_at, site_id)
+VALUES ($1, $2, $3, $4, $5, '', $6, $7)
 RETURNING id`)
 
-func (d *DB) CreateReport(ctx context.Context, reporterID, reportedID int64, reason, snapshot string, at time.Time) (int64, error) {
+func (d *DB) CreateReport(ctx context.Context, siteID, reporterID, reportedID int64, reason, snapshot string, at time.Time) (int64, error) {
 	var id int64
-	err := d.pool.QueryRow(ctx, qCreateReport, reporterID, reportedID, reason, snapshot, ReportPending, at).Scan(&id)
+	err := d.pool.QueryRow(ctx, qCreateReport, reporterID, reportedID, reason, snapshot, ReportPending, at, siteID).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("write report by %d against %d: %w", reporterID, reportedID, err)
 	}

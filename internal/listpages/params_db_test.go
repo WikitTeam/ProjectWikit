@@ -128,7 +128,7 @@ func (s dbSource) CategoryForm(category string) (*form.Definition, error) {
 }
 
 func (s dbSource) TagIDsByName(categorySlug, name string) ([]int64, error) {
-	return s.d.TagIDsByName(s.ctx, categorySlug, name)
+	return s.d.TagIDsByName(s.ctx, onlySiteID(s.ctx, s.d), categorySlug, name)
 }
 
 func (s dbSource) ArticleTagIDs(articleID int64) ([]int64, error) {

@@ -77,28 +77,28 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 func (h *Handler) queue(ctx context.Context, loc *i18n.Localizer, granted perms.Set) ([]queueItem, error) {
 	var out []queueItem
 	if granted.Has(perms.ViewUserReports) {
-		_, total, err := h.deps.DB.AdminReports(ctx, db.ReportPending, 1, 0)
+		_, total, err := h.deps.DB.AdminReports(ctx, siteID(ctx), db.ReportPending, 1, 0)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, queueItem{Prefix + reportSlug + "/?status=" + db.ReportPending, loc.T("admin.reports"), total})
 	}
 	if granted.Has(perms.ViewUserTickets) {
-		_, total, err := h.deps.DB.AdminTickets(ctx, db.TicketKind, db.TicketPending, 1, 0)
+		_, total, err := h.deps.DB.AdminTickets(ctx, siteID(ctx), db.TicketKind, db.TicketPending, 1, 0)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, queueItem{Prefix + ticketSlug + "/?status=" + db.TicketPending, loc.T("admin.tickets"), total})
 	}
 	if granted.Has(perms.ReviewMembershipApplications) {
-		_, total, err := h.deps.DB.AdminTickets(ctx, db.MembershipApplyKind, db.TicketPending, 1, 0)
+		_, total, err := h.deps.DB.AdminTickets(ctx, siteID(ctx), db.MembershipApplyKind, db.TicketPending, 1, 0)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, queueItem{Prefix + membershipSlug + "/?status=" + db.TicketPending, loc.T("admin.membership"), total})
 	}
 	if granted.Has(perms.ManageUsers) {
-		total, err := h.deps.DB.OpenInviteCount(ctx)
+		total, err := h.deps.DB.OpenInviteCount(ctx, siteID(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +108,7 @@ func (h *Handler) queue(ctx context.Context, loc *i18n.Localizer, granted perms.
 }
 
 func (h *Handler) recentChanges(ctx context.Context, loc *i18n.Localizer) ([]changeRow, error) {
-	found, err := h.deps.DB.SiteChanges(ctx, db.SiteChangeFilter{}, 0, dashboardRows)
+	found, err := h.deps.DB.SiteChanges(ctx, db.SiteChangeFilter{SiteID: siteID(ctx)}, 0, dashboardRows)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (h *Handler) recentChanges(ctx context.Context, loc *i18n.Localizer) ([]cha
 }
 
 func (h *Handler) recentActions(ctx context.Context) ([]actionRow, error) {
-	found, err := h.deps.DB.AdminNotes(ctx, "", dashboardRows, 0)
+	found, err := h.deps.DB.AdminNotes(ctx, siteID(ctx), "", dashboardRows, 0)
 	if err != nil {
 		return nil, err
 	}

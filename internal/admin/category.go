@@ -24,7 +24,7 @@ func (h *Handler) pageCategories(w http.ResponseWriter, r *http.Request, loc *i1
 		return h.savePageCategory(w, r, loc, rest)
 	}
 	if rest == "" {
-		found, err := h.deps.DB.AdminCategories(r.Context())
+		found, err := h.deps.DB.AdminCategories(r.Context(), siteID(r.Context()))
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	if row.ID == 0 {
 		did = db.AdminCreated
 	}
-	if err := h.deps.DB.SaveCategory(ctx, row); err != nil {
+	if err := h.deps.DB.SaveCategory(ctx, siteID(ctx), row); err != nil {
 		return err
 	}
 
@@ -155,7 +155,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 		return nil
 	}
 	if row.ID == 0 {
-		found, err := h.deps.DB.AdminCategories(ctx)
+		found, err := h.deps.DB.AdminCategories(ctx, siteID(ctx))
 		if err != nil {
 			return err
 		}

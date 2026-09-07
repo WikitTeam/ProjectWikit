@@ -294,7 +294,7 @@ func (e *editor) retag() (*refusal, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, _, err := e.handler.deps.DB.SetArticleTags(e.req.Context(), e.article.ID, tags, allow, e.userID, e.at)
+	rev, _, err := e.handler.deps.DB.SetArticleTags(e.req.Context(), siteID(e.req.Context()), e.article.ID, tags, allow, e.userID, e.at)
 	if err != nil {
 		return nil, err
 	}

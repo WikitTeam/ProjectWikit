@@ -9,19 +9,19 @@ var qTagIDsByName = register("TagIDsByName", `
 SELECT t.id
 FROM web_tag t
 JOIN web_tagscategory c ON c.id = t.category_id
-WHERE c.slug = $1 AND t.name = $2
+WHERE t.site_id = $1 AND c.slug = $2 AND t.name = $3
 ORDER BY t.id`)
 
 var qTagIDsByBareName = register("TagIDsByBareName", `
 SELECT id
 FROM web_tag
-WHERE name = $1
+WHERE site_id = $1 AND name = $2
 ORDER BY id`)
 
-func (d *DB) TagIDsByName(ctx context.Context, categorySlug, name string) ([]int64, error) {
-	sql, args := qTagIDsByBareName, []any{name}
+func (d *DB) TagIDsByName(ctx context.Context, siteID int64, categorySlug, name string) ([]int64, error) {
+	sql, args := qTagIDsByBareName, []any{siteID, name}
 	if categorySlug != "" {
-		sql, args = qTagIDsByName, []any{categorySlug, name}
+		sql, args = qTagIDsByName, []any{siteID, categorySlug, name}
 	}
 	rows, err := d.pool.Query(ctx, sql, args...)
 	if err != nil {
@@ -89,17 +89,17 @@ SELECT t.name,
 FROM web_tag t
 JOIN web_tagscategory c ON c.id = t.category_id
 LEFT JOIN web_article_tags link ON link.tag_id = t.id
-WHERE t.name NOT LIKE '\_%'
+WHERE t.site_id = $1 AND t.name NOT LIKE '\_%'
 GROUP BY t.id, t.name, c.id, c.name, c.slug, c.description, c.priority
 ORDER BY count(link.article_id) DESC`)
 
 // The limit lands after the busiest tags come first, so it decides which tags
 // are in the cloud and not just how many.
-func (d *DB) TagCloud(ctx context.Context, limit *int) ([]CloudTag, error) {
+func (d *DB) TagCloud(ctx context.Context, siteID int64, limit *int) ([]CloudTag, error) {
 	sql := qTagCloud
-	args := []any{}
+	args := []any{siteID}
 	if limit != nil {
-		sql += "\nLIMIT $1"
+		sql += "\nLIMIT $2"
 		args = append(args, *limit)
 	}
 	rows, err := d.pool.Query(ctx, sql, args...)
@@ -133,10 +133,11 @@ type TagsCategory struct {
 var qTagsCategories = register("TagsCategories", `
 SELECT id, name, description, slug
 FROM web_tagscategory
+WHERE site_id = $1
 ORDER BY priority, id`)
 
-func (d *DB) TagsCategories(ctx context.Context) ([]TagsCategory, error) {
-	rows, err := d.pool.Query(ctx, qTagsCategories)
+func (d *DB) TagsCategories(ctx context.Context, siteID int64) ([]TagsCategory, error) {
+	rows, err := d.pool.Query(ctx, qTagsCategories, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list tag categories: %w", err)
 	}
@@ -161,10 +162,10 @@ type NamedTag struct {
 	Name       string
 }
 
-var qAllTags = register("AllTags", `SELECT category_id, name FROM web_tag ORDER BY id`)
+var qAllTags = register("AllTags", `SELECT category_id, name FROM web_tag WHERE site_id = $1 ORDER BY id`)
 
-func (d *DB) AllTags(ctx context.Context) ([]NamedTag, error) {
-	rows, err := d.pool.Query(ctx, qAllTags)
+func (d *DB) AllTags(ctx context.Context, siteID int64) ([]NamedTag, error) {
+	rows, err := d.pool.Query(ctx, qAllTags, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list tags: %w", err)
 	}

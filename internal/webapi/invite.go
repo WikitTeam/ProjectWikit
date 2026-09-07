@@ -110,7 +110,7 @@ func (h *Users) mintInvite(r *http.Request, current *db.Site, by *db.User, email
 	link := scheme(r) + "://" + current.Domain + acceptPrefix + uid + "/" + minted
 
 	owner := by.ID
-	if _, err := h.deps.DB.CreateInviteLink(ctx, inviteKindRegister, inviteByLink,
+	if _, err := h.deps.DB.CreateInviteLink(ctx, siteID(ctx), inviteKindRegister, inviteByLink,
 		email, "", minted, uid, &owner, id, now); err != nil {
 		return "", err
 	}

@@ -43,7 +43,7 @@ func (h *Handler) reportList(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	if page < 1 {
 		page = 1
 	}
-	found, total, err := h.deps.DB.AdminReports(r.Context(), status, perPage, (page-1)*perPage)
+	found, total, err := h.deps.DB.AdminReports(r.Context(), siteID(r.Context()), status, perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}

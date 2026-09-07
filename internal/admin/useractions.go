@@ -208,7 +208,7 @@ func (h *Handler) saveClaimLink(w http.ResponseWriter, r *http.Request, loc *i18
 	if err != nil {
 		return h.claimLink(w, r, loc, loc.T("admin.claim-no-user"), "")
 	}
-	row, err := h.deps.DB.AdminUser(ctx, id)
+	row, err := h.deps.DB.AdminUser(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) || row.Type != db.UserTypeWikidot || row.IsActive {
 		return h.claimLink(w, r, loc, loc.T("admin.claim-no-user"), "")
 	}
@@ -240,7 +240,7 @@ func (h *Handler) mintLinkAs(w http.ResponseWriter, r *http.Request, kind, deliv
 	if by := auth.FromContext(ctx); by != nil {
 		owner = &by.ID
 	}
-	if _, err := h.deps.DB.CreateInviteLink(ctx, kind, delivery, email, wikidotName,
+	if _, err := h.deps.DB.CreateInviteLink(ctx, siteID(ctx), kind, delivery, email, wikidotName,
 		minted, uid, owner, id, now); err != nil {
 		return "", err
 	}
@@ -254,7 +254,7 @@ func (h *Handler) resetVotes(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		notFound(w)
 		return nil
 	}
-	row, err := h.deps.DB.AdminUser(ctx, id)
+	row, err := h.deps.DB.AdminUser(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -406,7 +406,7 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		notFound(w)
 		return nil
 	}
-	row, err := h.deps.DB.AdminUser(r.Context(), id)
+	row, err := h.deps.DB.AdminUser(r.Context(), siteID(r.Context()), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil

@@ -27,12 +27,12 @@ var qRatedBy = register("RatedBy", `
 SELECT `+prefixedArticleColumns+`, v.rate, v.date
 FROM web_vote v
 JOIN web_article a ON a.id = v.article_id
-WHERE v.user_id = $1
+WHERE v.user_id = $1 AND a.site_id = $4
 ORDER BY v.date DESC NULLS LAST, v.id DESC
 OFFSET $2 LIMIT $3`)
 
-func (d *DB) RatedBy(ctx context.Context, userID int64, offset, limit int) ([]RatedArticle, error) {
-	rows, err := d.pool.Query(ctx, qRatedBy, userID, offset, limit)
+func (d *DB) RatedBy(ctx context.Context, siteID, userID int64, offset, limit int) ([]RatedArticle, error) {
+	rows, err := d.pool.Query(ctx, qRatedBy, userID, offset, limit, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list votes of user %d: %w", userID, err)
 	}
@@ -77,12 +77,12 @@ SELECT p.id, p.thread_id, p.name, p.created_at, p.updated_at, p.author_id, p.rep
 FROM web_forumpostlike l
 JOIN web_forumpost p ON p.id = l.post_id
 JOIN web_forumthread t ON t.id = p.thread_id
-WHERE l.user_id = $1
+WHERE l.user_id = $1 AND t.site_id = $4
 ORDER BY l.created_at DESC, l.id DESC
 OFFSET $2 LIMIT $3`)
 
-func (d *DB) LikedPostsOf(ctx context.Context, userID int64, offset, limit int) ([]LikedPost, error) {
-	rows, err := d.pool.Query(ctx, qLikedPostsOf, userID, offset, limit)
+func (d *DB) LikedPostsOf(ctx context.Context, siteID, userID int64, offset, limit int) ([]LikedPost, error) {
+	rows, err := d.pool.Query(ctx, qLikedPostsOf, userID, offset, limit, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list likes of user %d: %w", userID, err)
 	}

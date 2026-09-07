@@ -27,11 +27,11 @@ type CategoryOverride struct {
 
 var qAdminCategories = register("AdminCategories", `
 SELECT c.id, c.name, c.is_indexed,
-       (SELECT count(*) FROM web_article a WHERE a.category = c.name)
-FROM web_category c ORDER BY c.name, c.id`)
+       (SELECT count(*) FROM web_article a WHERE a.category = c.name AND a.site_id = c.site_id)
+FROM web_category c WHERE c.site_id = $1 ORDER BY c.name, c.id`)
 
-func (d *DB) AdminCategories(ctx context.Context) ([]CategoryRow, error) {
-	rows, err := d.pool.Query(ctx, qAdminCategories)
+func (d *DB) AdminCategories(ctx context.Context, siteID int64) ([]CategoryRow, error) {
+	rows, err := d.pool.Query(ctx, qAdminCategories, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list categories: %w", err)
 	}
@@ -136,7 +136,7 @@ func (d *DB) AdminCategory(ctx context.Context, id int64) (CategoryRow, error) {
 }
 
 var (
-	qInsertCategory         = register("InsertCategory", `INSERT INTO web_category (name, is_indexed) VALUES ($1,$2) RETURNING id`)
+	qInsertCategory         = register("InsertCategory", `INSERT INTO web_category (name, is_indexed, site_id) VALUES ($1,$2,$3) RETURNING id`)
 	qUpdateCategory         = register("UpdateCategory", `UPDATE web_category SET name=$2, is_indexed=$3 WHERE id=$1`)
 	qUpsertCategorySettings = register("UpsertCategorySettings", `
 INSERT INTO web_settings (category_id, site_id, rating_mode, can_user_create_tags)
@@ -145,7 +145,7 @@ ON CONFLICT (category_id) DO UPDATE SET rating_mode = EXCLUDED.rating_mode,
 	can_user_create_tags = EXCLUDED.can_user_create_tags`)
 )
 
-func (d *DB) SaveCategory(ctx context.Context, c CategoryRow) error {
+func (d *DB) SaveCategory(ctx context.Context, siteID int64, c CategoryRow) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin saving category %q: %w", c.Name, err)
@@ -153,7 +153,7 @@ func (d *DB) SaveCategory(ctx context.Context, c CategoryRow) error {
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
 	if c.ID == 0 {
-		if err := tx.QueryRow(ctx, qInsertCategory, c.Name, c.IsIndexed).Scan(&c.ID); err != nil {
+		if err := tx.QueryRow(ctx, qInsertCategory, c.Name, c.IsIndexed, siteID).Scan(&c.ID); err != nil {
 			return fmt.Errorf("create category %q: %w", c.Name, err)
 		}
 	} else if _, err := tx.Exec(ctx, qUpdateCategory, c.ID, c.Name, c.IsIndexed); err != nil {

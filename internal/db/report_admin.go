@@ -39,24 +39,24 @@ LEFT JOIN web_user rev ON rev.id = r.reviewed_by_id`
 
 var qAdminReports = register("AdminReports", `
 SELECT `+reportColumns+reportJoins+`
-WHERE $1 = '' OR r.status = $1
+WHERE ($1 = '' OR r.status = $1) AND r.site_id = $4
 ORDER BY r.created_at DESC, r.id DESC
 LIMIT $2 OFFSET $3`)
 
 var qAdminReportCount = register("AdminReportCount", `
-SELECT count(*) FROM web_userreport r WHERE $1 = '' OR r.status = $1`)
+SELECT count(*) FROM web_userreport r WHERE ($1 = '' OR r.status = $1) AND r.site_id = $2`)
 
 func scanReport(row pgx.Row, r *ReportRow) error {
 	return row.Scan(&r.ID, &r.Reporter, &r.Reported, &r.Reason, &r.Messages,
 		&r.Status, &r.AdminNotes, &r.CreatedAt, &r.ReviewedAt, &r.ReviewedBy)
 }
 
-func (d *DB) AdminReports(ctx context.Context, status string, limit, offset int) ([]ReportRow, int, error) {
+func (d *DB) AdminReports(ctx context.Context, siteID int64, status string, limit, offset int) ([]ReportRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminReportCount, status).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminReportCount, status, siteID).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count reports: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminReports, status, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminReports, status, limit, offset, siteID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list reports: %w", err)
 	}

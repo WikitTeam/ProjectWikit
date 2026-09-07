@@ -111,7 +111,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		notFound(w)
 		return nil
 	}
-	row, err := h.deps.DB.AdminUser(ctx, id)
+	row, err := h.deps.DB.AdminUser(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -177,7 +177,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		notFound(w)
 		return nil
 	}
-	stored, err := h.deps.DB.AdminUser(ctx, id)
+	stored, err := h.deps.DB.AdminUser(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -230,7 +230,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if next.Username == "" {
 		return h.userForm(w, r, loc, rest, loc.T("admin.user-no-name"))
 	}
-	err = h.deps.DB.SaveAdminUser(ctx, next, builtinRoles, maySetRoles, maySuper)
+	err = h.deps.DB.SaveAdminUser(ctx, siteID(ctx), next, builtinRoles, maySetRoles, maySuper)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (h *Handler) mayEdit(ctx context.Context, target db.AdminUserRow) (bool, er
 	if mine.IsSuperuser {
 		return true, nil
 	}
-	rank, err := h.deps.DB.OperationIndex(ctx, mine.ID)
+	rank, err := h.deps.DB.OperationIndex(ctx, siteID(ctx), mine.ID)
 	if err != nil {
 		return false, err
 	}

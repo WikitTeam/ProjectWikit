@@ -136,11 +136,11 @@ func (d *DB) UserPreference(ctx context.Context, userID int64, section, name str
 var qTagCategoryBySlug = register("TagCategoryBySlug", `
 SELECT id, name, priority
 FROM web_tagscategory
-WHERE slug = $1`)
+WHERE slug = $1 AND site_id = $2`)
 
-func (d *DB) TagCategoryBySlug(ctx context.Context, slug string) (TagCategory, error) {
+func (d *DB) TagCategoryBySlug(ctx context.Context, siteID int64, slug string) (TagCategory, error) {
 	var c TagCategory
-	err := d.pool.QueryRow(ctx, qTagCategoryBySlug, slug).Scan(&c.ID, &c.Name, &c.Priority)
+	err := d.pool.QueryRow(ctx, qTagCategoryBySlug, slug, siteID).Scan(&c.ID, &c.Name, &c.Priority)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return TagCategory{}, ErrNotFound
 	}
@@ -179,16 +179,16 @@ FROM web_article a
 JOIN web_article_tags link ON link.article_id = a.id
 JOIN web_tag t ON t.id = link.tag_id
 JOIN web_tagscategory c ON c.id = t.category_id
-WHERE c.slug = $1 AND t.name = $2 AND NOT (a.category = ANY($3))
+WHERE c.slug = $1 AND t.name = $2 AND NOT (a.category = ANY($3)) AND a.site_id = $4
 ORDER BY a.title`)
 
 // ArticlesByTag leaves out the categories the visitor cannot see, which the
 // caller resolves because permissions are not a database question.
-func (d *DB) ArticlesByTag(ctx context.Context, categorySlug, name string, hidden []string) ([]Article, error) {
+func (d *DB) ArticlesByTag(ctx context.Context, siteID int64, categorySlug, name string, hidden []string) ([]Article, error) {
 	if hidden == nil {
 		hidden = []string{}
 	}
-	rows, err := d.pool.Query(ctx, qArticlesByTag, categorySlug, name, hidden)
+	rows, err := d.pool.Query(ctx, qArticlesByTag, categorySlug, name, hidden, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query articles tagged %q: %w", name, err)
 	}

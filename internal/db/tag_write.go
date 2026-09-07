@@ -23,18 +23,18 @@ type taggedName struct {
 
 var (
 	qFindTagCategory = register("FindTagCategory", `
-SELECT id FROM web_tagscategory WHERE slug = $1`)
+SELECT id FROM web_tagscategory WHERE slug = $1 AND site_id = $2`)
 
 	qInsertTagCategory = register("InsertTagCategory", `
-INSERT INTO web_tagscategory (name, description, slug)
-VALUES ($1, '', $1)
+INSERT INTO web_tagscategory (name, description, slug, site_id)
+VALUES ($1, '', $1, $2)
 RETURNING id`)
 
 	qFindTag = register("FindTag", `
 SELECT id FROM web_tag WHERE category_id = $1 AND name = $2`)
 
 	qInsertTag = register("InsertTag", `
-INSERT INTO web_tag (category_id, name) VALUES ($1, $2) RETURNING id`)
+INSERT INTO web_tag (category_id, name, site_id) VALUES ($1, $2, $3) RETURNING id`)
 
 	qReadArticleTags = register("ReadArticleTags", `
 SELECT t.id, c.slug, t.name
@@ -52,19 +52,20 @@ INSERT INTO web_article_tags (article_id, tag_id) VALUES ($1, $2)`)
 
 	qDropOrphanTags = register("DropOrphanTags", `
 DELETE FROM web_tag
-WHERE NOT EXISTS (SELECT 1 FROM web_article_tags at WHERE at.tag_id = web_tag.id)`)
+WHERE site_id = $1
+  AND NOT EXISTS (SELECT 1 FROM web_article_tags at WHERE at.tag_id = web_tag.id)`)
 
 	// Only a category whose name was never set apart from its slug is swept up,
 	// which is how one somebody typed out survives losing its last tag.
 	qDropOrphanTagCategories = register("DropOrphanTagCategories", `
 DELETE FROM web_tagscategory
-WHERE slug = name
+WHERE site_id = $1 AND slug = name
   AND NOT EXISTS (SELECT 1 FROM web_tag t WHERE t.category_id = web_tagscategory.id)`)
 )
 
 // A name with a space in it is dropped rather than refused, so one bad entry
 // does not cost the page the rest of its tags.
-func (d *DB) SetArticleTags(ctx context.Context, articleID int64, tags []string,
+func (d *DB) SetArticleTags(ctx context.Context, siteID, articleID int64, tags []string,
 	allowCreate bool, userID *int64, at time.Time) (Revision, bool, error) {
 
 	tx, err := d.pool.Begin(ctx)
@@ -73,7 +74,7 @@ func (d *DB) SetArticleTags(ctx context.Context, articleID int64, tags []string,
 	}
 	defer tx.Rollback(ctx)
 
-	wanted, err := resolveTags(ctx, tx, tags, allowCreate)
+	wanted, err := resolveTags(ctx, tx, siteID, tags, allowCreate)
 	if err != nil {
 		return Revision{}, false, fmt.Errorf("resolve tags of %d: %w", articleID, err)
 	}
@@ -101,10 +102,10 @@ func (d *DB) SetArticleTags(ctx context.Context, articleID int64, tags []string,
 		}
 	}
 	if allowCreate {
-		if _, err := tx.Exec(ctx, qDropOrphanTags); err != nil {
+		if _, err := tx.Exec(ctx, qDropOrphanTags, siteID); err != nil {
 			return Revision{}, false, fmt.Errorf("sweep tags: %w", err)
 		}
-		if _, err := tx.Exec(ctx, qDropOrphanTagCategories); err != nil {
+		if _, err := tx.Exec(ctx, qDropOrphanTagCategories, siteID); err != nil {
 			return Revision{}, false, fmt.Errorf("sweep tag categories: %w", err)
 		}
 	}
@@ -129,14 +130,14 @@ func (d *DB) SetArticleTags(ctx context.Context, articleID int64, tags []string,
 	return rev, true, nil
 }
 
-func resolveTags(ctx context.Context, tx pgx.Tx, tags []string, allowCreate bool) ([]taggedName, error) {
+func resolveTags(ctx context.Context, tx pgx.Tx, siteID int64, tags []string, allowCreate bool) ([]taggedName, error) {
 	var out []taggedName
 	for _, raw := range tags {
 		if strings.Contains(raw, " ") {
 			continue
 		}
 		category, name := splitTagName(strings.ToLower(raw))
-		id, err := tagID(ctx, tx, category, name, allowCreate)
+		id, err := tagID(ctx, tx, siteID, category, name, allowCreate)
 		if err != nil {
 			return nil, err
 		}
@@ -151,14 +152,14 @@ func resolveTags(ctx context.Context, tx pgx.Tx, tags []string, allowCreate bool
 	return out, nil
 }
 
-func tagID(ctx context.Context, tx pgx.Tx, category, name string, allowCreate bool) (int64, error) {
+func tagID(ctx context.Context, tx pgx.Tx, siteID int64, category, name string, allowCreate bool) (int64, error) {
 	var categoryID int64
-	err := tx.QueryRow(ctx, qFindTagCategory, category).Scan(&categoryID)
+	err := tx.QueryRow(ctx, qFindTagCategory, category, siteID).Scan(&categoryID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		if !allowCreate {
 			return 0, nil
 		}
-		if err := tx.QueryRow(ctx, qInsertTagCategory, category).Scan(&categoryID); err != nil {
+		if err := tx.QueryRow(ctx, qInsertTagCategory, category, siteID).Scan(&categoryID); err != nil {
 			return 0, err
 		}
 	} else if err != nil {
@@ -171,7 +172,7 @@ func tagID(ctx context.Context, tx pgx.Tx, category, name string, allowCreate bo
 		if !allowCreate {
 			return 0, nil
 		}
-		if err := tx.QueryRow(ctx, qInsertTag, categoryID, name).Scan(&id); err != nil {
+		if err := tx.QueryRow(ctx, qInsertTag, categoryID, name, siteID).Scan(&id); err != nil {
 			return 0, err
 		}
 	} else if err != nil {

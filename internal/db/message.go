@@ -201,11 +201,11 @@ func (d *DB) Report(ctx context.Context, id int64) (*Report, error) {
 var qReportsSince = register("ReportsSince", `
 SELECT count(*)
 FROM web_userreport
-WHERE reporter_id = $1 AND reported_id = $2 AND created_at >= $3`)
+WHERE reporter_id = $1 AND reported_id = $2 AND created_at >= $3 AND site_id = $4`)
 
-func (d *DB) ReportsSince(ctx context.Context, reporterID, reportedID int64, since time.Time) (int, error) {
+func (d *DB) ReportsSince(ctx context.Context, siteID, reporterID, reportedID int64, since time.Time) (int, error) {
 	var count int
-	if err := d.pool.QueryRow(ctx, qReportsSince, reporterID, reportedID, since).Scan(&count); err != nil {
+	if err := d.pool.QueryRow(ctx, qReportsSince, reporterID, reportedID, since, siteID).Scan(&count); err != nil {
 		return 0, fmt.Errorf("count reports by %d against %d: %w", reporterID, reportedID, err)
 	}
 	return count, nil

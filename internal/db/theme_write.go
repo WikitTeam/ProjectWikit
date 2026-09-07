@@ -21,10 +21,10 @@ type ThemeRow struct {
 
 var qThemes = register("Themes", `
 SELECT id, name, slug, mode, css, external_url, updated_at
-FROM web_theme ORDER BY name, id`)
+FROM web_theme WHERE site_id = $1 ORDER BY name, id`)
 
-func (d *DB) Themes(ctx context.Context) ([]ThemeRow, error) {
-	rows, err := d.pool.Query(ctx, qThemes)
+func (d *DB) Themes(ctx context.Context, siteID int64) ([]ThemeRow, error) {
+	rows, err := d.pool.Query(ctx, qThemes, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list themes: %w", err)
 	}
@@ -59,18 +59,18 @@ func (d *DB) Theme(ctx context.Context, id int64) (ThemeRow, error) {
 }
 
 var qInsertTheme = register("InsertTheme", `
-INSERT INTO web_theme (name, slug, mode, css, external_url, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`)
+INSERT INTO web_theme (name, slug, mode, css, external_url, updated_at, site_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`)
 
 var qUpdateTheme = register("UpdateTheme", `
 UPDATE web_theme SET name = $2, slug = $3, mode = $4, css = $5, external_url = $6, updated_at = $7
 WHERE id = $1`)
 
-func (d *DB) SaveTheme(ctx context.Context, t ThemeRow) (int64, error) {
+func (d *DB) SaveTheme(ctx context.Context, siteID int64, t ThemeRow) (int64, error) {
 	at := time.Now()
 	if t.ID == 0 {
 		var id int64
-		err := d.pool.QueryRow(ctx, qInsertTheme, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at).Scan(&id)
+		err := d.pool.QueryRow(ctx, qInsertTheme, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at, siteID).Scan(&id)
 		if err != nil {
 			return 0, fmt.Errorf("create theme %q: %w", t.Slug, err)
 		}

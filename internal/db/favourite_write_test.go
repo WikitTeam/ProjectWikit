@@ -96,7 +96,7 @@ func TestFavouritesOfComeBackNewestFirstInAWindow(t *testing.T) {
 		t.Errorf("FavouriteCountOf() = %d, want 3", total)
 	}
 
-	first, err := d.FavouritesOf(ctx, user, 0, 2)
+	first, err := d.FavouritesOf(ctx, seedSiteID(t, d), user, 0, 2)
 	if err != nil {
 		t.Fatalf("FavouritesOf() err = %v, want nil", err)
 	}
@@ -107,7 +107,7 @@ func TestFavouritesOfComeBackNewestFirstInAWindow(t *testing.T) {
 		t.Errorf("FavouritesOf()[0].ID = %d, want %d", first[0].Article.ID, ids[2])
 	}
 
-	second, err := d.FavouritesOf(ctx, user, 2, 2)
+	second, err := d.FavouritesOf(ctx, seedSiteID(t, d), user, 2, 2)
 	if err != nil {
 		t.Fatalf("FavouritesOf() err = %v, want nil", err)
 	}

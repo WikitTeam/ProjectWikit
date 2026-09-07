@@ -61,7 +61,7 @@ func TestSetArticleTagsCreatesWhatItIsAllowedTo(t *testing.T) {
 	id := scratchTagged(t, d)
 	stamp := time.Now().Format("150405.000000")
 
-	_, wrote, err := d.SetArticleTags(ctx, id,
+	_, wrote, err := d.SetArticleTags(ctx, seedSiteID(t, d), id,
 		[]string{"probe" + stamp, "probecat" + stamp + ":one"}, true, nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("SetArticleTags() err = %v, want nil", err)
@@ -87,7 +87,7 @@ func TestSetArticleTagsSkipsWhatItMayNotCreate(t *testing.T) {
 	ctx := context.Background()
 	id := scratchTagged(t, d)
 
-	_, wrote, err := d.SetArticleTags(ctx, id,
+	_, wrote, err := d.SetArticleTags(ctx, seedSiteID(t, d), id,
 		[]string{"probe-never-seen-" + time.Now().Format("150405.000000")}, false, nil, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("SetArticleTags() err = %v, want nil", err)
@@ -106,7 +106,7 @@ func TestSetArticleTagsDropsANameWithASpace(t *testing.T) {
 	id := scratchTagged(t, d)
 	stamp := time.Now().Format("150405.000000")
 
-	if _, _, err := d.SetArticleTags(ctx, id,
+	if _, _, err := d.SetArticleTags(ctx, seedSiteID(t, d), id,
 		[]string{"two words", "probe" + stamp}, true, nil, time.Now().UTC()); err != nil {
 		t.Fatalf("SetArticleTags() err = %v, want nil", err)
 	}
@@ -123,10 +123,10 @@ func TestSetArticleTagsRecordsWhatMoved(t *testing.T) {
 	stamp := time.Now().Format("150405.000000")
 	at := time.Now().UTC()
 
-	if _, _, err := d.SetArticleTags(ctx, id, []string{"probeold" + stamp}, true, nil, at); err != nil {
+	if _, _, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{"probeold" + stamp}, true, nil, at); err != nil {
 		t.Fatalf("SetArticleTags(first) err = %v, want nil", err)
 	}
-	if _, _, err := d.SetArticleTags(ctx, id, []string{"probenew" + stamp}, true, nil, at.Add(time.Second)); err != nil {
+	if _, _, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{"probenew" + stamp}, true, nil, at.Add(time.Second)); err != nil {
 		t.Fatalf("SetArticleTags(second) err = %v, want nil", err)
 	}
 
@@ -154,10 +154,10 @@ func TestSetArticleTagsKeepsQuietWhenNothingMoves(t *testing.T) {
 	stamp := time.Now().Format("150405.000000")
 	at := time.Now().UTC()
 
-	if _, _, err := d.SetArticleTags(ctx, id, []string{"probe" + stamp}, true, nil, at); err != nil {
+	if _, _, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{"probe" + stamp}, true, nil, at); err != nil {
 		t.Fatalf("SetArticleTags(first) err = %v, want nil", err)
 	}
-	_, wrote, err := d.SetArticleTags(ctx, id, []string{"probe" + stamp}, true, nil, at.Add(time.Second))
+	_, wrote, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{"probe" + stamp}, true, nil, at.Add(time.Second))
 	if err != nil {
 		t.Fatalf("SetArticleTags(second) err = %v, want nil", err)
 	}
@@ -173,10 +173,10 @@ func TestSetArticleTagsSweepsATagNothingCarries(t *testing.T) {
 	stamp := time.Now().Format("150405.000000")
 	at := time.Now().UTC()
 
-	if _, _, err := d.SetArticleTags(ctx, id, []string{"probegone" + stamp}, true, nil, at); err != nil {
+	if _, _, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{"probegone" + stamp}, true, nil, at); err != nil {
 		t.Fatalf("SetArticleTags(first) err = %v, want nil", err)
 	}
-	if _, _, err := d.SetArticleTags(ctx, id, []string{"probekept" + stamp}, true, nil, at.Add(time.Second)); err != nil {
+	if _, _, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{"probekept" + stamp}, true, nil, at.Add(time.Second)); err != nil {
 		t.Fatalf("SetArticleTags(second) err = %v, want nil", err)
 	}
 

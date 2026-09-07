@@ -106,3 +106,19 @@ func TestSiteScopeListsHoldOnlyKnownNames(t *testing.T) {
 		}
 	}
 }
+
+func TestBuiltFiltersNameTheSite(t *testing.T) {
+	list, _ := ListFilter{SiteID: 7}.SelectSQL(0, nil)
+	if !strings.Contains(list, "a.site_id") {
+		t.Errorf("ListFilter.SelectSQL() = %q, want it to name a.site_id", list)
+	}
+	changes, _ := SiteChangeFilter{SiteID: 7}.SelectSQL(0, 10)
+	if !strings.Contains(changes, "a.site_id") {
+		t.Errorf("SiteChangeFilter.SelectSQL() = %q, want it to name a.site_id", changes)
+	}
+	b := &listBuilder{}
+	search := SearchFilter{SiteID: 7}.where(b)
+	if !strings.Contains(search, "a.site_id") {
+		t.Errorf("SearchFilter.where() = %q, want it to name a.site_id", search)
+	}
+}

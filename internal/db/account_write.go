@@ -239,16 +239,16 @@ func (d *DB) ActivateInviteLink(ctx context.Context, token, username string, at 
 
 var qCreateInviteLink = register("CreateInviteLink", `
 INSERT INTO web_invitelink (kind, delivery, email, wikidot_username, token, uidb64,
-	created_at, activated_username, created_by_id, target_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, '', $8, $9)
+	created_at, activated_username, created_by_id, target_id, site_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, '', $8, $9, $10)
 RETURNING id`)
 
-func (d *DB) CreateInviteLink(ctx context.Context, kind, delivery, email, wikidotName,
+func (d *DB) CreateInviteLink(ctx context.Context, siteID int64, kind, delivery, email, wikidotName,
 	token, uid string, createdBy *int64, target int64, at time.Time) (int64, error) {
 
 	var id int64
 	err := d.pool.QueryRow(ctx, qCreateInviteLink, kind, delivery, email, wikidotName,
-		token, uid, at, createdBy, target).Scan(&id)
+		token, uid, at, createdBy, target, siteID).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("write invite link: %w", err)
 	}
@@ -263,13 +263,13 @@ const (
 )
 
 var qCreateTicket = register("CreateTicket", `
-INSERT INTO web_userticket (kind, subject, body, source_page, status, admin_notes, created_at, author_id)
-VALUES ($1, $2, $3, $4, $5, '', $6, $7)
+INSERT INTO web_userticket (kind, subject, body, source_page, status, admin_notes, created_at, author_id, site_id)
+VALUES ($1, $2, $3, $4, $5, '', $6, $7, $8)
 RETURNING id`)
 
-func (d *DB) CreateTicket(ctx context.Context, kind, subject, body, page string, authorID int64, at time.Time) (int64, error) {
+func (d *DB) CreateTicket(ctx context.Context, siteID int64, kind, subject, body, page string, authorID int64, at time.Time) (int64, error) {
 	var id int64
-	err := d.pool.QueryRow(ctx, qCreateTicket, kind, subject, body, page, TicketPending, at, authorID).Scan(&id)
+	err := d.pool.QueryRow(ctx, qCreateTicket, kind, subject, body, page, TicketPending, at, authorID, siteID).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("write ticket by %d: %w", authorID, err)
 	}

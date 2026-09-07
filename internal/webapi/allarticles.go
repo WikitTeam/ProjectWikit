@@ -57,7 +57,7 @@ func (h *AllArticles) listing(ctx context.Context, current *db.Site, viewer *db.
 	if err != nil {
 		return "", err
 	}
-	articles, err := h.deps.DB.ListArticles(ctx, db.ListFilter{}, 0, nil)
+	articles, err := h.deps.DB.ListArticles(ctx, db.ListFilter{SiteID: siteID(ctx)}, 0, nil)
 	if err != nil {
 		return "", err
 	}

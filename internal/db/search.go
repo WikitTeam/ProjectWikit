@@ -16,10 +16,11 @@ type SearchFilter struct {
 	From     *time.Time
 	To       *time.Time
 	Hidden   []string
+	SiteID   int64
 }
 
 func (f SearchFilter) where(b *listBuilder) string {
-	parts := []string{"si.article_id IS NOT NULL"}
+	parts := []string{"si.article_id IS NOT NULL", "a.site_id = " + b.arg(f.SiteID)}
 	if len(f.Hidden) > 0 {
 		parts = append(parts, "NOT (a.category = ANY("+b.arg(f.Hidden)+"))")
 	}
@@ -114,12 +115,12 @@ var qTagIDsByFullName = register("TagIDsByFullName", `
 SELECT t.id
 FROM web_tag t
 JOIN web_tagscategory c ON c.id = t.category_id
-WHERE t.name = $1 AND ($2 = '' OR c.slug = $2)`)
+WHERE t.name = $1 AND ($2 = '' OR c.slug = $2) AND t.site_id = $3`)
 
 // A name without a category matches that tag in every category, which is what
 // makes one name able to name several tags.
-func (d *DB) TagIDsByFullName(ctx context.Context, category, name string) ([]int64, error) {
-	rows, err := d.pool.Query(ctx, qTagIDsByFullName, name, category)
+func (d *DB) TagIDsByFullName(ctx context.Context, siteID int64, category, name string) ([]int64, error) {
+	rows, err := d.pool.Query(ctx, qTagIDsByFullName, name, category, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query tag %q: %w", name, err)
 	}

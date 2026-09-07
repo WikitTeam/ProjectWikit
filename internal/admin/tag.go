@@ -57,7 +57,7 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveTag(ctx, row); err != nil {
+		if err := h.deps.DB.SaveTag(ctx, siteID(ctx), row); err != nil {
 			return err
 		}
 		h.noteID(r, did, tagSlug, row.ID, row.Name)
@@ -71,7 +71,7 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		if page < 1 {
 			page = 1
 		}
-		found, total, err := h.deps.DB.AdminTags(ctx, query, perPage, (page-1)*perPage)
+		found, total, err := h.deps.DB.AdminTags(ctx, siteID(ctx), query, perPage, (page-1)*perPage)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (h *Handler) tagForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 			return err
 		}
 	}
-	categories, err := h.deps.DB.AdminTagCategories(ctx)
+	categories, err := h.deps.DB.AdminTagCategories(ctx, siteID(ctx))
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveTagCategory(ctx, row); err != nil {
+		if err := h.deps.DB.SaveTagCategory(ctx, siteID(ctx), row); err != nil {
 			return err
 		}
 		h.noteID(r, did, tagCategorySlug, row.ID, row.Name)
@@ -170,7 +170,7 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 	}
 
 	if rest == "" {
-		found, err := h.deps.DB.AdminTagCategories(ctx)
+		found, err := h.deps.DB.AdminTagCategories(ctx, siteID(ctx))
 		if err != nil {
 			return err
 		}

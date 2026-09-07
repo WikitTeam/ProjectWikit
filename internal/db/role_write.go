@@ -45,10 +45,10 @@ func scanRole(row pgx.Row, r *RoleRow) error {
 
 var qAdminRoles = register("AdminRoles", `
 SELECT `+roleColumns+`, (SELECT count(*) FROM web_user_roles ur WHERE ur.role_id = web_role.id)
-FROM web_role ORDER BY index, id`)
+FROM web_role WHERE site_id = $1 ORDER BY index, id`)
 
-func (d *DB) AdminRoles(ctx context.Context) ([]RoleRow, error) {
-	rows, err := d.pool.Query(ctx, qAdminRoles)
+func (d *DB) AdminRoles(ctx context.Context, siteID int64) ([]RoleRow, error) {
+	rows, err := d.pool.Query(ctx, qAdminRoles, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list roles: %w", err)
 	}
@@ -135,8 +135,8 @@ var (
 	qInsertRole = register("InsertRole", `
 INSERT INTO web_role (slug, name, short_name, category_id, index, is_staff, group_votes,
 	votes_title, inline_visual_mode, profile_visual_mode, color, icon, badge_text, badge_bg,
-	badge_text_color, badge_show_border)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`)
+	badge_text_color, badge_show_border, site_id)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING id`)
 
 	qUpdateRole = register("UpdateRole", `
 UPDATE web_role SET slug=$2, name=$3, short_name=$4, category_id=$5, index=$6, is_staff=$7,
@@ -160,7 +160,7 @@ JOIN django_content_type c ON c.id = p.content_type_id
 WHERE c.app_label = 'web' AND c.model = 'roles' AND p.codename = ANY($2)`)
 )
 
-func (d *DB) SaveRole(ctx context.Context, r RoleRow, withGrants bool) (int64, error) {
+func (d *DB) SaveRole(ctx context.Context, siteID int64, r RoleRow, withGrants bool) (int64, error) {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("begin saving role %q: %w", r.Slug, err)
@@ -171,7 +171,7 @@ func (d *DB) SaveRole(ctx context.Context, r RoleRow, withGrants bool) (int64, e
 		r.VotesTitle, r.InlineVisualMode, r.ProfileVisualMode, r.Color, r.Icon,
 		r.BadgeText, r.BadgeBg, r.BadgeTextColor, r.BadgeShowBorder}
 	if r.ID == 0 {
-		if err := tx.QueryRow(ctx, qInsertRole, args...).Scan(&r.ID); err != nil {
+		if err := tx.QueryRow(ctx, qInsertRole, append(args, siteID)...).Scan(&r.ID); err != nil {
 			return 0, fmt.Errorf("create role %q: %w", r.Slug, err)
 		}
 	} else if _, err := tx.Exec(ctx, qUpdateRole, append([]any{r.ID}, args...)...); err != nil {
@@ -235,11 +235,11 @@ func (d *DB) DeleteRole(ctx context.Context, id int64) error {
 
 var qOperationIndex = register("OperationIndex", `
 SELECT coalesce(min(r.index), 2147483647) FROM web_role r
-JOIN web_user_roles ur ON ur.role_id = r.id WHERE ur.user_id = $1`)
+JOIN web_user_roles ur ON ur.role_id = r.id WHERE ur.user_id = $1 AND r.site_id = $2`)
 
-func (d *DB) OperationIndex(ctx context.Context, userID int64) (int, error) {
+func (d *DB) OperationIndex(ctx context.Context, siteID, userID int64) (int, error) {
 	var index int
-	if err := d.pool.QueryRow(ctx, qOperationIndex, userID).Scan(&index); err != nil {
+	if err := d.pool.QueryRow(ctx, qOperationIndex, userID, siteID).Scan(&index); err != nil {
 		return 0, fmt.Errorf("read the rank of user %d: %w", userID, err)
 	}
 	return index, nil
@@ -253,10 +253,10 @@ type RoleCategoryRow struct {
 
 var qRoleCategories = register("RoleCategories", `
 SELECT c.id, c.name, (SELECT count(*) FROM web_role r WHERE r.category_id = c.id)
-FROM web_rolecategory c ORDER BY c.name, c.id`)
+FROM web_rolecategory c WHERE c.site_id = $1 ORDER BY c.name, c.id`)
 
-func (d *DB) RoleCategories(ctx context.Context) ([]RoleCategoryRow, error) {
-	rows, err := d.pool.Query(ctx, qRoleCategories)
+func (d *DB) RoleCategories(ctx context.Context, siteID int64) ([]RoleCategoryRow, error) {
+	rows, err := d.pool.Query(ctx, qRoleCategories, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list role categories: %w", err)
 	}
@@ -274,15 +274,15 @@ func (d *DB) RoleCategories(ctx context.Context) ([]RoleCategoryRow, error) {
 }
 
 var (
-	qInsertRoleCategory = register("InsertRoleCategory", `INSERT INTO web_rolecategory (name) VALUES ($1) RETURNING id`)
+	qInsertRoleCategory = register("InsertRoleCategory", `INSERT INTO web_rolecategory (name, site_id) VALUES ($1,$2) RETURNING id`)
 	qUpdateRoleCategory = register("UpdateRoleCategory", `UPDATE web_rolecategory SET name = $2 WHERE id = $1`)
 	qDeleteRoleCategory = register("DeleteRoleCategory", `DELETE FROM web_rolecategory WHERE id = $1`)
 )
 
-func (d *DB) SaveRoleCategory(ctx context.Context, c RoleCategoryRow) error {
+func (d *DB) SaveRoleCategory(ctx context.Context, siteID int64, c RoleCategoryRow) error {
 	if c.ID == 0 {
 		var id int64
-		if err := d.pool.QueryRow(ctx, qInsertRoleCategory, c.Name).Scan(&id); err != nil {
+		if err := d.pool.QueryRow(ctx, qInsertRoleCategory, c.Name, siteID).Scan(&id); err != nil {
 			return fmt.Errorf("create role category %q: %w", c.Name, err)
 		}
 		return nil

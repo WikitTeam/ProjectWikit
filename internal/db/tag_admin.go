@@ -20,10 +20,10 @@ type TagCategoryRow struct {
 var qAdminTagCategories = register("AdminTagCategories", `
 SELECT c.id, c.name, c.slug, c.description, c.priority,
        (SELECT count(*) FROM web_tag t WHERE t.category_id = c.id)
-FROM web_tagscategory c ORDER BY c.priority DESC, c.name, c.id`)
+FROM web_tagscategory c WHERE c.site_id = $1 ORDER BY c.priority DESC, c.name, c.id`)
 
-func (d *DB) AdminTagCategories(ctx context.Context) ([]TagCategoryRow, error) {
-	rows, err := d.pool.Query(ctx, qAdminTagCategories)
+func (d *DB) AdminTagCategories(ctx context.Context, siteID int64) ([]TagCategoryRow, error) {
+	rows, err := d.pool.Query(ctx, qAdminTagCategories, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("list tag categories: %w", err)
 	}
@@ -58,17 +58,17 @@ func (d *DB) AdminTagCategory(ctx context.Context, id int64) (TagCategoryRow, er
 
 var (
 	qInsertTagCat = register("InsertTagCat", `
-INSERT INTO web_tagscategory (name, slug, description, priority) VALUES ($1,$2,$3,$4) RETURNING id`)
+INSERT INTO web_tagscategory (name, slug, description, priority, site_id) VALUES ($1,$2,$3,$4,$5) RETURNING id`)
 	qUpdateTagCat = register("UpdateTagCat", `
 UPDATE web_tagscategory SET name=$2, slug=$3, description=$4, priority=$5 WHERE id=$1`)
 	qDetachTagCat = register("DetachTagCat", `UPDATE web_tag SET category_id = NULL WHERE category_id = $1`)
 	qDeleteTagCat = register("DeleteTagCat", `DELETE FROM web_tagscategory WHERE id = $1`)
 )
 
-func (d *DB) SaveTagCategory(ctx context.Context, c TagCategoryRow) error {
+func (d *DB) SaveTagCategory(ctx context.Context, siteID int64, c TagCategoryRow) error {
 	if c.ID == 0 {
 		var id int64
-		err := d.pool.QueryRow(ctx, qInsertTagCat, c.Name, c.Slug, c.Description, c.Priority).Scan(&id)
+		err := d.pool.QueryRow(ctx, qInsertTagCat, c.Name, c.Slug, c.Description, c.Priority, siteID).Scan(&id)
 		if err != nil {
 			return fmt.Errorf("create tag category %q: %w", c.Slug, err)
 		}
@@ -109,19 +109,19 @@ var qAdminTags = register("AdminTags", `
 SELECT t.id, t.name, t.category_id, coalesce(c.name, ''),
        (SELECT count(*) FROM web_article_tags at WHERE at.tag_id = t.id)
 FROM web_tag t LEFT JOIN web_tagscategory c ON c.id = t.category_id
-WHERE $1 = '' OR t.name ILIKE '%' || $1 || '%'
+WHERE ($1 = '' OR t.name ILIKE '%' || $1 || '%') AND t.site_id = $4
 ORDER BY c.name NULLS FIRST, t.name
 LIMIT $2 OFFSET $3`)
 
 var qAdminTagCount = register("AdminTagCount", `
-SELECT count(*) FROM web_tag t WHERE $1 = '' OR t.name ILIKE '%' || $1 || '%'`)
+SELECT count(*) FROM web_tag t WHERE ($1 = '' OR t.name ILIKE '%' || $1 || '%') AND t.site_id = $2`)
 
-func (d *DB) AdminTags(ctx context.Context, query string, limit, offset int) ([]TagRow, int, error) {
+func (d *DB) AdminTags(ctx context.Context, siteID int64, query string, limit, offset int) ([]TagRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminTagCount, query).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminTagCount, query, siteID).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count tags: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminTags, query, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminTags, query, limit, offset, siteID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list tags: %w", err)
 	}
@@ -153,16 +153,16 @@ func (d *DB) AdminTag(ctx context.Context, id int64) (TagRow, error) {
 }
 
 var (
-	qInsertTagRow = register("InsertTagRow", `INSERT INTO web_tag (name, category_id) VALUES ($1,$2) RETURNING id`)
+	qInsertTagRow = register("InsertTagRow", `INSERT INTO web_tag (name, category_id, site_id) VALUES ($1,$2,$3) RETURNING id`)
 	qUpdateTag    = register("UpdateTag", `UPDATE web_tag SET name=$2, category_id=$3 WHERE id=$1`)
 	qDetachTag    = register("DetachTag", `DELETE FROM web_article_tags WHERE tag_id = $1`)
 	qDeleteTagRow = register("DeleteTagRow", `DELETE FROM web_tag WHERE id = $1`)
 )
 
-func (d *DB) SaveTag(ctx context.Context, t TagRow) error {
+func (d *DB) SaveTag(ctx context.Context, siteID int64, t TagRow) error {
 	if t.ID == 0 {
 		var id int64
-		if err := d.pool.QueryRow(ctx, qInsertTagRow, t.Name, t.CategoryID).Scan(&id); err != nil {
+		if err := d.pool.QueryRow(ctx, qInsertTagRow, t.Name, t.CategoryID, siteID).Scan(&id); err != nil {
 			return fmt.Errorf("create tag %q: %w", t.Name, err)
 		}
 		return nil

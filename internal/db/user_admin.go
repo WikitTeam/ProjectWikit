@@ -82,7 +82,7 @@ var qAdminUser = register("AdminUser", `SELECT `+adminUserColumns+` FROM web_use
 
 var qAdminUserRoles = register("AdminUserRoles", `SELECT role_id FROM web_user_roles WHERE user_id = $1`)
 
-func (d *DB) AdminUser(ctx context.Context, id int64) (AdminUserRow, error) {
+func (d *DB) AdminUser(ctx context.Context, siteID, id int64) (AdminUserRow, error) {
 	var u AdminUserRow
 	err := scanAdminUser(d.pool.QueryRow(ctx, qAdminUser, id), &u)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -107,7 +107,7 @@ func (d *DB) AdminUser(ctx context.Context, id int64) (AdminUserRow, error) {
 	if err := rows.Err(); err != nil {
 		return AdminUserRow{}, err
 	}
-	u.OperationIndex, err = d.OperationIndex(ctx, id)
+	u.OperationIndex, err = d.OperationIndex(ctx, siteID, id)
 	return u, err
 }
 
@@ -122,10 +122,10 @@ WHERE id=$1`)
 	qClearUserRole = register("ClearUserRoles", `DELETE FROM web_user_roles WHERE user_id = $1`)
 	qAddUserRole   = register("AddUserRoles", `
 INSERT INTO web_user_roles (user_id, role_id)
-SELECT $1, r.id FROM web_role r WHERE r.id = ANY($2) AND r.slug <> ALL($3)`)
+SELECT $1, r.id FROM web_role r WHERE r.id = ANY($2) AND r.slug <> ALL($3) AND r.site_id = $4`)
 )
 
-func (d *DB) SaveAdminUser(ctx context.Context, u AdminUserRow, builtin []string, withRoles, withSuperuser bool) error {
+func (d *DB) SaveAdminUser(ctx context.Context, siteID int64, u AdminUserRow, builtin []string, withRoles, withSuperuser bool) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin saving user %d: %w", u.ID, err)
@@ -148,7 +148,7 @@ func (d *DB) SaveAdminUser(ctx context.Context, u AdminUserRow, builtin []string
 			return err
 		}
 		if len(u.Roles) > 0 {
-			if _, err := tx.Exec(ctx, qAddUserRole, u.ID, u.Roles, builtin); err != nil {
+			if _, err := tx.Exec(ctx, qAddUserRole, u.ID, u.Roles, builtin, siteID); err != nil {
 				return fmt.Errorf("give roles to user %d: %w", u.ID, err)
 			}
 		}
