@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -120,17 +119,4 @@ func writeDump(t *testing.T, dir string, req Request, a, b Response) {
 		}
 	}
 	t.Logf("bodies written to %s.a.html and %s.b.html", stem, stem)
-}
-
-func dumpName(req Request) string {
-	name := req.Method + strings.ReplaceAll(req.Target, "/", "_")
-	return strings.Map(func(r rune) rune {
-		switch {
-		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
-			return r
-		case r == '_' || r == '-' || r == '.':
-			return r
-		}
-		return '-'
-	}, name)
 }
