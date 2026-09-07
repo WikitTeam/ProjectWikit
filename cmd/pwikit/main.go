@@ -109,7 +109,7 @@ Commands:
   seed        write the pages a new site starts with
   routes      print the static route table
   render      render wikitext read from stdin or a file
-  migrate     inspect the schema migrations
+  migrate     apply or inspect the schema migrations
   modules     print the wikidot module list
   help        show this help
 `)
