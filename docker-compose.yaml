@@ -1,28 +1,5 @@
 name: ${COMPOSE_PROJECT_NAME:-wikitgo}
 services:
-  web:
-    restart: unless-stopped
-    build: .
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - ${WEB_PORT:-8000}:8000
-    volumes:
-      - ./files:/app/files
-      - ./archive:/app/archive:ro
-      - update-mailbox:/mailbox
-    env_file:
-      - .env
-    environment:
-      DB_ENGINE: pg
-      DB_PG_HOST: postgres
-      UPDATE_MAILBOX: /mailbox
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
   postgres:
     image: postgres:14
     restart: unless-stopped
