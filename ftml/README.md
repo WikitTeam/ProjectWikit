@@ -1,14 +1,32 @@
 ## ftml
 
-### Note 
+### About this fork
 
-This is a fork / alternate version of WikiJump's FTML.
+This is **FTML-WIKIT**, the wikitext engine of ProjectWikit. It descends from WikiJump's
+[FTML](https://github.com/scpwiki/wikijump/tree/develop/ftml), and it is
+now maintained here on its own terms.
 
-Link to the original repository: https://github.com/scpwiki/wikijump/tree/develop/ftml
+**It is not supported by the WikiJump team.** Do not report problems with this version to them,
+and do not assume its behaviour matches theirs — it deliberately does not. It has also moved on
+from the RuFoundation fork it came from. Report problems to ProjectWikit's maintainer.
 
-Our fork is largely unmodified and some texts may still refer to WikiJump, however this version **IS NOT OFFICIALLY SUPPORTED** by the original WikiJump team.
+#### Why it diverged
 
-Please do not report any issues with this version to WikiJump, unless the issue also reproduces in the original version.
+ProjectWikit serves wikis written for Wikidot, and Wikidot's own parser is far more forgiving
+than a correct one. FTML-WIKIT allows a page to open a `[[div]]` in one included page and close it in another,
+misspell closing tags, put a module inside a module, and reach for block names that are spelled
+differently here. Upstream treats those as malformed and prints the markup as text, which on a
+live page does not degrade quietly — a conditional block that fails to parse stops hiding what it
+was written to hide.
+
+#### Version
+
+Pinned at 1.16.3. Following upstream would drop the callback layer and change the HTML, which
+breaks the themes and the tests that pin this behaviour at the same time. Upgrading is a project
+of its own, not a side effect of another one.
+
+The Python bindings have been removed. ProjectWikit links this as a static library through the C
+ABI in `ftml-capi`.
 
 ### Foundation Text Markup Language
 
