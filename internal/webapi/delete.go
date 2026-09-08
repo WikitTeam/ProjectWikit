@@ -43,7 +43,7 @@ func (h *Articles) remove(r *http.Request, loc *i18n.Localizer, name string) (st
 		return "", 0, errForbidden
 	}
 
-	if err := h.deps.DB.DeleteArticle(ctx, article.ID, article.FullName()); err != nil {
+	if err := h.deps.DB.DeleteArticle(ctx, siteID(ctx), article.ID, article.FullName()); err != nil {
 		return "", 0, err
 	}
 	if err := h.seen(r, user); err != nil {

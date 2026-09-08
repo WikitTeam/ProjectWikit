@@ -35,14 +35,14 @@ var qDeleteArticle = registerAll("DeleteArticle", articleChildren)
 
 // The files on disk are left to the caller, which is the only layer that knows
 // where the state directory is.
-func (d *DB) DeleteArticle(ctx context.Context, articleID int64, fullName string) error {
+func (d *DB) DeleteArticle(ctx context.Context, siteID, articleID int64, fullName string) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin delete of %d: %w", articleID, err)
 	}
 	defer tx.Rollback(ctx)
 
-	if _, err := tx.Exec(ctx, qDropLinksFrom, fullName); err != nil {
+	if _, err := tx.Exec(ctx, qDropLinksFrom, fullName, siteID); err != nil {
 		return fmt.Errorf("drop links of %q: %w", fullName, err)
 	}
 	for _, sql := range qDeleteArticle {
