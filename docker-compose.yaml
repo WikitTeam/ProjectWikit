@@ -20,26 +20,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-  updater:
-    build: ./updater
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - "${HOST_PROJECT_DIR:?set HOST_PROJECT_DIR in .env}:${HOST_PROJECT_DIR}"
-      - update-mailbox:/mailbox
-    working_dir: ${HOST_PROJECT_DIR}
-    environment:
-      HOST_PROJECT_DIR: ${HOST_PROJECT_DIR}
-      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-wikitgo}
-      UPDATE_REPO: ${UPDATE_REPO:-WikitTeam/ProjectWikit}
-      UPDATE_BRANCH: ${UPDATE_BRANCH:-master}
-      UPDATE_POLL_INTERVAL: ${UPDATE_POLL_INTERVAL:-600}
-      MAILBOX: /mailbox
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  update-mailbox:
