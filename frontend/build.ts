@@ -40,7 +40,7 @@ function findHardcodedText(dir: string, found: string[] = []) {
 }
 
 async function build() {
-  const hardcoded = [...findHardcodedText('.'), ...findHardcodedText('../../static')]
+  const hardcoded = [...findHardcodedText('.'), ...findHardcodedText('../static')]
   if (hardcoded.length) {
     console.error('Hardcoded text outside locales/:')
     hardcoded.forEach(line => console.error('  ' + line))
@@ -69,7 +69,7 @@ async function build() {
 
   const baseConfigJS = {
     entryPoints: ['index.tsx'],
-    outfile: '../../static/app.js',
+    outfile: '../static/app.js',
     bundle: true,
     minify: true,
     sourcemap: true,
@@ -94,6 +94,6 @@ async function build() {
   }
 }
 
-fs.copyFileSync('./node_modules/highlight.js/styles/github.css', '../../static/highlight.js.css');
+fs.copyFileSync('./node_modules/highlight.js/styles/github.css', '../static/highlight.js.css');
 
 build()

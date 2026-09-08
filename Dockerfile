@@ -20,8 +20,8 @@ FROM node:24-slim AS js_build
 
 RUN mkdir -p /build/static
 
-WORKDIR /build/web/js
-COPY web/js .
+WORKDIR /build/frontend
+COPY frontend .
 RUN --mount=type=cache,target=/build/.yarn YARN_CACHE_FOLDER=/build/.yarn yarn install && yarn run build
 
 FROM python:3.13.2 AS python_build

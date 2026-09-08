@@ -104,7 +104,7 @@ DEBUG=false
 
 ### 2.Python 部署
    - **【STEP1】** 安装配置环境
-     - 定位到 `web/js` 目录，执行 `yarn install`
+     - 定位到 `frontend` 目录，执行 `yarn install`
      - 在项目根目录下，运行 `pip install -r requirements.txt`
       
    - **【STEP2】** 启动配置
