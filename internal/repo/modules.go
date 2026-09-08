@@ -123,7 +123,7 @@ func (m moduleData) CountArticles(f db.ListFilter, offset int, limit *int) (int,
 }
 
 func (m moduleData) ArticleByID(id int64) (*db.Article, error) {
-	return m.repo.db.ArticleByID(m.repo.ctx, id)
+	return m.repo.db.ArticleByID(m.repo.ctx, m.repo.siteID(), id)
 }
 
 func (m moduleData) ArticleAuthors(articleID int64) ([]db.User, error) {

@@ -368,7 +368,7 @@ func (h *Articles) parentName(ctx context.Context, id *int64) (string, error) {
 	if id == nil {
 		return "", nil
 	}
-	parent, err := h.deps.DB.ArticleByID(ctx, *id)
+	parent, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), *id)
 	if errors.Is(err, db.ErrNotFound) {
 		return "", nil
 	}
@@ -421,7 +421,7 @@ func (e *editor) announce(rev db.Revision) error {
 
 func (e *editor) answer() (string, int, error) {
 	ctx := e.req.Context()
-	article, err := e.handler.deps.DB.ArticleByID(ctx, e.article.ID)
+	article, err := e.handler.deps.DB.ArticleByID(ctx, siteID(ctx), e.article.ID)
 	if err != nil {
 		return "", 0, err
 	}
@@ -516,7 +516,7 @@ func (h *Articles) articleJSON(r *http.Request, article *db.Article, source *str
 
 	parent := ""
 	if article.ParentID != nil {
-		if found, err := h.deps.DB.ArticleByID(ctx, *article.ParentID); err == nil {
+		if found, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), *article.ParentID); err == nil {
 			parent = found.FullName()
 		} else if !errors.Is(err, db.ErrNotFound) {
 			return "", err

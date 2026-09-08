@@ -98,7 +98,7 @@ func (h *TicketHandler) membership(w http.ResponseWriter, r *http.Request, curre
 		back(w, r, "membership", "failed")
 		return
 	}
-	if err := h.deps.DB.GrantRole(ctx, user.ID, *current.MembershipPasswordRoleID); err != nil {
+	if err := h.deps.DB.GrantRole(ctx, siteID(ctx), user.ID, *current.MembershipPasswordRoleID); err != nil {
 		h.deps.logger().Error("grant membership", "user", user.ID, "err", err)
 		back(w, r, "membership", "failed")
 		return

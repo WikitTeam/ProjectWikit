@@ -105,7 +105,7 @@ func (h *Articles) fileAndArticle(r *http.Request, id int64) (*db.FileRow, *db.A
 	if err != nil {
 		return nil, nil, err
 	}
-	article, err := h.deps.DB.ArticleByID(ctx, file.ArticleID)
+	article, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), file.ArticleID)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil, nil, errNotFound
 	}

@@ -78,7 +78,7 @@ func (h *Handler) ticketScreen(w http.ResponseWriter, r *http.Request, loc *i18n
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return nil
 		}
-		err = h.deps.DB.ReviewTicket(ctx, id, status, r.PostFormValue("admin_notes"), mine.ID, role, time.Now())
+		err = h.deps.DB.ReviewTicket(ctx, siteID(ctx), id, status, r.PostFormValue("admin_notes"), mine.ID, role, time.Now())
 		if err != nil {
 			return err
 		}

@@ -156,7 +156,7 @@ func (h *Articles) writeNewArticle(r *http.Request, current *db.Site, name strin
 	if err != nil {
 		return err
 	}
-	fresh, err := h.deps.DB.ArticleByID(ctx, id)
+	fresh, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), id)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (h *Articles) writeNewArticle(r *http.Request, current *db.Site, name strin
 // The pass runs as nobody, so a page's links are the same set whoever saved it.
 func (h *Articles) refreshLinks(r *http.Request, current *db.Site, id int64, source string) error {
 	ctx := r.Context()
-	article, err := h.deps.DB.ArticleByID(ctx, id)
+	article, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), id)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (h *Articles) setParent(r *http.Request, current *db.Site, id int64,
 	if err != nil {
 		return err
 	}
-	child, err := h.deps.DB.ArticleByID(ctx, id)
+	child, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), id)
 	if err != nil {
 		return err
 	}

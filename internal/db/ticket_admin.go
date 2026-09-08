@@ -94,10 +94,12 @@ WHERE id=$1 AND site_id=$7`)
 
 var qGrantTicketRole = register("GrantTicketRole", `
 INSERT INTO web_user_roles (user_id, role_id)
-SELECT t.author_id, $2 FROM web_userticket t WHERE t.id = $1 AND t.author_id IS NOT NULL
+SELECT t.author_id, $2 FROM web_userticket t
+WHERE t.id = $1 AND t.author_id IS NOT NULL
+  AND EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3)
 ON CONFLICT DO NOTHING`)
 
-func (d *DB) ReviewTicket(ctx context.Context, id int64, status, notes string, by int64, role *int64, at time.Time) error {
+func (d *DB) ReviewTicket(ctx context.Context, siteID, id int64, status, notes string, by int64, role *int64, at time.Time) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin reviewing ticket %d: %w", id, err)
@@ -109,11 +111,11 @@ func (d *DB) ReviewTicket(ctx context.Context, id int64, status, notes string, b
 	if status != TicketPending {
 		reviewedAt, reviewer = &at, &by
 	}
-	if _, err := tx.Exec(ctx, qReviewTicket, id, status, notes, reviewedAt, reviewer, role); err != nil {
+	if _, err := tx.Exec(ctx, qReviewTicket, id, status, notes, reviewedAt, reviewer, role, siteID); err != nil {
 		return fmt.Errorf("review ticket %d: %w", id, err)
 	}
 	if status == TicketApproved && role != nil {
-		if _, err := tx.Exec(ctx, qGrantTicketRole, id, *role); err != nil {
+		if _, err := tx.Exec(ctx, qGrantTicketRole, id, *role, siteID); err != nil {
 			return fmt.Errorf("grant the role of ticket %d: %w", id, err)
 		}
 	}

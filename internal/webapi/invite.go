@@ -101,7 +101,7 @@ func (h *Users) mintInvite(r *http.Request, current *db.Site, by *db.User, email
 		return "", err
 	}
 	for _, role := range roles {
-		if err := h.deps.DB.GrantRole(ctx, id, role); err != nil {
+		if err := h.deps.DB.GrantRole(ctx, siteID(ctx), id, role); err != nil {
 			return "", err
 		}
 	}

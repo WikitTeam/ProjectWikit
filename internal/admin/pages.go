@@ -79,7 +79,7 @@ func (h *Handler) pageList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 
 func (h *Handler) pageForm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, id int64, problem string) error {
 	ctx := r.Context()
-	article, err := h.deps.DB.ArticleByID(ctx, id)
+	article, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -117,7 +117,7 @@ func (h *Handler) savePage(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return nil
 	}
 	ctx := r.Context()
-	article, err := h.deps.DB.ArticleByID(ctx, id)
+	article, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -176,7 +176,7 @@ func (h *Handler) pageBatch(w http.ResponseWriter, r *http.Request, loc *i18n.Lo
 		if err != nil {
 			continue
 		}
-		article, err := h.deps.DB.ArticleByID(ctx, id)
+		article, err := h.deps.DB.ArticleByID(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) {
 			continue
 		}

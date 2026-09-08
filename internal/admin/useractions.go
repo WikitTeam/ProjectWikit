@@ -303,7 +303,7 @@ func (h *Handler) grantPicked(r *http.Request, userID int64) error {
 		if err != nil {
 			continue
 		}
-		if err := h.deps.DB.GrantRole(r.Context(), userID, role); err != nil {
+		if err := h.deps.DB.GrantRole(r.Context(), siteID(r.Context()), userID, role); err != nil {
 			return err
 		}
 	}

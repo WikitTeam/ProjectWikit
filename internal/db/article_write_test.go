@@ -349,7 +349,7 @@ func TestCreateArticleWithoutAnAuthor(t *testing.T) {
 	}
 	dropArticle(t, d, id)
 
-	article, err := d.ArticleByID(ctx, id)
+	article, err := d.ArticleByID(ctx, seedSiteID(t, d), id)
 	if err != nil {
 		t.Fatalf("ArticleByID() err = %v, want nil", err)
 	}
@@ -418,7 +418,7 @@ func TestSetArticleParentRecordsTheMove(t *testing.T) {
 		t.Errorf("SetArticleParent().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
-	article, err := d.ArticleByID(ctx, child)
+	article, err := d.ArticleByID(ctx, seedSiteID(t, d), child)
 	if err != nil {
 		t.Fatalf("ArticleByID() err = %v, want nil", err)
 	}
@@ -495,7 +495,7 @@ func TestUpdateArticleTitleRecordsWhatItWas(t *testing.T) {
 		t.Errorf("UpdateArticleTitle().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
-	article, err := d.ArticleByID(ctx, id)
+	article, err := d.ArticleByID(ctx, seedSiteID(t, d), id)
 	if err != nil {
 		t.Fatalf("ArticleByID() err = %v, want nil", err)
 	}
@@ -539,7 +539,7 @@ func TestSetArticleLockLeavesNoRevision(t *testing.T) {
 	if err := d.SetArticleLock(ctx, id, true); err != nil {
 		t.Fatalf("SetArticleLock() err = %v, want nil", err)
 	}
-	article, err := d.ArticleByID(ctx, id)
+	article, err := d.ArticleByID(ctx, seedSiteID(t, d), id)
 	if err != nil {
 		t.Fatalf("ArticleByID() err = %v, want nil", err)
 	}
@@ -722,7 +722,7 @@ func TestRenameArticleTakesItsLinksAlong(t *testing.T) {
 		t.Errorf("RenameArticle().RevNumber = %d, want 0", rev.RevNumber)
 	}
 
-	article, err := d.ArticleByID(ctx, id)
+	article, err := d.ArticleByID(ctx, seedSiteID(t, d), id)
 	if err != nil {
 		t.Fatalf("ArticleByID() err = %v, want nil", err)
 	}
@@ -859,7 +859,7 @@ func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
 		t.Errorf("links of %q after deleting = %v, want none", name, got)
 	}
 
-	orphan, err := d.ArticleByID(ctx, child)
+	orphan, err := d.ArticleByID(ctx, seedSiteID(t, d), child)
 	if err != nil {
 		t.Fatalf("ArticleByID(child) err = %v, want nil", err)
 	}

@@ -390,7 +390,7 @@ func (rev *reverter) authors() error {
 
 func (rev *reverter) reindex() error {
 	ctx := rev.req.Context()
-	article, err := rev.handler.deps.DB.ArticleByID(ctx, rev.article.ID)
+	article, err := rev.handler.deps.DB.ArticleByID(ctx, siteID(ctx), rev.article.ID)
 	if err != nil {
 		return err
 	}

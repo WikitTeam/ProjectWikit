@@ -69,7 +69,7 @@ func (s *VarSource) HasVoted(articleID int64, userID *int64) (bool, error) {
 }
 
 func (s *VarSource) ArticleByID(id int64) (*db.Article, error) {
-	return s.db.ArticleByID(s.ctx, id)
+	return s.db.ArticleByID(s.ctx, s.siteID(), id)
 }
 
 func (s *VarSource) ChildCount(articleID int64) (int, error) {

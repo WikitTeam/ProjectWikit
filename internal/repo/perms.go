@@ -126,7 +126,7 @@ func (p *Perms) ForumSection(s *db.ForumSection) *perms.Object {
 func (p *Perms) ForumThread(t *db.ForumThread, u *db.User) (*perms.Object, error) {
 	object := &perms.Object{Kind: perms.KindForumThread, Locked: t.IsLocked}
 	if t.ArticleID != nil {
-		article, err := p.db.ArticleByID(p.ctx, *t.ArticleID)
+		article, err := p.db.ArticleByID(p.ctx, p.siteID(), *t.ArticleID)
 		if err != nil {
 			return nil, err
 		}

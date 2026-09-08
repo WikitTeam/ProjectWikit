@@ -94,11 +94,12 @@ func (d *DB) ActivateUser(ctx context.Context, id int64, username string, displa
 var qGrantRole = register("GrantRole", `
 INSERT INTO web_user_roles (user_id, role_id)
 SELECT $1, $2
-WHERE NOT EXISTS (
+WHERE EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3)
+  AND NOT EXISTS (
 	SELECT 1 FROM web_user_roles WHERE user_id = $1 AND role_id = $2)`)
 
-func (d *DB) GrantRole(ctx context.Context, userID, roleID int64) error {
-	if _, err := d.pool.Exec(ctx, qGrantRole, userID, roleID); err != nil {
+func (d *DB) GrantRole(ctx context.Context, siteID, userID, roleID int64) error {
+	if _, err := d.pool.Exec(ctx, qGrantRole, userID, roleID, siteID); err != nil {
 		return fmt.Errorf("grant role %d to user %d: %w", roleID, userID, err)
 	}
 	return nil

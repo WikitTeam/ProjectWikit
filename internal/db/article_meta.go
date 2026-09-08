@@ -11,11 +11,11 @@ import (
 var qArticleByID = register("ArticleByID", `
 SELECT `+articleColumns+`
 FROM web_article
-WHERE id = $1`)
+WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) ArticleByID(ctx context.Context, id int64) (*Article, error) {
+func (d *DB) ArticleByID(ctx context.Context, siteID, id int64) (*Article, error) {
 	var a Article
-	err := d.pool.QueryRow(ctx, qArticleByID, id).Scan(
+	err := d.pool.QueryRow(ctx, qArticleByID, id, siteID).Scan(
 		&a.ID, &a.Category, &a.Name, &a.Title, &a.ParentID, &a.Locked,
 		&a.CreatedAt, &a.UpdatedAt, &a.MediaName)
 	if errors.Is(err, pgx.ErrNoRows) {
