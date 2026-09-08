@@ -52,6 +52,7 @@ func wantedPagesCases() []wantedPagesCase {
 func TestWantedPagesMatchesGolden(t *testing.T) {
 	ctx := context.Background()
 	d := testDB(t)
+	ctx, current := onSite(t, ctx, d)
 	users, loc := testUsers(t)
 	cases := wantedPagesCases()
 
@@ -63,7 +64,7 @@ func TestWantedPagesMatchesGolden(t *testing.T) {
 	var b strings.Builder
 	for _, c := range cases {
 		pc := page.NewContext(article, article, sortedPath(c.Path), nil)
-		r := New(ctx, d, users, Options{Loc: loc})
+		r := New(ctx, d, users, Options{Loc: loc, Site: current})
 
 		body, err := r.RenderModule(pc, "WantedPages", copyParams(c.Params), "")
 		var moduleErr *callbacks.ModuleError

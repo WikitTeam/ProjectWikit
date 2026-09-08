@@ -48,6 +48,7 @@ func forumCategoryCases() []forumCategoryCase {
 func TestForumCategoryMatchesGolden(t *testing.T) {
 	ctx := context.Background()
 	d := testDB(t)
+	ctx, current := onSite(t, ctx, d)
 	users, loc := testUsers(t)
 	cases := forumCategoryCases()
 
@@ -72,7 +73,7 @@ func TestForumCategoryMatchesGolden(t *testing.T) {
 
 		path := forumCategoryPath(t, c, categories)
 		pc := page.NewContext(article, article, path, viewer)
-		r := New(ctx, d, users, Options{Loc: loc, User: viewer})
+		r := New(ctx, d, users, Options{Loc: loc, User: viewer, Site: current})
 
 		body, err := r.RenderModule(pc, "ForumCategory", nil, "")
 		var moduleErr *callbacks.ModuleError

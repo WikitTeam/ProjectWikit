@@ -43,7 +43,8 @@ func newTestRepo(t *testing.T) *Repository {
 	t.Helper()
 	d := testDB(t)
 	users, _ := testUsers(t)
-	return New(context.Background(), d, users, Options{})
+	ctx, current := onSite(t, context.Background(), d)
+	return New(ctx, d, users, Options{Site: current})
 }
 
 func TestPageInfoDropsMissingPages(t *testing.T) {

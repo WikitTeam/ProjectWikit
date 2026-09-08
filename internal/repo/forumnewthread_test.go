@@ -44,6 +44,7 @@ func forumNewThreadCases() []forumNewThreadCase {
 func TestForumNewThreadMatchesGolden(t *testing.T) {
 	ctx := context.Background()
 	d := testDB(t)
+	ctx, current := onSite(t, ctx, d)
 	users, loc := testUsers(t)
 	cases := forumNewThreadCases()
 
@@ -68,7 +69,7 @@ func TestForumNewThreadMatchesGolden(t *testing.T) {
 
 		path := forumNewThreadPath(t, c, categories)
 		pc := page.NewContext(article, article, path, viewer)
-		r := New(ctx, d, users, Options{Loc: loc, User: viewer})
+		r := New(ctx, d, users, Options{Loc: loc, User: viewer, Site: current})
 
 		body, err := r.RenderModule(pc, "ForumNewThread", nil, "")
 		var moduleErr *callbacks.ModuleError

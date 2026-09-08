@@ -62,6 +62,7 @@ func tagCloudCases() []tagCloudCase {
 func TestTagCloudMatchesGolden(t *testing.T) {
 	ctx := context.Background()
 	d := testDB(t)
+	ctx, current := onSite(t, ctx, d)
 	users, loc := testUsers(t)
 	cases := tagCloudCases()
 
@@ -73,7 +74,7 @@ func TestTagCloudMatchesGolden(t *testing.T) {
 	var b strings.Builder
 	for _, c := range cases {
 		pc := page.NewContext(article, article, nil, nil)
-		r := New(ctx, d, users, Options{Loc: loc})
+		r := New(ctx, d, users, Options{Loc: loc, Site: current})
 
 		body, err := r.RenderModule(pc, "TagCloud", copyParams(c.Params), "")
 		var moduleErr *callbacks.ModuleError
