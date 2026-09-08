@@ -11,12 +11,14 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/admin"
+	"github.com/WikitTeam/ProjectWikit/internal/archive"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
@@ -389,6 +391,10 @@ func seedPages(args []string) error {
 	fs := flag.NewFlagSet("seed", flag.ContinueOnError)
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	slug := fs.String("site", "", "slug of the site to write into; needed once a database holds more than one")
+	archivePath := fs.String("archive", "", "wikitCLI backup to import instead of the starter pages")
+	from := fs.String("from", "", "slug of the site inside the archive; needed when it holds more than one")
+	forceTags := fs.Bool("force-tags", false, "create tags this site would otherwise refuse")
+	noVotes := fs.Bool("no-votes", false, "leave the ratings behind")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -409,6 +415,10 @@ func seedPages(args []string) error {
 	current, err := resolveSite(ctx, conn, *slug)
 	if err != nil {
 		return err
+	}
+
+	if *archivePath != "" {
+		return importArchive(ctx, conn, current, *archivePath, *from, *forceTags, !*noVotes)
 	}
 
 	written, err := seed.Run(ctx, conn, current.ID)
@@ -573,4 +583,39 @@ func resolveSite(ctx context.Context, conn *db.DB, slug string) (*db.Site, error
 		return conn.SiteBySlug(ctx, slugs[0])
 	}
 	return nil, fmt.Errorf("this database holds %d sites, name one with -site", len(slugs))
+}
+
+func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, from string,
+	forceTags, votes bool) error {
+
+	found, err := archive.Open(path)
+	if err != nil {
+		return err
+	}
+	defer found.Close()
+
+	slugs, err := found.Sites()
+	if err != nil {
+		return err
+	}
+	switch {
+	case len(slugs) == 0:
+		return fmt.Errorf("no site in the archive at %q", path)
+	case from == "" && len(slugs) > 1:
+		return fmt.Errorf("the archive holds %d sites, name one with -from", len(slugs))
+	case from == "":
+		from = slugs[0]
+	case !slices.Contains(slugs, from):
+		return fmt.Errorf("the archive has no site %q", from)
+	}
+
+	fmt.Printf("importing %s into %s\n", from, current.Slug)
+	result, err := archive.ImportPages(ctx, conn, current.ID, found, from, archive.Options{
+		ForceTags: forceTags,
+		Votes:     votes,
+		Report:    func(line string) { fmt.Println(line) },
+	})
+	fmt.Printf("%d pages written, %d already there, %d revisions, %d parents, %d accounts\n",
+		result.Pages, result.Skipped, result.Revisions, result.Parents, result.Users)
+	return err
 }
