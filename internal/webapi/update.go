@@ -202,7 +202,7 @@ func (e *editor) rename() (*refusal, error) {
 	}
 
 	newCategory, newName := wikidot.Split(free)
-	rev, err := e.handler.deps.DB.RenameArticle(e.req.Context(), e.article.ID,
+	rev, err := e.handler.deps.DB.RenameArticle(e.req.Context(), siteID(e.req.Context()), e.article.ID,
 		newCategory, newName, from, e.userID, e.at)
 	if err != nil {
 		return nil, err

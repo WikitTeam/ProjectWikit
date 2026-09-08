@@ -196,7 +196,7 @@ func (h *Articles) refreshLinks(r *http.Request, current *db.Site, id int64, sou
 	if err != nil {
 		return err
 	}
-	return h.deps.DB.ReplaceArticleLinks(ctx, strings.ToLower(article.FullName()), links)
+	return h.deps.DB.ReplaceArticleLinks(ctx, siteID(ctx), strings.ToLower(article.FullName()), links)
 }
 
 func (h *Articles) env(r *http.Request, current *db.Site, viewer *db.User) *pagerender.Env {

@@ -221,7 +221,7 @@ func TestReplaceArticleLinksWritesBothKinds(t *testing.T) {
 	d := writeTestDB(t)
 	from := scratchLinkOwner(t, d)
 
-	err := d.ReplaceArticleLinks(context.Background(), from, []ArticleLink{
+	err := d.ReplaceArticleLinks(context.Background(), seedSiteID(t, d), from, []ArticleLink{
 		{To: "component:box", Kind: LinkInclude},
 		{To: "scp-173", Kind: LinkPlain},
 	})
@@ -245,10 +245,10 @@ func TestReplaceArticleLinksDropsWhatIsGone(t *testing.T) {
 	ctx := context.Background()
 	from := scratchLinkOwner(t, d)
 
-	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "old", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), from, []ArticleLink{{To: "old", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks(first) err = %v, want nil", err)
 	}
-	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "new", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), from, []ArticleLink{{To: "new", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks(second) err = %v, want nil", err)
 	}
 
@@ -265,7 +265,7 @@ func TestReplaceArticleLinksCollapsesRepeats(t *testing.T) {
 	d := writeTestDB(t)
 	from := scratchLinkOwner(t, d)
 
-	err := d.ReplaceArticleLinks(context.Background(), from, []ArticleLink{
+	err := d.ReplaceArticleLinks(context.Background(), seedSiteID(t, d), from, []ArticleLink{
 		{To: "component:box", Kind: LinkInclude},
 		{To: "component:box", Kind: LinkInclude},
 		{To: "component:box", Kind: LinkPlain},
@@ -283,10 +283,10 @@ func TestReplaceArticleLinksEmptiesTheSet(t *testing.T) {
 	ctx := context.Background()
 	from := scratchLinkOwner(t, d)
 
-	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "old", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), from, []ArticleLink{{To: "old", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks(first) err = %v, want nil", err)
 	}
-	if err := d.ReplaceArticleLinks(ctx, from, nil); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), from, nil); err != nil {
 		t.Fatalf("ReplaceArticleLinks(none) err = %v, want nil", err)
 	}
 	if got := linkSet(t, d, from); len(got) != 0 {
@@ -710,11 +710,11 @@ func TestRenameArticleTakesItsLinksAlong(t *testing.T) {
 		}
 	})
 
-	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "main", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), from, []ArticleLink{{To: "main", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
 	}
 
-	rev, err := d.RenameArticle(ctx, id, "_default", to, from, nil, at)
+	rev, err := d.RenameArticle(ctx, seedSiteID(t, d), id, "_default", to, from, nil, at)
 	if err != nil {
 		t.Fatalf("RenameArticle() err = %v, want nil", err)
 	}
@@ -777,14 +777,14 @@ func TestRenameArticleClearsWhatSatUnderTheNewName(t *testing.T) {
 		}
 	})
 
-	if err := d.ReplaceArticleLinks(ctx, from, []ArticleLink{{To: "kept", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), from, []ArticleLink{{To: "kept", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks(from) err = %v, want nil", err)
 	}
-	if err := d.ReplaceArticleLinks(ctx, to, []ArticleLink{{To: "stale", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), to, []ArticleLink{{To: "stale", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks(to) err = %v, want nil", err)
 	}
 
-	if _, err := d.RenameArticle(ctx, id, "_default", to, from, nil, at); err != nil {
+	if _, err := d.RenameArticle(ctx, seedSiteID(t, d), id, "_default", to, from, nil, at); err != nil {
 		t.Fatalf("RenameArticle() err = %v, want nil", err)
 	}
 	got := linkSet(t, d, to)
@@ -819,7 +819,7 @@ func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
 	if err := d.SubscribeToArticle(ctx, author, id); err != nil {
 		t.Fatalf("SubscribeToArticle() err = %v, want nil", err)
 	}
-	if err := d.ReplaceArticleLinks(ctx, name, []ArticleLink{{To: "main", Kind: LinkPlain}}); err != nil {
+	if err := d.ReplaceArticleLinks(ctx, seedSiteID(t, d), name, []ArticleLink{{To: "main", Kind: LinkPlain}}); err != nil {
 		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
 	}
 

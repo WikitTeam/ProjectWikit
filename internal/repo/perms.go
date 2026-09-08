@@ -16,12 +16,26 @@ const (
 
 // Perms assembles what internal/perms needs out of the database.
 type Perms struct {
-	ctx context.Context
-	db  *db.DB
+	ctx  context.Context
+	db   *db.DB
+	site *db.Site
 }
 
 func NewPerms(ctx context.Context, d *db.DB) *Perms {
-	return &Perms{ctx: ctx, db: d}
+	return &Perms{ctx: ctx, db: d, site: site.FromContext(ctx)}
+}
+
+// NewPermsOn answers for a site the request is not on, which is what an include
+// naming another wiki has to ask before it may read there.
+func NewPermsOn(ctx context.Context, d *db.DB, s *db.Site) *Perms {
+	return &Perms{ctx: ctx, db: d, site: s}
+}
+
+func (p *Perms) siteID() int64 {
+	if p.site == nil {
+		return 0
+	}
+	return p.site.ID
 }
 
 // Subject collects the roles one visitor carries. A nil user is the anonymous
@@ -31,7 +45,7 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 	if u != nil {
 		slugs = append(slugs, slugRegistered)
 	}
-	bySlug, err := p.db.RoleIDsBySlug(p.ctx, ctxSiteID(p.ctx), slugs)
+	bySlug, err := p.db.RoleIDsBySlug(p.ctx, p.siteID(), slugs)
 	if err != nil {
 		return perms.Subject{}, err
 	}
@@ -44,7 +58,7 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 		if id, ok := bySlug[slugRegistered]; ok {
 			ids = append(ids, id)
 		}
-		own, err := p.db.RoleIDsForUser(p.ctx, ctxSiteID(p.ctx), u.ID)
+		own, err := p.db.RoleIDsForUser(p.ctx, p.siteID(), u.ID)
 		if err != nil {
 			return perms.Subject{}, err
 		}
@@ -61,7 +75,7 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 		subject.Active = u.ActiveAt(now)
 		subject.ForumActive = u.ForumActiveAt(now)
 		subject.Superuser = u.IsSuperuser
-		subject.Unverified = unverified(site.FromContext(p.ctx), u)
+		subject.Unverified = unverified(p.site, u)
 	}
 	return subject, nil
 }
@@ -76,7 +90,7 @@ func unverified(current *db.Site, u *db.User) bool {
 // Article is the object side for a page that exists. Its category is the only
 // step taken before the page's own overrides.
 func (p *Perms) Article(a *db.Article, u *db.User) (*perms.Object, error) {
-	overrides, err := p.db.CategoryOverrides(p.ctx, ctxSiteID(p.ctx), a.Category)
+	overrides, err := p.db.CategoryOverrides(p.ctx, p.siteID(), a.Category)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +108,7 @@ func (p *Perms) Article(a *db.Article, u *db.User) (*perms.Object, error) {
 // Category is the object side for a page that does not exist. A category with
 // no row of its own answers the same as no object at all.
 func (p *Perms) Category(name string) (*perms.Object, error) {
-	overrides, err := p.db.CategoryOverrides(p.ctx, ctxSiteID(p.ctx), name)
+	overrides, err := p.db.CategoryOverrides(p.ctx, p.siteID(), name)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +130,7 @@ func (p *Perms) ForumThread(t *db.ForumThread, u *db.User) (*perms.Object, error
 		if err != nil {
 			return nil, err
 		}
-		overrides, err := p.db.CategoryOverrides(p.ctx, ctxSiteID(p.ctx), article.Category)
+		overrides, err := p.db.CategoryOverrides(p.ctx, p.siteID(), article.Category)
 		if err != nil {
 			return nil, err
 		}

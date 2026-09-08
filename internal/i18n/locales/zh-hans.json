@@ -468,7 +468,7 @@
   "include-create": "立刻创建",
   "include-loop": "插入的页面 \"{name}\" 导致了无限包含循环",
   "include-missing": "插入的页面 \"{name}\" 不存在",
-  "include-off-site": "插入的页面 \"{name}\" 在别的站点上，暂不支持跨站插入",
+  "include-off-site": "取不到插入的页面 \"{name}\"，可能是站点缩写写错了，也可能是你在那个站点上看不到它",
   "login.error-credentials": "用户名或密码错误。请重试。",
   "login.forgot": "忘记密码",
   "login.no-account": "还没有账号",

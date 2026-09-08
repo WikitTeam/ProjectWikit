@@ -174,7 +174,7 @@ func (h *Articles) links(r *http.Request, _ *i18n.Localizer, name string) (strin
 		kids = append(kids, linkRecord(children[i].FullName(), children[i].Title, true))
 	}
 
-	links, err := h.deps.DB.LinksTo(ctx, name)
+	links, err := h.deps.DB.LinksTo(ctx, siteID(ctx), name)
 	if err != nil {
 		return "", 0, err
 	}

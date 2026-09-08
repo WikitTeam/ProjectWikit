@@ -126,3 +126,18 @@ func allowed(r rune) bool {
 	}
 	return r == '-' || r == '_' || r == ':'
 }
+
+// SplitSiteRef reads the ":slug:category:page" form an include may use to name
+// another wiki. A ref without the leading colon names no site and comes back
+// whole.
+func SplitSiteRef(fullName string) (slug, name string) {
+	rest, prefixed := strings.CutPrefix(fullName, ":")
+	if !prefixed {
+		return "", fullName
+	}
+	slug, name, found := strings.Cut(rest, ":")
+	if !found || slug == "" {
+		return "", fullName
+	}
+	return slug, name
+}

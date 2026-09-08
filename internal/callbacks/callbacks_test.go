@@ -427,7 +427,7 @@ func TestNoSuchIncludeTakesARefNamingThisWikiAsLocal(t *testing.T) {
 	}
 }
 
-func TestIncludePagesDoesNotLookUpAnOffSiteRef(t *testing.T) {
+func TestIncludePagesHandsAnOffSiteRefToTheRepository(t *testing.T) {
 	repo := &fakeRepo{}
 	c := newCallbacks(t, repo)
 
@@ -438,14 +438,33 @@ func TestIncludePagesDoesNotLookUpAnOffSiteRef(t *testing.T) {
 	if err != nil {
 		t.Fatalf("IncludePages() err = %v, want nil", err)
 	}
+	if len(repo.includeSeen) != 2 {
+		t.Fatalf("len(refs reaching the repository) = %d, want 2", len(repo.includeSeen))
+	}
+	if repo.includeSeen[0].FullName != ":other:component:box" {
+		t.Errorf("ref reaching the repository = %q, want %q", repo.includeSeen[0].FullName, ":other:component:box")
+	}
+	if repo.includeSeen[1].FullName != "component:box" {
+		t.Errorf("ref reaching the repository = %q, want %q", repo.includeSeen[1].FullName, "component:box")
+	}
+	if len(got) != 2 {
+		t.Errorf("len(IncludePages()) = %d, want 2", len(got))
+	}
+}
+
+func TestIncludePagesStripsThisSiteFromARef(t *testing.T) {
+	repo := &fakeRepo{}
+	c := newCallbacks(t, repo)
+	c.SetSite("wikit")
+
+	if _, err := c.IncludePages([]renderer.IncludeRef{{FullName: ":wikit:component:box"}}); err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
 	if len(repo.includeSeen) != 1 {
 		t.Fatalf("len(refs reaching the repository) = %d, want 1", len(repo.includeSeen))
 	}
 	if repo.includeSeen[0].FullName != "component:box" {
 		t.Errorf("ref reaching the repository = %q, want %q", repo.includeSeen[0].FullName, "component:box")
-	}
-	if len(got) != 1 {
-		t.Errorf("len(IncludePages()) = %d, want 1", len(got))
 	}
 }
 
@@ -456,7 +475,7 @@ func TestNoSuchIncludeReportsAnOffSiteRef(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
 	}
-	want := `[[div class="error-block"]]插入的页面 ":other:component:box" 在别的站点上，暂不支持跨站插入[[/div]]`
+	want := `[[div class="error-block"]]取不到插入的页面 ":other:component:box"，可能是站点缩写写错了，也可能是你在那个站点上看不到它[[/div]]`
 	if got != want {
 		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
 	}

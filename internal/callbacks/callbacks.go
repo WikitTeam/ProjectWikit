@@ -163,10 +163,7 @@ func (c *Callbacks) IncludePages(refs []renderer.IncludeRef) ([]renderer.Fetched
 	local := make([]renderer.IncludeRef, 0, len(refs))
 	asked := make([]string, 0, len(refs))
 	for _, ref := range refs {
-		name, ok := c.localName(ref.FullName)
-		if !ok {
-			continue
-		}
+		name, _ := c.localName(ref.FullName)
 		asked = append(asked, ref.FullName)
 		ref.FullName = name
 		local = append(local, ref)
@@ -195,19 +192,21 @@ func (c *Callbacks) IncludePages(refs []renderer.IncludeRef) ([]renderer.Fetched
 }
 
 // A ref naming this very wiki means the same as one naming no wiki. One naming
-// another is turned away, since looking it up here reads the site as a category.
+// another keeps its prefix, because only the repository can say whether that
+// wiki exists and whether the reader may read there.
 func (c *Callbacks) localName(fullName string) (string, bool) {
-	rest, prefixed := strings.CutPrefix(fullName, ":")
-	if !prefixed {
+	slug, name := wikidot.SplitSiteRef(fullName)
+	if slug == "" {
 		return fullName, true
 	}
-	slug, name, found := strings.Cut(rest, ":")
-	if !found || c.site == "" || !strings.EqualFold(slug, c.site) {
-		return "", false
+	if c.site != "" && strings.EqualFold(slug, c.site) {
+		return name, true
 	}
-	return name, true
+	return fullName, false
 }
 
+// A ref that named another wiki gets one answer for every way it can fail, so
+// the block cannot be used to tell a missing page from an unreadable one.
 func (c *Callbacks) NoSuchInclude(fullName string) (string, error) {
 	name, ok := c.localName(fullName)
 	if !ok {

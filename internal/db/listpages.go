@@ -218,7 +218,8 @@ func (f ListFilter) build(b *listBuilder) string {
 	}
 	if f.HasLinkTo {
 		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_externallink l"+
-			" WHERE l.link_type = 'link'"+
+			" WHERE l.link_type = 'link' AND l.from_site_id = "+b.arg(f.SiteID)+
+			" AND l.to_site_id = "+b.arg(f.SiteID)+
 			" AND lower("+completeFrom+") = lower(a.complete_full_name)"+
 			" AND lower("+completeTo+") = "+b.arg(dumbName(f.LinkTo))+")")
 	}

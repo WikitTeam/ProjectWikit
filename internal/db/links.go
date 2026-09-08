@@ -18,10 +18,10 @@ type ExternalLink struct {
 var qLinksTo = register("LinksTo", `
 SELECT link_from, link_type
 FROM web_externallink
-WHERE link_to = $1`)
+WHERE link_to = $1 AND to_site_id = $2`)
 
-func (d *DB) LinksTo(ctx context.Context, fullName string) ([]ExternalLink, error) {
-	rows, err := d.pool.Query(ctx, qLinksTo, fullName)
+func (d *DB) LinksTo(ctx context.Context, siteID int64, fullName string) ([]ExternalLink, error) {
+	rows, err := d.pool.Query(ctx, qLinksTo, fullName, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("query links to %q: %w", fullName, err)
 	}

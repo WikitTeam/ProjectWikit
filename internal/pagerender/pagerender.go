@@ -4,6 +4,7 @@ package pagerender
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/netip"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
+	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
@@ -68,10 +70,18 @@ func (e *Env) Backlinks(source string, info renderer.PageInfo, cb *callbacks.Cal
 	}
 	links := make([]db.ArticleLink, 0, len(result.IncludedPages)+len(result.LinkedPages))
 	for _, name := range result.IncludedPages {
-		links = append(links, db.ArticleLink{To: strings.ToLower(name), Kind: db.LinkInclude})
+		link, err := e.link(name, db.LinkInclude)
+		if err != nil {
+			return nil, err
+		}
+		links = append(links, link)
 	}
 	for _, name := range result.LinkedPages {
-		links = append(links, db.ArticleLink{To: strings.ToLower(name), Kind: db.LinkPlain})
+		link, err := e.link(name, db.LinkPlain)
+		if err != nil {
+			return nil, err
+		}
+		links = append(links, link)
 	}
 	return links, nil
 }
@@ -173,4 +183,24 @@ func (e *Env) messageText(source string) (string, error) {
 		return "", err
 	}
 	return text.Body, nil
+}
+
+// A reference naming another wiki is filed against that wiki, so renaming a page
+// there still reaches the pages here that pull it in.
+func (e *Env) link(name, kind string) (db.ArticleLink, error) {
+	slug, bare := wikidot.SplitSiteRef(name)
+	link := db.ArticleLink{To: strings.ToLower(name), Kind: kind}
+	if slug == "" {
+		return link, nil
+	}
+	other, err := e.deps.DB.SiteBySlug(e.ctx, slug)
+	if errors.Is(err, db.ErrNotFound) {
+		return link, nil
+	}
+	if err != nil {
+		return db.ArticleLink{}, err
+	}
+	link.To = strings.ToLower(bare)
+	link.ToSiteID = &other.ID
+	return link, nil
 }

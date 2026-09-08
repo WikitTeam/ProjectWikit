@@ -98,39 +98,45 @@ func versionMeta(versionID int64, w VersionWrite) (string, error) {
 type ArticleLink struct {
 	To   string
 	Kind string
+
+	// ToSiteID is nil for a target on the same site, which is every link that
+	// does not name one.
+	ToSiteID *int64
 }
 
 var (
 	qDropArticleLinks = register("DropArticleLinks", `
-DELETE FROM web_externallink WHERE link_from = $1`)
+DELETE FROM web_externallink WHERE link_from = $1 AND from_site_id = $2`)
 
 	qInsertArticleLinks = register("InsertArticleLinks", `
-INSERT INTO web_externallink (link_from, link_type, link_to)
-SELECT $1, kind, target
-FROM unnest($2::text[], $3::text[]) AS t(kind, target)
+INSERT INTO web_externallink (link_from, link_type, link_to, from_site_id, to_site_id)
+SELECT $1, kind, target, $4, coalesce(site, $4)
+FROM unnest($2::text[], $3::text[], $5::bigint[]) AS t(kind, target, site)
 ON CONFLICT DO NOTHING`)
 )
 
 // The whole set is replaced under one transaction, so nobody reads a page as
 // having no links at all while it is being saved.
-func (d *DB) ReplaceArticleLinks(ctx context.Context, from string, links []ArticleLink) error {
+func (d *DB) ReplaceArticleLinks(ctx context.Context, siteID int64, from string, links []ArticleLink) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin links of %q: %w", from, err)
 	}
 	defer tx.Rollback(ctx)
 
-	if _, err := tx.Exec(ctx, qDropArticleLinks, from); err != nil {
+	if _, err := tx.Exec(ctx, qDropArticleLinks, from, siteID); err != nil {
 		return fmt.Errorf("drop links of %q: %w", from, err)
 	}
 	if len(links) > 0 {
 		kinds := make([]string, 0, len(links))
 		targets := make([]string, 0, len(links))
+		sites := make([]*int64, 0, len(links))
 		for _, link := range links {
 			kinds = append(kinds, link.Kind)
 			targets = append(targets, link.To)
+			sites = append(sites, link.ToSiteID)
 		}
-		if _, err := tx.Exec(ctx, qInsertArticleLinks, from, kinds, targets); err != nil {
+		if _, err := tx.Exec(ctx, qInsertArticleLinks, from, kinds, targets, siteID, sites); err != nil {
 			return fmt.Errorf("write links of %q: %w", from, err)
 		}
 	}
@@ -402,15 +408,15 @@ var (
 UPDATE web_article SET category = $2, name = $3 WHERE id = $1`)
 
 	qDropLinksFrom = register("DropLinksFrom", `
-DELETE FROM web_externallink WHERE link_from = $1`)
+DELETE FROM web_externallink WHERE link_from = $1 AND from_site_id = $2`)
 
 	qMoveLinksFrom = register("MoveLinksFrom", `
-UPDATE web_externallink SET link_from = $2 WHERE link_from = $1`)
+UPDATE web_externallink SET link_from = $2 WHERE link_from = $1 AND from_site_id = $3`)
 )
 
 // What a page points at moves with it, but what points at the page does not.
 // Everyone who linked to the old name keeps linking to the old name.
-func (d *DB) RenameArticle(ctx context.Context, articleID int64, category, name, from string,
+func (d *DB) RenameArticle(ctx context.Context, siteID, articleID int64, category, name, from string,
 	userID *int64, at time.Time) (Revision, error) {
 
 	to := (&Article{Category: category, Name: name}).FullName()
@@ -424,10 +430,10 @@ func (d *DB) RenameArticle(ctx context.Context, articleID int64, category, name,
 	if _, err := tx.Exec(ctx, qRenameArticle, articleID, category, name); err != nil {
 		return Revision{}, fmt.Errorf("rename article %d: %w", articleID, err)
 	}
-	if _, err := tx.Exec(ctx, qDropLinksFrom, to); err != nil {
+	if _, err := tx.Exec(ctx, qDropLinksFrom, to, siteID); err != nil {
 		return Revision{}, fmt.Errorf("drop links of %q: %w", to, err)
 	}
-	if _, err := tx.Exec(ctx, qMoveLinksFrom, from, to); err != nil {
+	if _, err := tx.Exec(ctx, qMoveLinksFrom, from, to, siteID); err != nil {
 		return Revision{}, fmt.Errorf("move links of %q: %w", from, err)
 	}
 

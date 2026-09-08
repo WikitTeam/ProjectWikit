@@ -18,6 +18,7 @@ import (
 	// [[module]] and every page carrying one draws an error block instead.
 	_ "github.com/WikitTeam/ProjectWikit/internal/modules"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
@@ -77,9 +78,11 @@ func (r *Repository) PageInfo(refs []string) ([]renderer.PartialPageInfo, error)
 }
 
 func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.FetchedPage, error) {
-	names := make([]string, len(refs))
-	for i, ref := range refs {
-		names[i] = ref.FullName
+	names := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		if slug, _ := wikidot.SplitSiteRef(ref.FullName); slug == "" {
+			names = append(names, ref.FullName)
+		}
 	}
 	sources, err := r.db.ArticleSources(r.ctx, r.siteID(), names)
 	if err != nil {
@@ -88,12 +91,63 @@ func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetc
 	out := make([]renderer.FetchedPage, 0, len(refs))
 	for _, ref := range refs {
 		page := renderer.FetchedPage{FullName: ref.FullName}
-		if source, ok := sources[ref.FullName]; ok {
-			page.Content = &source
+		slug, name := wikidot.SplitSiteRef(ref.FullName)
+		if slug == "" {
+			if source, ok := sources[ref.FullName]; ok {
+				page.Content = &source
+			}
+			out = append(out, page)
+			continue
 		}
+		source, err := r.offSiteSource(slug, name)
+		if err != nil {
+			return nil, err
+		}
+		page.Content = source
 		out = append(out, page)
 	}
 	return out, nil
+}
+
+// Reading another wiki goes through that wiki's own roles, so a reader who is
+// nobody there sees only what its anonymous visitor sees.
+func (r *Repository) offSiteSource(slug, name string) (*string, error) {
+	other, err := r.db.SiteBySlug(r.ctx, slug)
+	if errors.Is(err, db.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	article, err := r.db.ArticleByName(r.ctx, other.ID, name)
+	if errors.Is(err, db.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	resolver := NewPermsOn(r.ctx, r.db, other)
+	subject, err := resolver.Subject(r.opts.User, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	object, err := resolver.Article(article, r.opts.User)
+	if err != nil {
+		return nil, err
+	}
+	if !perms.Resolve(subject, object).Has(perms.ViewArticles) {
+		return nil, nil
+	}
+
+	sources, err := r.db.ArticleSources(r.ctx, other.ID, []string{name})
+	if err != nil {
+		return nil, err
+	}
+	if source, ok := sources[name]; ok {
+		return &source, nil
+	}
+	return nil, nil
 }
 
 func (r *Repository) moduleEnv(pc *page.Context) module.Env {

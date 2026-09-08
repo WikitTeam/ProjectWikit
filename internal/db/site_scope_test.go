@@ -24,6 +24,7 @@ var perSiteTables = []string{
 	"web_userreport",
 	"web_userticket",
 	"pwikit_admin_log",
+	"web_externallink",
 }
 
 func touchedTables(sql string) []string {
