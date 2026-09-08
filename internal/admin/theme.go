@@ -121,7 +121,7 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 		return err
 	}
 	row.ID = id
-	if err := h.writeThemeCSS(row); err != nil {
+	if err := h.writeThemeCSS(site.FromContext(r.Context()).Slug, row); err != nil {
 		return err
 	}
 	h.noteID(r, did, themeSlug, row.ID, row.Name)
@@ -143,11 +143,11 @@ func (h *Handler) checkTheme(loc *i18n.Localizer, row db.ThemeRow) string {
 	return ""
 }
 
-func (h *Handler) writeThemeCSS(row db.ThemeRow) error {
+func (h *Handler) writeThemeCSS(siteSlug string, row db.ThemeRow) error {
 	if row.Mode != db.ThemeInline || row.Slug == "" {
 		return nil
 	}
-	dir := filepath.Join(h.deps.Files, "theme")
+	dir := filepath.Join(h.deps.Files, "theme", siteSlug)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}

@@ -76,7 +76,14 @@ func (h *ThemeFiles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	full, err := paths.Resolve(h.dir, slug+themeSuffix)
+	current := FromContext(r.Context())
+	if current == nil {
+		themeMissing(w)
+		return
+	}
+	// One slug can name a theme on every site, so the site owns a directory
+	// rather than the themes sharing one.
+	full, err := paths.Resolve(h.dir, current.Slug+"/"+slug+themeSuffix)
 	if err != nil {
 		themeMissing(w)
 		return

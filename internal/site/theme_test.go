@@ -43,17 +43,19 @@ func TestThemeURLOfExternalThemeWithoutURL(t *testing.T) {
 func themeRequest(t *testing.T, dir, target string) *httptest.ResponseRecorder {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	NewThemeFiles(dir).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
+	req := httptest.NewRequest(http.MethodGet, target, nil)
+	req = req.WithContext(WithSite(req.Context(), &db.Site{Slug: "wikit"}))
+	NewThemeFiles(dir).ServeHTTP(rec, req)
 	return rec
 }
 
 func themeDir(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, "theme"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "theme", "wikit"), 0o755); err != nil {
 		t.Fatalf("MkdirAll() err = %v, want nil", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "theme", "night.css"), []byte("body{color:#fff}"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "theme", "wikit", "night.css"), []byte("body{color:#fff}"), 0o644); err != nil {
 		t.Fatalf("WriteFile() err = %v, want nil", err)
 	}
 	return root
@@ -104,5 +106,24 @@ func TestThemeSlugDropsWhatItCannotName(t *testing.T) {
 		if got := themeSlug(in); got != want {
 			t.Errorf("themeSlug(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestThemeFilesKeepsSitesApart(t *testing.T) {
+	root := themeDir(t)
+	if err := os.MkdirAll(filepath.Join(root, "theme", "other"), 0o755); err != nil {
+		t.Fatalf("MkdirAll() err = %v, want nil", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "theme", "other", "night.css"), []byte("body{color:#000}"), 0o644); err != nil {
+		t.Fatalf("WriteFile() err = %v, want nil", err)
+	}
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/-/theme/night.css", nil)
+	req = req.WithContext(WithSite(req.Context(), &db.Site{Slug: "other"}))
+	NewThemeFiles(root).ServeHTTP(rec, req)
+
+	if got := rec.Body.String(); got != "body{color:#000}" {
+		t.Errorf("GET night.css on other = %q, want %q", got, "body{color:#000}")
 	}
 }

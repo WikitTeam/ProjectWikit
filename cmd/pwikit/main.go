@@ -242,7 +242,7 @@ func serve(args []string) error {
 		"/-/":                           notFound,
 		"/pw-api/":                      notFound,
 		static.Prefix:                   static.New(assets, notFound),
-		site.ThemePrefix:                respheader.VaryCookie(site.NewThemeFiles(p.Files())),
+		site.ThemePrefix:                respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), site.NewThemeFiles(p.Files()), notFound)),
 		media.Prefix:                    respheader.VaryCookie(mediaHandler),
 		media.ResizedPrefix:             respheader.VaryCookie(resizedHandler),
 		localitem.CodePrefix:            codeHandler,
