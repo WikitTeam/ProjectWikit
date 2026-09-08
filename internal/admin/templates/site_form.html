@@ -12,6 +12,15 @@
       {{template "row_text" dict "n" "domain" "k" "admin.f-domain" "v" .Site.Domain "w" "narrow-4"}}
       {{template "row_text" dict "n" "media_domain" "k" "admin.f-media-domain" "v" .Site.MediaDomain "w" "narrow-4" "h" "admin.h-media-domain"}}
       {{template "row_text" dict "n" "home_page" "k" "admin.f-home-page" "v" .Site.HomePage "w" "narrow-3"}}
+      <div class="control-group">
+        <label class="control-label" for="id_language">{{t "admin.f-language"}}</label>
+        <div class="controls">
+          <select id="id_language" name="language" class="narrow-3">
+            {{range $.Languages}}<option value="{{esc .Tag}}"{{if eq .Tag $.Site.Language}} selected{{end}}>{{esc .Name}}</option>{{end}}
+          </select>
+          <span class="hint">{{t "admin.h-language"}}</span>
+        </div>
+      </div>
     </div>
   </div>
 

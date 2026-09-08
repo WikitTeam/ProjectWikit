@@ -410,6 +410,22 @@ func TestProfileEditCarriesTheToken(t *testing.T) {
 	}
 }
 
+func TestProfileEditMarksTheChosenLanguage(t *testing.T) {
+	got, err := profileTestRenderer(t).ProfileEdit(ProfileEdit{
+		DisplayName: "probe-author",
+		Language:    "en",
+		Languages:   []i18n.Choice{{Tag: "zh-hans", Name: "简体中文"}, {Tag: "en", Name: "English"}},
+	})
+	if err != nil {
+		t.Fatalf("ProfileEdit() err = %v, want nil", err)
+	}
+	for _, want := range []string{`<option value="en" selected>English</option>`, `<option value="zh-hans">简体中文</option>`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("Contains(ProfileEdit(), %q) = false, want true", want)
+		}
+	}
+}
+
 func TestProfileEditShowsTheProblem(t *testing.T) {
 	got, err := profileTestRenderer(t).ProfileEdit(ProfileEdit{
 		DisplayName: "probe-author", Error: "too big",

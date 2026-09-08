@@ -53,6 +53,13 @@
             </div>
           </div>
           <div class="form-row">
+            <label class="label" for="id_language">{{.T "profile.language"}}</label>
+            <select name="language" id="id_language">
+              <option value="">{{.T "profile.language-auto"}}</option>
+              {{range $.Languages}}<option value="{{esc .Tag}}"{{if eq .Tag $.Language}} selected{{end}}>{{esc .Name}}</option>{{end}}
+            </select>
+          </div>
+          <div class="form-row">
             <label class="label" for="id_advanced_editor">
               <input type="checkbox" name="advanced_editor" id="id_advanced_editor" value="1"{{if .AdvancedEditor}} checked{{end}}>
               {{.T "profile.advanced-editor"}}<span class="hint">{{.T "profile.advanced-editor-hint"}}</span>

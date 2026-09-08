@@ -37,7 +37,8 @@ var qUpdateSite = register("UpdateSite", `
 UPDATE web_site SET
 	slug = $2, title = $3, headline = $4, domain = $5, media_domain = $6, home_page = $7,
 	active_theme_id = $8, system_theme_id = $9, icon = $10, auth_icon = $11,
-	footer_license = $12, signup_notice = $13, password_help = $14, email_policy = $15
+	footer_license = $12, signup_notice = $13, password_help = $14, email_policy = $15,
+	language = $16
 WHERE id = $1`)
 
 var qUpdateSiteRoles = register("UpdateSiteRoles", `
@@ -55,7 +56,7 @@ func (d *DB) SaveSite(ctx context.Context, s *Site, settings SiteSettings, withR
 
 	_, err = tx.Exec(ctx, qUpdateSite, s.ID, s.Slug, s.Title, s.Headline, s.Domain, s.MediaDomain,
 		s.HomePage, s.ThemeID, s.SystemThemeID, nullable(s.Icon), nullable(s.AuthIcon),
-		s.FooterLicense, s.SignupNotice, s.PasswordHelp, s.EmailPolicy)
+		s.FooterLicense, s.SignupNotice, s.PasswordHelp, s.EmailPolicy, s.Language)
 	if err != nil {
 		return fmt.Errorf("save site %d: %w", s.ID, err)
 	}

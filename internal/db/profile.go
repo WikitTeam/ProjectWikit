@@ -59,11 +59,11 @@ func (d *DB) profile(ctx context.Context, query string, arg any) (*Profile, erro
 // a file does not wipe the picture.
 var qUpdateProfile = register("UpdateProfile", `
 UPDATE web_user
-SET first_name = $2, last_name = $3, bio = $4, avatar = COALESCE($5, avatar)
+SET first_name = $2, last_name = $3, bio = $4, avatar = COALESCE($5, avatar), language = $6
 WHERE id = $1`)
 
-func (d *DB) UpdateProfile(ctx context.Context, id int64, firstName, lastName, bio string, avatar *string) error {
-	if _, err := d.pool.Exec(ctx, qUpdateProfile, id, firstName, lastName, bio, avatar); err != nil {
+func (d *DB) UpdateProfile(ctx context.Context, id int64, firstName, lastName, bio string, avatar *string, language string) error {
+	if _, err := d.pool.Exec(ctx, qUpdateProfile, id, firstName, lastName, bio, avatar, language); err != nil {
 		return fmt.Errorf("update profile %d: %w", id, err)
 	}
 	return nil

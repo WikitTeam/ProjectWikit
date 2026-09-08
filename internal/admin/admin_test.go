@@ -10,13 +10,18 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 )
 
-func testLocalizer(t *testing.T) *i18n.Localizer {
+func testBundle(t *testing.T) *i18n.Bundle {
 	t.Helper()
 	bundle, err := i18n.Load("")
 	if err != nil {
 		t.Fatalf("Load() err = %v, want nil", err)
 	}
-	return bundle.Localizer(i18n.DefaultLanguage)
+	return bundle
+}
+
+func testLocalizer(t *testing.T) *i18n.Localizer {
+	t.Helper()
+	return testBundle(t).Localizer(i18n.DefaultLanguage)
 }
 
 func TestRegisteredScreensAreReachable(t *testing.T) {
@@ -97,11 +102,12 @@ func TestCheckTheme(t *testing.T) {
 
 func TestCheckSite(t *testing.T) {
 	loc := testLocalizer(t)
+	bundle := testBundle(t)
 	ok := db.Site{Slug: "wikit", Title: "T", Domain: "a.test", MediaDomain: "b.test",
-		HomePage: "main", EmailPolicy: db.EmailOptional}
+		HomePage: "main", EmailPolicy: db.EmailOptional, Language: i18n.DefaultLanguage}
 	fine := db.SiteSettings{RatingMode: "default", CreateTags: "default"}
 
-	if got := checkSite(loc, ok, fine); got != "" {
+	if got := checkSite(loc, bundle, ok, fine); got != "" {
 		t.Errorf("checkSite(complete) = %q, want \"\"", got)
 	}
 
@@ -118,9 +124,10 @@ func TestCheckSite(t *testing.T) {
 		"unknown policy":    {func() db.Site { s := ok; s.EmailPolicy = "later"; return s }(), fine},
 		"unknown rating":    {ok, db.SiteSettings{RatingMode: "vibes", CreateTags: "default"}},
 		"unknown tag mode":  {ok, db.SiteSettings{RatingMode: "default", CreateTags: "vibes"}},
+		"unknown language":  {func() db.Site { s := ok; s.Language = "kl"; return s }(), fine},
 	}
 	for name, c := range bad {
-		if checkSite(loc, c.site, c.settings) == "" {
+		if checkSite(loc, bundle, c.site, c.settings) == "" {
 			t.Errorf("checkSite(%s) = \"\", want a complaint", name)
 		}
 	}

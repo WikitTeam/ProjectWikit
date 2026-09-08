@@ -310,6 +310,8 @@ type ProfileEdit struct {
 	Bio      string
 
 	AdvancedEditor bool
+	Language       string
+	Languages      []i18n.Choice
 
 	Email         string
 	EmailVerified bool

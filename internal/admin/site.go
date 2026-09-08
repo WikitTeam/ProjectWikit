@@ -59,6 +59,7 @@ func (h *Handler) siteForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"RatingModes": ratingModes,
 		"TagModes":    tagModes,
 		"Policies":    emailPolicy,
+		"Languages":   h.deps.Bundle.Choices(),
 		"MayGrant":    granted.Has(perms.ManagePermissions),
 		"CSRF":        csrf.Issue(w, r),
 		"Error":       problem,
@@ -103,6 +104,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.SignupNotice = r.PostFormValue("signup_notice")
 	next.PasswordHelp = r.PostFormValue("password_help")
 	next.EmailPolicy = r.PostFormValue("email_policy")
+	next.Language = r.PostFormValue("language")
 	next.ThemeID = optionalID(r.PostFormValue("active_theme"))
 	next.SystemThemeID = optionalID(r.PostFormValue("system_theme"))
 
@@ -118,7 +120,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		RatingMode: r.PostFormValue("rating_mode"),
 		CreateTags: r.PostFormValue("can_user_create_tags"),
 	}
-	if problem := checkSite(loc, next, settings); problem != "" {
+	if problem := checkSite(loc, h.deps.Bundle, next, settings); problem != "" {
 		return h.siteForm(w, r, loc, problem, "")
 	}
 	if err := h.deps.DB.SaveSite(ctx, &next, settings, granted.Has(perms.ManagePermissions)); err != nil {
@@ -129,7 +131,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	return nil
 }
 
-func checkSite(loc *i18n.Localizer, s db.Site, settings db.SiteSettings) string {
+func checkSite(loc *i18n.Localizer, bundle *i18n.Bundle, s db.Site, settings db.SiteSettings) string {
 	switch {
 	case !slugPattern.MatchString(s.Slug):
 		return loc.T("admin.site-bad-slug")
@@ -141,6 +143,8 @@ func checkSite(loc *i18n.Localizer, s db.Site, settings db.SiteSettings) string 
 		return loc.T("admin.site-no-home")
 	case !contains(emailPolicy, s.EmailPolicy):
 		return loc.T("admin.site-bad-policy")
+	case !bundle.Has(s.Language):
+		return loc.T("admin.site-bad-language")
 	case !contains(ratingModes, settings.RatingMode) || !contains(tagModes, settings.CreateTags):
 		return loc.T("admin.site-bad-mode")
 	}

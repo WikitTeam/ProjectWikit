@@ -64,7 +64,7 @@ func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		redirect(w, loginPath+"?to="+url.QueryEscape(EditPrefix), http.StatusFound)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 
 	token := csrf.Issue(w, r)
 
@@ -131,7 +131,11 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 
 	first, last := splitFullName(r.PostFormValue("full_name"))
 	bio := strings.TrimSpace(r.PostFormValue("bio"))
-	if err := h.deps.DB.UpdateProfile(r.Context(), viewer.ID, first, last, bio, avatar); err != nil {
+	wanted := r.PostFormValue("language")
+	if wanted != "" && !h.deps.Bundle.Has(wanted) {
+		return loc.T("profile.error-language"), nil
+	}
+	if err := h.deps.DB.UpdateProfile(r.Context(), viewer.ID, first, last, bio, avatar, wanted); err != nil {
 		return "", err
 	}
 	return "", h.deps.DB.SetUserPreference(r.Context(), viewer.ID,
@@ -227,6 +231,8 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		FullName:       strings.TrimSpace(profile.FirstName + " " + profile.LastName),
 		Bio:            profile.Bio,
 		AdvancedEditor: pageconfig.PreferenceEnabled(raw),
+		Language:       viewer.Language,
+		Languages:      h.deps.Bundle.Choices(),
 		Email:          state.Email,
 		EmailVerified:  state.VerifiedAt != nil,
 		EmailPending:   state.Pending,
