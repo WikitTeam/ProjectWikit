@@ -153,7 +153,7 @@ func (h *Handler) forumCategories(w http.ResponseWriter, r *http.Request, loc *i
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveForumCategory(ctx, row); err != nil {
+		if err := h.deps.DB.SaveForumCategory(ctx, siteID(ctx), row); err != nil {
 			return err
 		}
 		h.noteID(r, did, categorySlug, row.ID, row.Name)

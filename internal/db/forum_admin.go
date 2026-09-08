@@ -163,16 +163,16 @@ AND section_id IN (SELECT id FROM web_forumsection WHERE site_id = $7)`)
 AND section_id IN (SELECT id FROM web_forumsection WHERE site_id = $2)`)
 )
 
-func (d *DB) SaveForumCategory(ctx context.Context, c ForumCategoryRow) error {
+func (d *DB) SaveForumCategory(ctx context.Context, siteID int64, c ForumCategoryRow) error {
 	if c.ID == 0 {
 		var id int64
-		err := d.pool.QueryRow(ctx, qInsertForumCategory, c.Name, c.Description, c.Order, c.IsForComments, c.SectionID).Scan(&id)
+		err := d.pool.QueryRow(ctx, qInsertForumCategory, c.Name, c.Description, c.Order, c.IsForComments, c.SectionID, siteID).Scan(&id)
 		if err != nil {
 			return fmt.Errorf("create forum category %q: %w", c.Name, err)
 		}
 		return nil
 	}
-	_, err := d.pool.Exec(ctx, qUpdateForumCategory, c.ID, c.Name, c.Description, c.Order, c.IsForComments, c.SectionID)
+	_, err := d.pool.Exec(ctx, qUpdateForumCategory, c.ID, c.Name, c.Description, c.Order, c.IsForComments, c.SectionID, siteID)
 	if err != nil {
 		return fmt.Errorf("update forum category %d: %w", c.ID, err)
 	}
