@@ -3,7 +3,7 @@
 ### About this fork
 
 This is **FTML-WIKIT**, the wikitext engine of ProjectWikit. It descends from WikiJump's
-[FTML](https://github.com/scpwiki/wikijump/tree/develop/ftml), and it is
+[FTML](https://github.com/scpwiki/ftml), and it is
 now maintained here on its own terms.
 
 **It is not supported by the WikiJump team.** Do not report problems with this version to them,
