@@ -109,6 +109,7 @@ type Page struct {
 	Rating    float64    `json:"rating"`
 	Locked    bool       `json:"is_locked"`
 	PageID    int64      `json:"page_id"`
+	ThreadID  int64      `json:"forum_thread"`
 	Revisions []Revision `json:"revisions"`
 	Votings   []Vote     `json:"votings"`
 	Files     []File     `json:"files"`

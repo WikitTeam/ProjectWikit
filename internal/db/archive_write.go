@@ -158,6 +158,10 @@ type ImportArticle struct {
 	UpdatedAt time.Time
 	AuthorID  *int64
 
+	// Indexed is the newest source. The import has no renderer, so the raw text
+	// stands in for the rendering until the page is next edited.
+	Indexed string
+
 	Revisions []ImportRevision
 	Votes     []ImportVote
 	TagIDs    []int64
@@ -187,15 +191,15 @@ ON CONFLICT DO NOTHING`)
 // ImportArticle writes one page and its whole history as the archive recorded
 // it. It goes around the ordinary save path on purpose, since that one renumbers
 // revisions, rebuilds links and tells subscribers about every one of them.
-func (d *DB) ImportArticle(ctx context.Context, siteID int64, a ImportArticle) (int64, error) {
+func (d *DB) ImportArticle(ctx context.Context, siteID int64, a ImportArticle) (int64, string, error) {
 	media, err := mediaName()
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("begin importing %q: %w", a.Name, err)
+		return 0, "", fmt.Errorf("begin importing %q: %w", a.Name, err)
 	}
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
@@ -203,11 +207,11 @@ func (d *DB) ImportArticle(ctx context.Context, siteID int64, a ImportArticle) (
 	err = tx.QueryRow(ctx, qImportArticle, siteID, a.Category, a.Name, a.Title, a.Locked,
 		a.CreatedAt, a.UpdatedAt, media).Scan(&id)
 	if err != nil {
-		return 0, fmt.Errorf("import article %q: %w", a.Name, err)
+		return 0, "", fmt.Errorf("import article %q: %w", a.Name, err)
 	}
 	if a.AuthorID != nil {
 		if _, err := tx.Exec(ctx, qInsertArticleAuthor, id, *a.AuthorID); err != nil {
-			return 0, fmt.Errorf("credit the author of %q: %w", a.Name, err)
+			return 0, "", fmt.Errorf("credit the author of %q: %w", a.Name, err)
 		}
 	}
 
@@ -218,7 +222,7 @@ func (d *DB) ImportArticle(ctx context.Context, siteID int64, a ImportArticle) (
 			var versionID int64
 			err := tx.QueryRow(ctx, qInsertArticleVersion, id, *rev.Source, rev.At).Scan(&versionID)
 			if err != nil {
-				return 0, fmt.Errorf("import a version of %q: %w", a.Name, err)
+				return 0, "", fmt.Errorf("import a version of %q: %w", a.Name, err)
 			}
 			kind = LogSource
 			meta["version_id"] = versionID
@@ -229,29 +233,36 @@ func (d *DB) ImportArticle(ctx context.Context, siteID int64, a ImportArticle) (
 		}
 		encoded, err := json.Marshal(meta)
 		if err != nil {
-			return 0, err
+			return 0, "", err
 		}
 		_, err = tx.Exec(ctx, qImportLogEntry, id, rev.UserID, kind, encoded, rev.Comment, rev.At, rev.Number)
 		if err != nil {
-			return 0, fmt.Errorf("import a revision of %q: %w", a.Name, err)
+			return 0, "", fmt.Errorf("import a revision of %q: %w", a.Name, err)
+		}
+	}
+
+	if a.Indexed != "" {
+		text := a.Title + "\n\n" + a.Indexed
+		if _, err := tx.Exec(ctx, qInsertSearchIndex, id, text, text); err != nil {
+			return 0, "", fmt.Errorf("index %q: %w", a.Name, err)
 		}
 	}
 
 	for _, vote := range a.Votes {
 		if _, err := tx.Exec(ctx, qImportVote, id, vote.UserID, vote.Rate); err != nil {
-			return 0, fmt.Errorf("import a vote on %q: %w", a.Name, err)
+			return 0, "", fmt.Errorf("import a vote on %q: %w", a.Name, err)
 		}
 	}
 	for _, tagID := range a.TagIDs {
 		if _, err := tx.Exec(ctx, qImportArticleTag, id, tagID); err != nil {
-			return 0, fmt.Errorf("tag %q: %w", a.Name, err)
+			return 0, "", fmt.Errorf("tag %q: %w", a.Name, err)
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return 0, fmt.Errorf("commit %q: %w", a.Name, err)
+		return 0, "", fmt.Errorf("commit %q: %w", a.Name, err)
 	}
-	return id, nil
+	return id, media, nil
 }
 
 var qImportParent = register("ImportParent", `
@@ -291,4 +302,123 @@ func (d *DB) EnsureTags(ctx context.Context, siteID int64, names []string, allow
 		return nil, fmt.Errorf("commit tags: %w", err)
 	}
 	return out, nil
+}
+
+// MediaName picks the name a file is stored under, which an importer needs
+// before it copies the bytes into place.
+func MediaName() (string, error) { return mediaName() }
+
+type ImportThread struct {
+	CategoryID  *int64
+	ArticleID   *int64
+	Name        string
+	Description string
+	AuthorID    *int64
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Pinned      bool
+	Locked      bool
+}
+
+type ImportPost struct {
+	Name      string
+	AuthorID  *int64
+	ReplyTo   *int64
+	CreatedAt time.Time
+	Versions  []ImportPostVersion
+}
+
+type ImportPostVersion struct {
+	Source   string
+	AuthorID *int64
+	At       time.Time
+}
+
+var (
+	qImportThread = register("ImportThread", `
+INSERT INTO web_forumthread (site_id, category_id, article_id, name, description, author_id,
+	created_at, updated_at, is_pinned, is_locked)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id`)
+
+	qImportPost = register("ImportPost", `
+INSERT INTO web_forumpost (thread_id, name, author_id, reply_to_id, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id`)
+
+	qImportPostVersion = register("ImportPostVersion", `
+INSERT INTO web_forumpostversion (post_id, source, author_id, created_at)
+VALUES ($1, $2, $3, $4)`)
+)
+
+func (d *DB) ImportForumSection(ctx context.Context, siteID int64, name, description string) (int64, error) {
+	var id int64
+	err := d.pool.QueryRow(ctx, qInsertForumSection, name, description, 0, false, false, siteID).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("create the imported forum section: %w", err)
+	}
+	return id, nil
+}
+
+func (d *DB) ImportForumCategory(ctx context.Context, siteID, sectionID int64, name, description string,
+	order int, forComments bool) (int64, error) {
+
+	var id int64
+	err := d.pool.QueryRow(ctx, qInsertForumCategory, name, description, order, forComments, sectionID, siteID).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("create the imported forum category %q: %w", name, err)
+	}
+	return id, nil
+}
+
+// ImportForumThread writes a thread and its posts together. A reply names its
+// parent by the position the parent holds in posts, so the caller flattens the
+// tree with every parent ahead of its children.
+func (d *DB) ImportForumThread(ctx context.Context, siteID int64, t ImportThread, posts []ImportPost,
+	parents []int) (int, error) {
+
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("begin importing a thread: %w", err)
+	}
+	defer tx.Rollback(context.WithoutCancel(ctx))
+
+	var threadID int64
+	err = tx.QueryRow(ctx, qImportThread, siteID, t.CategoryID, t.ArticleID, t.Name, t.Description,
+		t.AuthorID, t.CreatedAt, t.UpdatedAt, t.Pinned, t.Locked).Scan(&threadID)
+	if err != nil {
+		return 0, fmt.Errorf("import the thread %q: %w", t.Name, err)
+	}
+
+	ids := make([]int64, len(posts))
+	written := 0
+	for i, post := range posts {
+		var replyTo *int64
+		if parents[i] >= 0 {
+			replyTo = &ids[parents[i]]
+		}
+		updated := post.CreatedAt
+		if n := len(post.Versions); n > 0 {
+			updated = post.Versions[n-1].At
+		}
+		var postID int64
+		err := tx.QueryRow(ctx, qImportPost, threadID, post.Name, post.AuthorID, replyTo,
+			post.CreatedAt, updated).Scan(&postID)
+		if err != nil {
+			return written, fmt.Errorf("import a post of %q: %w", t.Name, err)
+		}
+		ids[i] = postID
+		for _, version := range post.Versions {
+			_, err := tx.Exec(ctx, qImportPostVersion, postID, version.Source, version.AuthorID, version.At)
+			if err != nil {
+				return written, fmt.Errorf("import a post version of %q: %w", t.Name, err)
+			}
+		}
+		written++
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return written, fmt.Errorf("commit the thread %q: %w", t.Name, err)
+	}
+	return written, nil
 }

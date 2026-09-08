@@ -395,6 +395,8 @@ func seedPages(args []string) error {
 	from := fs.String("from", "", "slug of the site inside the archive; needed when it holds more than one")
 	forceTags := fs.Bool("force-tags", false, "create tags this site would otherwise refuse")
 	noVotes := fs.Bool("no-votes", false, "leave the ratings behind")
+	noFiles := fs.Bool("no-files", false, "leave the attachments behind")
+	dataDir := fs.String("data-dir", "", "state directory attachments are copied into; defaults to the directory holding the executable")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -418,7 +420,18 @@ func seedPages(args []string) error {
 	}
 
 	if *archivePath != "" {
-		return importArchive(ctx, conn, current, *archivePath, *from, *forceTags, !*noVotes)
+		files := ""
+		if !*noFiles {
+			p, err := paths.New(*dataDir)
+			if err != nil {
+				return err
+			}
+			if err := p.EnsureBase(); err != nil {
+				return err
+			}
+			files = p.Files()
+		}
+		return importArchive(ctx, conn, current, *archivePath, *from, *forceTags, !*noVotes, files)
 	}
 
 	written, err := seed.Run(ctx, conn, current.ID)
@@ -586,7 +599,7 @@ func resolveSite(ctx context.Context, conn *db.DB, slug string) (*db.Site, error
 }
 
 func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, from string,
-	forceTags, votes bool) error {
+	forceTags, votes bool, files string) error {
 
 	found, err := archive.Open(path)
 	if err != nil {
@@ -613,9 +626,12 @@ func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, fro
 	result, err := archive.ImportPages(ctx, conn, current.ID, found, from, archive.Options{
 		ForceTags: forceTags,
 		Votes:     votes,
+		Files:     files,
 		Report:    func(line string) { fmt.Println(line) },
 	})
-	fmt.Printf("%d pages written, %d already there, %d revisions, %d parents, %d accounts\n",
-		result.Pages, result.Skipped, result.Revisions, result.Parents, result.Users)
+	fmt.Printf("%d pages, %d already there, %d revisions, %d parents, %d files, %d accounts\n",
+		result.Pages, result.Skipped, result.Revisions, result.Parents, result.Files, result.Users)
+	fmt.Printf("%d forum categories, %d threads, %d posts\n",
+		result.Categories, result.Threads, result.Posts)
 	return err
 }
