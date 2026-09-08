@@ -45,10 +45,10 @@ func scratchTagged(t *testing.T, d *DB) int64 {
 		if _, err := d.pool.Exec(clean, `DELETE FROM web_article_tags WHERE article_id = $1`, id); err != nil {
 			t.Errorf("clean up tags err = %v, want nil", err)
 		}
-		if _, err := d.pool.Exec(clean, qDropOrphanTags); err != nil {
+		if _, err := d.pool.Exec(clean, qDropOrphanTags, seedSiteID(t, d)); err != nil {
 			t.Errorf("sweep tags err = %v, want nil", err)
 		}
-		if _, err := d.pool.Exec(clean, qDropOrphanTagCategories); err != nil {
+		if _, err := d.pool.Exec(clean, qDropOrphanTagCategories, seedSiteID(t, d)); err != nil {
 			t.Errorf("sweep tag categories err = %v, want nil", err)
 		}
 	})

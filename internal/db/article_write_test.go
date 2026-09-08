@@ -28,9 +28,9 @@ func scratchArticle(t *testing.T, d *DB) int64 {
 	name := "probe-write-" + time.Now().Format("20060102150405.000000")
 	var id int64
 	err := d.pool.QueryRow(ctx, `
-INSERT INTO web_article (category, name, title, locked, created_at, updated_at, media_name)
-VALUES ('_default', $1, 'Probe', false, now(), now(), $2)
-RETURNING id`, name, name).Scan(&id)
+INSERT INTO web_article (site_id, category, name, title, locked, created_at, updated_at, media_name)
+VALUES ($3, '_default', $1, 'Probe', false, now(), now(), $2)
+RETURNING id`, name, name, seedSiteID(t, d)).Scan(&id)
 	if err != nil {
 		t.Fatalf("insert scratch article err = %v, want nil", err)
 	}
@@ -833,7 +833,7 @@ func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
 		t.Fatalf("SetArticleParent() err = %v, want nil", err)
 	}
 
-	if err := d.DeleteArticle(ctx, id, name); err != nil {
+	if err := d.DeleteArticle(ctx, seedSiteID(t, d), id, name); err != nil {
 		t.Fatalf("DeleteArticle() err = %v, want nil", err)
 	}
 
@@ -865,5 +865,41 @@ func TestDeleteArticleTakesEverythingThatPointsAtIt(t *testing.T) {
 	}
 	if orphan.ParentID != nil {
 		t.Errorf("child ParentID after deleting the parent = %v, want nil", orphan.ParentID)
+	}
+}
+
+func TestArticleLinksAreReadBackPerSite(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	here := seedSiteID(t, d)
+	from := "probe-links-" + time.Now().Format("20060102150405.000000")
+	to := from + "-target"
+
+	if err := d.ReplaceArticleLinks(ctx, here, from, []ArticleLink{
+		{To: to, Kind: LinkInclude, ToSiteID: &here},
+	}); err != nil {
+		t.Fatalf("ReplaceArticleLinks() err = %v, want nil", err)
+	}
+	t.Cleanup(func() {
+		d.pool.Exec(context.Background(), `DELETE FROM web_externallink WHERE link_from = $1`, from)
+	})
+
+	found, err := d.LinksTo(ctx, here, to)
+	if err != nil {
+		t.Fatalf("LinksTo(here) err = %v, want nil", err)
+	}
+	if len(found) != 1 {
+		t.Fatalf("len(LinksTo(here, %q)) = %d, want 1", to, len(found))
+	}
+	if found[0].From != from {
+		t.Errorf("LinksTo(here, %q)[0].From = %q, want %q", to, found[0].From, from)
+	}
+
+	elsewhere, err := d.LinksTo(ctx, here+1000, to)
+	if err != nil {
+		t.Fatalf("LinksTo(other) err = %v, want nil", err)
+	}
+	if len(elsewhere) != 0 {
+		t.Errorf("len(LinksTo(other site, %q)) = %d, want 0", to, len(elsewhere))
 	}
 }
