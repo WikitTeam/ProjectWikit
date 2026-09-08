@@ -30,6 +30,12 @@ func VaryCookie(next http.Handler) http.Handler {
 	return wrap(next, func(h http.Header) { addVary(h, "Cookie") })
 }
 
+// VaryLanguage belongs on every response whose language was negotiated, which
+// is every response a handler localized.
+func VaryLanguage(next http.Handler) http.Handler {
+	return wrap(next, func(h http.Header) { addVary(h, "Accept-Language") })
+}
+
 func setDefault(h http.Header, name, value string) {
 	if h.Get(name) == "" {
 		h.Set(name, value)

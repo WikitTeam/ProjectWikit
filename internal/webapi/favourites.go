@@ -6,7 +6,6 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
-	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
@@ -36,7 +35,7 @@ func (h *Favourites) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.next.ServeHTTP(w, r)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 	user := auth.FromContext(r.Context())
 	if user == nil {
 		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-forbidden")))

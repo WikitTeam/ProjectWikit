@@ -55,7 +55,7 @@ func (h *AcceptHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		redirect(w, homePath, http.StatusFound)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	csrfToken := csrf.Issue(w, r)
 
 	form := shell.Accept{CSRF: csrfToken}

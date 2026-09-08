@@ -9,7 +9,6 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
-	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -35,7 +34,7 @@ func (h *AllArticles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	current := site.FromContext(ctx)
 	if current == nil {
 		h.deps.log().Error("all articles", "err", errors.New("the request carries no site"))

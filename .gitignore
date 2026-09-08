@@ -9,5 +9,6 @@ target
 files/*
 !files/.gitkeep
 /archive
-secrets
+/locales
+/secrets
 postgresql

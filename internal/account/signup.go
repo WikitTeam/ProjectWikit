@@ -62,7 +62,7 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		redirect(w, homePath, http.StatusFound)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	token := csrf.Issue(w, r)
 
 	form := shell.Signup{
@@ -365,7 +365,7 @@ func (h *SignupHandler) sendCode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return

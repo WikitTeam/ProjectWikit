@@ -225,7 +225,7 @@ func (h *handler) load(r *http.Request, name string) (*request, item, error) {
 		return nil, item{}, err
 	}
 
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
 		Env(ctx, loc, current, user)
 

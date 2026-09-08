@@ -58,7 +58,7 @@ func (h *EmailHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 
 	outcome, err := h.act(r, purpose, uid, secret)
 	if err != nil {
@@ -132,7 +132,7 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 		if state.Pending == "" || !h.deps.Tokens.Check(secret, token.Custom(purposeApprove, id(user.ID), lower(state.Pending)), now) {
 			return "dead", nil
 		}
-		return "approved", h.deps.sendActivation(ctx, h.loc(), user, state.Pending)
+		return "approved", h.deps.sendActivation(ctx, h.loc(ctx), user, state.Pending)
 
 	case purposeActivate:
 		if state.Pending == "" || !h.deps.Tokens.Check(secret, token.Custom(purposeActivate, id(user.ID), lower(state.Pending)), now) {
@@ -151,7 +151,7 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 			return "dead", err
 		}
 		if state.VerifiedAt != nil {
-			if err := h.deps.warnPrevious(ctx, h.loc(), user, state.Email, pending); err != nil {
+			if err := h.deps.warnPrevious(ctx, h.loc(ctx), user, state.Email, pending); err != nil {
 				return "", err
 			}
 		}
@@ -204,8 +204,8 @@ func verifyValue(userID int64, state db.AccountEmail) token.Value {
 	return token.Custom(purposeVerify, id(userID), lower(state.Email), stamped)
 }
 
-func (h *EmailHandler) loc() *i18n.Localizer {
-	return h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+func (h *EmailHandler) loc(ctx context.Context) *i18n.Localizer {
+	return h.deps.Bundle.For(ctx)
 }
 
 func id(n int64) string { return strconv.FormatInt(n, 10) }

@@ -53,7 +53,7 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 
 	req := &request{
 		ctx:  ctx,
-		loc:  h.deps.Bundle.Localizer(i18n.DefaultLanguage),
+		loc:  h.deps.Bundle.For(ctx),
 		site: found,
 		user: auth.FromContext(ctx),
 	}

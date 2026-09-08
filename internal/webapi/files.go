@@ -45,7 +45,7 @@ func NewFileItems(d Deps, next http.Handler) *FileItems {
 
 func (h *FileItems) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a := h.articles
-	loc := a.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := a.deps.Bundle.For(r.Context())
 
 	id, err := strconv.ParseInt(strings.TrimPrefix(r.URL.Path, FilesPrefix), 10, 64)
 	if err != nil {

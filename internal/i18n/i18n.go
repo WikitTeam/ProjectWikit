@@ -10,6 +10,8 @@ import (
 	"path"
 	"slices"
 	"strings"
+
+	"golang.org/x/text/language"
 )
 
 //go:embed locales/*.json
@@ -23,6 +25,8 @@ const (
 
 type Bundle struct {
 	catalogs map[string]map[string]string
+	tagged   []string
+	matcher  language.Matcher
 }
 
 func Load(overrideDir string) (*Bundle, error) {
@@ -37,6 +41,9 @@ func Load(overrideDir string) (*Bundle, error) {
 	}
 	if len(b.catalogs[DefaultLanguage]) == 0 {
 		return nil, fmt.Errorf("catalog for default language %q is empty", DefaultLanguage)
+	}
+	if err := b.buildMatcher(); err != nil {
+		return nil, err
 	}
 	return b, nil
 }

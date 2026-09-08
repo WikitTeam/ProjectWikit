@@ -35,13 +35,14 @@ type Site struct {
 	VerifiedRoleID *int64
 
 	EmailPolicy string
+	Language    string
 }
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
        membership_password_enabled, membership_password, membership_password_role_id,
-       default_role_id, verified_role_id, email_policy
+       default_role_id, verified_role_id, email_policy, language
 FROM web_site
 WHERE domain = $1 OR media_domain = $1
 ORDER BY id
@@ -53,14 +54,14 @@ func scanSite(row pgx.Row, s *Site) error {
 		&s.Icon, &s.ThemeID, &s.SystemThemeID,
 		&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp,
 		&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID,
-		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy)
+		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language)
 }
 
 var qSiteBySlug = register("SiteBySlug", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
        membership_password_enabled, membership_password, membership_password_role_id,
-       default_role_id, verified_role_id, email_policy
+       default_role_id, verified_role_id, email_policy, language
 FROM web_site
 WHERE slug = $1`)
 

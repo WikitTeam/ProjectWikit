@@ -10,7 +10,6 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
-	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
@@ -96,7 +95,7 @@ func (h *ReactiveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *ReactiveHandler) page(r *http.Request, current *db.Site, viewer *db.User) (string, error) {
 	ctx := r.Context()
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 
 	theme, err := site.ThemeURLByID(ctx, h.deps.DB, current.SystemThemeID)
 	if err != nil {

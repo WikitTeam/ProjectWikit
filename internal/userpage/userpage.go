@@ -104,7 +104,7 @@ func (h *Handler) page(r *http.Request, name string) (string, error) {
 		return "", errors.New("userpage: the request carries no site")
 	}
 	viewer := auth.FromContext(ctx)
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 
 	profile, err := h.lookup(r, name)
 	if errors.Is(err, db.ErrNotFound) {

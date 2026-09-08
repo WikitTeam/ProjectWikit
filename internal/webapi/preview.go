@@ -43,7 +43,7 @@ func (h *Preview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, field("error", "method not allowed"))
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 
 	current := site.FromContext(r.Context())
 	if current == nil {

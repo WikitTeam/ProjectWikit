@@ -60,7 +60,7 @@ func (h *ResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	form := shell.Reset{
 		AuthIcon: authIcon(current), SiteTitle: current.Title, CSRF: csrf.Issue(w, r),
 	}
@@ -139,7 +139,7 @@ func (h *ResetHandler) help(r *http.Request, current *db.Site) (string, error) {
 		return "", nil
 	}
 	ctx := r.Context()
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
 		Env(ctx, loc, current, auth.FromContext(ctx))
 

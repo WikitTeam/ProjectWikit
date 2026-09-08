@@ -47,7 +47,7 @@ func (h *Notifications) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.next.ServeHTTP(w, r)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 	user := auth.FromContext(r.Context())
 	if user == nil {
 		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-forbidden")))

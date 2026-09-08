@@ -200,7 +200,7 @@ func (h *Articles) refreshLinks(r *http.Request, current *db.Site, id int64, sou
 }
 
 func (h *Articles) env(r *http.Request, current *db.Site, viewer *db.User) *pagerender.Env {
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 	return pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
 		Env(r.Context(), loc, current, viewer)
 }

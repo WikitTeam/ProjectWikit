@@ -13,6 +13,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/lang"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
@@ -163,34 +164,36 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	stack.adminPages = adminPages
 
 	resolver := auth.NewResolver(store, conn, conn, log)
-	stack.login = resolver.Middleware(stack.login)
-	stack.logout = resolver.Middleware(stack.logout)
-	stack.signup = resolver.Middleware(stack.signup)
-	stack.accept = resolver.Middleware(stack.accept)
-	stack.reset = resolver.Middleware(stack.reset)
-	stack.tickets = resolver.Middleware(stack.tickets)
-	stack.emailLinks = resolver.Middleware(stack.emailLinks)
-	stack.settings = resolver.Middleware(stack.settings)
-	stack.adminPages = resolver.Middleware(stack.adminPages)
-	stack.articleAPI = resolver.Middleware(stack.articleAPI)
-	stack.allArticles = resolver.Middleware(stack.allArticles)
-	stack.fileAPI = resolver.Middleware(stack.fileAPI)
-	stack.code = resolver.Middleware(stack.code)
-	stack.html = resolver.Middleware(stack.html)
-	stack.theme = resolver.Middleware(stack.theme)
-	stack.moduleAPI = resolver.Middleware(stack.moduleAPI)
-	stack.preview = resolver.Middleware(stack.preview)
-	stack.profile = resolver.Middleware(stack.profile)
-	stack.profileForm = resolver.Middleware(stack.profileForm)
-	stack.reactivePages = resolver.Middleware(stack.reactivePages)
-	stack.notifyAPI = resolver.Middleware(stack.notifyAPI)
-	stack.subscribeAPI = resolver.Middleware(stack.subscribeAPI)
-	stack.messageAPI = resolver.Middleware(stack.messageAPI)
-	stack.userAPI = resolver.Middleware(stack.userAPI)
-	stack.adminAPI = resolver.Middleware(stack.adminAPI)
-	stack.favesAPI = resolver.Middleware(stack.favesAPI)
-	stack.ownRowsAPI = resolver.Middleware(stack.ownRowsAPI)
-	stack.articles = resolver.Middleware(stack.articles)
+	negotiate := lang.Middleware(bundle)
+	resolved := func(h http.Handler) http.Handler { return resolver.Middleware(negotiate(h)) }
+	stack.login = resolved(stack.login)
+	stack.logout = resolved(stack.logout)
+	stack.signup = resolved(stack.signup)
+	stack.accept = resolved(stack.accept)
+	stack.reset = resolved(stack.reset)
+	stack.tickets = resolved(stack.tickets)
+	stack.emailLinks = resolved(stack.emailLinks)
+	stack.settings = resolved(stack.settings)
+	stack.adminPages = resolved(stack.adminPages)
+	stack.articleAPI = resolved(stack.articleAPI)
+	stack.allArticles = resolved(stack.allArticles)
+	stack.fileAPI = resolved(stack.fileAPI)
+	stack.code = resolved(stack.code)
+	stack.html = resolved(stack.html)
+	stack.theme = resolved(stack.theme)
+	stack.moduleAPI = resolved(stack.moduleAPI)
+	stack.preview = resolved(stack.preview)
+	stack.profile = resolved(stack.profile)
+	stack.profileForm = resolved(stack.profileForm)
+	stack.reactivePages = resolved(stack.reactivePages)
+	stack.notifyAPI = resolved(stack.notifyAPI)
+	stack.subscribeAPI = resolved(stack.subscribeAPI)
+	stack.messageAPI = resolved(stack.messageAPI)
+	stack.userAPI = resolved(stack.userAPI)
+	stack.adminAPI = resolved(stack.adminAPI)
+	stack.favesAPI = resolved(stack.favesAPI)
+	stack.ownRowsAPI = resolved(stack.ownRowsAPI)
+	stack.articles = resolved(stack.articles)
 	return stack, nil
 }
 

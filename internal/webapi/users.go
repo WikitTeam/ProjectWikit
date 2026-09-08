@@ -34,7 +34,7 @@ func NewUsers(d Deps, next http.Handler) *Users {
 }
 
 func (h *Users) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 	if r.URL.Path == UsersPath && r.Method == http.MethodGet {
 		h.all(w, r, loc)
 		return

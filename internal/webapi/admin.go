@@ -34,7 +34,7 @@ func (h *Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.next.ServeHTTP(w, r)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 	head, tail, _ := strings.Cut(rest, "/")
 	switch {
 	case head == "sus" && tail == "":

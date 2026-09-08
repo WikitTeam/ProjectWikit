@@ -43,7 +43,7 @@ func NewArticles(d Deps, next http.Handler) *Articles {
 }
 
 func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(r.Context())
 	if r.URL.Path == CreatePath && r.Method == http.MethodPost {
 		h.create(w, r, loc)
 		return
@@ -253,7 +253,7 @@ func (h *Articles) render(r *http.Request, article *db.Article, source string) (
 		return "", errors.New("webapi: the request carries no site")
 	}
 	user := auth.FromContext(ctx)
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 
 	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons, Trust: h.deps.Trust}.
 		Env(ctx, loc, current, user)
@@ -371,7 +371,7 @@ func (h *Articles) moduleAPI(r *http.Request, article *db.Article, name, method 
 	}
 	user := auth.FromContext(ctx)
 	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons, Trust: h.deps.Trust}.
-		Env(ctx, h.deps.Bundle.Localizer(i18n.DefaultLanguage), current, user)
+		Env(ctx, h.deps.Bundle.For(ctx), current, user)
 	env.SetClient(r)
 
 	out, err := env.ModuleAPI(page.NewContext(article, article, nil, user), name, method, nil)

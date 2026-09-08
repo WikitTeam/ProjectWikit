@@ -160,7 +160,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	loc := h.deps.Bundle.Localizer(i18n.DefaultLanguage)
+	loc := h.deps.Bundle.For(ctx)
 	if !staff {
 		if auth.FromContext(ctx) == nil {
 			seeOther(w, account.LoginPath+"?to="+url.QueryEscape(r.URL.Path), http.StatusFound)
