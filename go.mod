@@ -7,6 +7,7 @@ require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/tdewolff/minify/v2 v2.24.17
 	golang.org/x/crypto v0.46.0
+	golang.org/x/net v0.48.0
 	golang.org/x/text v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -28,6 +29,5 @@ require (
 	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	go4.org v0.0.0-20260112195520-a5071408f32f // indirect
-	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 )
