@@ -49,7 +49,7 @@ func (d *DB) AdminCategories(ctx context.Context, siteID int64) ([]CategoryRow, 
 }
 
 var qAdminCategory = register("AdminCategory", `
-SELECT id, name, is_indexed FROM web_category WHERE id = $1`)
+SELECT id, name, is_indexed FROM web_category WHERE id = $1 AND site_id = $2`)
 
 var qCategorySettings = register("CategorySettings", `
 SELECT rating_mode, can_user_create_tags FROM web_settings WHERE category_id = $1`)
@@ -70,9 +70,9 @@ LEFT JOIN auth_permission p ON p.id = x.permission_id
 WHERE cpo.category_id = $1
 ORDER BY r.index, o.role_id`)
 
-func (d *DB) AdminCategory(ctx context.Context, id int64) (CategoryRow, error) {
+func (d *DB) AdminCategory(ctx context.Context, siteID, id int64) (CategoryRow, error) {
 	var c CategoryRow
-	err := d.pool.QueryRow(ctx, qAdminCategory, id).Scan(&c.ID, &c.Name, &c.IsIndexed)
+	err := d.pool.QueryRow(ctx, qAdminCategory, id, siteID).Scan(&c.ID, &c.Name, &c.IsIndexed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return CategoryRow{}, ErrNotFound
 	}
@@ -137,7 +137,7 @@ func (d *DB) AdminCategory(ctx context.Context, id int64) (CategoryRow, error) {
 
 var (
 	qInsertCategory         = register("InsertCategory", `INSERT INTO web_category (name, is_indexed, site_id) VALUES ($1,$2,$3) RETURNING id`)
-	qUpdateCategory         = register("UpdateCategory", `UPDATE web_category SET name=$2, is_indexed=$3 WHERE id=$1`)
+	qUpdateCategory         = register("UpdateCategory", `UPDATE web_category SET name=$2, is_indexed=$3 WHERE id=$1 AND site_id=$4`)
 	qUpsertCategorySettings = register("UpsertCategorySettings", `
 INSERT INTO web_settings (category_id, site_id, rating_mode, can_user_create_tags)
 VALUES ($1, NULL, $2, $3)
@@ -156,7 +156,7 @@ func (d *DB) SaveCategory(ctx context.Context, siteID int64, c CategoryRow) erro
 		if err := tx.QueryRow(ctx, qInsertCategory, c.Name, c.IsIndexed, siteID).Scan(&c.ID); err != nil {
 			return fmt.Errorf("create category %q: %w", c.Name, err)
 		}
-	} else if _, err := tx.Exec(ctx, qUpdateCategory, c.ID, c.Name, c.IsIndexed); err != nil {
+	} else if _, err := tx.Exec(ctx, qUpdateCategory, c.ID, c.Name, c.IsIndexed, siteID); err != nil {
 		return fmt.Errorf("update category %d: %w", c.ID, err)
 	}
 	if _, err := tx.Exec(ctx, qUpsertCategorySettings, c.ID, c.Settings.RatingMode, c.Settings.CreateTags); err != nil {
@@ -245,10 +245,10 @@ func (d *DB) SaveCategoryOverrides(ctx context.Context, categoryID int64, list [
 
 var (
 	qDropCategorySettings = register("DropCategorySettings", `DELETE FROM web_settings WHERE category_id = $1`)
-	qDeleteCategory       = register("DeleteCategory", `DELETE FROM web_category WHERE id = $1`)
+	qDeleteCategory       = register("DeleteCategory", `DELETE FROM web_category WHERE id = $1 AND site_id = $2`)
 )
 
-func (d *DB) DeleteCategory(ctx context.Context, id int64) error {
+func (d *DB) DeleteCategory(ctx context.Context, siteID, id int64) error {
 	if err := d.SaveCategoryOverrides(ctx, id, nil); err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func (d *DB) DeleteCategory(ctx context.Context, id int64) error {
 	if _, err := tx.Exec(ctx, qDropCategorySettings, id); err != nil {
 		return fmt.Errorf("drop the settings of category %d: %w", id, err)
 	}
-	if _, err := tx.Exec(ctx, qDeleteCategory, id); err != nil {
+	if _, err := tx.Exec(ctx, qDeleteCategory, id, siteID); err != nil {
 		return fmt.Errorf("delete category %d: %w", id, err)
 	}
 	return tx.Commit(ctx)

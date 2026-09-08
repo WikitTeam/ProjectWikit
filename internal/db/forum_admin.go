@@ -43,11 +43,11 @@ func (d *DB) AdminForumSections(ctx context.Context, siteID int64) ([]ForumSecti
 
 var qAdminForumSection = register("AdminForumSection", `
 SELECT id, name, description, "order", is_hidden, is_hidden_for_users
-FROM web_forumsection WHERE id = $1`)
+FROM web_forumsection WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) AdminForumSection(ctx context.Context, id int64) (ForumSectionRow, error) {
+func (d *DB) AdminForumSection(ctx context.Context, siteID, id int64) (ForumSectionRow, error) {
 	var s ForumSectionRow
-	err := d.pool.QueryRow(ctx, qAdminForumSection, id).
+	err := d.pool.QueryRow(ctx, qAdminForumSection, id, siteID).
 		Scan(&s.ID, &s.Name, &s.Description, &s.Order, &s.IsHidden, &s.IsHiddenForUser)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ForumSectionRow{}, ErrNotFound
@@ -65,9 +65,9 @@ VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`)
 
 	qUpdateForumSection = register("UpdateForumSection", `
 UPDATE web_forumsection SET name=$2, description=$3, "order"=$4, is_hidden=$5, is_hidden_for_users=$6
-WHERE id=$1`)
+WHERE id=$1 AND site_id=$7`)
 
-	qDeleteForumSection = register("DeleteForumSection", `DELETE FROM web_forumsection WHERE id = $1`)
+	qDeleteForumSection = register("DeleteForumSection", `DELETE FROM web_forumsection WHERE id = $1 AND site_id = $2`)
 )
 
 func (d *DB) SaveForumSection(ctx context.Context, siteID int64, s ForumSectionRow) error {
@@ -79,15 +79,15 @@ func (d *DB) SaveForumSection(ctx context.Context, siteID int64, s ForumSectionR
 		}
 		return nil
 	}
-	_, err := d.pool.Exec(ctx, qUpdateForumSection, s.ID, s.Name, s.Description, s.Order, s.IsHidden, s.IsHiddenForUser)
+	_, err := d.pool.Exec(ctx, qUpdateForumSection, s.ID, s.Name, s.Description, s.Order, s.IsHidden, s.IsHiddenForUser, siteID)
 	if err != nil {
 		return fmt.Errorf("update forum section %d: %w", s.ID, err)
 	}
 	return nil
 }
 
-func (d *DB) DeleteForumSection(ctx context.Context, id int64) error {
-	if _, err := d.pool.Exec(ctx, qDeleteForumSection, id); err != nil {
+func (d *DB) DeleteForumSection(ctx context.Context, siteID, id int64) error {
+	if _, err := d.pool.Exec(ctx, qDeleteForumSection, id, siteID); err != nil {
 		return fmt.Errorf("delete forum section %d: %w", id, err)
 	}
 	return nil
@@ -131,11 +131,12 @@ func (d *DB) AdminForumCategories(ctx context.Context, siteID int64) ([]ForumCat
 
 var qAdminForumCategory = register("AdminForumCategory", `
 SELECT id, name, description, "order", is_for_comments, section_id
-FROM web_forumcategory WHERE id = $1`)
+FROM web_forumcategory WHERE id = $1
+AND section_id IN (SELECT id FROM web_forumsection WHERE site_id = $2)`)
 
-func (d *DB) AdminForumCategory(ctx context.Context, id int64) (ForumCategoryRow, error) {
+func (d *DB) AdminForumCategory(ctx context.Context, siteID, id int64) (ForumCategoryRow, error) {
 	var c ForumCategoryRow
-	err := d.pool.QueryRow(ctx, qAdminForumCategory, id).
+	err := d.pool.QueryRow(ctx, qAdminForumCategory, id, siteID).
 		Scan(&c.ID, &c.Name, &c.Description, &c.Order, &c.IsForComments, &c.SectionID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ForumCategoryRow{}, ErrNotFound
@@ -149,13 +150,17 @@ func (d *DB) AdminForumCategory(ctx context.Context, id int64) (ForumCategoryRow
 var (
 	qInsertForumCategory = register("InsertForumCategory", `
 INSERT INTO web_forumcategory (name, description, "order", is_for_comments, section_id)
-VALUES ($1, $2, $3, $4, $5) RETURNING id`)
+SELECT $1, $2, $3, $4, $5
+WHERE EXISTS (SELECT 1 FROM web_forumsection WHERE id = $5 AND site_id = $6)
+RETURNING id`)
 
 	qUpdateForumCategory = register("UpdateForumCategory", `
 UPDATE web_forumcategory SET name=$2, description=$3, "order"=$4, is_for_comments=$5, section_id=$6
-WHERE id=$1`)
+WHERE id=$1
+AND section_id IN (SELECT id FROM web_forumsection WHERE site_id = $7)`)
 
-	qDeleteForumCategory = register("DeleteForumCategory", `DELETE FROM web_forumcategory WHERE id = $1`)
+	qDeleteForumCategory = register("DeleteForumCategory", `DELETE FROM web_forumcategory WHERE id = $1
+AND section_id IN (SELECT id FROM web_forumsection WHERE site_id = $2)`)
 )
 
 func (d *DB) SaveForumCategory(ctx context.Context, c ForumCategoryRow) error {
@@ -174,8 +179,8 @@ func (d *DB) SaveForumCategory(ctx context.Context, c ForumCategoryRow) error {
 	return nil
 }
 
-func (d *DB) DeleteForumCategory(ctx context.Context, id int64) error {
-	if _, err := d.pool.Exec(ctx, qDeleteForumCategory, id); err != nil {
+func (d *DB) DeleteForumCategory(ctx context.Context, siteID, id int64) error {
+	if _, err := d.pool.Exec(ctx, qDeleteForumCategory, id, siteID); err != nil {
 		return fmt.Errorf("delete forum category %d: %w", id, err)
 	}
 	return nil

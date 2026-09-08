@@ -80,6 +80,8 @@ func SignedInUserJSON(u *db.User, userRoles []roles.Role, showAvatar, editor boo
 	return out
 }
 
+// The superuser flag is deliberately not per-site. It belongs to whoever runs
+// the server, and every other way into the admin comes from a role, which is.
 func IsStaff(u *db.User, userRoles []roles.Role) bool {
 	if u.IsSuperuser {
 		return true

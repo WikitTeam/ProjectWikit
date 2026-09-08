@@ -182,7 +182,7 @@ func TestCreateReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateReport() err = %v, want nil", err)
 	}
-	got, err := d.Report(ctx, id)
+	got, err := d.Report(ctx, seedSiteID(t, d), id)
 	if err != nil {
 		t.Fatalf("Report() err = %v, want nil", err)
 	}

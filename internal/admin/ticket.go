@@ -49,7 +49,7 @@ func (h *Handler) ticketScreen(w http.ResponseWriter, r *http.Request, loc *i18n
 			notFound(w)
 			return nil
 		}
-		stored, err := h.deps.DB.AdminTicket(ctx, id)
+		stored, err := h.deps.DB.AdminTicket(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) || (err == nil && stored.Kind != kind) {
 			notFound(w)
 			return nil
@@ -121,7 +121,7 @@ func (h *Handler) ticketForm(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		notFound(w)
 		return nil
 	}
-	row, err := h.deps.DB.AdminTicket(ctx, id)
+	row, err := h.deps.DB.AdminTicket(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) || (err == nil && row.Kind != kind) {
 		notFound(w)
 		return nil
@@ -160,7 +160,7 @@ func (h *Handler) invites(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 			return nil
 		}
 		if id := optionalID(r.PostFormValue("id")); id != nil && r.PostFormValue("delete") != "" {
-			if err := h.deps.DB.DeleteInvite(ctx, *id); err != nil {
+			if err := h.deps.DB.DeleteInvite(ctx, siteID(ctx), *id); err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, inviteSlug, *id, "")

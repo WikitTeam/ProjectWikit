@@ -55,7 +55,7 @@ func (h *Handler) themeForm(w http.ResponseWriter, r *http.Request, loc *i18n.Lo
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.Theme(r.Context(), id)
+		row, err = h.deps.DB.Theme(r.Context(), siteID(r.Context()), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil
@@ -101,7 +101,7 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 		row.ID = id
 	}
 	if r.PostFormValue("delete") != "" && row.ID != 0 {
-		if err := h.deps.DB.DeleteTheme(r.Context(), row.ID); err != nil {
+		if err := h.deps.DB.DeleteTheme(r.Context(), siteID(r.Context()), row.ID); err != nil {
 			return err
 		}
 		h.noteID(r, db.AdminDeleted, themeSlug, row.ID, row.Name)

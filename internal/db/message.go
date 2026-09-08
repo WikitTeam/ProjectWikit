@@ -183,11 +183,11 @@ type Report struct {
 var qReport = register("Report", `
 SELECT id, reporter_id, reported_id, reason, reported_messages, status, created_at
 FROM web_userreport
-WHERE id = $1`)
+WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) Report(ctx context.Context, id int64) (*Report, error) {
+func (d *DB) Report(ctx context.Context, siteID, id int64) (*Report, error) {
 	var r Report
-	err := d.pool.QueryRow(ctx, qReport, id).Scan(&r.ID, &r.ReporterID, &r.ReportedID,
+	err := d.pool.QueryRow(ctx, qReport, id, siteID).Scan(&r.ID, &r.ReporterID, &r.ReportedID,
 		&r.Reason, &r.Messages, &r.Status, &r.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound

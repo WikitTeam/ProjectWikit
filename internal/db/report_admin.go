@@ -73,11 +73,11 @@ func (d *DB) AdminReports(ctx context.Context, siteID int64, status string, limi
 	return out, total, rows.Err()
 }
 
-var qAdminReport = register("AdminReport", `SELECT `+reportColumns+reportJoins+` WHERE r.id = $1`)
+var qAdminReport = register("AdminReport", `SELECT `+reportColumns+reportJoins+` WHERE r.id = $1 AND r.site_id = $2`)
 
-func (d *DB) AdminReport(ctx context.Context, id int64) (ReportRow, error) {
+func (d *DB) AdminReport(ctx context.Context, siteID, id int64) (ReportRow, error) {
 	var r ReportRow
-	err := scanReport(d.pool.QueryRow(ctx, qAdminReport, id), &r)
+	err := scanReport(d.pool.QueryRow(ctx, qAdminReport, id, siteID), &r)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ReportRow{}, ErrNotFound
 	}
@@ -89,7 +89,7 @@ func (d *DB) AdminReport(ctx context.Context, id int64) (ReportRow, error) {
 
 var qReviewReport = register("ReviewReport", `
 UPDATE web_userreport SET status = $2, admin_notes = $3, reviewed_at = $4, reviewed_by_id = $5
-WHERE id = $1`)
+WHERE id = $1 AND site_id = $6`)
 
 func (d *DB) ReviewReport(ctx context.Context, id int64, status, notes string, by int64, at time.Time) error {
 	var reviewedAt *time.Time

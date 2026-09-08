@@ -89,7 +89,7 @@ func (h *Admin) conversation(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		writeJSON(w, http.StatusNotFound, field("error", loc.T("api-report-not-found")))
 		return
 	}
-	report, err := h.deps.DB.Report(ctx, id)
+	report, err := h.deps.DB.Report(ctx, siteID(ctx), id)
 	if errors.Is(err, db.ErrNotFound) {
 		writeJSON(w, http.StatusNotFound, field("error", loc.T("api-report-not-found")))
 		return

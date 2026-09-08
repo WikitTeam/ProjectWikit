@@ -43,7 +43,7 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 			row.ID = id
 		}
 		if r.PostFormValue("delete") != "" && row.ID != 0 {
-			if err := h.deps.DB.DeleteTag(ctx, row.ID); err != nil {
+			if err := h.deps.DB.DeleteTag(ctx, siteID(ctx), row.ID); err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, tagSlug, row.ID, row.Name)
@@ -98,7 +98,7 @@ func (h *Handler) tagForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.AdminTag(ctx, id)
+		row, err = h.deps.DB.AdminTag(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil
@@ -144,7 +144,7 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 			row.ID = id
 		}
 		if r.PostFormValue("delete") != "" && row.ID != 0 {
-			if err := h.deps.DB.DeleteTagCategory(ctx, row.ID); err != nil {
+			if err := h.deps.DB.DeleteTagCategory(ctx, siteID(ctx), row.ID); err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, tagCategorySlug, row.ID, row.Name)
@@ -203,7 +203,7 @@ func (h *Handler) tagCategoryForm(w http.ResponseWriter, r *http.Request, loc *i
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.AdminTagCategory(r.Context(), id)
+		row, err = h.deps.DB.AdminTagCategory(r.Context(), siteID(r.Context()), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil

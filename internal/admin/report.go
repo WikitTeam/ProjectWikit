@@ -65,7 +65,7 @@ func (h *Handler) reportForm(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		notFound(w)
 		return nil
 	}
-	row, err := h.deps.DB.AdminReport(r.Context(), id)
+	row, err := h.deps.DB.AdminReport(r.Context(), siteID(r.Context()), id)
 	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
@@ -104,7 +104,7 @@ func (h *Handler) saveReport(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		notFound(w)
 		return nil
 	}
-	if _, err := h.deps.DB.AdminReport(ctx, id); errors.Is(err, db.ErrNotFound) {
+	if _, err := h.deps.DB.AdminReport(ctx, siteID(ctx), id); errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
 	} else if err != nil {

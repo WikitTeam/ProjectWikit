@@ -43,11 +43,11 @@ func (d *DB) Themes(ctx context.Context, siteID int64) ([]ThemeRow, error) {
 
 var qThemeRow = register("ThemeRow", `
 SELECT id, name, slug, mode, css, external_url, updated_at
-FROM web_theme WHERE id = $1`)
+FROM web_theme WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) Theme(ctx context.Context, id int64) (ThemeRow, error) {
+func (d *DB) Theme(ctx context.Context, siteID, id int64) (ThemeRow, error) {
 	var t ThemeRow
-	err := d.pool.QueryRow(ctx, qThemeRow, id).
+	err := d.pool.QueryRow(ctx, qThemeRow, id, siteID).
 		Scan(&t.ID, &t.Name, &t.Slug, &t.Mode, &t.CSS, &t.ExternalURL, &t.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ThemeRow{}, ErrNotFound
@@ -64,7 +64,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`)
 
 var qUpdateTheme = register("UpdateTheme", `
 UPDATE web_theme SET name = $2, slug = $3, mode = $4, css = $5, external_url = $6, updated_at = $7
-WHERE id = $1`)
+WHERE id = $1 AND site_id = $8`)
 
 func (d *DB) SaveTheme(ctx context.Context, siteID int64, t ThemeRow) (int64, error) {
 	at := time.Now()
@@ -76,19 +76,19 @@ func (d *DB) SaveTheme(ctx context.Context, siteID int64, t ThemeRow) (int64, er
 		}
 		return id, nil
 	}
-	if _, err := d.pool.Exec(ctx, qUpdateTheme, t.ID, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at); err != nil {
+	if _, err := d.pool.Exec(ctx, qUpdateTheme, t.ID, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at, siteID); err != nil {
 		return 0, fmt.Errorf("update theme %d: %w", t.ID, err)
 	}
 	return t.ID, nil
 }
 
-var qDeleteTheme = register("DeleteTheme", `DELETE FROM web_theme WHERE id = $1`)
+var qDeleteTheme = register("DeleteTheme", `DELETE FROM web_theme WHERE id = $1 AND site_id = $2`)
 
 var qDetachTheme = register("DetachTheme", `UPDATE web_site SET
 	active_theme_id = CASE WHEN active_theme_id = $1 THEN NULL ELSE active_theme_id END,
 	system_theme_id = CASE WHEN system_theme_id = $1 THEN NULL ELSE system_theme_id END`)
 
-func (d *DB) DeleteTheme(ctx context.Context, id int64) error {
+func (d *DB) DeleteTheme(ctx context.Context, siteID, id int64) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin deleting theme %d: %w", id, err)
@@ -98,7 +98,7 @@ func (d *DB) DeleteTheme(ctx context.Context, id int64) error {
 	if _, err := tx.Exec(ctx, qDetachTheme, id); err != nil {
 		return fmt.Errorf("detach theme %d: %w", id, err)
 	}
-	if _, err := tx.Exec(ctx, qDeleteTheme, id); err != nil {
+	if _, err := tx.Exec(ctx, qDeleteTheme, id, siteID); err != nil {
 		return fmt.Errorf("delete theme %d: %w", id, err)
 	}
 	return tx.Commit(ctx)

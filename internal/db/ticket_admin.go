@@ -74,11 +74,11 @@ func (d *DB) AdminTickets(ctx context.Context, siteID int64, kind, status string
 	return out, total, rows.Err()
 }
 
-var qAdminTicket = register("AdminTicket", `SELECT `+ticketColumns+ticketJoins+` WHERE t.id = $1`)
+var qAdminTicket = register("AdminTicket", `SELECT `+ticketColumns+ticketJoins+` WHERE t.id = $1 AND t.site_id = $2`)
 
-func (d *DB) AdminTicket(ctx context.Context, id int64) (TicketRow, error) {
+func (d *DB) AdminTicket(ctx context.Context, siteID, id int64) (TicketRow, error) {
 	var t TicketRow
-	err := scanTicket(d.pool.QueryRow(ctx, qAdminTicket, id), &t)
+	err := scanTicket(d.pool.QueryRow(ctx, qAdminTicket, id, siteID), &t)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return TicketRow{}, ErrNotFound
 	}
@@ -90,7 +90,7 @@ func (d *DB) AdminTicket(ctx context.Context, id int64) (TicketRow, error) {
 
 var qReviewTicket = register("ReviewTicket", `
 UPDATE web_userticket SET status=$2, admin_notes=$3, reviewed_at=$4, reviewed_by_id=$5, granted_role_id=$6
-WHERE id=$1`)
+WHERE id=$1 AND site_id=$7`)
 
 var qGrantTicketRole = register("GrantTicketRole", `
 INSERT INTO web_user_roles (user_id, role_id)
@@ -175,10 +175,10 @@ func (d *DB) AdminInvites(ctx context.Context, siteID int64, limit, offset int) 
 	return out, total, rows.Err()
 }
 
-var qDeleteInvite = register("DeleteInvite", `DELETE FROM web_invitelink WHERE id = $1 AND activated_at IS NULL`)
+var qDeleteInvite = register("DeleteInvite", `DELETE FROM web_invitelink WHERE id = $1 AND activated_at IS NULL AND site_id = $2`)
 
-func (d *DB) DeleteInvite(ctx context.Context, id int64) error {
-	if _, err := d.pool.Exec(ctx, qDeleteInvite, id); err != nil {
+func (d *DB) DeleteInvite(ctx context.Context, siteID, id int64) error {
+	if _, err := d.pool.Exec(ctx, qDeleteInvite, id, siteID); err != nil {
 		return fmt.Errorf("delete invite link %d: %w", id, err)
 	}
 	return nil

@@ -47,7 +47,7 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 			row.ID = id
 		}
 		if r.PostFormValue("delete") != "" && row.ID != 0 {
-			if err := h.deps.DB.DeleteForumSection(ctx, row.ID); err != nil {
+			if err := h.deps.DB.DeleteForumSection(ctx, siteID(ctx), row.ID); err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, sectionSlug, row.ID, row.Name)
@@ -91,7 +91,7 @@ func (h *Handler) forumSectionForm(w http.ResponseWriter, r *http.Request, loc *
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.AdminForumSection(r.Context(), id)
+		row, err = h.deps.DB.AdminForumSection(r.Context(), siteID(r.Context()), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil
@@ -136,7 +136,7 @@ func (h *Handler) forumCategories(w http.ResponseWriter, r *http.Request, loc *i
 			row.ID = id
 		}
 		if r.PostFormValue("delete") != "" && row.ID != 0 {
-			if err := h.deps.DB.DeleteForumCategory(ctx, row.ID); err != nil {
+			if err := h.deps.DB.DeleteForumCategory(ctx, siteID(ctx), row.ID); err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, categorySlug, row.ID, row.Name)
@@ -184,7 +184,7 @@ func (h *Handler) forumCategoryForm(w http.ResponseWriter, r *http.Request, loc 
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.AdminForumCategory(ctx, id)
+		row, err = h.deps.DB.AdminForumCategory(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil

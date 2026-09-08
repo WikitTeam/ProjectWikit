@@ -60,7 +60,7 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.AdminRole(ctx, id)
+		row, err = h.deps.DB.AdminRole(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil
@@ -125,7 +125,7 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 			notFound(w)
 			return nil
 		}
-		stored, err = h.deps.DB.AdminRole(ctx, id)
+		stored, err = h.deps.DB.AdminRole(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil
@@ -148,7 +148,7 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		if builtin {
 			return h.roleForm(w, r, loc, rest, loc.T("admin.role-builtin"))
 		}
-		if err := h.deps.DB.DeleteRole(ctx, stored.ID); err != nil {
+		if err := h.deps.DB.DeleteRole(ctx, siteID(ctx), stored.ID); err != nil {
 			return err
 		}
 		h.noteID(r, db.AdminDeleted, roleSlug, stored.ID, stored.Slug)
@@ -258,7 +258,7 @@ func (h *Handler) roleCategories(w http.ResponseWriter, r *http.Request, loc *i1
 		}
 		id := optionalID(r.PostFormValue("id"))
 		if r.PostFormValue("delete") != "" && id != nil {
-			if err := h.deps.DB.DeleteRoleCategory(ctx, *id); err != nil {
+			if err := h.deps.DB.DeleteRoleCategory(ctx, siteID(ctx), *id); err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, roleCategorySlug, *id, "")

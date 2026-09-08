@@ -41,3 +41,33 @@ func TestActiveAt(t *testing.T) {
 		})
 	}
 }
+
+func TestRolesByUserSkipsAnotherSite(t *testing.T) {
+	d := newTestDB(t)
+	ctx := context.Background()
+	here := seedSiteID(t, d)
+
+	roleList, err := d.AllRoles(ctx, here)
+	if err != nil {
+		t.Fatalf("AllRoles() err = %v, want nil", err)
+	}
+	if len(roleList) == 0 {
+		t.Skip("the seed site has no roles to ask about")
+	}
+
+	elsewhere, err := d.AllRoles(ctx, here+1000)
+	if err != nil {
+		t.Fatalf("AllRoles(unknown site) err = %v, want nil", err)
+	}
+	if len(elsewhere) != 0 {
+		t.Errorf("len(AllRoles(unknown site)) = %d, want 0", len(elsewhere))
+	}
+
+	bySlug, err := d.RoleIDsBySlug(ctx, here+1000, []string{"everyone", "registered"})
+	if err != nil {
+		t.Fatalf("RoleIDsBySlug(unknown site) err = %v, want nil", err)
+	}
+	if len(bySlug) != 0 {
+		t.Errorf("len(RoleIDsBySlug(unknown site)) = %d, want 0", len(bySlug))
+	}
+}

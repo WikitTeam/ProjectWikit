@@ -46,7 +46,7 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 			notFound(w)
 			return nil
 		}
-		row, err = h.deps.DB.AdminCategory(ctx, id)
+		row, err = h.deps.DB.AdminCategory(ctx, siteID(ctx), id)
 		if errors.Is(err, db.ErrNotFound) {
 			notFound(w)
 			return nil
@@ -126,7 +126,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	}
 	if r.PostFormValue("delete") != "" && row.ID != 0 {
 		h.noteID(r, db.AdminDeleted, pageCategorySlug, row.ID, row.Name)
-		if err := h.deps.DB.DeleteCategory(ctx, row.ID); err != nil {
+		if err := h.deps.DB.DeleteCategory(ctx, siteID(ctx), row.ID); err != nil {
 			return err
 		}
 		redirect(w, Prefix+pageCategorySlug+"/")

@@ -68,7 +68,7 @@ func (d *DB) AdminRoles(ctx context.Context, siteID int64) ([]RoleRow, error) {
 	return out, rows.Err()
 }
 
-var qAdminRole = register("AdminRole", `SELECT `+roleColumns+` FROM web_role WHERE id = $1`)
+var qAdminRole = register("AdminRole", `SELECT `+roleColumns+` FROM web_role WHERE id = $1 AND site_id = $2`)
 
 var qRoleGrants = register("RoleGrants", `
 SELECT p.codename, false FROM web_role_permissions rp
@@ -77,9 +77,9 @@ UNION ALL
 SELECT p.codename, true FROM web_role_restrictions rr
 JOIN auth_permission p ON p.id = rr.permission_id WHERE rr.role_id = $1`)
 
-func (d *DB) AdminRole(ctx context.Context, id int64) (RoleRow, error) {
+func (d *DB) AdminRole(ctx context.Context, siteID, id int64) (RoleRow, error) {
 	var r RoleRow
-	err := scanRole(d.pool.QueryRow(ctx, qAdminRole, id), &r)
+	err := scanRole(d.pool.QueryRow(ctx, qAdminRole, id, siteID), &r)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return RoleRow{}, ErrNotFound
 	}
@@ -142,7 +142,7 @@ VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING id
 UPDATE web_role SET slug=$2, name=$3, short_name=$4, category_id=$5, index=$6, is_staff=$7,
 	group_votes=$8, votes_title=$9, inline_visual_mode=$10, profile_visual_mode=$11,
 	color=$12, icon=$13, badge_text=$14, badge_bg=$15, badge_text_color=$16, badge_show_border=$17
-WHERE id=$1`)
+WHERE id=$1 AND site_id=$18`)
 
 	qClearRolePermissions  = register("ClearRolePermissions", `DELETE FROM web_role_permissions WHERE role_id = $1`)
 	qClearRoleRestrictions = register("ClearRoleRestrictions", `DELETE FROM web_role_restrictions WHERE role_id = $1`)
@@ -174,7 +174,7 @@ func (d *DB) SaveRole(ctx context.Context, siteID int64, r RoleRow, withGrants b
 		if err := tx.QueryRow(ctx, qInsertRole, append(args, siteID)...).Scan(&r.ID); err != nil {
 			return 0, fmt.Errorf("create role %q: %w", r.Slug, err)
 		}
-	} else if _, err := tx.Exec(ctx, qUpdateRole, append([]any{r.ID}, args...)...); err != nil {
+	} else if _, err := tx.Exec(ctx, qUpdateRole, append(append([]any{r.ID}, args...), siteID)...); err != nil {
 		return 0, fmt.Errorf("update role %d: %w", r.ID, err)
 	}
 
@@ -199,7 +199,7 @@ func (d *DB) SaveRole(ctx context.Context, siteID int64, r RoleRow, withGrants b
 	return r.ID, tx.Commit(ctx)
 }
 
-var qDeleteRole = register("DeleteRole", `DELETE FROM web_role WHERE id = $1`)
+var qDeleteRole = register("DeleteRole", `DELETE FROM web_role WHERE id = $1 AND site_id = $2`)
 
 var roleDependents = []string{
 	register("DropRoleGrants", `DELETE FROM web_role_permissions WHERE role_id = $1`),
@@ -215,7 +215,7 @@ var roleDependents = []string{
 			THEN NULL ELSE membership_password_role_id END`),
 }
 
-func (d *DB) DeleteRole(ctx context.Context, id int64) error {
+func (d *DB) DeleteRole(ctx context.Context, siteID, id int64) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin deleting role %d: %w", id, err)
@@ -227,7 +227,7 @@ func (d *DB) DeleteRole(ctx context.Context, id int64) error {
 			return fmt.Errorf("detach role %d: %w", id, err)
 		}
 	}
-	if _, err := tx.Exec(ctx, qDeleteRole, id); err != nil {
+	if _, err := tx.Exec(ctx, qDeleteRole, id, siteID); err != nil {
 		return fmt.Errorf("delete role %d: %w", id, err)
 	}
 	return tx.Commit(ctx)
@@ -275,8 +275,8 @@ func (d *DB) RoleCategories(ctx context.Context, siteID int64) ([]RoleCategoryRo
 
 var (
 	qInsertRoleCategory = register("InsertRoleCategory", `INSERT INTO web_rolecategory (name, site_id) VALUES ($1,$2) RETURNING id`)
-	qUpdateRoleCategory = register("UpdateRoleCategory", `UPDATE web_rolecategory SET name = $2 WHERE id = $1`)
-	qDeleteRoleCategory = register("DeleteRoleCategory", `DELETE FROM web_rolecategory WHERE id = $1`)
+	qUpdateRoleCategory = register("UpdateRoleCategory", `UPDATE web_rolecategory SET name = $2 WHERE id = $1 AND site_id = $3`)
+	qDeleteRoleCategory = register("DeleteRoleCategory", `DELETE FROM web_rolecategory WHERE id = $1 AND site_id = $2`)
 )
 
 func (d *DB) SaveRoleCategory(ctx context.Context, siteID int64, c RoleCategoryRow) error {
@@ -287,7 +287,7 @@ func (d *DB) SaveRoleCategory(ctx context.Context, siteID int64, c RoleCategoryR
 		}
 		return nil
 	}
-	if _, err := d.pool.Exec(ctx, qUpdateRoleCategory, c.ID, c.Name); err != nil {
+	if _, err := d.pool.Exec(ctx, qUpdateRoleCategory, c.ID, c.Name, siteID); err != nil {
 		return fmt.Errorf("update role category %d: %w", c.ID, err)
 	}
 	return nil
@@ -295,7 +295,7 @@ func (d *DB) SaveRoleCategory(ctx context.Context, siteID int64, c RoleCategoryR
 
 var qDetachRoleCategory = register("DetachRoleCategory", `UPDATE web_role SET category_id = NULL WHERE category_id = $1`)
 
-func (d *DB) DeleteRoleCategory(ctx context.Context, id int64) error {
+func (d *DB) DeleteRoleCategory(ctx context.Context, siteID, id int64) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin deleting role category %d: %w", id, err)
@@ -305,7 +305,7 @@ func (d *DB) DeleteRoleCategory(ctx context.Context, id int64) error {
 	if _, err := tx.Exec(ctx, qDetachRoleCategory, id); err != nil {
 		return fmt.Errorf("detach role category %d: %w", id, err)
 	}
-	if _, err := tx.Exec(ctx, qDeleteRoleCategory, id); err != nil {
+	if _, err := tx.Exec(ctx, qDeleteRoleCategory, id, siteID); err != nil {
 		return fmt.Errorf("delete role category %d: %w", id, err)
 	}
 	return tx.Commit(ctx)

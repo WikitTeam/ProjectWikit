@@ -41,11 +41,11 @@ func (d *DB) AdminTagCategories(ctx context.Context, siteID int64) ([]TagCategor
 }
 
 var qAdminTagCategory = register("AdminTagCategory", `
-SELECT id, name, slug, description, priority FROM web_tagscategory WHERE id = $1`)
+SELECT id, name, slug, description, priority FROM web_tagscategory WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) AdminTagCategory(ctx context.Context, id int64) (TagCategoryRow, error) {
+func (d *DB) AdminTagCategory(ctx context.Context, siteID, id int64) (TagCategoryRow, error) {
 	var c TagCategoryRow
-	err := d.pool.QueryRow(ctx, qAdminTagCategory, id).
+	err := d.pool.QueryRow(ctx, qAdminTagCategory, id, siteID).
 		Scan(&c.ID, &c.Name, &c.Slug, &c.Description, &c.Priority)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return TagCategoryRow{}, ErrNotFound
@@ -60,9 +60,9 @@ var (
 	qInsertTagCat = register("InsertTagCat", `
 INSERT INTO web_tagscategory (name, slug, description, priority, site_id) VALUES ($1,$2,$3,$4,$5) RETURNING id`)
 	qUpdateTagCat = register("UpdateTagCat", `
-UPDATE web_tagscategory SET name=$2, slug=$3, description=$4, priority=$5 WHERE id=$1`)
+UPDATE web_tagscategory SET name=$2, slug=$3, description=$4, priority=$5 WHERE id=$1 AND site_id=$6`)
 	qDetachTagCat = register("DetachTagCat", `UPDATE web_tag SET category_id = NULL WHERE category_id = $1`)
-	qDeleteTagCat = register("DeleteTagCat", `DELETE FROM web_tagscategory WHERE id = $1`)
+	qDeleteTagCat = register("DeleteTagCat", `DELETE FROM web_tagscategory WHERE id = $1 AND site_id = $2`)
 )
 
 func (d *DB) SaveTagCategory(ctx context.Context, siteID int64, c TagCategoryRow) error {
@@ -74,14 +74,14 @@ func (d *DB) SaveTagCategory(ctx context.Context, siteID int64, c TagCategoryRow
 		}
 		return nil
 	}
-	_, err := d.pool.Exec(ctx, qUpdateTagCat, c.ID, c.Name, c.Slug, c.Description, c.Priority)
+	_, err := d.pool.Exec(ctx, qUpdateTagCat, c.ID, c.Name, c.Slug, c.Description, c.Priority, siteID)
 	if err != nil {
 		return fmt.Errorf("update tag category %d: %w", c.ID, err)
 	}
 	return nil
 }
 
-func (d *DB) DeleteTagCategory(ctx context.Context, id int64) error {
+func (d *DB) DeleteTagCategory(ctx context.Context, siteID, id int64) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin deleting tag category %d: %w", id, err)
@@ -91,7 +91,7 @@ func (d *DB) DeleteTagCategory(ctx context.Context, id int64) error {
 	if _, err := tx.Exec(ctx, qDetachTagCat, id); err != nil {
 		return fmt.Errorf("detach tag category %d: %w", id, err)
 	}
-	if _, err := tx.Exec(ctx, qDeleteTagCat, id); err != nil {
+	if _, err := tx.Exec(ctx, qDeleteTagCat, id, siteID); err != nil {
 		return fmt.Errorf("delete tag category %d: %w", id, err)
 	}
 	return tx.Commit(ctx)
@@ -138,11 +138,11 @@ func (d *DB) AdminTags(ctx context.Context, siteID int64, query string, limit, o
 	return out, total, rows.Err()
 }
 
-var qAdminTag = register("AdminTag", `SELECT id, name, category_id FROM web_tag WHERE id = $1`)
+var qAdminTag = register("AdminTag", `SELECT id, name, category_id FROM web_tag WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) AdminTag(ctx context.Context, id int64) (TagRow, error) {
+func (d *DB) AdminTag(ctx context.Context, siteID, id int64) (TagRow, error) {
 	var t TagRow
-	err := d.pool.QueryRow(ctx, qAdminTag, id).Scan(&t.ID, &t.Name, &t.CategoryID)
+	err := d.pool.QueryRow(ctx, qAdminTag, id, siteID).Scan(&t.ID, &t.Name, &t.CategoryID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return TagRow{}, ErrNotFound
 	}
@@ -154,9 +154,9 @@ func (d *DB) AdminTag(ctx context.Context, id int64) (TagRow, error) {
 
 var (
 	qInsertTagRow = register("InsertTagRow", `INSERT INTO web_tag (name, category_id, site_id) VALUES ($1,$2,$3) RETURNING id`)
-	qUpdateTag    = register("UpdateTag", `UPDATE web_tag SET name=$2, category_id=$3 WHERE id=$1`)
+	qUpdateTag    = register("UpdateTag", `UPDATE web_tag SET name=$2, category_id=$3 WHERE id=$1 AND site_id=$4`)
 	qDetachTag    = register("DetachTag", `DELETE FROM web_article_tags WHERE tag_id = $1`)
-	qDeleteTagRow = register("DeleteTagRow", `DELETE FROM web_tag WHERE id = $1`)
+	qDeleteTagRow = register("DeleteTagRow", `DELETE FROM web_tag WHERE id = $1 AND site_id = $2`)
 )
 
 func (d *DB) SaveTag(ctx context.Context, siteID int64, t TagRow) error {
@@ -167,13 +167,13 @@ func (d *DB) SaveTag(ctx context.Context, siteID int64, t TagRow) error {
 		}
 		return nil
 	}
-	if _, err := d.pool.Exec(ctx, qUpdateTag, t.ID, t.Name, t.CategoryID); err != nil {
+	if _, err := d.pool.Exec(ctx, qUpdateTag, t.ID, t.Name, t.CategoryID, siteID); err != nil {
 		return fmt.Errorf("update tag %d: %w", t.ID, err)
 	}
 	return nil
 }
 
-func (d *DB) DeleteTag(ctx context.Context, id int64) error {
+func (d *DB) DeleteTag(ctx context.Context, siteID, id int64) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin deleting tag %d: %w", id, err)
@@ -183,7 +183,7 @@ func (d *DB) DeleteTag(ctx context.Context, id int64) error {
 	if _, err := tx.Exec(ctx, qDetachTag, id); err != nil {
 		return fmt.Errorf("detach tag %d: %w", id, err)
 	}
-	if _, err := tx.Exec(ctx, qDeleteTagRow, id); err != nil {
+	if _, err := tx.Exec(ctx, qDeleteTagRow, id, siteID); err != nil {
 		return fmt.Errorf("delete tag %d: %w", id, err)
 	}
 	return tx.Commit(ctx)
