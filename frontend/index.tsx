@@ -34,6 +34,11 @@ import { makePasswordToggle } from './util/password'
 import { makeTopBar } from './articles/top-bar'
 import AdminSusUsers from './entrypoints/admin-sus-users'
 import { renderTo } from '~util/react-render-into'
+import { setLanguage } from '~util/i18n'
+
+// The page already declares its language for the browser, so the bundle reads
+// the same attribute instead of being told a second time.
+setLanguage(document.documentElement.lang)
 
 attachApiMessageListener()
 makeButtons()
