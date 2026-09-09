@@ -51,6 +51,8 @@
   <div class="batch-bar">
     <span class="label">{{t "admin.batch"}}</span>
     <button type="submit" class="btn btn-danger" name="action" value="delete"><i class="fas fa-trash"></i>{{t "admin.batch-delete"}}</button>
+    <button type="submit" class="btn" name="action" value="noindex"><i class="fas fa-eye-slash"></i>{{t "admin.pages-noindex"}}</button>
+    <button type="submit" class="btn" name="action" value="index"><i class="fas fa-eye"></i>{{t "admin.pages-index"}}</button>
     <span class="batch-revert">
       <button type="submit" class="btn" name="action" value="revert"><i class="fas fa-undo"></i>{{t "admin.batch-revert"}}</button>
       <input type="number" name="steps" value="1" min="1" max="50" class="narrow-2">

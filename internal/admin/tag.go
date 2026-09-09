@@ -33,6 +33,7 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		row := db.TagRow{
 			Name:       strings.TrimSpace(r.PostFormValue("name")),
 			CategoryID: optionalID(r.PostFormValue("category")),
+			IsIndexed:  r.PostFormValue("is_indexed") != "",
 		}
 		if rest != "new" {
 			id, err := strconv.ParseInt(rest, 10, 64)
@@ -91,7 +92,7 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 
 func (h *Handler) tagForm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest, problem string) error {
 	ctx := r.Context()
-	row := db.TagRow{}
+	row := db.TagRow{IsIndexed: true}
 	if rest != "new" {
 		id, err := strconv.ParseInt(rest, 10, 64)
 		if err != nil {

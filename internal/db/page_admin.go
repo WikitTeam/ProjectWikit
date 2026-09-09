@@ -84,3 +84,17 @@ func (d *DB) AdminPageCategories(ctx context.Context, siteID int64) ([]PageCateg
 	}
 	return out, rows.Err()
 }
+
+var qSetArticleIndexed = register("SetArticleIndexed", `
+UPDATE web_article SET is_indexed = $3 WHERE id = $1 AND site_id = $2`)
+
+func (d *DB) SetArticleIndexed(ctx context.Context, siteID, id int64, indexed bool) error {
+	tag, err := d.pool.Exec(ctx, qSetArticleIndexed, id, siteID, indexed)
+	if err != nil {
+		return fmt.Errorf("set indexed on article %d: %w", id, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

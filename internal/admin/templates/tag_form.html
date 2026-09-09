@@ -6,6 +6,7 @@
     <div class="widget-title"><i class="fas fa-tag"></i><h5>{{t "admin.tags"}}</h5></div>
     <div class="widget-content">
       {{template "row_text" dict "n" "name" "k" "admin.f-name" "v" .Tag.Name "w" "narrow-4"}}
+      {{template "row_check" dict "n" "is_indexed" "k" "admin.f-indexed" "l" "admin.l-indexed-tag" "v" .Tag.IsIndexed}}
       <div class="control-group">
         <label class="control-label" for="id_category">{{t "admin.f-category"}}</label>
         <div class="controls">

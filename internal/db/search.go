@@ -41,6 +41,14 @@ func (f SearchFilter) where(b *listBuilder) string {
 		parts = append(parts, "NOT EXISTS (SELECT 1 FROM web_article_tags at"+
 			" WHERE at.article_id = a.id AND at.tag_id = ANY("+b.arg(f.Exclude)+"))")
 	}
+	// A page, its category or any of its tags can be kept out of the search
+	// from the admin. A category with no row of its own counts as indexed.
+	parts = append(parts, "a.is_indexed")
+	parts = append(parts, "NOT EXISTS (SELECT 1 FROM web_category c"+
+		" WHERE c.site_id = a.site_id AND c.name = a.category AND NOT c.is_indexed)")
+	parts = append(parts, "NOT EXISTS (SELECT 1 FROM web_article_tags ax"+
+		" JOIN web_tag t ON t.id = ax.tag_id"+
+		" WHERE ax.article_id = a.id AND NOT t.is_indexed)")
 	if f.From != nil {
 		parts = append(parts, "a.created_at >= "+b.arg(*f.From))
 	}

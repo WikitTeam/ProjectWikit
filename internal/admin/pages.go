@@ -21,6 +21,8 @@ const (
 	pageActionDelete = "delete"
 	pageActionRevert = "revert"
 	pageActionRename = "rename"
+	pageActionIndex  = "index"
+	pageActionHide   = "noindex"
 )
 
 func init() {
@@ -191,7 +193,10 @@ func (h *Handler) pageBatch(w http.ResponseWriter, r *http.Request, loc *i18n.Lo
 		return h.pageList(w, r, loc, loc.T("admin.page-none-picked"))
 	}
 
-	if r.PostFormValue("confirm") == "" {
+	// Indexing is one click away from being undone, so only the two that
+	// destroy something stop to ask.
+	needsConfirm := action == pageActionDelete || action == pageActionRevert
+	if needsConfirm && r.PostFormValue("confirm") == "" {
 		return h.page(w, r, loc, loc.T("admin.pages"), "page_confirm.html", map[string]any{
 			"Picked": picked,
 			"What":   action,
@@ -227,6 +232,13 @@ func (h *Handler) applyOne(r *http.Request, loc *i18n.Localizer, one db.AdminPag
 			return apiProblem(loc, answer)
 		}
 		h.noteID(r, db.AdminDeleted, pageSlug, one.ID, one.FullName())
+		return ""
+	case pageActionIndex, pageActionHide:
+		ctx := r.Context()
+		if err := h.deps.DB.SetArticleIndexed(ctx, siteID(ctx), one.ID, action == pageActionIndex); err != nil {
+			return err.Error()
+		}
+		h.noteID(r, db.AdminChanged, pageSlug, one.ID, one.FullName())
 		return ""
 	case pageActionRevert:
 		target, err := h.revertTarget(r, one.ID, steps)

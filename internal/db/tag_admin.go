@@ -103,6 +103,7 @@ type TagRow struct {
 	CategoryID   *int64
 	CategoryName string
 	Articles     int
+	IsIndexed    bool
 }
 
 var qAdminTags = register("AdminTags", `
@@ -138,11 +139,11 @@ func (d *DB) AdminTags(ctx context.Context, siteID int64, query string, limit, o
 	return out, total, rows.Err()
 }
 
-var qAdminTag = register("AdminTag", `SELECT id, name, category_id FROM web_tag WHERE id = $1 AND site_id = $2`)
+var qAdminTag = register("AdminTag", `SELECT id, name, category_id, is_indexed FROM web_tag WHERE id = $1 AND site_id = $2`)
 
 func (d *DB) AdminTag(ctx context.Context, siteID, id int64) (TagRow, error) {
 	var t TagRow
-	err := d.pool.QueryRow(ctx, qAdminTag, id, siteID).Scan(&t.ID, &t.Name, &t.CategoryID)
+	err := d.pool.QueryRow(ctx, qAdminTag, id, siteID).Scan(&t.ID, &t.Name, &t.CategoryID, &t.IsIndexed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return TagRow{}, ErrNotFound
 	}
@@ -153,8 +154,8 @@ func (d *DB) AdminTag(ctx context.Context, siteID, id int64) (TagRow, error) {
 }
 
 var (
-	qInsertTagRow = register("InsertTagRow", `INSERT INTO web_tag (name, category_id, site_id) VALUES ($1,$2,$3) RETURNING id`)
-	qUpdateTag    = register("UpdateTag", `UPDATE web_tag SET name=$2, category_id=$3 WHERE id=$1 AND site_id=$4`)
+	qInsertTagRow = register("InsertTagRow", `INSERT INTO web_tag (name, category_id, site_id, is_indexed) VALUES ($1,$2,$3,$4) RETURNING id`)
+	qUpdateTag    = register("UpdateTag", `UPDATE web_tag SET name=$2, category_id=$3, is_indexed=$5 WHERE id=$1 AND site_id=$4`)
 	qDetachTag    = register("DetachTag", `DELETE FROM web_article_tags WHERE tag_id = $1`)
 	qDeleteTagRow = register("DeleteTagRow", `DELETE FROM web_tag WHERE id = $1 AND site_id = $2`)
 )
@@ -162,12 +163,12 @@ var (
 func (d *DB) SaveTag(ctx context.Context, siteID int64, t TagRow) error {
 	if t.ID == 0 {
 		var id int64
-		if err := d.pool.QueryRow(ctx, qInsertTagRow, t.Name, t.CategoryID, siteID).Scan(&id); err != nil {
+		if err := d.pool.QueryRow(ctx, qInsertTagRow, t.Name, t.CategoryID, siteID, t.IsIndexed).Scan(&id); err != nil {
 			return fmt.Errorf("create tag %q: %w", t.Name, err)
 		}
 		return nil
 	}
-	if _, err := d.pool.Exec(ctx, qUpdateTag, t.ID, t.Name, t.CategoryID, siteID); err != nil {
+	if _, err := d.pool.Exec(ctx, qUpdateTag, t.ID, t.Name, t.CategoryID, siteID, t.IsIndexed); err != nil {
 		return fmt.Errorf("update tag %d: %w", t.ID, err)
 	}
 	return nil
