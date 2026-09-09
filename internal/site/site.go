@@ -3,6 +3,8 @@ package site
 import (
 	"net"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -42,7 +44,9 @@ var (
 )
 
 func Decide(s Site, rawHost string, u *url.URL) Decision {
-	onMediaHost := StripPort(rawHost) == s.MediaDomain
+	// A host arrives however the visitor typed it, while the two columns hold
+	// one spelling each.
+	onMediaHost := strings.EqualFold(StripPort(rawHost), s.MediaDomain)
 	wantsMedia := IsMediaPath(u.Path)
 
 	if s.MediaDomain != "" && s.MediaDomain != s.Domain {
@@ -82,4 +86,30 @@ func StripPort(rawHost string) string {
 		return host
 	}
 	return strings.Trim(rawHost, "[]")
+}
+
+const maxHostName = 253
+
+var hostLabel = regexp.MustCompile(`^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$`)
+
+// A value no request can carry stores a site that nothing reaches and nothing
+// reports, so a scheme or a path is refused here rather than later.
+func ValidHost(value string) bool {
+	name := value
+	if host, port, err := net.SplitHostPort(value); err == nil {
+		number, err := strconv.Atoi(port)
+		if err != nil || number < 1 || number > 65535 {
+			return false
+		}
+		name = host
+	}
+	if name == "" || len(name) > maxHostName {
+		return false
+	}
+	for _, label := range strings.Split(name, ".") {
+		if !hostLabel.MatchString(label) {
+			return false
+		}
+	}
+	return true
 }

@@ -115,16 +115,18 @@ func TestCheckSite(t *testing.T) {
 		site     db.Site
 		settings db.SiteSettings
 	}{
-		"slug with a space": {withSlug(ok, "a b"), fine},
-		"empty slug":        {withSlug(ok, ""), fine},
-		"no title":          {func() db.Site { s := ok; s.Title = ""; return s }(), fine},
-		"no domain":         {func() db.Site { s := ok; s.Domain = ""; return s }(), fine},
-		"no media domain":   {func() db.Site { s := ok; s.MediaDomain = ""; return s }(), fine},
-		"no home page":      {func() db.Site { s := ok; s.HomePage = ""; return s }(), fine},
-		"unknown policy":    {func() db.Site { s := ok; s.EmailPolicy = "later"; return s }(), fine},
-		"unknown rating":    {ok, db.SiteSettings{RatingMode: "vibes", CreateTags: "default"}},
-		"unknown tag mode":  {ok, db.SiteSettings{RatingMode: "default", CreateTags: "vibes"}},
-		"unknown language":  {func() db.Site { s := ok; s.Language = "kl"; return s }(), fine},
+		"slug with a space":    {withSlug(ok, "a b"), fine},
+		"empty slug":           {withSlug(ok, ""), fine},
+		"no title":             {func() db.Site { s := ok; s.Title = ""; return s }(), fine},
+		"no domain":            {func() db.Site { s := ok; s.Domain = ""; return s }(), fine},
+		"no media domain":      {func() db.Site { s := ok; s.MediaDomain = ""; return s }(), fine},
+		"domain with a scheme": {func() db.Site { s := ok; s.Domain = "http://a.test"; return s }(), fine},
+		"domain with a path":   {func() db.Site { s := ok; s.Domain = "a.test/wiki"; return s }(), fine},
+		"no home page":         {func() db.Site { s := ok; s.HomePage = ""; return s }(), fine},
+		"unknown policy":       {func() db.Site { s := ok; s.EmailPolicy = "later"; return s }(), fine},
+		"unknown rating":       {ok, db.SiteSettings{RatingMode: "vibes", CreateTags: "default"}},
+		"unknown tag mode":     {ok, db.SiteSettings{RatingMode: "default", CreateTags: "vibes"}},
+		"unknown language":     {func() db.Site { s := ok; s.Language = "kl"; return s }(), fine},
 	}
 	for name, c := range bad {
 		if checkSite(loc, bundle, c.site, c.settings) == "" {

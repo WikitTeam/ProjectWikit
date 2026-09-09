@@ -44,7 +44,7 @@ SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon
        membership_password_enabled, membership_password, membership_password_role_id,
        default_role_id, verified_role_id, email_policy, language
 FROM web_site
-WHERE domain = $1 OR media_domain = $1
+WHERE lower(domain) = $1 OR lower(media_domain) = $1
 ORDER BY id
 LIMIT 1`)
 
@@ -103,7 +103,7 @@ func (d *DB) SiteSlugs(ctx context.Context) ([]string, error) {
 func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 	for _, host := range hosts {
 		var s Site
-		err := scanSite(d.pool.QueryRow(ctx, qSiteByHost, host), &s)
+		err := scanSite(d.pool.QueryRow(ctx, qSiteByHost, strings.ToLower(host)), &s)
 		if errors.Is(err, pgx.ErrNoRows) {
 			continue
 		}

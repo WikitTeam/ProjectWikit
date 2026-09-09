@@ -137,8 +137,8 @@ func checkSite(loc *i18n.Localizer, bundle *i18n.Bundle, s db.Site, settings db.
 		return loc.T("admin.site-bad-slug")
 	case s.Title == "":
 		return loc.T("admin.site-no-title")
-	case s.Domain == "" || s.MediaDomain == "":
-		return loc.T("admin.site-no-domain")
+	case !site.ValidHost(s.Domain) || !site.ValidHost(s.MediaDomain):
+		return loc.T("admin.site-bad-domain")
 	case s.HomePage == "":
 		return loc.T("admin.site-no-home")
 	case !contains(emailPolicy, s.EmailPolicy):

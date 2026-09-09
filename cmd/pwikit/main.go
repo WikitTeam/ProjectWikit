@@ -472,6 +472,11 @@ func createSite(args []string) error {
 	if *mediaDomain == "" {
 		mediaDomain = domain
 	}
+	for name, value := range map[string]string{"domain": *domain, "media-domain": *mediaDomain} {
+		if !site.ValidHost(value) {
+			return fmt.Errorf("-%s %q is not a host name; give the name a request arrives on, without a scheme or a path", name, value)
+		}
+	}
 	if *database == "" {
 		return errors.New("no database, pass -database or set " + envDatabase)
 	}
