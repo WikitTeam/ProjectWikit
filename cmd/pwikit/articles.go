@@ -20,6 +20,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
@@ -55,6 +56,7 @@ type pageStack struct {
 	ownRowsAPI    http.Handler
 	articleAPI    http.Handler
 	fileAPI       http.Handler
+	unresolved    http.Handler
 	close         func()
 }
 
@@ -162,6 +164,8 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		return nil, err
 	}
 	stack.adminPages = adminPages
+
+	stack.unresolved = site.NewUnresolved(bundle, static.NewAssets(assets), location)
 
 	resolver := auth.NewResolver(store, conn, conn, log)
 	negotiate := lang.Middleware(bundle)

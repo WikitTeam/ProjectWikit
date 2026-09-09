@@ -467,6 +467,8 @@
   "forum-like-signed-out": "请先登录再点赞",
   "forum-like-toggle": "点赞",
   "forum-like-who": "查看点赞的人",
+  "host.unresolved": "这台服务器上没有绑定到 {host} 的站点。检查一下域名有没有填错，或者 DNS 是不是还没生效。",
+  "host.unresolved-title": "没有这个站点",
   "image-context-bad": "图像地址不正确",
   "include-create": "立刻创建",
   "include-loop": "插入的页面 \"{name}\" 导致了无限包含循环",

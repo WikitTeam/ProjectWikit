@@ -206,8 +206,10 @@ func serve(args []string) error {
 		return err
 	}
 	defer stack.close()
+	// Only the page handler answers a name a person typed, so only it explains
+	// an unresolved one. The rest are reached from inside a page.
 	served := func(h http.Handler) http.Handler {
-		return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), h, notFound)))
+		return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), h, stack.unresolved)))
 	}
 	articles := served(stack.articles)
 	codeHandler := served(stack.code)
