@@ -86,6 +86,10 @@ func run(args []string) error {
 		return migrateCommand(args[1:])
 	case "createsite":
 		return createSite(args[1:])
+	case "site":
+		return siteCommand(args[1:])
+	case "admin":
+		return adminCommand(args[1:])
 	case "seed":
 		return seedPages(args[1:])
 	case "help", "-h", "--help":
@@ -103,6 +107,8 @@ func usage() {
 Commands:
   serve       start the HTTP server
   createsite  create the site this database serves
+  site        list the sites in this database or point one at another domain
+  admin       create an administrator or give an account every right
   seed        write the pages a new site starts with
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
@@ -641,4 +647,94 @@ func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, fro
 	fmt.Printf("%d forum categories, %d threads, %d posts\n",
 		result.Categories, result.Threads, result.Posts)
 	return err
+}
+
+func siteCommand(args []string) error {
+	sub := ""
+	if len(args) > 0 {
+		sub = args[0]
+	}
+	if sub != "list" && sub != "rebind" {
+		fmt.Fprint(os.Stderr, `Usage: pwikit site <list|rebind> [options]
+
+  list    print the slug and the two domains of every site
+  rebind  point a site at another domain, for when the stored one cannot be reached
+
+Options for rebind:
+  -slug          site to rebind
+  -domain        domain the pages are served on
+  -media-domain  domain the uploaded files are served on; defaults to -domain
+`)
+		return errors.New("unknown site subcommand")
+	}
+	fs := flag.NewFlagSet("site "+sub, flag.ContinueOnError)
+	slug := fs.String("slug", "", "site to rebind")
+	domain := fs.String("domain", "", "domain the pages are served on")
+	mediaDomain := fs.String("media-domain", "", "domain the uploaded files are served on; defaults to -domain")
+	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	if err := fs.Parse(args[1:]); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	if *database == "" {
+		return errors.New("no database, pass -database or set " + envDatabase)
+	}
+
+	ctx := context.Background()
+	conn, err := db.Open(ctx, *database)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	if sub == "list" {
+		return listSites(ctx, conn)
+	}
+	return rebindSite(ctx, conn, *slug, *domain, *mediaDomain)
+}
+
+func listSites(ctx context.Context, conn *db.DB) error {
+	slugs, err := conn.SiteSlugs(ctx)
+	if err != nil {
+		return err
+	}
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "SLUG\tDOMAIN\tMEDIA DOMAIN")
+	for _, slug := range slugs {
+		s, err := conn.SiteBySlug(ctx, slug)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\n", s.Slug, s.Domain, s.MediaDomain)
+	}
+	return w.Flush()
+}
+
+func rebindSite(ctx context.Context, conn *db.DB, slug, domain, mediaDomain string) error {
+	if slug == "" || domain == "" {
+		return errors.New("rebind needs -slug and -domain")
+	}
+	if mediaDomain == "" {
+		mediaDomain = domain
+	}
+	for name, value := range map[string]string{"domain": domain, "media-domain": mediaDomain} {
+		if !site.ValidHost(value) {
+			return fmt.Errorf("-%s %q is not a host name; give the name a request arrives on, without a scheme or a path", name, value)
+		}
+	}
+	before, err := conn.SiteBySlug(ctx, slug)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return fmt.Errorf("no site with slug %q", slug)
+		}
+		return err
+	}
+	if err := conn.SetSiteHosts(ctx, slug, domain, mediaDomain); err != nil {
+		return err
+	}
+	fmt.Printf("%s: %s -> %s\n", slug, before.Domain, domain)
+	fmt.Printf("%s: %s -> %s (media)\n", slug, before.MediaDomain, mediaDomain)
+	return nil
 }

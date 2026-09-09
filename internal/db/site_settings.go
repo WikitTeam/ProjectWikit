@@ -79,3 +79,17 @@ func nullable(s string) *string {
 	}
 	return &s
 }
+
+var qSetSiteHosts = register("SetSiteHosts", `
+UPDATE web_site SET domain = $2, media_domain = $3 WHERE slug = $1`)
+
+func (d *DB) SetSiteHosts(ctx context.Context, slug, domain, mediaDomain string) error {
+	tag, err := d.pool.Exec(ctx, qSetSiteHosts, slug, domain, mediaDomain)
+	if err != nil {
+		return fmt.Errorf("rebind site %q: %w", slug, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

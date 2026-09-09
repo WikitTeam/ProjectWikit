@@ -276,3 +276,52 @@ func (d *DB) CreateTicket(ctx context.Context, siteID int64, kind, subject, body
 	}
 	return id, nil
 }
+
+// The name is compared twice because an archive keeps whatever spelling the
+// other site displayed, while a local name is already canonical.
+var qUserToClaim = register("UserToClaim", `
+SELECT `+userColumns+`, password
+FROM web_user
+WHERE username = $1 OR lower(wikidot_username) = $1 OR lower(wikidot_username) = $2
+ORDER BY id
+LIMIT 1`)
+
+// The hash comes back because an unusable one is what tells a row waiting to be
+// claimed apart from somebody's live account.
+func (d *DB) UserToClaim(ctx context.Context, canonical, spelled string) (*User, string, error) {
+	var (
+		u    User
+		hash string
+	)
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserToClaim, canonical, spelled).Scan(append(dest, &hash)...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", ErrNotFound
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("look up account %q: %w", canonical, err)
+	}
+	finish()
+	return &u, hash, nil
+}
+
+func (d *DB) SetSuperuser(ctx context.Context, id int64, on bool) error {
+	tag, err := d.pool.Exec(ctx, qSetSuperuser, id, on)
+	if err != nil {
+		return fmt.Errorf("set superuser on %d: %w", id, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+var qSuperuserCount = register("SuperuserCount", `SELECT count(*) FROM web_user WHERE is_superuser`)
+
+func (d *DB) SuperuserCount(ctx context.Context) (int, error) {
+	var n int
+	if err := d.pool.QueryRow(ctx, qSuperuserCount).Scan(&n); err != nil {
+		return 0, fmt.Errorf("count superusers: %w", err)
+	}
+	return n, nil
+}
