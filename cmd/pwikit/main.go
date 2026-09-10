@@ -19,6 +19,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/admin"
 	"github.com/WikitTeam/ProjectWikit/internal/archive"
+	"github.com/WikitTeam/ProjectWikit/internal/backup"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
@@ -90,6 +91,8 @@ func run(args []string) error {
 		return siteCommand(args[1:])
 	case "admin":
 		return adminCommand(args[1:])
+	case "backup":
+		return backupCommand(args[1:])
 	case "seed":
 		return seedPages(args[1:])
 	case "help", "-h", "--help":
@@ -109,6 +112,7 @@ Commands:
   createsite  create the site this database serves
   site        list the sites in this database or point one at another domain
   admin       create an administrator or give an account every right
+  backup      write, check, list or put back a backup
   seed        write the pages a new site starts with
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
@@ -174,6 +178,14 @@ func serve(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// Asked before anything writes, so a server too old to hold the schema says
+	// so instead of failing somewhere in the middle of a migration.
+	found, err := backup.CheckServer(context.Background(), *database)
+	if err != nil {
+		return err
+	}
+	log.Info("pwikit reached postgres", "version", backup.Describe(found))
 
 	if !*noMigrate {
 		result, err := migrate.Run(context.Background(), *database)
