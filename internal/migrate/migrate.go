@@ -157,6 +157,39 @@ func run(ctx context.Context, conn *pgx.Conn) (Result, error) {
 	return out, nil
 }
 
+// ApplyInto replays migrations inside a transaction the caller owns, which is
+// what lets a restore rebuild the schema and load the data all or nothing.
+func ApplyInto(ctx context.Context, tx pgx.Tx, wanted []string) error {
+	for _, name := range wanted {
+		if !slices.Contains(names, name) {
+			return fmt.Errorf("this build does not carry %q", name)
+		}
+	}
+	if _, err := tx.Exec(ctx, `CREATE TABLE IF NOT EXISTS `+versionTable+` (
+	name text PRIMARY KEY,
+	applied_at timestamptz NOT NULL DEFAULT now())`); err != nil {
+		return fmt.Errorf("create %s: %w", versionTable, err)
+	}
+	for _, name := range wanted {
+		body, err := files.ReadFile(path.Join(dir, name))
+		if err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, string(body)); err != nil {
+			return fmt.Errorf("apply %s: %w", name, err)
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO `+versionTable+` (name) VALUES ($1)`, name); err != nil {
+			return fmt.Errorf("record %s: %w", name, err)
+		}
+		// A deferrable key made here leaves its first check queued, and a queued
+		// check blocks the next migration from altering that table.
+		if _, err := tx.Exec(ctx, `SET CONSTRAINTS ALL IMMEDIATE`); err != nil {
+			return fmt.Errorf("settle the constraints after %s: %w", name, err)
+		}
+	}
+	return nil
+}
+
 func apply(ctx context.Context, conn *pgx.Conn, name string) error {
 	body, err := files.ReadFile(path.Join(dir, name))
 	if err != nil {
