@@ -222,3 +222,33 @@ func TestRenderIsReusableAcrossCalls(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderHTMLIfBody(t *testing.T) {
+	tests := []struct {
+		name    string
+		source  string
+		want    string
+		without string
+	}{
+		{"word else in the shown text", "[[if yes]]\nsomething else here\n[[else]]\nhidden\n[[/if]]", "something else here", "hidden"},
+		{"word else in the hidden text", "[[if false]]\nnot shown\n[[else]]\nor else\n[[/if]]", "or else", "not shown"},
+		{"word else without an else block", "[[if yes]]\nelse\n[[/if]]", "else", "[[/if]]"},
+		{"ifexpr keeps the word", "[[ifexpr 1]]\nnothing else\n[[else]]\nzero\n[[/ifexpr]]", "nothing else", "zero"},
+	}
+
+	r := New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.RenderHTML(context.Background(), tt.source, info(), newHost(), renderer.ModeArticle)
+			if err != nil {
+				t.Fatalf("RenderHTML(%q) err = %v, want nil", tt.source, err)
+			}
+			if !strings.Contains(got.Body, tt.want) {
+				t.Errorf("RenderHTML(%q) = %q, want substring %q", tt.source, got.Body, tt.want)
+			}
+			if strings.Contains(got.Body, tt.without) {
+				t.Errorf("RenderHTML(%q) = %q, want no %q", tt.source, got.Body, tt.without)
+			}
+		})
+	}
+}

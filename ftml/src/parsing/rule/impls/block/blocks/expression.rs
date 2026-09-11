@@ -204,6 +204,8 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
             // check for presence of "else"
             
             let found_else = parser.save_evaluate_fn(|parser| {
+                // Without the opening brackets the plain word "else" in the body would end it.
+                parser.get_token(Token::LeftBlock, ParseWarningKind::ManualBreak)?;
                 let (name, _) = parser.get_block_name(false)?;
 
                 if name == "else" {
