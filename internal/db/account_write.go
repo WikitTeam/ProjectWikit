@@ -116,6 +116,18 @@ func (d *DB) UserByEmail(ctx context.Context, email string) (*User, error) {
 	return d.scanUser(ctx, qUserByEmail, email)
 }
 
+// Only a verified address is trusted with a way into the account.
+var qUserByVerifiedEmail = register("UserByVerifiedEmail", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE lower(email) = lower($1) AND email <> '' AND email_verified_at IS NOT NULL
+ORDER BY id
+LIMIT 1`)
+
+func (d *DB) UserByVerifiedEmail(ctx context.Context, email string) (*User, error) {
+	return d.scanUser(ctx, qUserByVerifiedEmail, email)
+}
+
 var qSetEmail = register("SetEmail", `UPDATE web_user SET email = $2 WHERE id = $1`)
 
 func (d *DB) SetEmail(ctx context.Context, id int64, email string) error {

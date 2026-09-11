@@ -91,13 +91,13 @@ var qReviewReport = register("ReviewReport", `
 UPDATE web_userreport SET status = $2, admin_notes = $3, reviewed_at = $4, reviewed_by_id = $5
 WHERE id = $1 AND site_id = $6`)
 
-func (d *DB) ReviewReport(ctx context.Context, id int64, status, notes string, by int64, at time.Time) error {
+func (d *DB) ReviewReport(ctx context.Context, siteID, id int64, status, notes string, by int64, at time.Time) error {
 	var reviewedAt *time.Time
 	var reviewer *int64
 	if status != ReportPending {
 		reviewedAt, reviewer = &at, &by
 	}
-	if _, err := d.pool.Exec(ctx, qReviewReport, id, status, notes, reviewedAt, reviewer); err != nil {
+	if _, err := d.pool.Exec(ctx, qReviewReport, id, status, notes, reviewedAt, reviewer, siteID); err != nil {
 		return fmt.Errorf("review report %d: %w", id, err)
 	}
 	return nil

@@ -120,7 +120,7 @@ func (h *Handler) saveReport(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return nil
 	}
-	err = h.deps.DB.ReviewReport(ctx, id, status, r.PostFormValue("admin_notes"), mine.ID, time.Now())
+	err = h.deps.DB.ReviewReport(ctx, siteID(ctx), id, status, r.PostFormValue("admin_notes"), mine.ID, time.Now())
 	if err != nil {
 		return err
 	}

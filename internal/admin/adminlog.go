@@ -25,6 +25,7 @@ func (h *Handler) note(r *http.Request, action, screen, target, label string) {
 		Screen: screen,
 		Target: target,
 		Label:  label,
+		SiteID: siteID(r.Context()),
 		At:     time.Now().UTC(),
 	}
 	if by := auth.FromContext(r.Context()); by != nil {

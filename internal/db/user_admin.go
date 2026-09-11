@@ -80,7 +80,10 @@ func (d *DB) AdminUsers(ctx context.Context, query, kind string, limit, offset i
 
 var qAdminUser = register("AdminUser", `SELECT `+adminUserColumns+` FROM web_user WHERE id = $1`)
 
-var qAdminUserRoles = register("AdminUserRoles", `SELECT role_id FROM web_user_roles WHERE user_id = $1`)
+var qAdminUserRoles = register("AdminUserRoles", `
+SELECT ur.role_id FROM web_user_roles ur
+JOIN web_role r ON r.id = ur.role_id
+WHERE ur.user_id = $1 AND r.site_id = $2`)
 
 func (d *DB) AdminUser(ctx context.Context, siteID, id int64) (AdminUserRow, error) {
 	var u AdminUserRow
@@ -92,7 +95,7 @@ func (d *DB) AdminUser(ctx context.Context, siteID, id int64) (AdminUserRow, err
 		return AdminUserRow{}, fmt.Errorf("read user %d: %w", id, err)
 	}
 
-	rows, err := d.pool.Query(ctx, qAdminUserRoles, id)
+	rows, err := d.pool.Query(ctx, qAdminUserRoles, id, siteID)
 	if err != nil {
 		return AdminUserRow{}, fmt.Errorf("read the roles of user %d: %w", id, err)
 	}
@@ -119,8 +122,10 @@ UPDATE web_user SET username=$2, wikidot_username=$3, display_name=$4, email=$5,
 WHERE id=$1`)
 
 	qSetSuperuser  = register("SetSuperuser", `UPDATE web_user SET is_superuser = $2 WHERE id = $1`)
-	qClearUserRole = register("ClearUserRoles", `DELETE FROM web_user_roles WHERE user_id = $1`)
-	qAddUserRole   = register("AddUserRoles", `
+	qClearUserRole = register("ClearUserRoles", `
+DELETE FROM web_user_roles ur USING web_role r
+WHERE ur.role_id = r.id AND ur.user_id = $1 AND r.site_id = $2`)
+	qAddUserRole = register("AddUserRoles", `
 INSERT INTO web_user_roles (user_id, role_id)
 SELECT $1, r.id FROM web_role r WHERE r.id = ANY($2) AND r.slug <> ALL($3) AND r.site_id = $4`)
 )
@@ -133,7 +138,7 @@ func (d *DB) SaveAdminUser(ctx context.Context, siteID int64, u AdminUserRow, bu
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
 	_, err = tx.Exec(ctx, qUpdateAdminUser, u.ID, u.Username, nullable(u.WikidotUsername),
-		nullable(u.DisplayName), nullable(u.Email), u.Bio, u.IsActive, u.InactiveUntil,
+		nullable(u.DisplayName), u.Email, u.Bio, u.IsActive, u.InactiveUntil,
 		u.IsForumActive, u.ForumInactiveUntil, u.CanSendDM)
 	if err != nil {
 		return fmt.Errorf("save user %d: %w", u.ID, err)
@@ -144,7 +149,7 @@ func (d *DB) SaveAdminUser(ctx context.Context, siteID int64, u AdminUserRow, bu
 		}
 	}
 	if withRoles {
-		if _, err := tx.Exec(ctx, qClearUserRole, u.ID); err != nil {
+		if _, err := tx.Exec(ctx, qClearUserRole, u.ID, siteID); err != nil {
 			return err
 		}
 		if len(u.Roles) > 0 {
