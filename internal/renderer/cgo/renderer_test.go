@@ -252,3 +252,33 @@ func TestRenderHTMLIfBody(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderHTMLMath(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   []string
+	}{
+		{"block", "[[math]]\nE = mc^2\n[[/math]]", []string{`id="equation-1"`, `class="wj-equation-number equation-number"`, "<math", `display="block"`, "<msup>"}},
+		{"inline", `Area [[$ \pi r^2 $]] here.`, []string{`class="wj-math wj-math-inline"`, `display="inline"`}},
+		{"reference before the equation", "See ([[eref second]]).\n\n[[math first]]\na\n[[/math]]\n\n[[math second]]\nb\n[[/math]]", []string{`<a class="wj-equation-ref eref" href="#equation-2">2</a>`, `id="equation-2" data-name="second"`}},
+		{"reference to no equation", "See [[eref nowhere]].", []string{`<span class="wj-equation-ref wj-equation-ref-missing">??</span>`}},
+		{"too long", "[[math]]\n" + strings.Repeat("x+", 5000) + "x\n[[/math]]", []string{`<span class="wj-error-block">[math-too-complex]</span>`}},
+		{"deeper than the caller stack holds", "[[math]]\n" + strings.Repeat("{", 3000) + "x" + strings.Repeat("}", 3000) + "\n[[/math]]", []string{"<math"}},
+	}
+
+	r := New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.RenderHTML(context.Background(), tt.source, info(), newHost(), renderer.ModeArticle)
+			if err != nil {
+				t.Fatalf("RenderHTML(%q) err = %v, want nil", tt.name, err)
+			}
+			for _, want := range tt.want {
+				if !strings.Contains(got.Body, want) {
+					t.Errorf("RenderHTML(%s) = %q, want substring %q", tt.name, got.Body, want)
+				}
+			}
+		})
+	}
+}

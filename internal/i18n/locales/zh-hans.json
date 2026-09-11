@@ -490,6 +490,7 @@
   "login.submit": "登 录",
   "login.title": "登录账号",
   "login.username": "用户名",
+  "math-too-complex": "公式过长或嵌套过深，无法显示",
   "module-applicationform-body": "正文",
   "module-applicationform-login": "请先登录后再提交。",
   "module-applicationform-subject": "标题",

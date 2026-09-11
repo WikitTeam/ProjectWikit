@@ -132,6 +132,7 @@ pub use self::italics::BLOCK_ITALICS;
 pub use self::lines::BLOCK_LINES;
 pub use self::list::{BLOCK_LI, BLOCK_OL, BLOCK_UL};
 pub use self::mark::BLOCK_MARK;
+pub use self::math::{BLOCK_EQUATION_REFERENCE, BLOCK_MATH};
 pub use self::module::BLOCK_MODULE;
 pub use self::monospace::BLOCK_MONOSPACE;
 pub use self::paragraph::BLOCK_PARAGRAPH;

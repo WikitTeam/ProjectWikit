@@ -9,4 +9,4 @@ name = "ftml_capi"
 crate-type = ["staticlib"]
 
 [dependencies]
-ftml = { path = "../ftml", default-features = false, features = ["html"] }
+ftml = { path = "../ftml", default-features = false, features = ["html", "mathml"] }

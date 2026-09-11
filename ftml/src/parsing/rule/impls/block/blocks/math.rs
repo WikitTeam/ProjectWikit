@@ -30,6 +30,40 @@ pub const BLOCK_MATH: BlockRule = BlockRule {
     parse_fn,
 };
 
+pub const BLOCK_EQUATION_REFERENCE: BlockRule = BlockRule {
+    name: "block-equation-reference",
+    accepts_names: &["eref"],
+    accepts_star: false,
+    accepts_score: false,
+    accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
+    parse_fn: parse_equation_reference,
+};
+
+fn parse_equation_reference<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    name: &'t str,
+    flag_star: bool,
+    flag_score: bool,
+    in_head: bool,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    info!("Parsing equation reference block (name '{name}', in-head {in_head})");
+    assert!(!flag_star, "Equation reference doesn't allow star flag");
+    assert!(!flag_score, "Equation reference doesn't allow score flag");
+    assert_block_name(&BLOCK_EQUATION_REFERENCE, name);
+
+    let label = parser.get_head_value(
+        &BLOCK_EQUATION_REFERENCE,
+        in_head,
+        |parser, value| match value {
+            Some(label) if !label.trim().is_empty() => Ok(label.trim()),
+            _ => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
+        },
+    )?;
+
+    ok!(Element::EquationReference(cow!(label)))
+}
+
 fn parse_fn<'r, 't>(
     parser: &mut Parser<'r, 't>,
     name: &'t str,

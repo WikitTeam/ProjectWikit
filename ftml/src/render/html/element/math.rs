@@ -25,6 +25,34 @@ use std::num::NonZeroUsize;
 cfg_if! {
     if #[cfg(feature = "mathml")] {
         use latex2mathml::{latex_to_mathml, DisplayStyle};
+
+        const MAX_LATEX_BYTES: usize = 8 * 1024;
+        const MAX_NESTING_ON_CALLER_STACK: usize = 128;
+        const CONVERTER_STACK_BYTES: usize = 64 * 1024 * 1024;
+
+        // Running out of stack takes the whole process down, so a formula that could
+        // nest deeply is converted on a thread with room for the longest source allowed.
+        fn convert(latex_source: &str, display: DisplayStyle) -> Result<String, Option<String>> {
+            if latex_source.len() > MAX_LATEX_BYTES {
+                return Err(None);
+            }
+            let nesting = latex_source
+                .bytes()
+                .filter(|byte| matches!(byte, b'{' | b'^' | b'_' | b'\\'))
+                .count();
+            if nesting <= MAX_NESTING_ON_CALLER_STACK {
+                return latex_to_mathml(latex_source, display).map_err(|error| Some(str!(error)));
+            }
+
+            let source = str!(latex_source);
+            std::thread::Builder::new()
+                .stack_size(CONVERTER_STACK_BYTES)
+                .spawn(move || latex_to_mathml(&source, display).map_err(|error| str!(error)))
+                .map_err(|_| None)?
+                .join()
+                .map_err(|_| None)?
+                .map_err(Some)
+        }
     } else {
         /// Mocked version of the enum from `latex2mathml`.
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -43,6 +71,9 @@ pub fn render_math_block(ctx: &mut HtmlContext, name: Option<&str>, latex_source
     );
 
     let index = ctx.next_equation_index();
+    if let Some(name) = name {
+        ctx.name_equation(name, index);
+    }
 
     render_latex(ctx, name, Some(index), latex_source, DisplayStyle::Block);
 }
@@ -70,6 +101,7 @@ fn render_latex(
         .tag(html_tag)
         .attr(attr!(
             "class" => "wj-math " wj_type,
+            "id" => &format!("equation-{}", index.map_or(0, NonZeroUsize::get)); if index.is_some(),
             "data-name" => name.unwrap_or(""); if name.is_some(),
         ))
         .contents(|ctx| {
@@ -77,7 +109,7 @@ fn render_latex(
             if let Some(index) = index {
                 ctx.html()
                     .span()
-                    .attr(attr!("class" => "wj-equation-number"))
+                    .attr(attr!("class" => "wj-equation-number equation-number"))
                     .contents(|ctx| {
                         // Open parenthesis
                         ctx.html()
@@ -106,13 +138,14 @@ fn render_latex(
                 .attr(attr!(
                     "class" => "wj-math-source wj-hidden",
                     "aria-hidden" => "true",
+                    "hidden" => "",
                 ))
                 .inner(latex_source);
 
             // Add generated MathML
             cfg_if! {
                 if #[cfg(feature = "mathml")] {
-                    match latex_to_mathml(latex_source, display) {
+                    match convert(latex_source, display) {
                         Ok(mathml) => {
                             info!("Processed LaTeX -> MathML");
 
@@ -123,8 +156,11 @@ fn render_latex(
                                 .contents(|ctx| ctx.push_raw_str(&mathml));
                         }
                         Err(error) => {
+                            let error = match error {
+                                Some(error) => error,
+                                None => ctx.handle().get_message("math-too-complex"),
+                            };
                             warn!("Error processing LaTeX -> MathML: {error}");
-                            let error = str!(error);
 
                             ctx.html()
                                 .span()
@@ -140,25 +176,6 @@ fn render_latex(
 pub fn render_equation_reference(ctx: &mut HtmlContext, name: &str) {
     info!("Rendering equation reference (name '{name}')");
 
-    ctx.html()
-        .span()
-        .attr(attr!("class" => "wj-equation-ref"))
-        .contents(|ctx| {
-            // Equation marker that is hoverable
-            ctx.html()
-                .element("wj-equation-ref-marker")
-                .attr(attr!(
-                    "class" => "wj-equation-ref-marker",
-                    "type" => "button",
-                    "data-name" => name,
-                ))
-                .inner(name);
-
-            // Tooltip shown on hover.
-            ctx.html().span().attr(attr!(
-                "class" => "wj-equation-ref-tooltip",
-                "aria-hidden" => "true",
-            ));
-            // TODO tooltip contents
-        });
+    let slot = ctx.equation_reference_slot(name);
+    ctx.push_raw_str(&slot);
 }
