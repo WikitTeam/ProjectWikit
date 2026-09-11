@@ -113,7 +113,7 @@ func (h *SettingsHandler) email(r *http.Request, loc *i18n.Localizer, user *db.U
 		if state.VerifiedAt != nil {
 			return "email-same", nil
 		}
-		return "email-verified-sent", h.deps.sendVerification(ctx, loc, user, state)
+		return "email-verified-sent", h.deps.sendVerification(r, loc, user, state)
 	}
 
 	taken, err := h.deps.DB.VerifiedEmailTaken(ctx, wanted, user.ID)
@@ -135,9 +135,9 @@ func (h *SettingsHandler) email(r *http.Request, loc *i18n.Localizer, user *db.U
 		return "", err
 	}
 	if proven {
-		return "email-sent", h.deps.sendActivation(ctx, loc, user, wanted)
+		return "email-sent", h.deps.sendActivation(r, loc, user, wanted)
 	}
-	return "email-approval-sent", h.deps.sendApproval(ctx, loc, user, state.Email, wanted)
+	return "email-approval-sent", h.deps.sendApproval(r, loc, user, state.Email, wanted)
 }
 
 func (h *SettingsHandler) password(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, user *db.User) (string, error) {
@@ -177,7 +177,7 @@ func (h *SettingsHandler) password(w http.ResponseWriter, r *http.Request, loc *
 	if state.VerifiedAt == nil {
 		return "password-changed", nil
 	}
-	return "password-changed", h.deps.warnPasswordChanged(ctx, loc, user, state.Email)
+	return "password-changed", h.deps.warnPasswordChanged(r, loc, user, state.Email)
 }
 
 func (h *SettingsHandler) name(r *http.Request, user *db.User) (string, error) {

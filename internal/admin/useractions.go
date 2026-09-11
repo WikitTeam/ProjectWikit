@@ -244,7 +244,7 @@ func (h *Handler) mintLinkAs(w http.ResponseWriter, r *http.Request, kind, deliv
 		minted, uid, owner, id, now); err != nil {
 		return "", err
 	}
-	return scheme(r) + "://" + current.Domain + acceptPrefix + uid + "/" + minted, nil
+	return h.deps.Trust.Scheme(r) + "://" + current.Domain + acceptPrefix + uid + "/" + minted, nil
 }
 
 func (h *Handler) resetVotes(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest string) error {
@@ -308,13 +308,6 @@ func (h *Handler) grantPicked(r *http.Request, userID int64) error {
 		}
 	}
 	return nil
-}
-
-func scheme(r *http.Request) string {
-	if r.TLS != nil {
-		return "https"
-	}
-	return "http"
 }
 
 func (h *Handler) mailInvite(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer,

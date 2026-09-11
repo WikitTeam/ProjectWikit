@@ -195,3 +195,15 @@ func TestScheme(t *testing.T) {
 		})
 	}
 }
+
+func TestSchemeOnNilTrustReadsTheConnection(t *testing.T) {
+	var tr *Trust
+	r := request("10.0.0.1:1", headers(headerProto, "https"))
+	if got := tr.Scheme(r); got != "http" {
+		t.Errorf("(*Trust)(nil).Scheme() = %q, want %q", got, "http")
+	}
+	r.TLS = &tls.ConnectionState{}
+	if got := tr.Scheme(r); got != "https" {
+		t.Errorf("(*Trust)(nil).Scheme() over TLS = %q, want %q", got, "https")
+	}
+}

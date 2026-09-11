@@ -176,7 +176,7 @@ func (d Deps) signIn(ctx context.Context, w http.ResponseWriter, r *http.Request
 	http.SetCookie(w, &http.Cookie{
 		Name: session.CookieName, Value: key, Path: "/",
 		Expires: now.Add(session.CookieAge), MaxAge: int(session.CookieAge / time.Second),
-		HttpOnly: true, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode,
+		HttpOnly: true, Secure: d.Trust.Scheme(r) == "https", SameSite: http.SameSiteLaxMode,
 	})
 	return nil
 }
@@ -203,7 +203,7 @@ func (h *LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name: session.CookieName, Value: "", Path: "/", MaxAge: -1,
-		HttpOnly: true, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode,
+		HttpOnly: true, Secure: h.deps.Trust.Scheme(r) == "https", SameSite: http.SameSiteLaxMode,
 	})
 	redirect(w, destination(r), http.StatusFound)
 }

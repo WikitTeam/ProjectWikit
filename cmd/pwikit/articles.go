@@ -149,7 +149,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	adminPages, err := admin.New(admin.Deps{
 		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(),
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
-		Mail: mail.New(mailConfig(cfg.Mail)), Log: log,
+		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Log: log,
 	}, next)
 	if err != nil {
 		return nil, err

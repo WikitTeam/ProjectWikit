@@ -173,7 +173,7 @@ func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db
 	if email == "" {
 		return nil
 	}
-	user, err := h.deps.DB.UserByEmail(ctx, email)
+	user, err := h.deps.DB.UserByVerifiedEmail(ctx, email)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil
 	}
@@ -189,7 +189,7 @@ func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db
 	}
 	minted := h.deps.Tokens.Make(value, time.Now())
 	uid := base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(user.ID, 10)))
-	home := siteURL(r, current)
+	home := h.deps.origin(r, current)
 	link := home + ResetConfirmPath + uid + "/" + minted
 
 	subject := loc.T("reset.mail-subject", "site", current.Title)
@@ -273,12 +273,4 @@ func (h *ResetHandler) resetValue(ctx context.Context, user *db.User) (token.Val
 		return nil, err
 	}
 	return token.ResetValue(user.ID, hash, last, email), nil
-}
-
-func siteURL(r *http.Request, current *db.Site) string {
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	return scheme + "://" + current.Domain
 }

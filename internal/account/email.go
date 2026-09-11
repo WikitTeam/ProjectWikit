@@ -132,7 +132,7 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 		if state.Pending == "" || !h.deps.Tokens.Check(secret, token.Custom(purposeApprove, id(user.ID), lower(state.Pending)), now) {
 			return "dead", nil
 		}
-		return "approved", h.deps.sendActivation(ctx, h.loc(ctx), user, state.Pending)
+		return "approved", h.deps.sendActivation(r, h.loc(ctx), user, state.Pending)
 
 	case purposeActivate:
 		if state.Pending == "" || !h.deps.Tokens.Check(secret, token.Custom(purposeActivate, id(user.ID), lower(state.Pending)), now) {
@@ -151,7 +151,7 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 			return "dead", err
 		}
 		if state.VerifiedAt != nil {
-			if err := h.deps.warnPrevious(ctx, h.loc(ctx), user, state.Email, pending); err != nil {
+			if err := h.deps.warnPrevious(r, h.loc(ctx), user, state.Email, pending); err != nil {
 				return "", err
 			}
 		}

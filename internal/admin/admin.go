@@ -21,6 +21,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -45,6 +46,7 @@ type Deps struct {
 
 	Articles http.Handler
 	Mail     mail.Sender
+	Trust    *proxyheader.Trust
 
 	Log *slog.Logger
 }

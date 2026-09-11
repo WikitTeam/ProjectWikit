@@ -205,7 +205,7 @@ func (h *SignupHandler) register(w http.ResponseWriter, r *http.Request, loc *i1
 	if err != nil {
 		return false, err
 	}
-	if err := h.deps.sendVerification(ctx, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
+	if err := h.deps.sendVerification(r, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
 		return false, err
 	}
 	if current.EmailPolicy == db.EmailAtSignup {
@@ -250,7 +250,7 @@ func (h *SignupHandler) claim(w http.ResponseWriter, r *http.Request, loc *i18n.
 	if err != nil {
 		return false, err
 	}
-	if err := h.deps.sendVerification(ctx, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
+	if err := h.deps.sendVerification(r, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
 		return false, err
 	}
 	if current.EmailPolicy == db.EmailAtSignup {

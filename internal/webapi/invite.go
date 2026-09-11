@@ -107,7 +107,7 @@ func (h *Users) mintInvite(r *http.Request, current *db.Site, by *db.User, email
 	}
 	minted := h.deps.Tokens.Make(token.InviteValue(id, false), now)
 	uid := base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(id, 10)))
-	link := scheme(r) + "://" + current.Domain + acceptPrefix + uid + "/" + minted
+	link := h.deps.Trust.Scheme(r) + "://" + current.Domain + acceptPrefix + uid + "/" + minted
 
 	owner := by.ID
 	if _, err := h.deps.DB.CreateInviteLink(ctx, siteID(ctx), inviteKindRegister, inviteByLink,
@@ -119,11 +119,4 @@ func (h *Users) mintInvite(r *http.Request, current *db.Site, by *db.User, email
 		{Key: "invitationUrl", Value: link},
 		{Key: "userId", Value: id},
 	})
-}
-
-func scheme(r *http.Request) string {
-	if r.TLS != nil {
-		return "https"
-	}
-	return "http"
 }

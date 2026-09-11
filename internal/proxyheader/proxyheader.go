@@ -43,6 +43,9 @@ func NewTrust(sources []string) (*Trust, error) {
 }
 
 func (t *Trust) Trusted(addr netip.Addr) bool {
+	if t == nil {
+		return false
+	}
 	addr = addr.Unmap()
 	for _, p := range t.nets {
 		if p.Contains(addr) {
