@@ -45,14 +45,12 @@ Options:
 	fromStdin := fs.Bool("password-stdin", false, "read the password from standard input instead of asking")
 	yes := fs.Bool("yes", false, "create a new account without asking")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
-	}
-	if *database == "" {
-		return errors.New("no database, pass -database or set " + envDatabase)
 	}
 
 	raw, canonical, err := adminName(*name)
@@ -61,7 +59,12 @@ Options:
 	}
 
 	ctx := context.Background()
-	conn, err := db.Open(ctx, *database)
+	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
+	if err != nil {
+		return err
+	}
+	defer release()
+	conn, err := db.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ func renderCountPages(env module.Env, params map[string]string, body string) (st
 	}
 
 	params, _ = listpages.URLParams(params, pc.PathParams)
-	query, err := listpages.Parse(env.Data, pc.Article, env.User, params, pc.PathParams)
+	query, err := listpages.Parse(env.Data, pc.Article, env.User, siteZone(env), params, pc.PathParams)
 	if err != nil {
 		return "", err
 	}

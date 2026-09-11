@@ -243,7 +243,7 @@
                             </div>
                             <div id="page-info-break"></div>
                             
-                                <div id="page-info">页面版本: 12, 最后编辑: <span class="odate w-date" data-timestamp="1787637787000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">8月25日, 2026年 14:03</span></div>
+                                <div id="page-info">页面版本: 12, 最后编辑: <span class="odate w-date" data-timestamp="1787637787000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">8月25日, 2026年 14:03 (UTC+08:00)</span></div>
                             
                             <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"></div>
                             <div id="action-area"></div>
@@ -1111,7 +1111,7 @@
                             </div>
                             <div id="page-info-break"></div>
                             
-                                <div id="page-info">页面版本: 0, 最后编辑: <span class="odate w-date" data-timestamp="1767575220000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">1月5日, 2026年 09:07</span></div>
+                                <div id="page-info">页面版本: 0, 最后编辑: <span class="odate w-date" data-timestamp="1767575220000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">1月5日, 2026年 09:07 (UTC+08:00)</span></div>
                             
                             <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"></div>
                             <div id="action-area"></div>
@@ -1229,7 +1229,7 @@
                             </div>
                             <div id="page-info-break"></div>
                             
-                                <div id="page-info">页面版本: 3, 最后编辑: <span class="odate w-date" data-timestamp="1772296200000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">3月1日, 2026年 00:30</span></div>
+                                <div id="page-info">页面版本: 3, 最后编辑: <span class="odate w-date" data-timestamp="1772296200000" data-format="%b%e日, %Y年 %H:%M (%O)" style="display: inline">3月1日, 2026年 00:30 (UTC+08:00)</span></div>
                             
                             <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"></div>
                             <div id="action-area"></div>

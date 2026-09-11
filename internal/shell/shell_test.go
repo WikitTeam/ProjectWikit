@@ -89,7 +89,7 @@ func testRenderer(t *testing.T) *Renderer {
 	if err != nil {
 		t.Fatalf("i18n.Load() err = %v, want nil", err)
 	}
-	return New(b.Localizer(i18n.DefaultLanguage), static.NewAssets(bundle), time.FixedZone("Asia/Shanghai", 8*60*60))
+	return New(b.Localizer(i18n.DefaultLanguage), static.NewAssets(bundle))
 }
 
 func base() pageSpec {
@@ -255,6 +255,7 @@ func dataFor(t *testing.T, p *pageSpec) Data {
 			t.Fatalf("Parse(%q) err = %v, want nil", p.UpdatedAt, err)
 		}
 		d.UpdatedAt = at
+		d.TimeZone = time.FixedZone("Asia/Shanghai", 8*60*60)
 	}
 	return d
 }
@@ -345,7 +346,7 @@ func profileTestRenderer(t *testing.T) *Renderer {
 	if err != nil {
 		t.Fatalf("i18n.Load() err = %v, want nil", err)
 	}
-	return New(bundle.Localizer(i18n.DefaultLanguage), static.NewAssets(nil), time.UTC)
+	return New(bundle.Localizer(i18n.DefaultLanguage), static.NewAssets(nil))
 }
 
 func TestProfileFeedRendersOneRowPerItem(t *testing.T) {

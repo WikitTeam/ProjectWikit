@@ -45,7 +45,7 @@ func renderWantedPages(env module.Env, params map[string]string, _ string) (stri
 	if value, ok := pc.PathParams.Lookup("p"); ok {
 		path = path.Put(value)
 	}
-	window, err := listpages.Parse(env.Data, pc.Article, env.User,
+	window, err := listpages.Parse(env.Data, pc.Article, env.User, siteZone(env),
 		map[string]string{"category": categoryTo, "perpage": params["perpage"]}, path)
 	if err != nil {
 		return "", err
@@ -99,7 +99,7 @@ func renderWantedPages(env module.Env, params map[string]string, _ string) (stri
 }
 
 func wantedSourceNames(env module.Env, pc *page.Context, params map[string]string) ([]string, error) {
-	query, err := listpages.Parse(env.Data, pc.Article, env.User, params, nil)
+	query, err := listpages.Parse(env.Data, pc.Article, env.User, siteZone(env), params, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@
 {{template "form_error" .Error}}
 <form method="POST" action="{{esc .Action}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <input type="hidden" name="editor_zone" value="{{esc .ZoneName}}" data-browser-zone>
 
   <div class="widget-box narrow">
     <div class="widget-title"><i class="fas fa-user"></i><h5>{{t "admin.user-identity"}}</h5></div>
@@ -24,7 +25,7 @@
       <div class="control-group">
         <label class="control-label" for="id_inactive_until">{{t "admin.f-inactive-until"}}</label>
         <div class="controls">
-          <input type="datetime-local" id="id_inactive_until" name="inactive_until" value="{{stamp .User.InactiveUntil}}" class="narrow-3">
+          <input type="datetime-local" id="id_inactive_until" name="inactive_until" value="{{stamp .User.InactiveUntil $.Zone}}" data-timestamp="{{millis .User.InactiveUntil}}" class="narrow-3">
           <span class="hint">{{t "admin.h-until"}}</span>
         </div>
       </div>
@@ -32,7 +33,7 @@
       <div class="control-group">
         <label class="control-label" for="id_forum_inactive_until">{{t "admin.f-forum-inactive-until"}}</label>
         <div class="controls">
-          <input type="datetime-local" id="id_forum_inactive_until" name="forum_inactive_until" value="{{stamp .User.ForumInactiveUntil}}" class="narrow-3">
+          <input type="datetime-local" id="id_forum_inactive_until" name="forum_inactive_until" value="{{stamp .User.ForumInactiveUntil $.Zone}}" data-timestamp="{{millis .User.ForumInactiveUntil}}" class="narrow-3">
           <span class="hint">{{t "admin.h-until"}}</span>
         </div>
       </div>

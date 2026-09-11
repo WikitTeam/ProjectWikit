@@ -3,7 +3,6 @@ package site
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
@@ -12,10 +11,10 @@ import (
 
 // A wildcard DNS record sends every subdomain to this server, so a mistyped one
 // has to land somewhere that says so.
-func NewUnresolved(bundle *i18n.Bundle, assets *static.Assets, tz *time.Location) http.Handler {
+func NewUnresolved(bundle *i18n.Bundle, assets *static.Assets) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		loc := bundle.For(r.Context())
-		render := shell.New(loc, assets, tz)
+		render := shell.New(loc, assets)
 		host := StripPort(r.Host)
 
 		// The host is echoed and nothing else is. Listing the sites that do

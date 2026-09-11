@@ -107,7 +107,7 @@ func (h *ReactiveHandler) page(r *http.Request, current *db.Site, viewer *db.Use
 	}
 
 	var out strings.Builder
-	err = shell.New(loc, h.deps.Assets, h.deps.TimeZone).Reactive(&out, shell.Reactive{ThemeURL: theme, Config: config})
+	err = shell.New(loc, h.deps.Assets).Reactive(&out, shell.Reactive{ThemeURL: theme, Config: config})
 	return out.String(), err
 }
 

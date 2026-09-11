@@ -10,6 +10,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 )
 
 const siteSlug = "site"
@@ -105,6 +106,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.PasswordHelp = r.PostFormValue("password_help")
 	next.EmailPolicy = r.PostFormValue("email_policy")
 	next.Language = r.PostFormValue("language")
+	next.TimeZone = strings.TrimSpace(r.PostFormValue("time_zone"))
 	next.ThemeID = optionalID(r.PostFormValue("active_theme"))
 	next.SystemThemeID = optionalID(r.PostFormValue("system_theme"))
 
@@ -145,6 +147,8 @@ func checkSite(loc *i18n.Localizer, bundle *i18n.Bundle, s db.Site, settings db.
 		return loc.T("admin.site-bad-policy")
 	case !bundle.Has(s.Language):
 		return loc.T("admin.site-bad-language")
+	case !timezone.Valid(s.TimeZone):
+		return loc.T("admin.site-bad-time-zone")
 	case !contains(ratingModes, settings.RatingMode) || !contains(tagModes, settings.CreateTags):
 		return loc.T("admin.site-bad-mode")
 	}

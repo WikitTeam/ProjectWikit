@@ -6,6 +6,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
+	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
 
@@ -44,10 +45,8 @@ func renderDate(env module.Env, at time.Time) string {
 		escape.HTML(serverDate(env, at)) + `</span>`
 }
 
-// The stamp is formatted in UTC and not the site's zone, which is what the
-// stored value carries.
 func serverDate(env module.Env, at time.Time) string {
-	at = at.UTC()
+	at = at.In(siteZone(env))
 	pad := func(n int) string {
 		if n < 10 {
 			return "0" + strconv.Itoa(n)
@@ -59,7 +58,15 @@ func serverDate(env module.Env, at time.Time) string {
 		"month", pad(int(at.Month())),
 		"day", pad(at.Day()),
 		"hour", pad(at.Hour()),
-		"minute", pad(at.Minute()))
+		"minute", pad(at.Minute()),
+		"zone", timezone.Label(at))
+}
+
+func siteZone(env module.Env) *time.Location {
+	if env.Site == nil {
+		return time.UTC
+	}
+	return timezone.Load(env.Site.TimeZone)
 }
 
 func forumFailed(env module.Env) error {

@@ -63,14 +63,18 @@ type parser struct {
 	src     Source
 	article *db.Article
 	viewer  *db.User
+	zone    *time.Location
 	params  map[string]string
 	path    page.PathParams
 	out     Query
 	err     error
 }
 
-func Parse(src Source, article *db.Article, viewer *db.User, params map[string]string, pathParams page.PathParams) (Query, error) {
-	p := &parser{src: src, article: article, viewer: viewer, params: params, path: pathParams}
+func Parse(src Source, article *db.Article, viewer *db.User, zone *time.Location, params map[string]string, pathParams page.PathParams) (Query, error) {
+	if zone == nil {
+		zone = time.UTC
+	}
+	p := &parser{src: src, article: article, viewer: viewer, zone: zone, params: params, path: pathParams}
 	if p.params == nil {
 		p.params = map[string]string{}
 	}
@@ -392,15 +396,15 @@ func (p *parser) parseTime(key string, of func(*db.Article) time.Time, set func(
 			p.invalid()
 			return
 		}
-		y, m, d := of(p.article).UTC().Date()
-		dayStart := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
-		dayEnd := time.Date(y, m, d, 23, 59, 59, 0, time.UTC)
+		y, m, d := of(p.article).In(p.zone).Date()
+		dayStart := time.Date(y, m, d, 0, 0, 0, 0, p.zone)
+		dayEnd := time.Date(y, m, d, 23, 59, 59, 0, p.zone)
 		set(&db.TimeFilter{Op: db.TimeRange, Start: dayStart, End: dayEnd})
 		return
 	}
 
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	first, last, ok := parseDateBounds(strings.TrimSpace(rest))
+	first, last, ok := parseDateBounds(strings.TrimSpace(rest), p.zone)
 	if !ok {
 		p.invalid()
 		return
@@ -426,7 +430,7 @@ func timeOp(op string) string {
 
 // Month and day are clamped rather than rejected, so 2020-13-99 is the last
 // day of 2020-12.
-func parseDateBounds(text string) (first, last time.Time, ok bool) {
+func parseDateBounds(text string, zone *time.Location) (first, last time.Time, ok bool) {
 	parts := strings.Split(text, "-")
 	year, err := wikinum.Int(parts[0])
 	if err != nil || year < 1 || year > 9999 {
@@ -452,8 +456,8 @@ func parseDateBounds(text string) (first, last time.Time, ok bool) {
 		day = clamp(d, 1, daysIn(year, month))
 		lastDay = day
 	}
-	first = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	last = time.Date(year, time.Month(lastMonth), lastDay, 0, 0, 0, 0, time.UTC)
+	first = time.Date(year, time.Month(month), day, 0, 0, 0, 0, zone)
+	last = time.Date(year, time.Month(lastMonth), lastDay, 0, 0, 0, 0, zone)
 	return first, last, true
 }
 

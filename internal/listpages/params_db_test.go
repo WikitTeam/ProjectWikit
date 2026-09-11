@@ -213,7 +213,7 @@ func TestParseMatchesGolden(t *testing.T) {
 			}
 			viewer = found
 		}
-		q, err := Parse(src, host, viewer, copyParams(c.Params), pathOf(c.Path))
+		q, err := Parse(src, host, viewer, nil, copyParams(c.Params), pathOf(c.Path))
 		if err != nil {
 			t.Fatalf("Parse(%s) err = %v, want nil", c.Name, err)
 		}

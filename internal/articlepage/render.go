@@ -20,6 +20,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
@@ -482,6 +483,7 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 		TagCategories:     tags,
 		RevNumber:         out.rev,
 		UpdatedAt:         out.updatedAt,
+		TimeZone:          timezone.Load(req.site.TimeZone),
 		LoginStatusConfig: login,
 		OptionsConfig:     options,
 	}, nil

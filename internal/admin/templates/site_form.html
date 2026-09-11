@@ -21,6 +21,15 @@
           <span class="hint">{{t "admin.h-language"}}</span>
         </div>
       </div>
+      <div class="control-group">
+        <label class="control-label" for="id_time_zone">{{t "admin.f-time-zone"}}</label>
+        <div class="controls">
+          <input type="text" id="id_time_zone" name="time_zone" value="{{esc .Site.TimeZone}}" list="time-zones" autocomplete="off" class="narrow-3">
+          <datalist id="time-zones"></datalist>
+          <span class="hint">{{t "admin.h-time-zone"}}</span>
+          <span class="hint" hidden>{{t "admin.h-browser-zone"}}<code data-browser-zone-name></code></span>
+        </div>
+      </div>
     </div>
   </div>
 

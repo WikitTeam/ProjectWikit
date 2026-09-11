@@ -15,6 +15,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 )
 
 const (
@@ -146,6 +147,8 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 
 	return h.page(w, r, loc, loc.T("admin.users"), "user_form.html", map[string]any{
 		"User":        row,
+		"Zone":        site.Zone(ctx),
+		"ZoneName":    site.Zone(ctx).String(),
 		"Roles":       choices,
 		"Held":        row.Roles,
 		"MaySetRoles": h.maySetRoles(mine, granted, row),
@@ -207,8 +210,9 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.IsActive = r.PostFormValue("is_active") != ""
 	next.IsForumActive = r.PostFormValue("is_forum_active") != ""
 	next.CanSendDM = r.PostFormValue("can_send_direct_messages") != ""
-	next.InactiveUntil = optionalTime(r.PostFormValue("inactive_until"))
-	next.ForumInactiveUntil = optionalTime(r.PostFormValue("forum_inactive_until"))
+	zone := editorZone(r)
+	next.InactiveUntil = optionalTime(r.PostFormValue("inactive_until"), zone)
+	next.ForumInactiveUntil = optionalTime(r.PostFormValue("forum_inactive_until"), zone)
 	if granted.Has(perms.ViewSensitiveInfo) {
 		next.Email = strings.TrimSpace(r.PostFormValue("email"))
 	}
@@ -267,13 +271,20 @@ func (h *Handler) maySetRoles(mine *db.User, granted perms.Set, target db.AdminU
 	return granted.Has(perms.ManagePermissions)
 }
 
-func optionalTime(raw string) *time.Time {
+func editorZone(r *http.Request) *time.Location {
+	if name := r.PostFormValue("editor_zone"); timezone.Valid(name) {
+		return timezone.Load(name)
+	}
+	return site.Zone(r.Context())
+}
+
+func optionalTime(raw string, zone *time.Location) *time.Time {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return nil
 	}
 	for _, layout := range []string{time.RFC3339, "2006-01-02T15:04", "2006-01-02"} {
-		if at, err := time.Parse(layout, raw); err == nil {
+		if at, err := time.ParseInLocation(layout, raw, zone); err == nil {
 			return &at
 		}
 	}

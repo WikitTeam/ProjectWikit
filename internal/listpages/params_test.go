@@ -128,7 +128,7 @@ func article173() *db.Article {
 
 func parse(t *testing.T, src Source, a *db.Article, viewer *db.User, params map[string]string) Query {
 	t.Helper()
-	q, err := Parse(src, a, viewer, params, nil)
+	q, err := Parse(src, a, viewer, nil, params, nil)
 	if err != nil {
 		t.Fatalf("Parse(%v) err = %v, want nil", params, err)
 	}
@@ -428,6 +428,38 @@ func TestParseCreatedAtEqualsIsTheOwnDay(t *testing.T) {
 	}
 }
 
+func TestParseCreatedAtBoundsFollowTheSiteZone(t *testing.T) {
+	shanghai := time.FixedZone("Asia/Shanghai", 8*60*60)
+	q, err := Parse(newFakeSource(), article173(), nil, shanghai, map[string]string{"created_at": "2021-06"}, nil)
+	if err != nil {
+		t.Fatalf("Parse(created_at=2021-06) err = %v, want nil", err)
+	}
+	got := q.Filter.CreatedAt
+	if got == nil {
+		t.Fatal("Parse(created_at=2021-06).CreatedAt = nil, want a filter")
+	}
+	if start := got.Start.UTC().Format(time.RFC3339); start != "2021-05-31T16:00:00Z" {
+		t.Errorf("Start = %q, want %q", start, "2021-05-31T16:00:00Z")
+	}
+}
+
+func TestParseCreatedAtEqualsIsTheOwnDayInTheSiteZone(t *testing.T) {
+	late := article173()
+	late.CreatedAt = time.Date(2021, 6, 5, 20, 0, 0, 0, time.UTC)
+	shanghai := time.FixedZone("Asia/Shanghai", 8*60*60)
+	q, err := Parse(newFakeSource(), late, nil, shanghai, map[string]string{"created_at": "="}, nil)
+	if err != nil {
+		t.Fatalf("Parse(created_at==) err = %v, want nil", err)
+	}
+	got := q.Filter.CreatedAt
+	if got == nil {
+		t.Fatal("Parse(created_at==).CreatedAt = nil, want a filter")
+	}
+	if start := got.Start.Format(time.RFC3339); start != "2021-06-06T00:00:00+08:00" {
+		t.Errorf("Start = %q, want %q", start, "2021-06-06T00:00:00+08:00")
+	}
+}
+
 func TestParseLinkTo(t *testing.T) {
 	q := parse(t, newFakeSource(), article173(), nil, map[string]string{"link_to": "theme:black"})
 	if !q.Filter.HasLinkTo || q.Filter.LinkTo != "theme:black" {
@@ -589,7 +621,7 @@ func TestParseSort(t *testing.T) {
 
 func TestParseWindow(t *testing.T) {
 	src := newFakeSource()
-	q, err := Parse(src, article173(), nil,
+	q, err := Parse(src, article173(), nil, nil,
 		map[string]string{"offset": "5", "limit": "40", "perpage": "300"},
 		page.PathParams{{Key: "p", Value: "3"}})
 	if err != nil {
@@ -611,7 +643,7 @@ func TestParseWindow(t *testing.T) {
 
 func TestParseWindowFallsBackOnJunk(t *testing.T) {
 	src := newFakeSource()
-	q, err := Parse(src, article173(), nil,
+	q, err := Parse(src, article173(), nil, nil,
 		map[string]string{"offset": "x", "limit": "y", "perpage": "z"},
 		page.PathParams{{Key: "p", Value: "0"}})
 	if err != nil {

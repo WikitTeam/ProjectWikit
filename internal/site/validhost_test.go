@@ -2,6 +2,22 @@ package site
 
 import "testing"
 
+func TestPublicHost(t *testing.T) {
+	for _, host := range []string{"wiki.scp-wiki.cn", "Wiki.Example.io", "a.b.c.dev"} {
+		if !PublicHost(host) {
+			t.Errorf("PublicHost(%q) = false, want true", host)
+		}
+	}
+	for _, host := range []string{
+		"", "localhost", "localhost:8080", "wiki.localhost", "wiki", "192.0.2.7", "wiki.example.io:8443",
+		"media.test", "nas.local", "example.org", "wiki.example.com", "router.lan", "box.home.arpa",
+	} {
+		if PublicHost(host) {
+			t.Errorf("PublicHost(%q) = true, want false", host)
+		}
+	}
+}
+
 func TestValidHostAcceptsWhatARequestCarries(t *testing.T) {
 	for _, host := range []string{
 		"localhost",

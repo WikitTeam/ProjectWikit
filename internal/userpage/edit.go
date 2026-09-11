@@ -243,7 +243,7 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		Saved:          problem == "" && r.URL.Query().Get("saved") == "1",
 	}
 
-	render := shell.New(loc, h.deps.Assets, h.deps.TimeZone)
+	render := shell.New(loc, h.deps.Assets)
 	content, err := render.ProfileEdit(data)
 	if err != nil {
 		return "", err

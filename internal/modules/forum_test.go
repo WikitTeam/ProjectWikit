@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 )
@@ -29,18 +30,27 @@ func TestForumURLsNormalizeTheName(t *testing.T) {
 	}
 }
 
-func TestRenderDateIsUTC(t *testing.T) {
+func TestRenderDateWithoutASiteIsUTC(t *testing.T) {
 	at := time.Date(2023, 9, 10, 11, 12, 13, 0, time.FixedZone("east", 8*3600))
 	want := `<span class="odate w-date" style="display: inline" data-timestamp="1694315533000" ` +
-		`data-format="%m.%d.%Y %H:%M">09.10.2023 03:12</span>`
+		`data-format="%m.%d.%Y %H:%M">09.10.2023 03:12 (UTC)</span>`
 	if got := renderDate(forumEnv(t), at); got != want {
 		t.Errorf("renderDate(%s) = %q, want %q", at, got, want)
 	}
 }
 
+func TestServerDateUsesTheSiteZone(t *testing.T) {
+	env := forumEnv(t)
+	env.Site = &db.Site{TimeZone: "Asia/Shanghai"}
+	at := time.Date(2021, 3, 4, 20, 6, 7, 0, time.UTC)
+	if got, want := serverDate(env, at), "03.05.2021 04:06 (UTC+08:00)"; got != want {
+		t.Errorf("serverDate(%s) = %q, want %q", at, got, want)
+	}
+}
+
 func TestServerDatePadsEveryField(t *testing.T) {
 	at := time.Date(2021, 3, 4, 5, 6, 7, 0, time.UTC)
-	if got, want := serverDate(forumEnv(t), at), "03.04.2021 05:06"; got != want {
+	if got, want := serverDate(forumEnv(t), at), "03.04.2021 05:06 (UTC)"; got != want {
 		t.Errorf("serverDate(%s) = %q, want %q", at, got, want)
 	}
 }

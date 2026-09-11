@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
@@ -104,7 +105,7 @@ func TestCheckSite(t *testing.T) {
 	loc := testLocalizer(t)
 	bundle := testBundle(t)
 	ok := db.Site{Slug: "wikit", Title: "T", Domain: "a.test", MediaDomain: "b.test",
-		HomePage: "main", EmailPolicy: db.EmailOptional, Language: i18n.DefaultLanguage}
+		HomePage: "main", EmailPolicy: db.EmailOptional, Language: i18n.DefaultLanguage, TimeZone: "Asia/Shanghai"}
 	fine := db.SiteSettings{RatingMode: "default", CreateTags: "default"}
 
 	if got := checkSite(loc, bundle, ok, fine); got != "" {
@@ -127,6 +128,8 @@ func TestCheckSite(t *testing.T) {
 		"unknown rating":       {ok, db.SiteSettings{RatingMode: "vibes", CreateTags: "default"}},
 		"unknown tag mode":     {ok, db.SiteSettings{RatingMode: "default", CreateTags: "vibes"}},
 		"unknown language":     {func() db.Site { s := ok; s.Language = "kl"; return s }(), fine},
+		"unknown time zone":    {func() db.Site { s := ok; s.TimeZone = "Beijing"; return s }(), fine},
+		"server local zone":    {func() db.Site { s := ok; s.TimeZone = "Local"; return s }(), fine},
 	}
 	for name, c := range bad {
 		if checkSite(loc, bundle, c.site, c.settings) == "" {
@@ -222,15 +225,26 @@ func TestMaySetRoles(t *testing.T) {
 }
 
 func TestOptionalTime(t *testing.T) {
-	if optionalTime("") != nil || optionalTime("  ") != nil || optionalTime("nonsense") != nil {
+	if optionalTime("", time.UTC) != nil || optionalTime("  ", time.UTC) != nil || optionalTime("nonsense", time.UTC) != nil {
 		t.Error("optionalTime over an unparseable value = non-nil, want nil")
 	}
-	got := optionalTime("2026-09-06T12:30")
+	got := optionalTime("2026-09-06T12:30", time.UTC)
 	if got == nil {
 		t.Fatal("optionalTime(\"2026-09-06T12:30\") = nil, want a time")
 	}
 	if got.Year() != 2026 || got.Month() != 9 || got.Day() != 6 || got.Hour() != 12 {
 		t.Errorf("optionalTime(\"2026-09-06T12:30\") = %v, want 2026-09-06 12:30", got)
+	}
+}
+
+func TestOptionalTimeReadsTheWallClockInTheGivenZone(t *testing.T) {
+	shanghai := time.FixedZone("Asia/Shanghai", 8*60*60)
+	got := optionalTime("2026-09-06T12:30", shanghai)
+	if got == nil {
+		t.Fatal("optionalTime(2026-09-06T12:30, Shanghai) = nil, want a time")
+	}
+	if got, want := got.UTC().Format(time.RFC3339), "2026-09-06T04:30:00Z"; got != want {
+		t.Errorf("optionalTime(2026-09-06T12:30, Shanghai) = %s, want %s", got, want)
 	}
 }
 

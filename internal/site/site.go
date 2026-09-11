@@ -92,6 +92,30 @@ const maxHostName = 253
 
 var hostLabel = regexp.MustCompile(`^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$`)
 
+var unsignable = []string{
+	"localhost", "localdomain", "local", "test", "example", "invalid", "internal", "lan", "home.arpa",
+	"example.com", "example.net", "example.org",
+}
+
+func PublicHost(value string) bool {
+	if !ValidHost(value) || net.ParseIP(value) != nil {
+		return false
+	}
+	if _, _, err := net.SplitHostPort(value); err == nil {
+		return false
+	}
+	name := strings.ToLower(value)
+	if !strings.Contains(name, ".") {
+		return false
+	}
+	for _, suffix := range unsignable {
+		if name == suffix || strings.HasSuffix(name, "."+suffix) {
+			return false
+		}
+	}
+	return true
+}
+
 // A value no request can carry stores a site that nothing reaches and nothing
 // reports, so a scheme or a path is refused here rather than later.
 func ValidHost(value string) bool {

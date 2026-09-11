@@ -13,6 +13,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 )
 
 const (
@@ -82,6 +83,7 @@ type Data struct {
 
 	RevNumber int
 	UpdatedAt time.Time
+	TimeZone  *time.Location
 
 	LoginStatusConfig string
 	OptionsConfig     string
@@ -96,11 +98,10 @@ type NotFound struct {
 type Renderer struct {
 	loc    *i18n.Localizer
 	assets *static.Assets
-	tz     *time.Location
 }
 
-func New(loc *i18n.Localizer, assets *static.Assets, tz *time.Location) *Renderer {
-	return &Renderer{loc: loc, assets: assets, tz: tz}
+func New(loc *i18n.Localizer, assets *static.Assets) *Renderer {
+	return &Renderer{loc: loc, assets: assets}
 }
 
 func (r *Renderer) Page(w io.Writer, d Data) error {
@@ -135,6 +136,13 @@ func (r *Renderer) execute(name string, data any) (string, error) {
 
 func em(s string) string { return "<em>" + escape.HTML(s) + "</em>" }
 
+func orUTC(zone *time.Location) *time.Location {
+	if zone == nil {
+		return time.UTC
+	}
+	return zone
+}
+
 type view struct {
 	Data
 	r *Renderer
@@ -163,13 +171,14 @@ func (v view) PageInfo() string {
 }
 
 func (v view) date() string {
-	at := v.UpdatedAt.In(v.r.tz)
+	at := v.UpdatedAt.In(orUTC(v.TimeZone))
 	return v.T("page.date-format",
 		"year", strconv.Itoa(at.Year()),
 		"month", strconv.Itoa(int(at.Month())),
 		"day", strconv.Itoa(at.Day()),
 		"hour", fmt.Sprintf("%02d", at.Hour()),
-		"minute", fmt.Sprintf("%02d", at.Minute()))
+		"minute", fmt.Sprintf("%02d", at.Minute()),
+		"zone", timezone.Label(at))
 }
 
 // System is the page the wiki's own pages sit in, which is not the one an
@@ -210,6 +219,7 @@ type Profile struct {
 	Bio         string
 	BioHTML     string
 	JoinedAt    time.Time
+	TimeZone    *time.Location
 
 	Roles []ProfileRoles
 	Edits ProfileFeed
@@ -451,7 +461,7 @@ func (v profileView) ODate(at time.Time) string {
 }
 
 func (v profileView) date(at time.Time) string {
-	at = at.In(v.r.tz)
+	at = at.In(orUTC(v.TimeZone))
 	return v.T("profile.date-format",
 		"year", strconv.Itoa(at.Year()),
 		"month", strconv.Itoa(int(at.Month())),

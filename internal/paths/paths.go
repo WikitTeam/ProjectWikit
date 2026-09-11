@@ -98,6 +98,7 @@ func (p *Paths) PGData() string   { return filepath.Join(p.root, "pgdata") }
 func (p *Paths) Postgres() string { return filepath.Join(p.root, "postgres") }
 func (p *Paths) Locales() string  { return filepath.Join(p.root, "locales") }
 func (p *Paths) Backups() string  { return filepath.Join(p.root, "backups") }
+func (p *Paths) Logs() string     { return filepath.Join(p.root, "logs") }
 
 func (p *Paths) Certs() string { return filepath.Join(p.Secrets(), "certs") }
 

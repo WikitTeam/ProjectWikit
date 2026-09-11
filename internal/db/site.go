@@ -36,13 +36,14 @@ type Site struct {
 
 	EmailPolicy string
 	Language    string
+	TimeZone    string
 }
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
        membership_password_enabled, membership_password, membership_password_role_id,
-       default_role_id, verified_role_id, email_policy, language
+       default_role_id, verified_role_id, email_policy, language, time_zone
 FROM web_site
 WHERE lower(domain) = $1 OR lower(media_domain) = $1
 ORDER BY id
@@ -54,14 +55,14 @@ func scanSite(row pgx.Row, s *Site) error {
 		&s.Icon, &s.ThemeID, &s.SystemThemeID,
 		&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp,
 		&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID,
-		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language)
+		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language, &s.TimeZone)
 }
 
 var qSiteBySlug = register("SiteBySlug", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
        membership_password_enabled, membership_password, membership_password_role_id,
-       default_role_id, verified_role_id, email_policy, language
+       default_role_id, verified_role_id, email_policy, language, time_zone
 FROM web_site
 WHERE slug = $1`)
 
@@ -113,6 +114,26 @@ func (d *DB) SiteByHosts(ctx context.Context, hosts []string) (*Site, error) {
 		return &s, nil
 	}
 	return nil, ErrNotFound
+}
+
+var qSiteHosts = register("SiteHosts", `
+SELECT domain FROM web_site UNION SELECT media_domain FROM web_site ORDER BY 1`)
+
+func (d *DB) SiteHosts(ctx context.Context) ([]string, error) {
+	rows, err := d.pool.Query(ctx, qSiteHosts)
+	if err != nil {
+		return nil, fmt.Errorf("list site hosts: %w", err)
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var host string
+		if err := rows.Scan(&host); err != nil {
+			return nil, err
+		}
+		out = append(out, host)
+	}
+	return out, rows.Err()
 }
 
 var qSiteHostExists = register("SiteHostExists", `

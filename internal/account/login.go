@@ -81,7 +81,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	render := shell.New(loc, h.deps.Assets, h.deps.TimeZone)
+	render := shell.New(loc, h.deps.Assets)
 	content, err := render.Login(form)
 	if err == nil {
 		var body string

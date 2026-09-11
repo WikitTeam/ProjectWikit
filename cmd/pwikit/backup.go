@@ -77,21 +77,23 @@ Options:
 		}
 		return verifyBackup(loose[0])
 	}
-	if *database == "" {
-		return errors.New("no database, pass -database or set " + envDatabase)
+	dsn, release, err := resolveDatabase(context.Background(), *database, *dataDir)
+	if err != nil {
+		return err
 	}
+	defer release()
 
 	files := p.Files()
 	if *noFiles {
 		files = ""
 	}
 	if sub == "create" {
-		return createBackup(*database, files, *output, p.Backups(), *site, *keepPasswords)
+		return createBackup(dsn, files, *output, p.Backups(), *site, *keepPasswords)
 	}
 	if len(loose) != 1 {
 		return errors.New("restore needs one backup file")
 	}
-	return restoreBackup(loose[0], *database, p.Files(), p.Backups(), *force, *noSafety)
+	return restoreBackup(loose[0], dsn, p.Files(), p.Backups(), *force, *noSafety)
 }
 
 // A file name reads naturally before the flags, and the flag package stops at

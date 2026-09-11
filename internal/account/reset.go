@@ -113,7 +113,7 @@ func (h *ResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render := shell.New(loc, h.deps.Assets, h.deps.TimeZone)
+	render := shell.New(loc, h.deps.Assets)
 	content, err := render.Reset(form)
 	if err == nil {
 		var body string

@@ -55,7 +55,7 @@ func renderListPages(env module.Env, params map[string]string, body string) (str
 
 	retireLegacyParams(params)
 
-	query, err := listpages.Parse(env.Data, pc.Article, env.User, params, pc.PathParams)
+	query, err := listpages.Parse(env.Data, pc.Article, env.User, siteZone(env), params, pc.PathParams)
 	if err != nil {
 		return "", err
 	}

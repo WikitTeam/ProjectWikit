@@ -35,14 +35,13 @@ const Prefix = "/-/users/"
 const userNotFoundBody = "User not found"
 
 type Deps struct {
-	DB       *db.DB
-	Engine   renderer.Renderer
-	Bundle   *i18n.Bundle
-	Icons    roles.IconLoader
-	Assets   *static.Assets
-	TimeZone *time.Location
-	Files    string
-	Log      *slog.Logger
+	DB     *db.DB
+	Engine renderer.Renderer
+	Bundle *i18n.Bundle
+	Icons  roles.IconLoader
+	Assets *static.Assets
+	Files  string
+	Log    *slog.Logger
 }
 
 func (d Deps) logger() *slog.Logger {
@@ -59,9 +58,6 @@ type Handler struct {
 var _ http.Handler = (*Handler)(nil)
 
 func New(d Deps) *Handler {
-	if d.TimeZone == nil {
-		d.TimeZone = time.UTC
-	}
 	return &Handler{deps: d}
 }
 
@@ -118,7 +114,7 @@ func (h *Handler) page(r *http.Request, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	render := shell.New(loc, h.deps.Assets, h.deps.TimeZone)
+	render := shell.New(loc, h.deps.Assets)
 	content, err := render.Profile(data)
 	if err != nil {
 		return "", err
@@ -184,6 +180,7 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		FullName:    strings.TrimSpace(profile.FirstName + " " + profile.LastName),
 		Bio:         profile.Bio,
 		JoinedAt:    profile.DateJoined,
+		TimeZone:    site.Zone(ctx),
 	}
 
 	titles, err := h.titles(ctx, loc, profile)

@@ -68,7 +68,7 @@ func (h *EmailHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, err := h.deps.page(r, loc, current, loc.T("email."+outcome+"-title"),
-		mustRender(shell.New(loc, h.deps.Assets, h.deps.TimeZone).Notice(shell.Notice{
+		mustRender(shell.New(loc, h.deps.Assets).Notice(shell.Notice{
 			AuthIcon:  authIcon(current),
 			SiteTitle: current.Title,
 			Heading:   loc.T("email." + outcome + "-title"),

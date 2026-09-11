@@ -37,12 +37,11 @@ const (
 var files embed.FS
 
 type Deps struct {
-	DB       *db.DB
-	Bundle   *i18n.Bundle
-	Assets   *static.Assets
-	Files    string
-	TimeZone *time.Location
-	Tokens   token.Generator
+	DB     *db.DB
+	Bundle *i18n.Bundle
+	Assets *static.Assets
+	Files  string
+	Tokens token.Generator
 
 	Articles http.Handler
 	Mail     mail.Sender
@@ -206,7 +205,7 @@ func (h *Handler) forbidden(w http.ResponseWriter, r *http.Request, loc *i18n.Lo
 	if current.AuthIcon != "" {
 		icon = "/local--files/" + current.AuthIcon
 	}
-	body, err := shell.New(loc, h.deps.Assets, h.deps.TimeZone).Notice(shell.Notice{
+	body, err := shell.New(loc, h.deps.Assets).Notice(shell.Notice{
 		AuthIcon:  icon,
 		SiteTitle: current.Title,
 		Heading:   loc.T("admin.denied-title"),
@@ -295,7 +294,7 @@ func (h *Handler) write(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		return err
 	}
 	var out strings.Builder
-	err = shell.New(loc, h.deps.Assets, h.deps.TimeZone).SystemPage(&out, shell.System{
+	err = shell.New(loc, h.deps.Assets).SystemPage(&out, shell.System{
 		Title:       title,
 		SiteTitle:   current.Title,
 		ThemeURL:    theme,
@@ -339,11 +338,17 @@ func funcs() template.FuncMap {
 		"add": func(a, b int) int { return a + b },
 		"sub": func(a, b int) int { return a - b },
 		"has": func(list []int64, want int64) bool { return slices.Contains(list, want) },
-		"stamp": func(at *time.Time) string {
+		"stamp": func(at *time.Time, zone *time.Location) string {
 			if at == nil {
 				return ""
 			}
-			return at.Format("2006-01-02T15:04")
+			return at.In(zone).Format("2006-01-02T15:04")
+		},
+		"millis": func(at *time.Time) string {
+			if at == nil {
+				return ""
+			}
+			return strconv.FormatInt(at.UnixMilli(), 10)
 		},
 		"num": func(p *int) string {
 			if p == nil {

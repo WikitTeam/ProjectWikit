@@ -5,12 +5,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
+	"strconv"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/admin"
 	"github.com/WikitTeam/ProjectWikit/internal/articlepage"
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
+	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/lang"
@@ -65,17 +66,12 @@ type limits struct {
 	hard int64
 }
 
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret, timezone string, log *slog.Logger) (*pageStack, error) {
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret string, cfg config.File, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
 	}
 	bundle, err := i18n.Load(p.Locales())
-	if err != nil {
-		closeEngine()
-		return nil, err
-	}
-	location, err := time.LoadLocation(timezone)
 	if err != nil {
 		closeEngine()
 		return nil, err
@@ -88,8 +84,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		Bundle:      bundle,
 		Icons:       icons,
 		Assets:      static.NewAssets(assets),
-		TimeZone:    location,
-		GoogleTagID: envOr(envGoogleTag, ""),
+		GoogleTagID: envOr(envGoogleTag, cfg.Analytics.GoogleTagID),
 		Log:         log,
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
@@ -99,7 +94,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 
 	profiles := userpage.Deps{
 		DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
-		Assets: static.NewAssets(assets), TimeZone: location, Files: p.Files(), Log: log,
+		Assets: static.NewAssets(assets), Files: p.Files(), Log: log,
 	}
 
 	stack := &pageStack{
@@ -132,19 +127,15 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		favesAPI:      webapi.NewFavourites(api, next),
 		ownRowsAPI:    webapi.NewOwnRows(api, next),
 		close:         closeEngine,
-	}
-
-	// Without the key nothing can be verified, so every visitor stays
-	if secret == "" {
-		return stack, nil
+		unresolved:    site.NewUnresolved(bundle, static.NewAssets(assets)),
 	}
 	store := session.New(secret)
 	accounts := account.Deps{
 		DB: conn, Sessions: store, Engine: engine, Icons: icons, Bundle: bundle,
 		Tokens:   token.Generator{Secret: secret},
 		Verifier: account.NewVerifier(),
-		Mail:     mail.New(mailConfig()),
-		Assets:   static.NewAssets(assets), TimeZone: location, Trust: trust, Log: log,
+		Mail:     mail.New(mailConfig(cfg.Mail)),
+		Assets:   static.NewAssets(assets), Trust: trust, Log: log,
 	}
 	stack.login = account.NewLogin(accounts)
 	stack.logout = account.NewLogout(accounts)
@@ -156,16 +147,14 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	stack.settings = account.NewSettings(accounts)
 
 	adminPages, err := admin.New(admin.Deps{
-		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(), TimeZone: location,
+		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(),
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
-		Mail: mail.New(mailConfig()), Log: log,
+		Mail: mail.New(mailConfig(cfg.Mail)), Log: log,
 	}, next)
 	if err != nil {
 		return nil, err
 	}
 	stack.adminPages = adminPages
-
-	stack.unresolved = site.NewUnresolved(bundle, static.NewAssets(assets), location)
 
 	resolver := auth.NewResolver(store, conn, conn, log)
 	negotiate := lang.Middleware(bundle)
@@ -201,20 +190,37 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	return stack, nil
 }
 
-func mailConfig() mail.Config {
-	if os.Getenv(envMailEngine) == "console" {
+func mailConfig(file config.Mail) mail.Config {
+	if envOr(envMailEngine, file.Engine) == config.EngineConsole {
 		return mail.Config{}
 	}
-	port := envOr(envMailPort, "1025")
+	filePort := ""
+	if file.Port > 0 {
+		filePort = strconv.Itoa(file.Port)
+	}
+	port := envOr(envMailPort, filePort)
+	if port == "" {
+		port = defaultMailPort
+	}
 	return mail.Config{
-		Host:     os.Getenv(envMailHost),
+		Host:     envOr(envMailHost, file.Host),
 		Port:     port,
-		Username: os.Getenv(envMailUser),
-		Password: os.Getenv(envMailPassword),
-		UseTLS:   os.Getenv(envMailTLS) == "true" || port == implicitTLSPort,
-		Implicit: os.Getenv(envMailImplicit) == "true" || port == implicitTLSPort,
-		From:     os.Getenv(envMailFrom),
+		Username: envOr(envMailUser, file.Username),
+		Password: envOr(envMailPassword, file.Password),
+		UseTLS:   switchSetting(envMailTLS, file.UseTLS) || port == implicitTLSPort,
+		Implicit: switchSetting(envMailImplicit, file.ImplicitTLS) || port == implicitTLSPort,
+		From:     envOr(envMailFrom, file.From),
 	}
 }
 
-const implicitTLSPort = "465"
+func switchSetting(env string, file *bool) bool {
+	if value := os.Getenv(env); value != "" {
+		return value == "true"
+	}
+	return file != nil && *file
+}
+
+const (
+	implicitTLSPort = "465"
+	defaultMailPort = "587"
+)

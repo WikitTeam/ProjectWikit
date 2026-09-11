@@ -77,5 +77,30 @@
     if (a.hasAttribute('data-back')) { e.preventDefault(); open('first'); }
   });
 })();
+(function () {
+  var zone = '';
+  try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+  if (!zone) { return; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  document.querySelectorAll('input[type="datetime-local"][data-timestamp]').forEach(function (input) {
+    if (!input.dataset.timestamp) { return; }
+    var d = new Date(Number(input.dataset.timestamp));
+    input.value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  });
+  document.querySelectorAll('input[data-browser-zone]').forEach(function (input) { input.value = zone; });
+  document.querySelectorAll('[data-browser-zone-name]').forEach(function (el) {
+    el.textContent = zone;
+    el.parentElement.hidden = false;
+  });
+  var list = document.getElementById('time-zones');
+  if (list && Intl.supportedValuesOf) {
+    Intl.supportedValuesOf('timeZone').forEach(function (name) {
+      var option = document.createElement('option');
+      option.value = name;
+      list.appendChild(option);
+    });
+  }
+})();
 </script>
 {{end}}

@@ -23,7 +23,6 @@ type Deps struct {
 	Bundle      *i18n.Bundle
 	Icons       roles.IconLoader
 	Assets      *static.Assets
-	TimeZone    *time.Location
 	GoogleTagID string
 	Log         *slog.Logger
 
@@ -51,13 +50,10 @@ func New(d Deps) *Handler {
 	if d.Now == nil {
 		d.Now = time.Now
 	}
-	if d.TimeZone == nil {
-		d.TimeZone = time.UTC
-	}
 	return &Handler{
 		deps: d,
 		shell: func(loc *i18n.Localizer) *shell.Renderer {
-			return shell.New(loc, d.Assets, d.TimeZone)
+			return shell.New(loc, d.Assets)
 		},
 	}
 }

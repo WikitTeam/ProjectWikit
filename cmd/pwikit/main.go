@@ -6,14 +6,15 @@ import (
 	"flag"
 	"fmt"
 	iofs "io/fs"
-	"log/slog"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
@@ -21,6 +22,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/archive"
 	"github.com/WikitTeam/ProjectWikit/internal/backup"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
+	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
@@ -31,6 +33,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/respheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
+	"github.com/WikitTeam/ProjectWikit/internal/secretfile"
 	"github.com/WikitTeam/ProjectWikit/internal/seed"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
@@ -41,7 +44,6 @@ import (
 const (
 	envDatabase     = "DATABASE_URL"
 	envSecretKey    = "SECRET_KEY"
-	envTimeZone     = "PWIKIT_TIMEZONE"
 	envGoogleTag    = "GOOGLE_TAG_ID"
 	envUploadLimit  = "MEDIA_UPLOAD_LIMIT"
 	envMailHost     = "EMAIL_HOST"
@@ -62,9 +64,17 @@ const (
 	defaultListen   = "127.0.0.1:8080"
 	defaultTLSPlain = ":80"
 	defaultTLSAddr  = ":443"
+	sessionKeyFile  = "session-key"
 )
 
 func main() {
+	if handled, err := runAsService(os.Args[1:]); handled || err != nil {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "pwikit: "+err.Error())
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, "pwikit: "+err.Error())
 		os.Exit(1)
@@ -78,7 +88,7 @@ func run(args []string) error {
 	}
 	switch args[0] {
 	case "serve":
-		return serve(args[1:])
+		return serve(context.Background(), args[1:])
 	case "modules":
 		return printModules()
 	case "render":
@@ -95,6 +105,8 @@ func run(args []string) error {
 		return backupCommand(args[1:])
 	case "seed":
 		return seedPages(args[1:])
+	case "service":
+		return serviceCommand(args[1:])
 	case "help", "-h", "--help":
 		usage()
 		return nil
@@ -114,6 +126,7 @@ Commands:
   admin       create an administrator or give an account every right
   backup      write, check, list or put back a backup
   seed        write the pages a new site starts with
+  service     start pwikit whenever the machine boots
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
   modules     print the wikidot module list
@@ -121,74 +134,103 @@ Commands:
 `)
 }
 
-func serve(args []string) error {
-	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
-	listen := fs.String("listen", defaultListen, "listen address")
-	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
-	trusted := fs.String("trusted-proxies", "", "trusted reverse proxy addresses or CIDRs, comma separated; empty trusts no X-Forwarded-* header")
-	staticDir := fs.String("static-dir", "", "directory holding the frontend asset bundle")
-	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
-	secret := fs.String("secret-key", os.Getenv(envSecretKey), "key the session cookie is signed with; without it every visitor is anonymous")
-	sidecar := fs.String("sidecar", os.Getenv(envSidecar), "path to the ftml sidecar binary; without it the linked-in ftml is used")
-	timezone := fs.String("timezone", envOr(envTimeZone, "UTC"), "time zone dates are shown in")
-	noMigrate := fs.Bool("no-migrate", false, "start without applying pending schema migrations")
-	uploadLimit := fs.String("upload-limit", envOr(envUploadLimit, "0"), "size the files still attached to pages may reach, such as 4GB; 0 for no ceiling")
-	storageLimit := fs.String("storage-limit", envOr(envStorageLimit, "0"), "size every file on disk may reach, deleted ones counted; 0 for no ceiling")
-	tlsMode := fs.String("tls", envOr(envTLS, string(entry.Off)), "off to serve plain HTTP behind a proxy, file to use a supplied certificate, auto to obtain one over ACME")
-	tlsListen := fs.String("tls-listen", envOr(envTLSListen, defaultTLSAddr), "listen address for HTTPS")
-	tlsCert := fs.String("tls-cert", os.Getenv(envTLSCert), "certificate chain in PEM form, for -tls=file")
-	tlsKey := fs.String("tls-key", os.Getenv(envTLSKey), "private key in PEM form, for -tls=file")
-	acmeEmail := fs.String("acme-email", os.Getenv(envACMEEmail), "address the certificate authority sends expiry warnings to")
-	acmeDirectory := fs.String("acme-directory", os.Getenv(envACMEDir), "ACME directory URL; empty uses Let's Encrypt")
-	if err := fs.Parse(args); err != nil {
+func serve(ctx context.Context, args []string) (err error) {
+	o := newServeOptions()
+	if err := o.fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
 	}
 
-	if *database == "" {
-		return errors.New("serve needs -database or " + envDatabase)
-	}
-
-	mode, err := entry.ParseMode(*tlsMode)
-	if err != nil {
-		return err
-	}
-	if mode != entry.Off && !given(fs, "listen") {
-		*listen = defaultTLSPlain
-	}
-
-	p, err := paths.New(*dataDir)
+	p, err := paths.New(*o.dataDir)
 	if err != nil {
 		return err
 	}
 	if err := p.EnsureBase(); err != nil {
 		return err
 	}
+	if _, err := config.WriteTemplate(p.Config()); err != nil {
+		return err
+	}
+	cfg, err := config.Load(p.Config())
+	if err != nil {
+		return err
+	}
+	mode, err := o.resolve(cfg)
+	if err != nil {
+		return err
+	}
+	if *o.secret == "" {
+		if *o.secret, err = secretfile.Ensure(p.Secrets(), sessionKeyFile); err != nil {
+			return err
+		}
+	}
 
-	log := slog.Default()
+	log, closeLog, err := openLog(*o.logFile)
+	if err != nil {
+		return err
+	}
+	defer closeLog()
+	if cfg.Mail.Password != "" && config.ReadableByOthers(p.Config()) {
+		log.Warn("pwikit.toml holds the mail password and other accounts on this machine can read it", "path", p.Config())
+	}
 
-	trust, err := proxyheader.NewTrust(strings.Split(*trusted, ","))
+	// Caught this early so a stop during a slow PostgreSQL start still stops PostgreSQL.
+	ctx, stopSignals := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stopSignals()
+
+	dsn := *o.database
+	if dsn == "" {
+		bundled, err := startBundled(ctx, p, log)
+		if err != nil {
+			return err
+		}
+		defer stopBundled(bundled)
+		dsn = bundled.DSN()
+
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithCancel(ctx)
+		defer cancel()
+		go func() {
+			select {
+			case <-bundled.Exited():
+				log.Error("PostgreSQL stopped while pwikit was serving")
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+		defer func() {
+			select {
+			case <-bundled.Exited():
+				if err == nil {
+					err = bundled.ExitError()
+				}
+			default:
+			}
+		}()
+	}
+
+	trust, err := proxyheader.NewTrust(strings.Split(*o.trusted, ","))
 	if err != nil {
 		return err
 	}
 
-	assets, err := assetFS(*staticDir)
+	assets, err := assetFS(*o.staticDir)
 	if err != nil {
 		return err
 	}
 
 	// Asked before anything writes, so a server too old to hold the schema says
 	// so instead of failing somewhere in the middle of a migration.
-	found, err := backup.CheckServer(context.Background(), *database)
+	found, err := backup.CheckServer(ctx, dsn)
 	if err != nil {
 		return err
 	}
 	log.Info("pwikit reached postgres", "version", backup.Describe(found))
 
-	if !*noMigrate {
-		result, err := migrate.Run(context.Background(), *database)
+	if !*o.noMigrate {
+		result, err := migrate.Run(ctx, dsn)
 		if err != nil {
 			return err
 		}
@@ -199,27 +241,39 @@ func serve(args []string) error {
 			log.Info("pwikit applied a migration", "name", name)
 		}
 	}
-	conn, err := db.Open(context.Background(), *database)
+	conn, err := db.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	notFound := http.NotFoundHandler()
-	mediaHandler := site.NewHostRules(conn, listenPort(*listen), media.New(p.Files(), conn), notFound)
-	resizedHandler := site.NewHostRules(conn, listenPort(*listen), media.NewResized(p.Files(), conn), notFound)
+	hostsBound, err := conn.SiteHosts(ctx)
+	if err != nil {
+		return err
+	}
+	if domain, ok := o.promote(hostsBound); ok {
+		mode = entry.Auto
+		log.Info("pwikit serves HTTPS because a site is bound to a public domain", "domain", domain)
+	}
+	if *o.dev {
+		log.Info("pwikit is in development mode, and only this machine can reach it", "url", "http://"+*o.listen)
+	}
 
-	soft, err := parseSize(*uploadLimit)
+	notFound := http.NotFoundHandler()
+	mediaHandler := site.NewHostRules(conn, listenPort(*o.listen), media.New(p.Files(), conn), notFound)
+	resizedHandler := site.NewHostRules(conn, listenPort(*o.listen), media.NewResized(p.Files(), conn), notFound)
+
+	soft, err := parseSize(*o.uploadLimit)
 	if err != nil {
 		return fmt.Errorf("parse -upload-limit: %w", err)
 	}
-	hard, err := parseSize(*storageLimit)
+	hard, err := parseSize(*o.storageLimit)
 	if err != nil {
 		return fmt.Errorf("parse -storage-limit: %w", err)
 	}
 
 	stack, err := newPageStack(conn, p, assets, notFound, trust, limits{soft: soft, hard: hard},
-		*sidecar, *secret, *timezone, log)
+		*o.sidecar, *o.secret, cfg, log)
 	if err != nil {
 		return err
 	}
@@ -227,7 +281,7 @@ func serve(args []string) error {
 	// Only the page handler answers a name a person typed, so only it explains
 	// an unresolved one. The rest are reached from inside a page.
 	served := func(h http.Handler) http.Handler {
-		return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), h, stack.unresolved)))
+		return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*o.listen), h, stack.unresolved)))
 	}
 	articles := served(stack.articles)
 	codeHandler := served(stack.code)
@@ -264,7 +318,7 @@ func serve(args []string) error {
 		"/-/":                           notFound,
 		"/pw-api/":                      notFound,
 		static.Prefix:                   static.New(assets, notFound),
-		site.ThemePrefix:                respheader.VaryCookie(site.NewHostRules(conn, listenPort(*listen), site.NewThemeFiles(p.Files()), notFound)),
+		site.ThemePrefix:                respheader.VaryCookie(site.NewHostRules(conn, listenPort(*o.listen), site.NewThemeFiles(p.Files()), notFound)),
 		media.Prefix:                    respheader.VaryCookie(mediaHandler),
 		media.ResizedPrefix:             respheader.VaryCookie(resizedHandler),
 		localitem.CodePrefix:            codeHandler,
@@ -315,8 +369,8 @@ func serve(args []string) error {
 		return err
 	}
 
-	log.Info("pwikit serve", "listen", *listen, "root", p.Root(),
-		"root_source", string(p.Source()), "static_dir", *staticDir)
+	log.Info("pwikit serve", "listen", *o.listen, "root", p.Root(),
+		"root_source", string(p.Source()), "static_dir", *o.staticDir)
 
 	var hosts entry.Hosts
 	if conn != nil {
@@ -334,15 +388,15 @@ func serve(args []string) error {
 		return errors.New("-tls=auto needs -database to know which hosts to obtain certificates for")
 	}
 
-	return entry.Serve(context.Background(), entry.Config{
+	return entry.Serve(ctx, entry.Config{
 		Mode:      mode,
-		Plain:     *listen,
-		Secure:    *tlsListen,
-		CertFile:  *tlsCert,
-		KeyFile:   *tlsKey,
+		Plain:     *o.listen,
+		Secure:    *o.tlsListen,
+		CertFile:  *o.tlsCert,
+		KeyFile:   *o.tlsKey,
 		CacheDir:  p.Certs(),
-		Email:     *acmeEmail,
-		Directory: *acmeDirectory,
+		Email:     *o.acmeEmail,
+		Directory: *o.acmeDirectory,
 		Hosts:     hosts,
 		Handler:   respheader.OriginPolicy(mux),
 		Logger:    log,
@@ -423,12 +477,13 @@ func seedPages(args []string) error {
 		}
 		return err
 	}
-	if *database == "" {
-		return errors.New("no database, pass -database or set " + envDatabase)
-	}
-
 	ctx := context.Background()
-	conn, err := db.Open(ctx, *database)
+	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
+	if err != nil {
+		return err
+	}
+	defer release()
+	conn, err := db.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
@@ -475,6 +530,7 @@ func createSite(args []string) error {
 	title := fs.String("title", "", "site title")
 	headline := fs.String("headline", "", "site subtitle")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -497,12 +553,13 @@ func createSite(args []string) error {
 			return fmt.Errorf("-%s %q is not a host name; give the name a request arrives on, without a scheme or a path", name, value)
 		}
 	}
-	if *database == "" {
-		return errors.New("no database, pass -database or set " + envDatabase)
-	}
-
 	ctx := context.Background()
-	conn, err := db.Open(ctx, *database)
+	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
+	if err != nil {
+		return err
+	}
+	defer release()
+	conn, err := db.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
@@ -516,6 +573,7 @@ func createSite(args []string) error {
 		return err
 	}
 	fmt.Printf("created site %s (%d) on %s\n", *slug, id, *domain)
+	announceHTTPS(*domain)
 	return nil
 }
 
@@ -525,7 +583,7 @@ func migrateCommand(args []string) error {
 		sub = args[0]
 	}
 	if sub != "status" && sub != "up" {
-		fmt.Fprint(os.Stderr, `Usage: pwikit migrate <status|up> [-database <url>]
+		fmt.Fprint(os.Stderr, `Usage: pwikit migrate <status|up> [-database <url>] [-data-dir <dir>]
 
   status  print which schema migrations the database carries
   up      apply the migrations the database is missing
@@ -534,20 +592,24 @@ func migrateCommand(args []string) error {
 	}
 	fs := flag.NewFlagSet("migrate "+sub, flag.ContinueOnError)
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
 	}
-	if *database == "" {
-		return errors.New("no database, pass -database or set " + envDatabase)
+	ctx := context.Background()
+	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
+	if err != nil {
+		return err
 	}
+	defer release()
 	if sub == "up" {
-		return migrateUp(*database)
+		return migrateUp(dsn)
 	}
 
-	state, err := migrate.Status(context.Background(), *database)
+	state, err := migrate.Status(ctx, dsn)
 	if err != nil {
 		return err
 	}
@@ -684,18 +746,21 @@ Options for rebind:
 	domain := fs.String("domain", "", "domain the pages are served on")
 	mediaDomain := fs.String("media-domain", "", "domain the uploaded files are served on; defaults to -domain")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
+	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
 		}
 		return err
 	}
-	if *database == "" {
-		return errors.New("no database, pass -database or set " + envDatabase)
-	}
 
 	ctx := context.Background()
-	conn, err := db.Open(ctx, *database)
+	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
+	if err != nil {
+		return err
+	}
+	defer release()
+	conn, err := db.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
@@ -748,5 +813,12 @@ func rebindSite(ctx context.Context, conn *db.DB, slug, domain, mediaDomain stri
 	}
 	fmt.Printf("%s: %s -> %s\n", slug, before.Domain, domain)
 	fmt.Printf("%s: %s -> %s (media)\n", slug, before.MediaDomain, mediaDomain)
+	announceHTTPS(domain)
 	return nil
+}
+
+func announceHTTPS(domain string) {
+	if site.PublicHost(domain) {
+		fmt.Printf("https://%s answers once pwikit serve starts, or restarts if it is already running\n", domain)
+	}
 }

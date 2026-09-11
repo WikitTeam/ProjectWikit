@@ -32,7 +32,7 @@ func renderTime(env module.Env, _ map[string]string, body string) (string, error
 		pc = page.NewContext(nil, nil, nil, env.User)
 	}
 
-	now := time.Now()
+	now := time.Now().In(siteZone(env))
 	stamps := map[string]string{}
 	source := page.ApplyTemplate(strings.TrimSpace(body), func(name string) (string, bool) {
 		format, ok := timeFields[normalizeTimeField(name)]

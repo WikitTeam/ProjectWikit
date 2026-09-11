@@ -39,7 +39,6 @@ type Deps struct {
 	Icons    roles.IconLoader
 	Bundle   *i18n.Bundle
 	Assets   *static.Assets
-	TimeZone *time.Location
 	Trust    *proxyheader.Trust
 	Log      *slog.Logger
 }
@@ -82,7 +81,7 @@ func (d Deps) page(r *http.Request, loc *i18n.Localizer, current *db.Site, title
 		return "", err
 	}
 	var out strings.Builder
-	err = shell.New(loc, d.Assets, d.TimeZone).SystemPage(&out, shell.System{
+	err = shell.New(loc, d.Assets).SystemPage(&out, shell.System{
 		Title:     title,
 		SiteTitle: current.Title,
 		ThemeURL:  theme,
