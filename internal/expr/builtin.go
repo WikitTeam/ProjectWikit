@@ -174,7 +174,12 @@ func randomOf(args []Value) (Value, error) {
 	if low > high {
 		return None(), errType
 	}
-	return IntOf(low + rand.Int64N(high-low+1)), nil
+	// The width is worked out unsigned because the full int64 range overflows it.
+	span := uint64(high) - uint64(low) + 1
+	if span == 0 {
+		return IntOf(int64(rand.Uint64())), nil
+	}
+	return IntOf(low + int64(rand.Uint64N(span))), nil
 }
 
 func sqrtOf(args []Value) (Value, error) {

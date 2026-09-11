@@ -4,7 +4,17 @@ import (
 	"strings"
 )
 
+// Page text reaches here after variables are substituted, so neither the
+// expression nor the strings it builds are bounded by the page size.
+const (
+	maxSource = 16 << 10
+	maxString = 64 << 10
+)
+
 func Evaluate(src string) Value {
+	if len(src) > maxSource {
+		return None()
+	}
 	n, err := parse(src)
 	if err != nil {
 		return None()
@@ -64,14 +74,17 @@ func evalBinary(n *binNode) (Value, error) {
 	switch n.op {
 	case "+":
 		if x.Kind == KindStr && y.Kind == KindStr {
+			if len(x.Str)+len(y.Str) > maxString {
+				return None(), errType
+			}
 			return StrOf(x.Str + y.Str), nil
 		}
 		return arith(x, y, func(a, b int64) int64 { return a + b }, func(a, b float64) float64 { return a + b })
 	case "-":
 		return arith(x, y, func(a, b int64) int64 { return a - b }, func(a, b float64) float64 { return a - b })
 	case "*":
-		if repeated, ok := repeat(x, y); ok {
-			return repeated, nil
+		if repeated, ok, err := repeat(x, y); ok {
+			return repeated, err
 		}
 		return arith(x, y, func(a, b int64) int64 { return a * b }, func(a, b float64) float64 { return a * b })
 	case "/":
@@ -104,19 +117,22 @@ func arith(x, y Value, ints func(a, b int64) int64, floats func(a, b float64) fl
 	return IntOf(ints(x.toInt(), y.toInt())), nil
 }
 
-func repeat(x, y Value) (Value, bool) {
+func repeat(x, y Value) (Value, bool, error) {
 	str, count := x, y
 	if str.Kind != KindStr {
 		str, count = y, x
 	}
 	if str.Kind != KindStr || !count.integral() {
-		return None(), false
+		return None(), false, nil
 	}
 	n := count.toInt()
-	if n <= 0 {
-		return StrOf(""), true
+	if n <= 0 || str.Str == "" {
+		return StrOf(""), true, nil
 	}
-	return StrOf(strings.Repeat(str.Str, int(n))), true
+	if n > int64(maxString/len(str.Str)) {
+		return None(), true, errType
+	}
+	return StrOf(strings.Repeat(str.Str, int(n))), true, nil
 }
 
 func evalCompare(n *cmpNode) (Value, error) {

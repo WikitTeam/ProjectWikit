@@ -51,13 +51,14 @@ fn parse_scope<'r, 't>(
     // [[/scope]]
 
     assert_block_name(&BLOCK_SCOPE, name);
+    parser.check_page_syntax()?;
     
     parser.push_scope();
 
     let arguments = parser.get_head_map(&BLOCK_SCOPE, in_head)?;
 
     let (elements, exceptions, _) = parser
-        .get_body_elements(&BLOCK_SCOPE, name, false)?
+        .get_body_elements(&BLOCK_SCOPE, name, true)?
         .into();
 
     let element = Element::Container(Container::new(
@@ -84,6 +85,7 @@ fn parse_var<'r, 't>(
 
     // syntax: [[declare name value]]
     //         [[set name value]]
+    parser.check_page_syntax()?;
 
     let condition = collect_text(
         parser,
@@ -119,7 +121,9 @@ fn parse_var<'r, 't>(
         Cow::from(expr)
     };
 
-    parser.push_variable(Cow::Borrowed(var_name), value.clone(), name == "declare");
+    if !parser.push_variable(Cow::Borrowed(var_name), value.clone(), name == "declare") {
+        return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+    }
 
     let transaction = &mut parser.transaction(ParserTransactionFlags::Scopes);
 

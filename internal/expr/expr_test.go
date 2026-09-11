@@ -1,6 +1,9 @@
 package expr
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func check(t *testing.T, src string, want Value) {
 	t.Helper()
@@ -308,4 +311,43 @@ func TestTruthy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEvaluateRandomAcrossTheWholeIntRange(t *testing.T) {
+	for _, src := range []string{
+		"random(0, 9223372036854775807)",
+		"random(-9223372036854775807 - 1, 9223372036854775807)",
+		"random(-5, -5)",
+	} {
+		if got := Evaluate(src); got.Kind != KindInt {
+			t.Errorf("Evaluate(%q).Kind = %v, want %v", src, got.Kind, KindInt)
+		}
+	}
+	if got := Evaluate("random(-5, -5)"); got != IntOf(-5) {
+		t.Errorf("Evaluate(%q) = %+v, want %+v", "random(-5, -5)", got, IntOf(-5))
+	}
+}
+
+func TestEvaluateRepeatBeyondTheStringLimit(t *testing.T) {
+	check(t, `"a" * 100000000000`, None())
+	if got := Evaluate(`"ab" * 32769`); got.Kind != KindNone {
+		t.Errorf("Evaluate(%q).Kind = %v, want %v", `"ab" * 32769`, got.Kind, KindNone)
+	}
+	if got := Evaluate(`"ab" * 32768`); len(got.Str) != 65536 {
+		t.Errorf("len(Evaluate(%q).Str) = %d, want %d", `"ab" * 32768`, len(got.Str), 65536)
+	}
+	check(t, `"" * 100000000000`, StrOf(""))
+}
+
+func TestEvaluateConcatBeyondTheStringLimit(t *testing.T) {
+	if got := Evaluate(`"a" * 40000 + "a" * 40000`); got.Kind != KindNone {
+		t.Errorf("Evaluate(%q).Kind = %v, want %v", `"a" * 40000 + "a" * 40000`, got.Kind, KindNone)
+	}
+}
+
+func TestEvaluateSourceBeyondTheLimit(t *testing.T) {
+	long := "1" + strings.Repeat(" + 1", 4096)
+	check(t, long, None())
+	short := "1" + strings.Repeat(" + 1", 1024)
+	check(t, short, IntOf(1025))
 }

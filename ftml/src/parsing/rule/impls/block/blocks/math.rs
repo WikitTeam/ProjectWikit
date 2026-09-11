@@ -51,6 +51,7 @@ fn parse_equation_reference<'r, 't>(
     assert!(!flag_star, "Equation reference doesn't allow star flag");
     assert!(!flag_score, "Equation reference doesn't allow score flag");
     assert_block_name(&BLOCK_EQUATION_REFERENCE, name);
+    parser.check_page_syntax()?;
 
     let label = parser.get_head_value(
         &BLOCK_EQUATION_REFERENCE,
@@ -75,6 +76,7 @@ fn parse_fn<'r, 't>(
     assert!(!flag_star, "User doesn't allow star flag");
     assert!(!flag_score, "User doesn't allow score flag");
     assert_block_name(&BLOCK_MATH, name);
+    parser.check_page_syntax()?;
 
     let block_name = name;
 

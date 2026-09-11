@@ -4,6 +4,7 @@ package cgo
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"testing"
 
@@ -281,4 +282,90 @@ func TestRenderHTMLMath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRenderHTMLScriptVariables(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{"declare and read", "[[declare n 3]]\nn is {@n}", "<p>n is 3</p>"},
+		{"set changes the value", "[[declare n 3]]\n[[set n 4]]\nn is {@n}", "<p>n is 4</p>"},
+		{"scope adds no element", "[[scope]]\n[[declare inner hi]]\nInner {@inner}\n[[/scope]]\nOuter {@inner}", "<p>Inner hi</p><p>Outer </p>"},
+		{"value over the limit is refused", "[[declare n " + strings.Repeat("a", 1025) + "]]\nn is {@n}", "n is </p>"},
+	}
+
+	r := New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.RenderHTML(context.Background(), tt.source, info(), newHost(), renderer.ModeArticle)
+			if err != nil {
+				t.Fatalf("RenderHTML(%s) err = %v, want nil", tt.name, err)
+			}
+			if !strings.Contains(got.Body, tt.want) {
+				t.Errorf("RenderHTML(%s) = %q, want substring %q", tt.name, got.Body, tt.want)
+			}
+		})
+	}
+}
+
+func TestRenderHTMLExprReadsScriptVariables(t *testing.T) {
+	host := newHost()
+	if _, err := New().RenderHTML(context.Background(), "[[declare n 3]]\n[[#expr {@n} * 2]]", info(), host, renderer.ModeArticle); err != nil {
+		t.Fatalf("RenderHTML() err = %v, want nil", err)
+	}
+	if !slices.Contains(host.calls, "evaluate_expression:3 * 2") {
+		t.Errorf("RenderHTML() calls = %q, want %q among them", host.calls, "evaluate_expression:3 * 2")
+	}
+}
+
+func TestRenderHTMLDoublingVariableStopsGrowing(t *testing.T) {
+	source := "[[declare s abcdefgh]]\n" + strings.Repeat("[[set s {@s}{@s}]]\n", 60) + strings.Repeat("{@s}", 2000)
+	got, err := New().RenderHTML(context.Background(), source, info(), newHost(), renderer.ModeArticle)
+	if err != nil {
+		t.Fatalf("RenderHTML() err = %v, want nil", err)
+	}
+	if len(got.Body) > 2<<20 {
+		t.Errorf("len(RenderHTML().Body) = %d, want at most %d", len(got.Body), 2<<20)
+	}
+}
+
+func TestRenderHTMLMessageLeavesPageSyntaxAsText(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{"math block", "[[math]]\nE = mc^2\n[[/math]]", "[[math]]"},
+		{"inline math", "a [[$ x^2 $]] b", "[[$ x^2 $]]"},
+		{"equation reference", "see [[eref a]]", "[[eref a]]"},
+		{"declare", "[[declare n 3]]", "[[declare n 3]]"},
+		{"variable", "value {@n}", "{@n}"},
+		{"expr", "[[#expr 1 + 1]]", "[[#expr 1 + 1]]"},
+		{"ifexpr", "[[#ifexpr 1 | yes | no]]", "[[#ifexpr 1 | yes | no]]"},
+	}
+
+	r := New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			host := newHost()
+			got, err := r.RenderHTML(context.Background(), tt.source, info(), host, renderer.ModeMessage)
+			if err != nil {
+				t.Fatalf("RenderHTML(%s) err = %v, want nil", tt.name, err)
+			}
+			if !strings.Contains(got.Body, escapeHTML(tt.want)) {
+				t.Errorf("RenderHTML(%s, message) = %q, want substring %q", tt.name, got.Body, escapeHTML(tt.want))
+			}
+			for _, call := range host.calls {
+				if strings.HasPrefix(call, "evaluate_expression:") {
+					t.Errorf("RenderHTML(%s, message) calls %q, want no expression evaluated", tt.name, call)
+				}
+			}
+		})
+	}
+}
+
+func escapeHTML(s string) string {
+	return strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;").Replace(s)
 }
