@@ -85,6 +85,22 @@ func OtherConnections(ctx context.Context, conn *pgx.Conn) (int, error) {
 	return n, nil
 }
 
+var qDatabaseExists = register("DatabaseExists", `SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = $1)`)
+
+func EnsureDatabase(ctx context.Context, conn *pgx.Conn, name string) error {
+	var found bool
+	if err := conn.QueryRow(ctx, qDatabaseExists, name).Scan(&found); err != nil {
+		return fmt.Errorf("look for database %q: %w", name, err)
+	}
+	if found {
+		return nil
+	}
+	if _, err := conn.Exec(ctx, `CREATE DATABASE `+QuoteName(name)+` ENCODING 'UTF8' TEMPLATE template0`); err != nil {
+		return fmt.Errorf("create database %q: %w", name, err)
+	}
+	return nil
+}
+
 func NonEmptyTables(ctx context.Context, conn *pgx.Conn, tables []string) ([]string, error) {
 	var out []string
 	for _, name := range tables {
