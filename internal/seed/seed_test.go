@@ -39,7 +39,7 @@ func (f *fakeStore) CreateArticleVersion(_ context.Context, w db.VersionWrite) (
 
 func TestNamesTurnDirectoriesIntoCategories(t *testing.T) {
 	got := Names()
-	for _, want := range []string{"main", "nav:top", "nav:side", "forum:start", "wiki-syntax-guide"} {
+	for _, want := range []string{"main", "nav:top", "nav:side", "forum:start", "search:site"} {
 		if !slices.Contains(got, want) {
 			t.Errorf("Names() = %v, want it to contain %q", got, want)
 		}
@@ -83,10 +83,9 @@ func TestRunSkipsPagesThatAreAlreadyThere(t *testing.T) {
 
 func TestSplitPutsUncategorisedPagesInTheDefaultCategory(t *testing.T) {
 	cases := map[string][2]string{
-		"main":              {"_default", "main"},
-		"wiki-syntax-guide": {"_default", "wiki-syntax-guide"},
-		"nav:top":           {"nav", "top"},
-		"forum:new-thread":  {"forum", "new-thread"},
+		"main":             {"_default", "main"},
+		"nav:top":          {"nav", "top"},
+		"forum:new-thread": {"forum", "new-thread"},
 	}
 	for full, want := range cases {
 		category, name := split(full)
