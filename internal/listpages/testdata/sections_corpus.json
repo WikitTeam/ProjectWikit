@@ -44,6 +44,14 @@
     "content": "[[body]]\n[[/body]]"
   },
   {
+    "name": "blank-line-after-open",
+    "content": "[[head]]\n\n||~ Title||\n[[/head]]\n[[body]]\n\n||%%title%%||\n\n[[/body]]"
+  },
+  {
+    "name": "table-rows",
+    "content": "[[head]]\n||~ Title||\n[[/head]]\n[[body]]\n||%%title%%||\n[[/body]]\n[[foot]]\n||~ End||\n[[/foot]]"
+  },
+  {
     "name": "body-before-head",
     "content": "[[body]]\nrow\n[[/body]]\n[[head]]\ntop\n[[/head]]"
   }

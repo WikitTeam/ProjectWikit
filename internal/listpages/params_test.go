@@ -272,6 +272,27 @@ func TestParseTagsDoubleEqualsTakesTheOwnTags(t *testing.T) {
 	if len(q.Filter.ExactTags) != 2 {
 		t.Errorf("ExactTags = %v, want two entries", q.Filter.ExactTags)
 	}
+	if len(q.Filter.RequiredTags) != 0 {
+		t.Errorf("RequiredTags = %v, want []", q.Filter.RequiredTags)
+	}
+}
+
+func TestParseRangeOthersLeavesOutTheOwnPage(t *testing.T) {
+	a := article173()
+	q := parse(t, newFakeSource(), a, nil, map[string]string{"range": "others"})
+	if q.Filter.NotID == nil || *q.Filter.NotID != a.ID {
+		t.Errorf("Parse(range=others).NotID = %v, want %d", q.Filter.NotID, a.ID)
+	}
+	if q.HasOnly {
+		t.Error("Parse(range=others).HasOnly = true, want false")
+	}
+}
+
+func TestParseRangeOthersWithoutAnArticle(t *testing.T) {
+	q := parse(t, newFakeSource(), nil, nil, map[string]string{"range": "others", "category": "*"})
+	if q.Filter.NotID != nil {
+		t.Errorf("Parse(range=others, nil article).NotID = %d, want nil", *q.Filter.NotID)
+	}
 }
 
 func TestParseTagsWithoutACategoryMatchesEveryCategory(t *testing.T) {
@@ -383,17 +404,19 @@ func TestParseCreatedAtBounds(t *testing.T) {
 		op         string
 		start, end string
 	}{
-		{"2021", db.TimeRange, "2021-01-01T00:00:00Z", "2021-12-31T00:00:00Z"},
-		{"2021-02", db.TimeRange, "2021-02-01T00:00:00Z", "2021-02-28T00:00:00Z"},
-		{"2020-02", db.TimeRange, "2020-02-01T00:00:00Z", "2020-02-29T00:00:00Z"},
-		{"2021-02-09", db.TimeRange, "2021-02-09T00:00:00Z", "2021-02-09T00:00:00Z"},
-		{"2021-13-99", db.TimeRange, "2021-12-31T00:00:00Z", "2021-12-31T00:00:00Z"},
-		{"2021-00-00", db.TimeRange, "2021-01-01T00:00:00Z", "2021-01-01T00:00:00Z"},
-		{">2021", db.TimeGT, "2021-01-01T00:00:00Z", "2021-12-31T00:00:00Z"},
-		{">=2021", db.TimeGTE, "2021-01-01T00:00:00Z", "2021-12-31T00:00:00Z"},
-		{"<2021", db.TimeLT, "2021-01-01T00:00:00Z", "2021-12-31T00:00:00Z"},
-		{"<=2021", db.TimeLTE, "2021-01-01T00:00:00Z", "2021-12-31T00:00:00Z"},
-		{"<>2021", db.TimeExcludeRange, "2021-01-01T00:00:00Z", "2021-12-31T00:00:00Z"},
+		{"2021", db.TimeRange, "2021-01-01T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"2021-02", db.TimeRange, "2021-02-01T00:00:00Z", "2021-03-01T00:00:00Z"},
+		{"2020-02", db.TimeRange, "2020-02-01T00:00:00Z", "2020-03-01T00:00:00Z"},
+		{"2021-02-09", db.TimeRange, "2021-02-09T00:00:00Z", "2021-02-10T00:00:00Z"},
+		{"2021-12", db.TimeRange, "2021-12-01T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"2021-12-31", db.TimeRange, "2021-12-31T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"2021-13-99", db.TimeRange, "2021-12-31T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"2021-00-00", db.TimeRange, "2021-01-01T00:00:00Z", "2021-01-02T00:00:00Z"},
+		{">2021", db.TimeGT, "2021-01-01T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{">=2021", db.TimeGTE, "2021-01-01T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"<2021", db.TimeLT, "2021-01-01T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"<=2021", db.TimeLTE, "2021-01-01T00:00:00Z", "2022-01-01T00:00:00Z"},
+		{"<>2021", db.TimeExcludeRange, "2021-01-01T00:00:00Z", "2022-01-01T00:00:00Z"},
 	}
 	for _, c := range cases {
 		q := parse(t, newFakeSource(), article173(), nil, map[string]string{"created_at": c.in})
@@ -423,8 +446,8 @@ func TestParseCreatedAtEqualsIsTheOwnDay(t *testing.T) {
 	if start := got.Start.Format(time.RFC3339); start != "2021-06-05T00:00:00Z" {
 		t.Errorf("Start = %q, want %q", start, "2021-06-05T00:00:00Z")
 	}
-	if end := got.End.Format(time.RFC3339); end != "2021-06-05T23:59:59Z" {
-		t.Errorf("End = %q, want %q", end, "2021-06-05T23:59:59Z")
+	if end := got.End.Format(time.RFC3339); end != "2021-06-06T00:00:00Z" {
+		t.Errorf("End = %q, want %q", end, "2021-06-06T00:00:00Z")
 	}
 }
 
@@ -490,8 +513,8 @@ func TestParseUpdatedAtBounds(t *testing.T) {
 	if got.Op != db.TimeGTE {
 		t.Errorf("Op = %q, want %q", got.Op, db.TimeGTE)
 	}
-	if end := got.End.Format(time.RFC3339); end != "2021-02-28T00:00:00Z" {
-		t.Errorf("End = %q, want %q", end, "2021-02-28T00:00:00Z")
+	if start := got.Start.Format(time.RFC3339); start != "2021-02-01T00:00:00Z" {
+		t.Errorf("Start = %q, want %q", start, "2021-02-01T00:00:00Z")
 	}
 }
 
@@ -513,8 +536,8 @@ func TestParseUpdatedAtEqualsIsTheOwnDay(t *testing.T) {
 	if start := got.Start.Format(time.RFC3339); start != "2022-03-09T00:00:00Z" {
 		t.Errorf("Start = %q, want %q", start, "2022-03-09T00:00:00Z")
 	}
-	if end := got.End.Format(time.RFC3339); end != "2022-03-09T23:59:59Z" {
-		t.Errorf("End = %q, want %q", end, "2022-03-09T23:59:59Z")
+	if end := got.End.Format(time.RFC3339); end != "2022-03-10T00:00:00Z" {
+		t.Errorf("End = %q, want %q", end, "2022-03-10T00:00:00Z")
 	}
 }
 

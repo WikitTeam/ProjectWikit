@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// Range and ExcludeRange read both ends, the rest read only the end the
-// operator names.
+// End is the first moment after the period. Range and ExcludeRange read both
+// ends, the rest read only the end the operator names.
 type TimeFilter struct {
 	Op    string
 	Start time.Time
@@ -76,6 +76,8 @@ type ListFilter struct {
 	PresentTags  []int64
 	AbsentTags   []int64
 	ExactTags    []int64
+
+	NotID *int64
 
 	Categories    []string
 	NotCategories []string
@@ -192,6 +194,9 @@ func (f ListFilter) build(b *listBuilder) string {
 		b.where = append(b.where, "NOT EXISTS (SELECT 1 FROM web_article_tags t WHERE t.article_id = a.id)")
 	}
 	f.buildTags(b)
+	if f.NotID != nil {
+		b.where = append(b.where, "a.id <> "+b.arg(*f.NotID))
+	}
 	if len(f.Categories) > 0 {
 		b.where = append(b.where, "a.category = ANY("+b.arg(f.Categories)+")")
 	}
@@ -248,6 +253,10 @@ func (f ListFilter) buildTags(b *listBuilder) {
 			" WHERE t.article_id = a.id AND t.tag_id = ANY("+b.arg(ids)+")) = "+b.arg(len(ids)))
 	}
 	hasAll(f.ExactTags)
+	if len(f.ExactTags) > 0 {
+		b.where = append(b.where, "NOT EXISTS (SELECT 1 FROM web_article_tags t"+
+			" WHERE t.article_id = a.id AND NOT (t.tag_id = ANY("+b.arg(f.ExactTags)+")))")
+	}
 	hasAll(f.RequiredTags)
 	if len(f.PresentTags) > 0 {
 		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_article_tags t"+
@@ -265,17 +274,17 @@ func (f ListFilter) buildTime(b *listBuilder, column string, c *TimeFilter) {
 	}
 	switch c.Op {
 	case TimeRange:
-		b.where = append(b.where, column+" >= "+b.arg(c.Start)+" AND "+column+" <= "+b.arg(c.End))
+		b.where = append(b.where, column+" >= "+b.arg(c.Start)+" AND "+column+" < "+b.arg(c.End))
 	case TimeExcludeRange:
-		b.where = append(b.where, "("+column+" < "+b.arg(c.Start)+" OR "+column+" > "+b.arg(c.End)+")")
+		b.where = append(b.where, "("+column+" < "+b.arg(c.Start)+" OR "+column+" >= "+b.arg(c.End)+")")
 	case TimeLT:
 		b.where = append(b.where, column+" < "+b.arg(c.Start))
 	case TimeLTE:
-		b.where = append(b.where, column+" <= "+b.arg(c.Start))
+		b.where = append(b.where, column+" < "+b.arg(c.End))
 	case TimeGT:
-		b.where = append(b.where, column+" > "+b.arg(c.End))
-	case TimeGTE:
 		b.where = append(b.where, column+" >= "+b.arg(c.End))
+	case TimeGTE:
+		b.where = append(b.where, column+" >= "+b.arg(c.Start))
 	}
 }
 
@@ -318,6 +327,8 @@ func (f ListFilter) orderBy() (expr, extra string) {
 		direction = " DESC"
 	}
 	switch f.Sort.Column {
+	case SortCreatedAt:
+		return "a.created_at" + direction, ""
 	case SortCreatedBy:
 		return "author_name" + direction, ", au.username AS author_name"
 	case SortName:
@@ -343,8 +354,8 @@ func (f ListFilter) orderBy() (expr, extra string) {
 	case SortComments:
 		return "comments" + direction, ", " + commentsExpr + " AS comments"
 	}
-	// A column nobody recognises falls back to the newest first, direction and
-	// all, so asking for one is not the same as asking for created_at.
+	// A column nobody recognises lists the newest first whatever direction was
+	// asked for.
 	return "a.created_at DESC", ""
 }
 

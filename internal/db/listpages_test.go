@@ -23,6 +23,7 @@ func listFilterVariants() map[string]ListFilter {
 		"name-prefix":    {NamePrefix: "scp-", HasNamePrefix: true},
 		"no-tags":        {NoTags: true},
 		"exact-tags":     {ExactTags: int64s(1, 2)},
+		"not-id":         {NotID: &parent},
 		"required-tags":  {RequiredTags: int64s(1, 2)},
 		"present-tags":   {PresentTags: int64s(3)},
 		"absent-tags":    {AbsentTags: int64s(4)},

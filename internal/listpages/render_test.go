@@ -89,6 +89,8 @@ func sectionCases() []sectionCase {
 		{"multiline-body", "[[body]]\none\ntwo\nthree\n[[/body]]"},
 		{"leading-text", "junk\n[[body]]\nrow\n[[/body]]"},
 		{"empty-body", "[[body]]\n[[/body]]"},
+		{"blank-line-after-open", "[[head]]\n\n||~ Title||\n[[/head]]\n[[body]]\n\n||%%title%%||\n\n[[/body]]"},
+		{"table-rows", "[[head]]\n||~ Title||\n[[/head]]\n[[body]]\n||%%title%%||\n[[/body]]\n[[foot]]\n||~ End||\n[[/foot]]"},
 		{"body-before-head", "[[body]]\nrow\n[[/body]]\n[[head]]\ntop\n[[/head]]"},
 	}
 }

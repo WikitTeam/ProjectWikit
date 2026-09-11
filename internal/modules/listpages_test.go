@@ -280,7 +280,7 @@ func TestListPagesBodySectionsOverrideTheParameters(t *testing.T) {
 	env, seen := listEnv(t, data, ctx)
 
 	params := map[string]string{"wrapper": "no", "prependline": "ignored"}
-	body := "[[head]]\nXtop\n[[/head]]\n[[body]]\nX%%name%%\n[[/body]]"
+	body := "[[head]]\ntop\n[[/head]]\n[[body]]\n%%name%%\n[[/body]]"
 	if _, err := module.Render(env, "listpages", params, body); err != nil {
 		t.Fatalf("Render(listpages) err = %v, want nil", err)
 	}

@@ -84,6 +84,7 @@ func Parse(src Source, article *db.Article, viewer *db.User, zone *time.Location
 	if p.parseSinglePage() {
 		return p.out, p.err
 	}
+	p.parseRange()
 	p.parseType()
 	p.parseName()
 	p.parseTags()
@@ -129,6 +130,12 @@ func (p *parser) parseSinglePage() bool {
 		return true
 	}
 	return false
+}
+
+func (p *parser) parseRange() {
+	if p.get("range") == "others" && p.article != nil {
+		p.out.Filter.NotID = &p.article.ID
+	}
 }
 
 func (p *parser) parseType() {
@@ -185,9 +192,12 @@ func (p *parser) parseTags() {
 			p.fail(err)
 			return
 		}
-		if raw == "=" {
+		switch {
+		case raw == "=":
 			p.out.Filter.RequiredTags = ids
-		} else {
+		case len(ids) == 0:
+			p.out.Filter.NoTags = true
+		default:
 			p.out.Filter.ExactTags = ids
 		}
 		return
@@ -397,19 +407,18 @@ func (p *parser) parseTime(key string, of func(*db.Article) time.Time, set func(
 			return
 		}
 		y, m, d := of(p.article).In(p.zone).Date()
-		dayStart := time.Date(y, m, d, 0, 0, 0, 0, p.zone)
-		dayEnd := time.Date(y, m, d, 23, 59, 59, 0, p.zone)
-		set(&db.TimeFilter{Op: db.TimeRange, Start: dayStart, End: dayEnd})
+		set(&db.TimeFilter{Op: db.TimeRange,
+			Start: time.Date(y, m, d, 0, 0, 0, 0, p.zone), End: time.Date(y, m, d+1, 0, 0, 0, 0, p.zone)})
 		return
 	}
 
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
-	first, last, ok := parseDateBounds(strings.TrimSpace(rest), p.zone)
+	start, end, ok := parseDateBounds(strings.TrimSpace(rest), p.zone)
 	if !ok {
 		p.invalid()
 		return
 	}
-	set(&db.TimeFilter{Op: timeOp(op), Start: first, End: last})
+	set(&db.TimeFilter{Op: timeOp(op), Start: start, End: end})
 }
 
 func timeOp(op string) string {
@@ -428,37 +437,40 @@ func timeOp(op string) string {
 	return db.TimeRange
 }
 
-// Month and day are clamped rather than rejected, so 2020-13-99 is the last
-// day of 2020-12.
-func parseDateBounds(text string, zone *time.Location) (first, last time.Time, ok bool) {
+// The end is the first moment after the period rather than its last day, so a
+// day covers all of its hours. Month and day are clamped rather than rejected,
+// so 2020-13-99 is the last day of 2020-12.
+func parseDateBounds(text string, zone *time.Location) (start, end time.Time, ok bool) {
 	parts := strings.Split(text, "-")
 	year, err := wikinum.Int(parts[0])
 	if err != nil || year < 1 || year > 9999 {
 		return time.Time{}, time.Time{}, false
 	}
-	month, day := 1, 1
-	lastMonth, lastDay := 12, 31
+	start = time.Date(year, 1, 1, 0, 0, 0, 0, zone)
+	end = time.Date(year+1, 1, 1, 0, 0, 0, 0, zone)
+	if len(parts) < 2 {
+		return start, end, true
+	}
 
-	if len(parts) >= 2 {
-		m, err := wikinum.Int(parts[1])
-		if err != nil {
-			return time.Time{}, time.Time{}, false
-		}
-		month = clamp(m, 1, 12)
-		lastMonth = month
-		lastDay = daysIn(year, month)
+	m, err := wikinum.Int(parts[1])
+	if err != nil {
+		return time.Time{}, time.Time{}, false
 	}
-	if len(parts) >= 3 {
-		d, err := wikinum.Int(parts[2])
-		if err != nil {
-			return time.Time{}, time.Time{}, false
-		}
-		day = clamp(d, 1, daysIn(year, month))
-		lastDay = day
+	month := time.Month(clamp(m, 1, 12))
+	start = time.Date(year, month, 1, 0, 0, 0, 0, zone)
+	end = time.Date(year, month+1, 1, 0, 0, 0, 0, zone)
+	if len(parts) < 3 {
+		return start, end, true
 	}
-	first = time.Date(year, time.Month(month), day, 0, 0, 0, 0, zone)
-	last = time.Date(year, time.Month(lastMonth), lastDay, 0, 0, 0, 0, zone)
-	return first, last, true
+
+	d, err := wikinum.Int(parts[2])
+	if err != nil {
+		return time.Time{}, time.Time{}, false
+	}
+	day := clamp(d, 1, daysIn(year, int(month)))
+	start = time.Date(year, month, day, 0, 0, 0, 0, zone)
+	end = time.Date(year, month, day+1, 0, 0, 0, 0, zone)
+	return start, end, true
 }
 
 func daysIn(year, month int) int {

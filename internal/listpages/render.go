@@ -16,12 +16,9 @@ type Sections struct {
 	Foot string
 }
 
-// The two characters this eats around each part are not a mistake to fix. They
-// are what the running site's output already has, so removing them would move
-// every listing by two characters.
-var sectionPattern = regexp.MustCompile(`(?is)\A(?:.*\s*(\[\[head]]\n?.(?P<head>.*?).\[\[/head]])|)` +
-	`(?:.*\s*(\[\[body]]\n?.(?P<body>.*?).\[\[/body]])|)` +
-	`(?:.*\s*(\[\[foot]]\n?.(?P<foot>.*?).\[\[/foot]])|)`)
+var sectionPattern = regexp.MustCompile(`(?is)\A(?:.*\s*(\[\[head]]\n*(?P<head>.*?)\n*\[\[/head]])|)` +
+	`(?:.*\s*(\[\[body]]\n*(?P<body>.*?)\n*\[\[/body]])|)` +
+	`(?:.*\s*(\[\[foot]]\n*(?P<foot>.*?)\n*\[\[/foot]])|)`)
 
 func Split(content string) Sections {
 	match := sectionPattern.FindStringSubmatch(content)
