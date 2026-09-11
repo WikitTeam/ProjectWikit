@@ -566,6 +566,20 @@ func createSite(args []string) error {
 		return err
 	}
 	defer release()
+	if _, err := backup.CheckServer(ctx, dsn); err != nil {
+		return err
+	}
+	// A database nothing has started on yet has no tables to put the site in.
+	result, err := migrate.Run(ctx, dsn)
+	if err != nil {
+		return err
+	}
+	if result.Adopted {
+		fmt.Printf("adopted %s\n", migrate.BaselineName)
+	}
+	for _, name := range result.Applied {
+		fmt.Printf("applied %s\n", name)
+	}
 	conn, err := db.Open(ctx, dsn)
 	if err != nil {
 		return err
