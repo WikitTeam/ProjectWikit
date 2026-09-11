@@ -49,6 +49,7 @@ interface Props {
   favourites?: number
   isFavourited?: boolean
   preferences?: { [key: string]: any }
+  pageInfo?: string
 }
 
 type SubViewType =
@@ -114,6 +115,7 @@ const PageOptions: React.FC<Props> = ({
   canWatch,
   isWatching,
   preferences,
+  pageInfo,
 }: Props) => {
   const [subView, setSubView] = useState<SubViewType>(null)
   const [extOptions, setExtOptions] = useState(false)
@@ -376,12 +378,16 @@ const PageOptions: React.FC<Props> = ({
     )
   }
 
+  // fix as wikidot
+  const info = pageInfo !== undefined ? <div id="page-info" dangerouslySetInnerHTML={{ __html: pageInfo }} /> : null
+
   if (!optionsEnabled) {
-    return null
+    return info
   }
 
   return (
     <>
+      {info}
       {canWatch && (
         <div className="page-watch-options">
           {pageId === 'forum:thread' && (

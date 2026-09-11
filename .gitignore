@@ -13,3 +13,5 @@ files/*
 /secrets
 postgresql
 /internal/pgbundle/archive
+/pwikit.toml
+/logs

@@ -117,10 +117,7 @@
                                 </span>
                             </div>
                             <div id="page-info-break"></div>
-                            {{if not .UpdatedAt.IsZero}}
-                                <div id="page-info">{{.PageInfo}}</div>
-                            {{end}}
-                            <div id="page-options-container" data-config="{{esc .OptionsConfig}}"></div>
+                            <div id="page-options-container" data-config="{{esc .OptionsConfig}}">{{if not .UpdatedAt.IsZero}}<div id="page-info">{{.PageInfo}}</div>{{end}}</div>
                             <div id="action-area"></div>
                         </div>
                     </div>

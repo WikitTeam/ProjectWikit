@@ -48,7 +48,9 @@ window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#create-new-page').forEach((node: HTMLElement) => renderTo(node, <Page404 {...JSON.parse(node.dataset.config!)} />))
   document
     .querySelectorAll('#page-options-container')
-    .forEach((node: HTMLElement) => renderTo(node, <PageOptions {...JSON.parse(node.dataset.config!)} />))
+    .forEach((node: HTMLElement) =>
+      renderTo(node, <PageOptions {...JSON.parse(node.dataset.config!)} pageInfo={node.querySelector('#page-info')?.innerHTML} />),
+    )
   document.querySelectorAll('#login-status').forEach((node: HTMLElement) => renderTo(node, <PageLoginStatus {...JSON.parse(node.dataset.config!)} />))
   document
     .querySelectorAll('.w-forum-new-thread')
