@@ -32,7 +32,7 @@ func backupCommand(args []string) error {
 
 Options:
   -output          where create writes; defaults to a timestamped name in backups/
-  -no-files        leave the uploaded files out of the backup
+  -no-files        leave the uploaded files out of a backup, or alone on restore
   -site            back up one site on its own instead of the whole instance
   -keep-passwords  carry the sign-in passwords into a single site backup
   -dir             directory list reads; defaults to backups/
@@ -44,7 +44,7 @@ Options:
 
 	fs := flag.NewFlagSet("backup "+sub, flag.ContinueOnError)
 	output := fs.String("output", "", "where create writes the backup")
-	noFiles := fs.Bool("no-files", false, "leave the uploaded files out of the backup")
+	noFiles := fs.Bool("no-files", false, "leave the uploaded files out of a backup, or alone on restore")
 	site := fs.String("site", "", "back up one site on its own instead of the whole instance")
 	keepPasswords := fs.Bool("keep-passwords", false, "carry the sign-in passwords into a single site backup")
 	dir := fs.String("dir", "", "directory list reads")
@@ -93,7 +93,7 @@ Options:
 	if len(loose) != 1 {
 		return errors.New("restore needs one backup file")
 	}
-	return restoreBackup(loose[0], dsn, p.Files(), p.Backups(), *force, *noSafety)
+	return restoreBackup(loose[0], dsn, files, p.Backups(), *force, *noSafety)
 }
 
 // A file name reads naturally before the flags, and the flag package stops at
@@ -160,7 +160,14 @@ func printReport(name string, report backup.Report) {
 }
 
 func restoreBackup(name, dsn, files, backups string, force, noSafety bool) error {
-	if !noSafety {
+	holdsData, err := backup.Ready(context.Background(), dsn, force)
+	if err != nil {
+		return err
+	}
+	if !holdsData && !noSafety {
+		fmt.Println("the database holds no data yet, so there is nothing to back up first")
+	}
+	if holdsData && !noSafety {
 		safety := filepath.Join(backups, "before-restore-"+backup.DefaultName(time.Now(), ""))
 		fmt.Println("backing up the current state first")
 		result, err := backup.Create(context.Background(), backup.CreateOptions{

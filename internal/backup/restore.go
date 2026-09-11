@@ -36,6 +36,26 @@ type RestoreResult struct {
 
 var ErrNotEmpty = errors.New("the database already holds data")
 
+// The migrations fill these before anyone uses the database, so rows in them
+// alone leave nothing to replace or keep.
+var seeded = map[string]bool{
+	"auth_permission":      true,
+	"django_content_type":  true,
+	"web_role":             true,
+	"web_role_permissions": true,
+	"web_rolecategory":     true,
+	"web_theme":            true,
+}
+
+func Ready(ctx context.Context, dsn string, force bool) (holdsData bool, err error) {
+	conn, err := pgx.Connect(ctx, dsn)
+	if err != nil {
+		return false, fmt.Errorf("connect to restore: %w", err)
+	}
+	defer conn.Close(ctx)
+	return readyToRestore(ctx, conn, force)
+}
+
 func Restore(ctx context.Context, name string, opts RestoreOptions) (RestoreResult, error) {
 	var out RestoreResult
 
@@ -57,7 +77,7 @@ func Restore(ctx context.Context, name string, opts RestoreOptions) (RestoreResu
 	}
 	defer conn.Close(ctx)
 
-	if err := readyToRestore(ctx, conn, opts.Force); err != nil {
+	if _, err := readyToRestore(ctx, conn, opts.Force); err != nil {
 		return out, err
 	}
 
@@ -133,27 +153,33 @@ func named(m Manifest) map[string]bool {
 	return out
 }
 
-func readyToRestore(ctx context.Context, conn *pgx.Conn, force bool) error {
+func readyToRestore(ctx context.Context, conn *pgx.Conn, force bool) (bool, error) {
 	others, err := db.OtherConnections(ctx, conn)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if others > 0 {
-		return fmt.Errorf("%d other connections are using this database; stop pwikit before restoring", others)
+		return false, fmt.Errorf("%d other connections are using this database; stop pwikit before restoring", others)
 	}
 	tables, err := db.BackupTables(ctx, conn)
 	if err != nil {
-		return err
+		return false, err
 	}
-	full, err := db.NonEmptyTables(ctx, conn, tables)
+	var used []string
+	for _, name := range tables {
+		if !seeded[name] {
+			used = append(used, name)
+		}
+	}
+	full, err := db.NonEmptyTables(ctx, conn, used)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if len(full) > 0 && !force {
-		return fmt.Errorf("%w (%s and %d more tables); run again with -force to replace it",
+		return true, fmt.Errorf("%w (%s and %d more tables); run again with -force to replace it",
 			ErrNotEmpty, full[0], len(full)-1)
 	}
-	return nil
+	return len(full) > 0, nil
 }
 
 func loadTables(ctx context.Context, tx pgx.Tx, name string, m Manifest, out func(string)) (int64, error) {

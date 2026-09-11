@@ -807,3 +807,84 @@ func TestDescribeReadsBackAsAVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestReadyOnABlankDatabase(t *testing.T) {
+	target := scratch(t)
+	holdsData, err := Ready(context.Background(), target, false)
+	if err != nil {
+		t.Fatalf("Ready(blank) err = %v, want nil", err)
+	}
+	if holdsData {
+		t.Error("Ready(blank) holdsData = true, want false")
+	}
+}
+
+func TestReadyOnADatabaseOnlyMigrated(t *testing.T) {
+	target := scratch(t)
+	ctx := context.Background()
+	if _, err := migrate.Run(ctx, target); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	holdsData, err := Ready(ctx, target, false)
+	if err != nil {
+		t.Fatalf("Ready(migrated) err = %v, want nil", err)
+	}
+	if holdsData {
+		t.Error("Ready(migrated) holdsData = true, want false")
+	}
+}
+
+func TestSeededNamesEveryTableTheMigrationsFill(t *testing.T) {
+	target := scratch(t)
+	ctx := context.Background()
+	if _, err := migrate.Run(ctx, target); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	conn := connect(t, target)
+	tables, err := db.BackupTables(ctx, conn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	full, err := db.NonEmptyTables(ctx, conn, tables)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range full {
+		if !seeded[name] {
+			t.Errorf("seeded[%q] = false, want true", name)
+		}
+	}
+}
+
+func TestReadyOnADatabaseThatHoldsData(t *testing.T) {
+	target, _ := filled(t)
+	holdsData, err := Ready(context.Background(), target, true)
+	if err != nil {
+		t.Fatalf("Ready(full, force) err = %v, want nil", err)
+	}
+	if !holdsData {
+		t.Error("Ready(full, force) holdsData = false, want true")
+	}
+}
+
+func TestRestoreIntoAMigratedDatabaseWithoutForce(t *testing.T) {
+	source, files := filled(t)
+	name, _ := create(t, source, files)
+
+	target := scratch(t)
+	ctx := context.Background()
+	if _, err := migrate.Run(ctx, target); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	if _, err := Restore(ctx, name, RestoreOptions{DSN: target}); err != nil {
+		t.Fatalf("Restore(into a migrated database) err = %v, want nil", err)
+	}
+	conn := connect(t, target)
+	var slug string
+	if err := conn.QueryRow(ctx, `SELECT slug FROM web_site`).Scan(&slug); err != nil {
+		t.Fatalf("read the restored site err = %v, want nil", err)
+	}
+	if slug != "probe" {
+		t.Errorf("restored site slug = %q, want %q", slug, "probe")
+	}
+}
