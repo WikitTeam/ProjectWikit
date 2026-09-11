@@ -39,6 +39,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
 	"github.com/WikitTeam/ProjectWikit/internal/webapi"
+	staticfiles "github.com/WikitTeam/ProjectWikit/static"
 )
 
 const (
@@ -220,6 +221,9 @@ func serve(ctx context.Context, args []string) (err error) {
 	if err != nil {
 		return err
 	}
+	if assets == nil {
+		log.Warn("this build carries no page assets and -static-dir is not set, so pages are served without styles and scripts")
+	}
 
 	// Asked before anything writes, so a server too old to hold the schema says
 	// so instead of failing somewhere in the middle of a migration.
@@ -370,7 +374,7 @@ func serve(ctx context.Context, args []string) (err error) {
 	}
 
 	log.Info("pwikit serve", "listen", *o.listen, "root", p.Root(),
-		"root_source", string(p.Source()), "static_dir", *o.staticDir)
+		"root_source", string(p.Source()), "static_dir", *o.staticDir, "assets_embedded", staticfiles.Embedded)
 
 	var hosts entry.Hosts
 	if conn != nil {
@@ -423,6 +427,9 @@ func listenPort(addr string) string {
 
 func assetFS(dir string) (iofs.FS, error) {
 	if dir == "" {
+		if staticfiles.Embedded {
+			return staticfiles.Files, nil
+		}
 		return nil, nil
 	}
 	info, err := os.Stat(dir)
