@@ -475,8 +475,8 @@ func seedPages(args []string) error {
 	fs := flag.NewFlagSet("seed", flag.ContinueOnError)
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	slug := fs.String("site", "", "slug of the site to write into; needed once a database holds more than one")
-	archivePath := fs.String("archive", "", "wikitCLI backup to import instead of the starter pages")
-	from := fs.String("from", "", "slug of the site inside the archive; needed when it holds more than one")
+	archivePath := fs.String("archive", "", "directory of an unpacked wikitCLI backup to import instead of the starter pages")
+	from := fs.String("from", "", "slug of the site inside the backup; needed when it holds more than one")
 	forceTags := fs.Bool("force-tags", false, "create tags this site would otherwise refuse")
 	noVotes := fs.Bool("no-votes", false, "leave the ratings behind")
 	noFiles := fs.Bool("no-files", false, "leave the attachments behind")
@@ -716,21 +716,15 @@ func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, fro
 	if err != nil {
 		return err
 	}
-	defer found.Close()
 
-	slugs, err := found.Sites()
-	if err != nil {
-		return err
-	}
+	slugs := found.Sites()
 	switch {
-	case len(slugs) == 0:
-		return fmt.Errorf("no site in the archive at %q", path)
 	case from == "" && len(slugs) > 1:
-		return fmt.Errorf("the archive holds %d sites, name one with -from", len(slugs))
+		return fmt.Errorf("the backup holds %d sites, name one with -from", len(slugs))
 	case from == "":
 		from = slugs[0]
 	case !slices.Contains(slugs, from):
-		return fmt.Errorf("the archive has no site %q", from)
+		return fmt.Errorf("the backup has no site %q", from)
 	}
 
 	fmt.Printf("importing %s into %s\n", from, current.Slug)

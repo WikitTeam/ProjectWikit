@@ -2,11 +2,8 @@
 package archive
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,8 +21,11 @@ const (
 )
 
 type Archive struct {
-	roots     []string
-	extracted string
+	// sites maps each slug to the directory holding that site's meta, pages,
+	// files and forum.
+	sites map[string]string
+	// users are the _users directories that belong to no single site.
+	users []string
 }
 
 type SiteMeta struct {
@@ -115,101 +115,68 @@ type Page struct {
 	Files     []File     `json:"files"`
 }
 
-// Open reads a .tar.gz, or a directory holding unpacked sites, tarballs, or
-// both. A backup that arrives as several tarballs is read by putting them in one
-// directory. The archive owns the temporary directory it unpacks into, so
-// callers must Close it.
+// The path is either a site directory, recognised by the site meta inside it,
+// or a directory holding several of them.
 func Open(path string) (*Archive, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
-	a := &Archive{}
-	tarballs := []string{path}
-	if info.IsDir() {
-		a.roots = append(a.roots, path)
-		tarballs, err = tarballsIn(path)
-		if err != nil {
-			return nil, err
-		}
+	if !info.IsDir() {
+		return nil, fmt.Errorf("%q is a file, and pwikit reads the unpacked backup; unpack it and pass the directory", path)
 	}
-	if len(tarballs) == 0 {
-		return a, nil
-	}
-
-	dir, err := os.MkdirTemp("", "pwikit-archive-")
-	if err != nil {
-		return nil, err
-	}
-	for _, ball := range tarballs {
-		if err := untar(ball, dir); err != nil {
-			os.RemoveAll(dir)
-			return nil, err
-		}
-	}
-	a.roots = append(a.roots, dir)
-	a.extracted = dir
-	return a, nil
-}
-
-func tarballsIn(dir string) ([]string, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var out []string
-	for _, e := range entries {
-		name := strings.ToLower(e.Name())
-		if e.IsDir() || !(strings.HasSuffix(name, ".tar.gz") || strings.HasSuffix(name, ".tgz")) {
-			continue
-		}
-		out = append(out, filepath.Join(dir, e.Name()))
-	}
-	sort.Strings(out)
-	return out, nil
-}
-
-// find answers where a path lives, searching the roots in the order they were
-// added so an unpacked directory wins over a tarball of the same site.
-func (a *Archive) find(parts ...string) (string, bool) {
-	for _, root := range a.roots {
-		full := filepath.Join(append([]string{root}, parts...)...)
-		if _, err := os.Stat(full); err == nil {
-			return full, true
-		}
-	}
-	return "", false
-}
-
-func (a *Archive) Close() error {
-	if a.extracted == "" {
-		return nil
-	}
-	return os.RemoveAll(a.extracted)
-}
-
-// Sites lists the slugs the archive carries. A backup of one site holds one.
-func (a *Archive) Sites() ([]string, error) {
-	seen := map[string]bool{}
-	var out []string
-	for _, root := range a.roots {
-		entries, err := os.ReadDir(root)
+	a := &Archive{sites: map[string]string{}}
+	if isSite(path) {
+		a.sites[filepath.Base(path)] = path
+	} else {
+		entries, err := os.ReadDir(path)
 		if err != nil {
 			return nil, err
 		}
 		for _, e := range entries {
-			if !e.IsDir() || e.Name() == usersDir || seen[e.Name()] {
+			if !e.IsDir() || e.Name() == usersDir {
 				continue
 			}
-			if _, err := os.Stat(filepath.Join(root, e.Name(), metaDir, siteFile)); err != nil {
-				continue
+			if dir := filepath.Join(path, e.Name()); isSite(dir) {
+				a.sites[e.Name()] = dir
 			}
-			seen[e.Name()] = true
-			out = append(out, e.Name())
 		}
 	}
+	if len(a.sites) == 0 {
+		return nil, fmt.Errorf("no site under %q; a site directory holds %s, and the directory above several of them works too",
+			path, filepath.Join(metaDir, siteFile))
+	}
+	if _, err := os.Stat(filepath.Join(path, usersDir)); err == nil {
+		a.users = append(a.users, filepath.Join(path, usersDir))
+	}
+	return a, nil
+}
+
+func isSite(dir string) bool {
+	_, err := os.Stat(filepath.Join(dir, metaDir, siteFile))
+	return err == nil
+}
+
+func (a *Archive) find(slug string, parts ...string) (string, bool) {
+	base, ok := a.sites[slug]
+	if !ok {
+		return "", false
+	}
+	full := filepath.Join(append([]string{base}, parts...)...)
+	if _, err := os.Stat(full); err != nil {
+		return "", false
+	}
+	return full, true
+}
+
+// Sites lists the slugs the backup carries. A backup of one site holds one.
+func (a *Archive) Sites() []string {
+	out := make([]string, 0, len(a.sites))
+	for slug := range a.sites {
+		out = append(out, slug)
+	}
 	sort.Strings(out)
-	return out, nil
+	return out
 }
 
 func (a *Archive) Site(slug string) (SiteMeta, error) {
@@ -228,19 +195,12 @@ func (a *Archive) Site(slug string) (SiteMeta, error) {
 	return s, nil
 }
 
-// Users merges every _users directory the archive carries, the shared one and
+// Users merges every _users directory the backup carries, the shared one and
 // the one a site brought along. Where two disagree the newer fetch wins.
 func (a *Archive) Users() (map[int64]User, error) {
-	slugs, err := a.Sites()
-	if err != nil {
-		return nil, err
-	}
-	var dirs []string
-	for _, root := range a.roots {
-		dirs = append(dirs, filepath.Join(root, usersDir))
-		for _, slug := range slugs {
-			dirs = append(dirs, filepath.Join(root, slug, usersDir))
-		}
+	dirs := append([]string{}, a.users...)
+	for _, slug := range a.Sites() {
+		dirs = append(dirs, filepath.Join(a.sites[slug], usersDir))
 	}
 
 	out := map[int64]User{}
@@ -324,65 +284,4 @@ func (a *Archive) FilePath(slug, pageName string, fileID int64) string {
 
 func quotePage(name string) string {
 	return strings.ReplaceAll(name, ":", "%3A")
-}
-
-func untar(from, into string) error {
-	f, err := os.Open(from)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	gz, err := gzip.NewReader(f)
-	if err != nil {
-		return fmt.Errorf("read %q as gzip: %w", from, err)
-	}
-	defer gz.Close()
-
-	reader := tar.NewReader(gz)
-	for {
-		head, err := reader.Next()
-		if err == io.EOF {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		target, err := safeJoin(into, head.Name)
-		if err != nil {
-			return err
-		}
-		switch head.Typeflag {
-		case tar.TypeDir:
-			if err := os.MkdirAll(target, 0o755); err != nil {
-				return err
-			}
-		case tar.TypeReg:
-			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-				return err
-			}
-			out, err := os.Create(target)
-			if err != nil {
-				return err
-			}
-			if _, err := io.Copy(out, reader); err != nil {
-				out.Close()
-				return err
-			}
-			if err := out.Close(); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-// An entry naming its way out of the directory is refused rather than cleaned,
-// because a backup that carries one is not a backup this reader understands.
-func safeJoin(root, name string) (string, error) {
-	target := filepath.Join(root, filepath.FromSlash(name))
-	rel, err := filepath.Rel(root, target)
-	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", fmt.Errorf("archive entry %q leaves the directory", name)
-	}
-	return target, nil
 }
