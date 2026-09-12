@@ -106,6 +106,8 @@ func run(args []string) error {
 		return backupCommand(args[1:])
 	case "seed":
 		return seedPages(args[1:])
+	case "reindex":
+		return reindex(args[1:])
 	case "service":
 		return serviceCommand(args[1:])
 	case "help", "-h", "--help":
@@ -127,6 +129,7 @@ Commands:
   admin       create an administrator or give an account every right
   backup      write, check, list or put back a backup
   seed        write the pages a new site starts with
+  reindex     put every page of a site back into the search index
   service     start pwikit whenever the machine boots
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
