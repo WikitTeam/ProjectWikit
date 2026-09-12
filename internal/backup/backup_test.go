@@ -851,6 +851,13 @@ func readyWhenAlone(t *testing.T, dsn string) (bool, error) {
 	return holdsData, err
 }
 
+func waitAlone(t *testing.T, dsn string) {
+	t.Helper()
+	if _, err := readyWhenAlone(t, dsn); err != nil && strings.Contains(err.Error(), "other connections") {
+		t.Fatalf("waiting for the database to be free err = %v, want nil", err)
+	}
+}
+
 func TestSeededNamesEveryTableTheMigrationsFill(t *testing.T) {
 	target := scratch(t)
 	ctx := context.Background()
@@ -893,6 +900,7 @@ func TestRestoreIntoAMigratedDatabaseWithoutForce(t *testing.T) {
 	if _, err := migrate.Run(ctx, target); err != nil {
 		t.Fatalf("Run() err = %v, want nil", err)
 	}
+	waitAlone(t, target)
 	if _, err := Restore(ctx, name, RestoreOptions{DSN: target}); err != nil {
 		t.Fatalf("Restore(into a migrated database) err = %v, want nil", err)
 	}
