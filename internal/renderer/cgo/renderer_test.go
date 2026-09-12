@@ -369,3 +369,41 @@ func TestRenderHTMLMessageLeavesPageSyntaxAsText(t *testing.T) {
 func escapeHTML(s string) string {
 	return strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;").Replace(s)
 }
+
+func TestRenderHTMLRefusesDataURLsAsLinkTargets(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{"single bracket link", "[data:text/html,x label]", "[data:text/html,x label]"},
+		{"triple bracket link", "[[[data:text/html,x|label]]]", "[[[data:text/html,x|label]]]"},
+		{"iframe", "[[iframe data:text/html,x]]", "[[iframe data:text/html,x]]"},
+	}
+
+	r := New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.RenderHTML(context.Background(), tt.source, info(), newHost(), renderer.ModeArticle)
+			if err != nil {
+				t.Fatalf("RenderHTML(%s) err = %v, want nil", tt.name, err)
+			}
+			if strings.Contains(got.Body, "data:text/html") && !strings.Contains(got.Body, escapeHTML(tt.want)) {
+				t.Errorf("RenderHTML(%s) = %q, want it left as text", tt.name, got.Body)
+			}
+			if strings.Contains(got.Body, `href="data:`) || strings.Contains(got.Body, `src="data:text/html`) {
+				t.Errorf("RenderHTML(%s) = %q, want no data: target", tt.name, got.Body)
+			}
+		})
+	}
+}
+
+func TestRenderHTMLKeepsDataURLImages(t *testing.T) {
+	got, err := New().RenderHTML(context.Background(), "[[image data:image/png;base64,AAAA]]", info(), newHost(), renderer.ModeArticle)
+	if err != nil {
+		t.Fatalf("RenderHTML() err = %v, want nil", err)
+	}
+	if !strings.Contains(got.Body, `src="data:image/png;base64,AAAA"`) {
+		t.Errorf("RenderHTML([[image data:...]]) = %q, want the image kept", got.Body)
+	}
+}
