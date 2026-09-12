@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -825,13 +826,29 @@ func TestReadyOnADatabaseOnlyMigrated(t *testing.T) {
 	if _, err := migrate.Run(ctx, target); err != nil {
 		t.Fatalf("Run() err = %v, want nil", err)
 	}
-	holdsData, err := Ready(ctx, target, false)
+	holdsData, err := readyWhenAlone(t, target)
 	if err != nil {
 		t.Fatalf("Ready(migrated) err = %v, want nil", err)
 	}
 	if holdsData {
 		t.Error("Ready(migrated) holdsData = true, want false")
 	}
+}
+
+func readyWhenAlone(t *testing.T, dsn string) (bool, error) {
+	t.Helper()
+	var (
+		holdsData bool
+		err       error
+	)
+	for i := 0; i < 100; i++ {
+		holdsData, err = Ready(context.Background(), dsn, false)
+		if err == nil || !strings.Contains(err.Error(), "other connections") {
+			return holdsData, err
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return holdsData, err
 }
 
 func TestSeededNamesEveryTableTheMigrationsFill(t *testing.T) {
