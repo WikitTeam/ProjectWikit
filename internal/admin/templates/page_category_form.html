@@ -12,7 +12,7 @@
         <label class="control-label" for="id_rating_mode">{{t "admin.f-rating-mode"}}</label>
         <div class="controls">
           <select id="id_rating_mode" name="rating_mode" class="narrow-3">
-            {{range $.RatingModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.RatingMode}} selected{{end}}>{{enum "admin.rating-" .}}</option>{{end}}
+            {{range $.RatingModes}}<option value="{{esc .Value}}"{{if eq .Value $.Category.Settings.RatingMode}} selected{{end}}>{{esc .Label}}</option>{{end}}
           </select>
         </div>
       </div>
@@ -20,7 +20,7 @@
         <label class="control-label" for="id_can_user_create_tags">{{t "admin.f-user-tags"}}</label>
         <div class="controls">
           <select id="id_can_user_create_tags" name="can_user_create_tags" class="narrow-3">
-            {{range $.TagModes}}<option value="{{esc .}}"{{if eq . $.Category.Settings.CreateTags}} selected{{end}}>{{enum "admin.tagmode-" .}}</option>{{end}}
+            {{range $.TagModes}}<option value="{{esc .Value}}"{{if eq .Value $.Category.Settings.CreateTags}} selected{{end}}>{{esc .Label}}</option>{{end}}
           </select>
         </div>
       </div>

@@ -16,9 +16,12 @@ import (
 const siteSlug = "site"
 
 var (
-	ratingModes = []string{"default", "disabled", "updown", "stars"}
-	tagModes    = []string{"default", "disabled", "enabled"}
-	emailPolicy = []string{db.EmailOptional, db.EmailRequired, db.EmailAtSignup}
+	ratingModes = []string{"disabled", "updown", "stars"}
+	tagModes    = []string{"disabled", "enabled"}
+
+	categoryRatingModes = append([]string{followSite}, ratingModes...)
+	categoryTagModes    = append([]string{followSite}, tagModes...)
+	emailPolicy         = []string{db.EmailOptional, db.EmailRequired, db.EmailAtSignup}
 )
 
 func init() {

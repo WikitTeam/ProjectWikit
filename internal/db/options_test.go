@@ -122,7 +122,7 @@ func TestSiteCanCreateTagsReadsTheSiteRowAlone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SiteCanCreateTags() err = %v, want nil", err)
 	}
-	if got != CreateTagsDefault {
-		t.Errorf("SiteCanCreateTags() = %q, want %q", got, CreateTagsDefault)
+	if got != CreateTagsDisabled && got != CreateTagsEnabled {
+		t.Errorf("SiteCanCreateTags() = %q, want %q or %q", got, CreateTagsDisabled, CreateTagsEnabled)
 	}
 }

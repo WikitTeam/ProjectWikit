@@ -39,7 +39,13 @@ func (h *Handler) pageCategories(w http.ResponseWriter, r *http.Request, loc *i1
 
 func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest, problem string) error {
 	ctx := r.Context()
-	row := db.CategoryRow{IsIndexed: true, Settings: db.SiteSettings{RatingMode: "default", CreateTags: "default"}}
+	// The site's own values name what "follow the site" resolves to, so the
+	// choice can say it rather than leaving the reader to look it up.
+	fallback, err := h.deps.DB.SiteSettings(ctx, siteID(ctx))
+	if err != nil {
+		return err
+	}
+	row := db.CategoryRow{IsIndexed: true, Settings: db.SiteSettings{RatingMode: followSite, CreateTags: followSite}}
 	if rest != "new" {
 		id, err := strconv.ParseInt(rest, 10, 64)
 		if err != nil {
@@ -55,7 +61,7 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 			return err
 		}
 		if row.Settings.RatingMode == "" {
-			row.Settings = db.SiteSettings{RatingMode: "default", CreateTags: "default"}
+			row.Settings = db.SiteSettings{RatingMode: followSite, CreateTags: followSite}
 		}
 	}
 	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
@@ -93,8 +99,8 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 	return h.page(w, r, loc, loc.T("admin.page-categories"), "page_category_form.html", map[string]any{
 		"Category":    row,
 		"Cells":       cells,
-		"RatingModes": ratingModes,
-		"TagModes":    tagModes,
+		"RatingModes": settingChoices(loc, "admin.rating-", categoryRatingModes, siteSetting(fallback.RatingMode, "updown")),
+		"TagModes":    settingChoices(loc, "admin.tagmode-", categoryTagModes, siteSetting(fallback.CreateTags, db.CreateTagsDisabled)),
 		"MayGrant":    granted.Has(perms.ManagePermissions),
 		"CSRF":        csrf.Issue(w, r),
 		"Error":       problem,
@@ -135,7 +141,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	if row.Name == "" {
 		return h.pageCategoryForm(w, r, loc, rest, loc.T("admin.category-no-name"))
 	}
-	if !contains(ratingModes, row.Settings.RatingMode) || !contains(tagModes, row.Settings.CreateTags) {
+	if !contains(categoryRatingModes, row.Settings.RatingMode) || !contains(categoryTagModes, row.Settings.CreateTags) {
 		return h.pageCategoryForm(w, r, loc, rest, loc.T("admin.site-bad-mode"))
 	}
 	did := db.AdminChanged

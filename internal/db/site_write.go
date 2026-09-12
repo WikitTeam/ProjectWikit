@@ -24,7 +24,7 @@ RETURNING id`)
 
 var qInsertSiteSettings = register("InsertSiteSettings", `
 INSERT INTO web_settings (site_id, category_id, rating_mode, can_user_create_tags)
-VALUES ($1, NULL, 'default', 'default')`)
+VALUES ($1, NULL, 'updown', 'disabled')`)
 
 var qInsertBuiltInRole = register("InsertBuiltInRole", `
 INSERT INTO web_role (site_id, slug, index, name, short_name, is_staff, group_votes,

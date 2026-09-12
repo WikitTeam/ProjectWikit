@@ -106,7 +106,7 @@ func TestCheckSite(t *testing.T) {
 	bundle := testBundle(t)
 	ok := db.Site{Slug: "wikit", Title: "T", Domain: "a.test", MediaDomain: "b.test",
 		HomePage: "main", EmailPolicy: db.EmailOptional, Language: i18n.DefaultLanguage, TimeZone: "Asia/Shanghai"}
-	fine := db.SiteSettings{RatingMode: "default", CreateTags: "default"}
+	fine := db.SiteSettings{RatingMode: "updown", CreateTags: "enabled"}
 
 	if got := checkSite(loc, bundle, ok, fine); got != "" {
 		t.Errorf("checkSite(complete) = %q, want \"\"", got)
@@ -125,8 +125,9 @@ func TestCheckSite(t *testing.T) {
 		"domain with a path":   {func() db.Site { s := ok; s.Domain = "a.test/wiki"; return s }(), fine},
 		"no home page":         {func() db.Site { s := ok; s.HomePage = ""; return s }(), fine},
 		"unknown policy":       {func() db.Site { s := ok; s.EmailPolicy = "later"; return s }(), fine},
-		"unknown rating":       {ok, db.SiteSettings{RatingMode: "vibes", CreateTags: "default"}},
-		"unknown tag mode":     {ok, db.SiteSettings{RatingMode: "default", CreateTags: "vibes"}},
+		"unknown rating":       {ok, db.SiteSettings{RatingMode: "vibes", CreateTags: "enabled"}},
+		"unknown tag mode":     {ok, db.SiteSettings{RatingMode: "updown", CreateTags: "vibes"}},
+		"follow the site":      {ok, db.SiteSettings{RatingMode: "default", CreateTags: "default"}},
 		"unknown language":     {func() db.Site { s := ok; s.Language = "kl"; return s }(), fine},
 		"unknown time zone":    {func() db.Site { s := ok; s.TimeZone = "Beijing"; return s }(), fine},
 		"server local zone":    {func() db.Site { s := ok; s.TimeZone = "Local"; return s }(), fine},
