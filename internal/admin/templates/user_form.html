@@ -7,20 +7,51 @@
   <div class="widget-box narrow">
     <div class="widget-title"><i class="fas fa-user"></i><h5>{{t "admin.user-identity"}}</h5></div>
     <div class="widget-content">
+      {{if .MayAccount}}
       {{template "row_text" dict "n" "username" "k" "admin.f-username" "v" .User.Username "w" "narrow-4"}}
       {{template "row_text" dict "n" "wikidot_username" "k" "admin.f-wikidot-username" "v" .User.WikidotUsername "w" "narrow-4"}}
       {{template "row_text" dict "n" "display_name" "k" "admin.f-display-name" "v" .User.DisplayName "w" "narrow-4"}}
       {{if .SeeEmail}}{{template "row_text" dict "n" "email" "k" "admin.f-email" "v" .User.Email "w" "narrow-5"}}{{end}}
       {{template "row_area" dict "n" "bio" "k" "admin.f-bio" "v" .User.Bio}}
+      {{else}}
+      {{template "row_static" dict "k" "admin.f-username" "v" .User.Username}}
+      {{template "row_static" dict "k" "admin.f-wikidot-username" "v" .User.WikidotUsername}}
+      {{template "row_static" dict "k" "admin.f-display-name" "v" .User.DisplayName}}
+      {{if .SeeEmail}}{{template "row_static" dict "k" "admin.f-email" "v" .User.Email}}{{end}}
+      {{template "row_static" dict "k" "admin.f-bio" "v" .User.Bio}}
+      {{end}}
       {{template "row_static" dict "k" "admin.f-user-type" "v" .User.Type}}
       {{template "row_static" dict "k" "admin.f-api-key" "v" .User.APIKey}}
       {{template "row_static" dict "k" "admin.f-rank" "v" (printf "%d" .User.OperationIndex)}}
+      {{if not .MayAccount}}<p class="hint">{{t "admin.account-needs-superuser"}}</p>{{end}}
     </div>
   </div>
 
+  {{if .MaySanction}}
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-gavel"></i><h5>{{t "admin.sanctions"}}</h5></div>
+    <div class="widget-content">
+      <p class="hint">{{t "admin.sanctions-hint"}}</p>
+      {{range .Sanctions}}
+      <div class="control-group">
+        <span class="control-label">{{t .Label}}</span>
+        <div class="controls">
+          <label class="checkbox"><input type="checkbox" name="sanction_{{esc .Kind}}" value="1"{{if .InForce}} checked{{end}}> {{t "admin.sanction-in-force"}}</label>
+          <input type="datetime-local" name="sanction_{{esc .Kind}}_until" value="{{stamp .Until $.Zone}}" data-timestamp="{{millis .Until}}" class="narrow-3">
+          <span class="hint">{{t "admin.sanction-until"}}</span>
+          <input type="text" name="sanction_{{esc .Kind}}_reason" value="{{esc .Reason}}" class="narrow-5" placeholder="{{t "admin.sanction-reason"}}">
+        </div>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+
+  {{if .MayAccount}}
   <div class="widget-box narrow">
     <div class="widget-title"><i class="fas fa-lock"></i><h5>{{t "admin.user-state"}}</h5></div>
     <div class="widget-content">
+      <p class="hint">{{t "admin.account-state-hint"}}</p>
       {{template "row_check" dict "n" "is_active" "k" "admin.f-active" "l" "admin.l-active" "v" .User.IsActive}}
       <div class="control-group">
         <label class="control-label" for="id_inactive_until">{{t "admin.f-inactive-until"}}</label>
@@ -38,11 +69,10 @@
         </div>
       </div>
       {{template "row_check" dict "n" "can_send_direct_messages" "k" "admin.f-can-message" "l" "admin.l-can-message" "v" .User.CanSendDM}}
-      {{if .MaySuper}}
       {{template "row_check" dict "n" "is_superuser" "k" "admin.f-superuser" "l" "admin.l-superuser" "v" .User.IsSuperuser}}
-      {{end}}
     </div>
   </div>
+  {{end}}
 
   {{if .MaySetRoles}}
   <div class="widget-box narrow">
@@ -65,7 +95,7 @@
     <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
     <a class="btn" href="{{esc .Activate}}"><i class="fas fa-envelope"></i>{{t "admin.activate"}}</a>
     <a class="btn" href="{{esc .Activity}}"><i class="fas fa-history"></i>{{t "admin.user-activity"}}</a>
-    <a class="btn btn-danger pull-right" href="{{esc .ResetVotes}}"><i class="fas fa-trash"></i>{{t "admin.reset-votes"}}</a>
+    {{if .MayReset}}<a class="btn btn-danger pull-right" href="{{esc .ResetVotes}}"><i class="fas fa-trash"></i>{{t "admin.reset-votes"}}</a>{{end}}
   </div>
 </form>
 {{end}}

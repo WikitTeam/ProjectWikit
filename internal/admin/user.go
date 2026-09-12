@@ -34,6 +34,9 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 	if id, tail, ok := strings.Cut(rest, "/"); ok {
 		switch tail {
 		case actionResetVote:
+			if !h.allowed(w, r, perms.ResetMemberVotes) {
+				return nil
+			}
 			return h.resetVotes(w, r, loc, id)
 		case actionActivate:
 			return h.activate(w, r, loc, id)
@@ -44,6 +47,9 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		return nil
 	}
 	if contains(userActions, rest) {
+		if !h.allowed(w, r, neededForAction(rest)) {
+			return nil
+		}
 		if r.Method != http.MethodPost {
 			return h.userAction(w, r, loc, rest)
 		}
@@ -145,6 +151,10 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	}
 	mine := auth.FromContext(ctx)
 
+	sanctions, err := h.deps.DB.MemberSanctions(ctx, siteID(ctx), row.ID)
+	if err != nil {
+		return err
+	}
 	return h.page(w, r, loc, loc.T("admin.users"), "user_form.html", map[string]any{
 		"User":        row,
 		"Zone":        site.Zone(ctx),
@@ -152,7 +162,11 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Roles":       choices,
 		"Held":        row.Roles,
 		"MaySetRoles": h.maySetRoles(mine, granted, row),
+		"Sanctions":   sanctionRows(sanctions, granted),
+		"MaySanction": len(sanctionRows(sanctions, granted)) > 0,
+		"MayAccount":  mine != nil && mine.IsSuperuser,
 		"ResetVotes":  Prefix + userSlug + "/" + rest + "/" + actionResetVote,
+		"MayReset":    granted.Has(perms.ResetMemberVotes),
 		"Activity":    Prefix + userSlug + "/" + rest + "/" + actionActivity,
 		"Activate":    Prefix + userSlug + "/" + rest + "/" + actionActivate,
 		"MaySuper":    mine != nil && mine.IsSuperuser,
@@ -203,23 +217,24 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	mine := auth.FromContext(ctx)
 
 	next := stored
-	next.Username = strings.TrimSpace(r.PostFormValue("username"))
-	next.WikidotUsername = strings.TrimSpace(r.PostFormValue("wikidot_username"))
-	next.DisplayName = strings.TrimSpace(r.PostFormValue("display_name"))
-	next.Bio = r.PostFormValue("bio")
-	next.IsActive = r.PostFormValue("is_active") != ""
-	next.IsForumActive = r.PostFormValue("is_forum_active") != ""
-	next.CanSendDM = r.PostFormValue("can_send_direct_messages") != ""
-	zone := editorZone(r)
-	next.InactiveUntil = optionalTime(r.PostFormValue("inactive_until"), zone)
-	next.ForumInactiveUntil = optionalTime(r.PostFormValue("forum_inactive_until"), zone)
-	if granted.Has(perms.ViewSensitiveInfo) {
-		next.Email = strings.TrimSpace(r.PostFormValue("email"))
-	}
-
+	// The account itself is shared by every site of the instance, so only a
+	// superuser changes it.
 	maySuper := mine != nil && mine.IsSuperuser
 	if maySuper {
+		zone := editorZone(r)
+		next.Username = strings.TrimSpace(r.PostFormValue("username"))
+		next.WikidotUsername = strings.TrimSpace(r.PostFormValue("wikidot_username"))
+		next.DisplayName = strings.TrimSpace(r.PostFormValue("display_name"))
+		next.Bio = r.PostFormValue("bio")
+		next.IsActive = r.PostFormValue("is_active") != ""
+		next.IsForumActive = r.PostFormValue("is_forum_active") != ""
+		next.CanSendDM = r.PostFormValue("can_send_direct_messages") != ""
+		next.InactiveUntil = optionalTime(r.PostFormValue("inactive_until"), zone)
+		next.ForumInactiveUntil = optionalTime(r.PostFormValue("forum_inactive_until"), zone)
 		next.IsSuperuser = r.PostFormValue("is_superuser") != ""
+		if granted.Has(perms.ViewSensitiveInfo) {
+			next.Email = strings.TrimSpace(r.PostFormValue("email"))
+		}
 	}
 	maySetRoles := h.maySetRoles(mine, granted, stored)
 	if maySetRoles {
@@ -236,6 +251,9 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	}
 	err = h.deps.DB.SaveAdminUser(ctx, siteID(ctx), next, builtinRoles, maySetRoles, maySuper)
 	if err != nil {
+		return err
+	}
+	if err := h.saveSanctions(r, next.ID); err != nil {
 		return err
 	}
 	h.noteID(r, db.AdminChanged, userSlug, next.ID, next.Username)

@@ -387,3 +387,63 @@ func TestResolveMatchesGolden(t *testing.T) {
 	}
 	t.Fatalf("perms.golden line count: got %d, want %d", len(got), len(wantLines))
 }
+
+func TestResolveSanctions(t *testing.T) {
+	member := Role{ID: 1, Permissions: []string{
+		ViewArticles, RateArticles, CreateArticles, EditArticles, TagArticles,
+		CommentArticles, CreateForumPosts, CreateForumThreads, SendDirectMessage,
+	}}
+	tests := []struct {
+		name    string
+		kinds   []Sanction
+		kept    []string
+		removed []string
+	}{
+		{"none", nil, []string{ViewArticles, RateArticles, EditArticles, CommentArticles}, nil},
+		{"mute", []Sanction{SanctionMute},
+			[]string{ViewArticles, RateArticles, EditArticles, SendDirectMessage},
+			[]string{CommentArticles, CreateForumPosts, CreateForumThreads}},
+		{"edit", []Sanction{SanctionEdit},
+			[]string{ViewArticles, RateArticles, CommentArticles},
+			[]string{CreateArticles, EditArticles, TagArticles}},
+		{"rating", []Sanction{SanctionRating},
+			[]string{ViewArticles, EditArticles, CommentArticles},
+			[]string{RateArticles}},
+		{"ban", []Sanction{SanctionBan},
+			[]string{ViewArticles, SendDirectMessage},
+			[]string{RateArticles, CreateArticles, EditArticles, TagArticles, CommentArticles, CreateForumPosts, CreateForumThreads}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Resolve(Subject{Active: true, Roles: []Role{member}, Sanctions: tt.kinds}, nil)
+			for _, name := range tt.kept {
+				if !got.Has(name) {
+					t.Errorf("Resolve(%v).Has(%q) = false, want true", tt.kinds, name)
+				}
+			}
+			for _, name := range tt.removed {
+				if got.Has(name) {
+					t.Errorf("Resolve(%v).Has(%q) = true, want false", tt.kinds, name)
+				}
+			}
+		})
+	}
+}
+
+func TestResolveLeavesASuperuserAlone(t *testing.T) {
+	got := Resolve(Subject{Active: true, Superuser: true, Sanctions: []Sanction{SanctionBan}}, nil)
+	if !got.All() {
+		t.Error("Resolve(banned superuser).All() = false, want true")
+	}
+}
+
+func TestValidSanction(t *testing.T) {
+	for _, kind := range []Sanction{SanctionBan, SanctionMute, SanctionEdit, SanctionRating} {
+		if !ValidSanction(kind) {
+			t.Errorf("ValidSanction(%q) = false, want true", kind)
+		}
+	}
+	if ValidSanction("nonsense") {
+		t.Errorf("ValidSanction(%q) = true, want false", "nonsense")
+	}
+}

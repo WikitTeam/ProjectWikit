@@ -45,6 +45,15 @@ var Catalog = []Group{
 		"view_user_tickets",
 		"review_membership_applications",
 	}},
+	{Key: "members", Names: []string{
+		"ban_members",
+		"mute_members",
+		"restrict_member_editing",
+		"restrict_member_rating",
+		"reset_member_votes",
+		"invite_members",
+		"manage_bots",
+	}},
 	{Key: "admin", Names: []string{
 		"manage_users",
 		"manage_roles",

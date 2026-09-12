@@ -50,7 +50,59 @@ const (
 	ReviewMembershipApplications = "review_membership_applications"
 	ViewActionsLog               = "view_actions_log"
 	ViewUserTickets              = "view_user_tickets"
+
+	BanMembers            = "ban_members"
+	MuteMembers           = "mute_members"
+	RestrictMemberEditing = "restrict_member_editing"
+	RestrictMemberRating  = "restrict_member_rating"
+	ResetMemberVotes      = "reset_member_votes"
+	InviteMembers         = "invite_members"
+	ManageBots            = "manage_bots"
 )
+
+// A ban covers the other three, so it is the only one that has to be given
+// alone.
+type Sanction string
+
+const (
+	SanctionBan    Sanction = "ban"
+	SanctionMute   Sanction = "mute"
+	SanctionEdit   Sanction = "edit"
+	SanctionRating Sanction = "rating"
+)
+
+func ValidSanction(kind Sanction) bool {
+	switch kind {
+	case SanctionBan, SanctionMute, SanctionEdit, SanctionRating:
+		return true
+	}
+	return false
+}
+
+var muted = append([]string{CreateForumThreads}, silenced...)
+
+var editRestricted = []string{
+	CreateArticles, EditArticles, TagArticles, MoveArticles, LockArticles,
+	DeleteArticles, ManageArticleFiles, ManageArticleAuthors, ResetArticleVotes,
+}
+
+var ratingRestricted = []string{RateArticles}
+
+func sanctioned(kind Sanction) []string {
+	switch kind {
+	case SanctionMute:
+		return muted
+	case SanctionEdit:
+		return editRestricted
+	case SanctionRating:
+		return ratingRestricted
+	case SanctionBan:
+		out := append([]string{}, muted...)
+		out = append(out, editRestricted...)
+		return append(out, ratingRestricted...)
+	}
+	return nil
+}
 
 // lockable is what a locked page takes away from anyone who cannot unlock it.
 var lockable = []string{EditArticles, ManageArticleAuthors, ManageArticleFiles, TagArticles, MoveArticles, DeleteArticles}
@@ -111,6 +163,8 @@ type Subject struct {
 	Unverified  bool
 	Superuser   bool
 	Roles       []Role
+	// Sanctions are the ones this site has in force against the subject now.
+	Sanctions []Sanction
 }
 
 type Kind int
@@ -179,6 +233,11 @@ func Resolve(s Subject, o *Object) Set {
 	}
 	if s.Unverified {
 		for _, name := range unverified {
+			delete(granted, name)
+		}
+	}
+	for _, kind := range s.Sanctions {
+		for _, name := range sanctioned(kind) {
 			delete(granted, name)
 		}
 	}
