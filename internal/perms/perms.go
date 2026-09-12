@@ -148,20 +148,31 @@ func Resolve(s Subject, o *Object) Set {
 	}
 
 	granted := make(map[string]bool)
+	// A role that refuses a permission refuses it for everyone holding that
+	// role, so the refusals are collected across roles and applied last.
+	refused := make(map[string]bool)
 	for _, role := range s.Roles {
-		final := make(map[string]bool, len(role.Permissions))
+		allow := make(map[string]bool, len(role.Permissions))
 		for _, name := range role.Permissions {
-			final[name] = true
+			allow[name] = true
 		}
+		deny := make(map[string]bool, len(role.Restrictions))
 		for _, name := range role.Restrictions {
-			delete(final, name)
+			delete(allow, name)
+			deny[name] = true
 		}
 		if o != nil {
-			applyOverride(final, o.Overrides, role.ID)
+			applyOverride(allow, deny, o.Overrides, role.ID)
 		}
-		for name := range final {
+		for name := range allow {
 			granted[name] = true
 		}
+		for name := range deny {
+			refused[name] = true
+		}
+	}
+	for name := range refused {
+		delete(granted, name)
 	}
 	if o != nil {
 		applyObject(granted, o, s)
@@ -174,16 +185,18 @@ func Resolve(s Subject, o *Object) Set {
 	return Set{named: granted}
 }
 
-func applyOverride(final map[string]bool, overrides []Override, roleID int64) {
+func applyOverride(allow, deny map[string]bool, overrides []Override, roleID int64) {
 	for _, override := range overrides {
 		if override.RoleID != roleID {
 			continue
 		}
 		for _, name := range override.Permissions {
-			final[name] = true
+			allow[name] = true
+			delete(deny, name)
 		}
 		for _, name := range override.Restrictions {
-			delete(final, name)
+			delete(allow, name)
+			deny[name] = true
 		}
 		return
 	}

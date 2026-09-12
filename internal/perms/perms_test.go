@@ -92,10 +92,16 @@ var scenarios = []scenario{
 		Object: &objectSpec{Kind: "article"},
 	},
 	{
-		Name:   "a restriction in one role does not take away what another grants",
+		Name:   "a restriction in one role takes away what another grants",
 		Roles:  withRoles(roleSpec{Slug: "half", Restrictions: []string{ViewArticles}}),
 		User:   userSpec{Kind: "normal", Roles: []string{"half"}},
 		Object: &objectSpec{Kind: "article"},
+	},
+	{
+		Name:   "a category override does not bring back what another role refuses",
+		Roles:  withRoles(roleSpec{Slug: "half", Restrictions: []string{DeleteArticles}}),
+		User:   userSpec{Kind: "normal", Roles: []string{"editor", "half"}},
+		Object: &objectSpec{Kind: "article", Overrides: []overrideSpec{{Role: "editor", Permissions: []string{DeleteArticles}}}},
 	},
 	{
 		Name:   "a category override grants to one role",

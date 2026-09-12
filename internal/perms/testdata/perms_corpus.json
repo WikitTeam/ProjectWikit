@@ -232,7 +232,7 @@
       }
     },
     {
-      "name": "a restriction in one role does not take away what another grants",
+      "name": "a restriction in one role takes away what another grants",
       "roles": [
         {
           "slug": "everyone",
@@ -283,6 +283,73 @@
       "object": {
         "kind": "article",
         "overrides": null,
+        "locked": false,
+        "author": false,
+        "hidden_for_users": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a category override does not bring back what another role refuses",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "half",
+          "permissions": null,
+          "restrictions": [
+            "delete_articles"
+          ]
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "editor",
+          "half"
+        ],
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "article",
+        "overrides": [
+          {
+            "role": "editor",
+            "permissions": [
+              "delete_articles"
+            ],
+            "restrictions": null
+          }
+        ],
         "locked": false,
         "author": false,
         "hidden_for_users": false,
