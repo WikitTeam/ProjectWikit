@@ -161,10 +161,13 @@ func (d *DB) SaveAdminUser(ctx context.Context, siteID int64, u AdminUserRow, bu
 	return tx.Commit(ctx)
 }
 
-var qResetUserVotes = register("ResetUserVotes", `DELETE FROM web_vote WHERE user_id = $1`)
+var qResetUserVotes = register("ResetUserVotes", `
+DELETE FROM web_vote v
+USING web_article a
+WHERE a.id = v.article_id AND v.user_id = $1 AND a.site_id = $2`)
 
-func (d *DB) ResetUserVotes(ctx context.Context, userID int64) (int64, error) {
-	tag, err := d.pool.Exec(ctx, qResetUserVotes, userID)
+func (d *DB) ResetUserVotes(ctx context.Context, siteID, userID int64) (int64, error) {
+	tag, err := d.pool.Exec(ctx, qResetUserVotes, userID, siteID)
 	if err != nil {
 		return 0, fmt.Errorf("reset votes of user %d: %w", userID, err)
 	}

@@ -273,7 +273,7 @@ func (h *Handler) resetVotes(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	if !h.verified(w, r) {
 		return nil
 	}
-	if _, err := h.deps.DB.ResetUserVotes(ctx, id); err != nil {
+	if _, err := h.deps.DB.ResetUserVotes(ctx, siteID(ctx), id); err != nil {
 		return err
 	}
 	h.noteID(r, db.AdminChanged, userSlug, id, row.Username)

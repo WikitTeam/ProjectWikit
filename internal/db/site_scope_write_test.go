@@ -178,3 +178,61 @@ func TestUserByVerifiedEmailSkipsAnUnverifiedAddress(t *testing.T) {
 		t.Errorf("UserByVerifiedEmail().ID = %d, want %d", got.ID, owner)
 	}
 }
+
+func TestResetUserVotesLeavesOtherSitesAlone(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	here, there := scratchSite(t, d), scratchSite(t, d)
+
+	userID, err := d.CreateUser(ctx, scratchName(t), "Probe Voter", "!", true, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("CreateUser() err = %v, want nil", err)
+	}
+	dropUser(t, d, userID)
+
+	rated := map[int64]int64{}
+	for _, site := range []int64{here, there} {
+		name := "probe-vote-" + strconv.FormatInt(time.Now().UnixNano(), 36)
+		article, err := d.CreateArticle(ctx, site, "_default", name, name, nil, time.Now().UTC())
+		if err != nil {
+			t.Fatalf("CreateArticle() err = %v, want nil", err)
+		}
+		rated[site] = article
+		t.Cleanup(func() {
+			clean := context.Background()
+			for _, sql := range []string{
+				`DELETE FROM web_vote WHERE article_id = $1`,
+				`DELETE FROM web_articlelogentry WHERE article_id = $1`,
+				`DELETE FROM web_articleversion WHERE article_id = $1`,
+				`DELETE FROM web_article_authors WHERE article_id = $1`,
+				`DELETE FROM web_article WHERE id = $1`,
+			} {
+				if _, err := d.pool.Exec(clean, sql, article); err != nil {
+					t.Errorf("clean up article %d err = %v, want nil", article, err)
+				}
+			}
+		})
+		if _, err := d.pool.Exec(ctx, `
+INSERT INTO web_vote (rate, article_id, user_id, date) VALUES (1, $1, $2, now())`, article, userID); err != nil {
+			t.Fatalf("insert vote err = %v, want nil", err)
+		}
+	}
+
+	removed, err := d.ResetUserVotes(ctx, here, userID)
+	if err != nil {
+		t.Fatalf("ResetUserVotes() err = %v, want nil", err)
+	}
+	if removed != 1 {
+		t.Errorf("ResetUserVotes(here) = %d, want 1", removed)
+	}
+	for site, want := range map[int64]int{here: 0, there: 1} {
+		var left int
+		if err := d.pool.QueryRow(ctx, `
+SELECT count(*) FROM web_vote WHERE article_id = $1 AND user_id = $2`, rated[site], userID).Scan(&left); err != nil {
+			t.Fatal(err)
+		}
+		if left != want {
+			t.Errorf("votes left on site %d = %d, want %d", site, left, want)
+		}
+	}
+}
