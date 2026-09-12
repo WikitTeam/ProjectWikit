@@ -20,6 +20,10 @@ const (
 
 	BaselineName = "0001_baseline.sql"
 
+	// The schema the baseline was taken from, as the database that wrote it
+	// records the name.
+	BaselineSchema = "0087_align_models_and_schema"
+
 	lockKey = int64(0x7077696B_69746D67)
 
 	versionTable = "pwikit_migration"
@@ -237,7 +241,25 @@ func builtElsewhere(ctx context.Context, conn *pgx.Conn) (bool, error) {
 	if err := conn.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM public.django_migrations)`).Scan(&any); err != nil {
 		return false, fmt.Errorf("read the previous version table: %w", err)
 	}
-	return any, nil
+	if !any {
+		return false, nil
+	}
+	return true, checkBaselineSchema(ctx, conn)
+}
+
+// Adopting a database that stopped before the baseline was taken would apply
+// every later migration to a schema they do not fit.
+func checkBaselineSchema(ctx context.Context, conn *pgx.Conn) error {
+	var reached string
+	err := conn.QueryRow(ctx, `
+SELECT coalesce(max(name), '') FROM public.django_migrations WHERE app = 'web'`).Scan(&reached)
+	if err != nil {
+		return fmt.Errorf("read the previous version table: %w", err)
+	}
+	if reached == "" || reached >= BaselineSchema {
+		return nil
+	}
+	return fmt.Errorf("this database stopped at %q and pwikit needs the schema of %q, so nothing was changed", reached, BaselineSchema)
 }
 
 func tableExists(ctx context.Context, conn *pgx.Conn, name string) (bool, error) {

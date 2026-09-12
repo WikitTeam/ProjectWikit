@@ -90,7 +90,7 @@ func TestRunAdoptsASchemaBuiltBeforeGoOwnedIt(t *testing.T) {
 		t.Fatalf("apply the baseline by hand err = %v, want nil", err)
 	}
 	if _, err := conn.Exec(ctx,
-		`INSERT INTO django_migrations (app, name, applied) VALUES ('web', '0001_initial', now())`); err != nil {
+		`INSERT INTO django_migrations (app, name, applied) VALUES ('web', '`+BaselineSchema+`', now())`); err != nil {
 		t.Fatalf("record a previous migration err = %v, want nil", err)
 	}
 
@@ -464,4 +464,35 @@ func rowCounts(t *testing.T, dsn string) map[string]int {
 		out[table] = count(t, conn, table)
 	}
 	return out
+}
+
+func TestRunRefusesASchemaOlderThanTheBaseline(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+
+	conn := connect(t, fresh)
+	if _, err := conn.Exec(ctx, `
+CREATE TABLE django_migrations (id bigserial PRIMARY KEY, app text NOT NULL, name text NOT NULL, applied timestamptz NOT NULL)`); err != nil {
+		t.Fatalf("create the previous version table err = %v, want nil", err)
+	}
+	if _, err := conn.Exec(ctx,
+		`INSERT INTO django_migrations (app, name, applied) VALUES ('web', '0079_theme_slug', now())`); err != nil {
+		t.Fatalf("record a previous migration err = %v, want nil", err)
+	}
+
+	_, err := Run(ctx, fresh)
+	if err == nil {
+		t.Fatal("Run(a database older than the baseline) err = nil, want non-nil")
+	}
+	if !strings.Contains(err.Error(), "0079_theme_slug") || !strings.Contains(err.Error(), BaselineSchema) {
+		t.Errorf("Run() err = %v, want it to name both schemas", err)
+	}
+	var tables int
+	if err := conn.QueryRow(ctx, `
+SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE 'web_%'`).Scan(&tables); err != nil {
+		t.Fatal(err)
+	}
+	if tables != 0 {
+		t.Errorf("tables after the refusal = %d, want 0", tables)
+	}
 }
