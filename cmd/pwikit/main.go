@@ -110,6 +110,8 @@ func run(args []string) error {
 		return reindex(args[1:])
 	case "service":
 		return serviceCommand(args[1:])
+	case "path":
+		return pathCommand(args[1:])
 	case "help", "-h", "--help":
 		usage()
 		return nil
@@ -131,6 +133,7 @@ Commands:
   seed        write the pages a new site starts with
   reindex     put every page of a site back into the search index
   service     start pwikit whenever the machine boots
+  path        make pwikit runnable by name from any directory
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
   modules     print the wikidot module list

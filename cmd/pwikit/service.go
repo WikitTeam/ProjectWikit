@@ -27,6 +27,8 @@ Options:
   -name      name the service is registered under; defaults to pwikit
   -user      account the service runs as on Linux and macOS; defaults to the one sudo was run from
   -data-dir  state directory; defaults to the directory holding the executable
+  -no-path   leave the PATH alone; by default install makes pwikit runnable by name
+             from any directory and uninstall undoes it
 
 Anything after -- is handed to pwikit serve, for example:
   pwikit service install -- -tls=auto -acme-email you@example.com
@@ -52,6 +54,7 @@ func serviceCommand(args []string) error {
 	name := fs.String("name", service.DefaultName, "name the service is registered under")
 	account := fs.String("user", "", "account the service runs as on Linux and macOS")
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
+	noPath := fs.Bool("no-path", false, "leave the PATH alone on install and uninstall")
 	if err := fs.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -64,7 +67,15 @@ func serviceCommand(args []string) error {
 
 	switch sub {
 	case "uninstall":
-		return service.Uninstall(*name)
+		if err := service.Uninstall(*name); err != nil {
+			return err
+		}
+		if !*noPath {
+			if exe, err := runnableExecutable(); err == nil {
+				servicePath(exe, false)
+			}
+		}
+		return nil
 	case "start":
 		return service.Start(*name)
 	case "stop":
@@ -90,6 +101,9 @@ func serviceCommand(args []string) error {
 	}
 	fmt.Printf("installed %s; it starts now and whenever the machine boots\n", spec.Name)
 	fmt.Println(afterInstall(spec))
+	if !*noPath {
+		servicePath(spec.Executable, true)
+	}
 	return nil
 }
 
