@@ -26,6 +26,14 @@ func bundledConfig(p *paths.Paths, log *slog.Logger) pgbundle.Config {
 	}
 }
 
+func prepareDataDir(p *paths.Paths) error {
+	if err := p.EnsureBase(); err != nil {
+		return err
+	}
+	_, err := config.WriteTemplate(p.Config())
+	return err
+}
+
 func resolveDatabase(ctx context.Context, explicit, dataDir string) (string, func(), error) {
 	if explicit != "" {
 		return explicit, func() {}, nil

@@ -154,10 +154,7 @@ func serve(ctx context.Context, args []string) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := p.EnsureBase(); err != nil {
-		return err
-	}
-	if _, err := config.WriteTemplate(p.Config()); err != nil {
+	if err := prepareDataDir(p); err != nil {
 		return err
 	}
 	cfg, err := config.Load(p.Config())
@@ -565,6 +562,15 @@ func createSite(args []string) error {
 		if !site.ValidHost(value) {
 			return fmt.Errorf("-%s %q is not a host name; give the name a request arrives on, without a scheme or a path", name, value)
 		}
+	}
+	// createsite is the first command a new instance runs, so the layout and the
+	// settings file should be there to look at before serve ever starts.
+	p, err := paths.New(*dataDir)
+	if err != nil {
+		return err
+	}
+	if err := prepareDataDir(p); err != nil {
+		return err
 	}
 	ctx := context.Background()
 	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
