@@ -8,7 +8,8 @@
 #   --version <vX.Y.Z>  release to install; defaults to the newest
 #   --dir <directory>   where pwikit and all of its data go
 #   --mirror <url>      mirror to use when GitHub cannot be reached
-#   --user <account>    account that owns the directory when run as root
+#   --user <account>    account that owns the directory when run as root;
+#                       defaults to the sudo account, or a new pwikit account
 #   --no-path           do not make pwikit runnable by name
 set -eu
 
@@ -64,17 +65,24 @@ else
 fi
 command -v tar >/dev/null 2>&1 || fail "tar is needed"
 
+create_owner=0
 if [ "$(id -u)" -eq 0 ]; then
   if [ -z "$owner" ]; then
     if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
       owner="$SUDO_USER"
     else
-      fail "pwikit does not run as root; pass --user <account> to say who owns the installation"
+      owner=pwikit
     fi
   fi
-  id "$owner" >/dev/null 2>&1 || fail "no account named $owner"
   [ "$owner" != root ] || fail "pwikit does not run as root; pass another account to --user"
   [ -n "$dir" ] || dir=/opt/pwikit
+  if ! id "$owner" >/dev/null 2>&1; then
+    [ "$owner" = pwikit ] || fail "no account named $owner"
+    [ "$os" = linux ] || fail "pwikit does not run as root; create an account for it and pass it to --user"
+    command -v useradd >/dev/null 2>&1 || command -v adduser >/dev/null 2>&1 ||
+      fail "pwikit does not run as root, and there is no useradd to create an account for it; create one and pass it to --user"
+    create_owner=1
+  fi
 else
   [ -z "$owner" ] || fail "--user only applies when running as root"
   [ -n "$dir" ] || dir="$HOME/pwikit"
@@ -139,6 +147,24 @@ tar -xzf "$work/$file" -C "$work/unpacked"
 top="$work/unpacked/pwikit-$version-$os-$arch"
 [ -x "$top/pwikit" ] || fail "$file does not hold pwikit"
 
+if [ "$create_owner" -eq 1 ]; then
+  shell=/bin/false
+  for candidate in /usr/sbin/nologin /sbin/nologin; do
+    if [ -x "$candidate" ]; then
+      shell="$candidate"
+      break
+    fi
+  done
+  if command -v useradd >/dev/null 2>&1; then
+    useradd --system --user-group --home-dir "$dir" --no-create-home --shell "$shell" "$owner" ||
+      fail "could not create the account $owner; create one and pass it to --user"
+  else
+    adduser -S -D -H -h "$dir" -s "$shell" "$owner" ||
+      fail "could not create the account $owner; create one and pass it to --user"
+  fi
+  say "Created the account $owner, which pwikit runs as"
+fi
+
 mkdir -p "$dir"
 cp "$top/pwikit" "$dir/pwikit"
 [ ! -f "$top/LICENSE" ] || cp "$top/LICENSE" "$dir/LICENSE"
@@ -156,7 +182,14 @@ say ""
 say "Next, create the site from that directory:"
 say "  cd $dir"
 if [ -n "$owner" ]; then
-  say "  sudo -u $owner ./pwikit createsite -slug main -title \"My Wiki\" -headline \"A wiki\" -domain wiki.example.org -media-domain files.example.org"
+  create='./pwikit createsite -slug main -title "My Wiki" -headline "A wiki" -domain wiki.example.org -media-domain files.example.org'
+  if command -v sudo >/dev/null 2>&1; then
+    say "  sudo -u $owner $create"
+  else
+    say "  su -s /bin/sh $owner -c '$create'"
+  fi
+  say "To start it at boot, run as root from that directory:"
+  say "  ./pwikit service install -user $owner"
 else
   say "  ./pwikit createsite -slug main -title \"My Wiki\" -headline \"A wiki\" -domain wiki.example.org -media-domain files.example.org"
 fi
