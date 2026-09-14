@@ -1,13 +1,11 @@
 .idea
 .DS_Store
 *.log
-*.pyc
 node_modules
 target
 .env
 *.env
-files/*
-!files/.gitkeep
+/files
 /archive
 /locales
 /secrets
