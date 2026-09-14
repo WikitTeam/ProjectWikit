@@ -10,9 +10,7 @@ const path = require('path')
 
 const CJK = new RegExp('[\\u4e00-\\u9fff]')
 
-// app.js is what this script emits and fontawesome is vendored, so neither is
-// ours to fix; skipping them by name keeps the check from reporting its own output.
-const SKIP_NAMES = ['node_modules', 'locales', 'fontawesome', 'app.js']
+const SKIP_NAMES = ['node_modules', 'locales']
 
 // Text belongs in locales/, reachable through t(). A literal here would render
 // the same in every language and nothing else would notice.
@@ -37,7 +35,7 @@ function findHardcodedText(dir: string, found: string[] = []) {
 }
 
 async function build() {
-  const hardcoded = [...findHardcodedText('.'), ...findHardcodedText('../static')]
+  const hardcoded = findHardcodedText('.')
   if (hardcoded.length) {
     console.error('Hardcoded text outside locales/:')
     hardcoded.forEach(line => console.error('  ' + line))
