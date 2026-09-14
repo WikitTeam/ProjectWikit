@@ -1,6 +1,9 @@
 package localitem
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestSplitTakesTwoSegments(t *testing.T) {
 	cases := []struct {
@@ -63,11 +66,50 @@ func TestStripNoInclude(t *testing.T) {
 		"a[[noinclude]]b":                "a",
 		"[[noinclude]]b[[/noinclude]]":   "",
 		"a[[/noinclude]]b[[noinclude]]c": "a[[/noinclude]]b",
+		"[[noinclude]]b[[/noinclude]]c":  "c",
 	}
 	for source, want := range cases {
 		if got := stripNoInclude(source); got != want {
 			t.Errorf("stripNoInclude(%q) = %q, want %q", source, got, want)
 		}
+	}
+}
+
+func TestStripNoIncludeManyPairs(t *testing.T) {
+	source := "x" + strings.Repeat("[[noinclude]]a[[/noinclude]]", 1<<16) + "y"
+	if got := stripNoInclude(source); got != "xy" {
+		t.Errorf("stripNoInclude(%d pairs) = %q, want %q", 1<<16, got, "xy")
+	}
+}
+
+func TestExpandParams(t *testing.T) {
+	cases := []struct {
+		source string
+		params map[string]string
+		want   string
+	}{
+		{"color: {$c};", map[string]string{"c": "red"}, "color: red;"},
+		{"{$a} {$b}", map[string]string{"a": "{$b}", "b": "x"}, "{$b} x"},
+		{"{$b} {$a}", map[string]string{"a": "{$b}", "b": "x"}, "x {$b}"},
+		{"{$missing}", map[string]string{"c": "red"}, "{$missing}"},
+		{"plain", nil, "plain"},
+	}
+	for _, c := range cases {
+		got, ok := expandParams(c.source, c.params)
+		if !ok || got != c.want {
+			t.Errorf("expandParams(%q, %v) = %q, %v, want %q, true", c.source, c.params, got, ok, c.want)
+		}
+	}
+}
+
+func TestExpandParamsRefusesLargeGrowth(t *testing.T) {
+	source := strings.Repeat("{$a}", 1024)
+	value := strings.Repeat("x", 4096)
+	if got, ok := expandParams(source, map[string]string{"a": value}); ok {
+		t.Errorf("expandParams(1024 tokens, 4096 bytes) = %d bytes, true, want false", len(got))
+	}
+	if _, ok := expandParams("{$a}", map[string]string{"a": value}); !ok {
+		t.Errorf("expandParams(1 token, 4096 bytes) ok = false, want true")
 	}
 }
 
