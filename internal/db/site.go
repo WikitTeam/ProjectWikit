@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type Site struct {
@@ -82,6 +83,10 @@ func (d *DB) SiteBySlug(ctx context.Context, slug string) (*Site, error) {
 
 func (d *DB) SiteSlugs(ctx context.Context) ([]string, error) {
 	rows, err := d.pool.Query(ctx, qSiteSlugs)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("list sites: %w", err)
 	}
