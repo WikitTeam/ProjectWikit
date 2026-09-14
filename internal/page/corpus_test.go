@@ -100,7 +100,7 @@ func TestVarsMatchOracle(t *testing.T) {
 	for _, entry := range corpus.Articles {
 		article, err := conn.ArticleByName(ctx, site.ID, entry.Name)
 		if err != nil {
-			t.Fatalf("ArticleByName(%q) = %v, want nil; run testdata/oracle_seed.py", entry.Name, err)
+			t.Fatalf("ArticleByName(%q) = %v, want nil", entry.Name, err)
 		}
 		var viewer *db.User
 		if entry.Viewer != "" {

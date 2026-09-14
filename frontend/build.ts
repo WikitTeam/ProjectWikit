@@ -12,10 +12,7 @@ const CJK = new RegExp('[\\u4e00-\\u9fff]')
 
 // app.js is what this script emits and fontawesome is vendored, so neither is
 // ours to fix; skipping them by name keeps the check from reporting its own output.
-// static/admin is Django admin, which cannot reach the bundle's catalog and goes
-// away with Django; giving it a catalog of its own would be a second table nobody
-// maintains.
-const SKIP_NAMES = ['node_modules', 'locales', 'fontawesome', 'app.js', 'admin']
+const SKIP_NAMES = ['node_modules', 'locales', 'fontawesome', 'app.js']
 
 // Text belongs in locales/, reachable through t(). A literal here would render
 // the same in every language and nothing else would notice.

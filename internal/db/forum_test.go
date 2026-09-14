@@ -106,7 +106,7 @@ func categoryNamed(t *testing.T, d *DB, ctx context.Context, name string) ForumC
 			return c
 		}
 	}
-	t.Fatalf("ForumCategories() has no %q, want it; run oracle_seed.py first", name)
+	t.Fatalf("ForumCategories() has no %q, want it", name)
 	return ForumCategory{}
 }
 

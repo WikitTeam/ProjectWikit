@@ -1,6 +1,5 @@
 package media
 
-// Generated from testdata/oracle_mime.py; do not edit by hand.
 // mime.TypeByExtension is a different table and reads the Windows registry,
 // which would make a file's Content-Type depend on the machine.
 

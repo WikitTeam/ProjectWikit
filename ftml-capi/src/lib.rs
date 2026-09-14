@@ -431,8 +431,7 @@ impl<'t, 'b> Includer<'t> for BridgeIncluder<'b> {
             f(self.0.host, refs.as_ptr(), refs.len(), &mut sink);
 
             // ftml wants one FetchedPage per request, in request order, while the
-            // host may answer a subset -- the Python binding's host does exactly
-            // that for pages it cannot find.
+            // host may leave out the pages it cannot find.
             let mut out = Vec::with_capacity(includes.len());
             for (index, include) in includes.iter().enumerate() {
                 let content = sink
