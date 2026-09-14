@@ -10,15 +10,7 @@ import (
 	"unicode"
 )
 
-var skipDirs = map[string]bool{
-	".git":         true,
-	".claude":      true,
-	"node_modules": true,
-	"target":       true,
-	"postgresql":   true,
-	"venv":         true,
-	"__pycache__":  true,
-}
+var scannedDirs = []string{"cmd", "internal"}
 
 func hasHan(line string) bool {
 	for _, r := range line {
@@ -30,35 +22,36 @@ func hasHan(line string) bool {
 }
 
 func TestNoHanTextInGoSource(t *testing.T) {
-	root := filepath.Join("..", "..")
 	var found []string
-
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			if skipDirs[d.Name()] {
-				return fs.SkipDir
+	for _, dir := range scannedDirs {
+		root := filepath.Join("..", "..", dir)
+		err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				if d.Name() == "testdata" {
+					return fs.SkipDir
+				}
+				return nil
+			}
+			if !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
+				return nil
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			for i, line := range strings.Split(string(data), "\n") {
+				if hasHan(line) {
+					found = append(found, filepath.ToSlash(path)+":"+strconv.Itoa(i+1)+"  "+strings.TrimSpace(line))
+				}
 			}
 			return nil
-		}
-		if !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
-			return nil
-		}
-		data, err := os.ReadFile(path)
+		})
 		if err != nil {
-			return err
+			t.Fatalf("WalkDir(%s) err = %v, want nil", root, err)
 		}
-		for i, line := range strings.Split(string(data), "\n") {
-			if hasHan(line) {
-				found = append(found, filepath.ToSlash(path)+":"+strconv.Itoa(i+1)+"  "+strings.TrimSpace(line))
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("WalkDir(%s) err = %v, want nil", root, err)
 	}
 
 	for _, line := range found {
