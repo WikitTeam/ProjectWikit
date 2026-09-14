@@ -203,7 +203,10 @@ func serve(ctx context.Context, args []string) (err error) {
 	ctx, stopSignals := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stopSignals()
 
-	dsn := *o.database
+	dsn, err := withPasswordFile(*o.database)
+	if err != nil {
+		return err
+	}
 	bundledPostgres := ""
 	if dsn == "" {
 		bundledPostgres = pgbundle.Version

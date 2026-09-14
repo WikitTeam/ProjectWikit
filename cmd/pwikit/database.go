@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/config"
@@ -34,9 +36,32 @@ func prepareDataDir(p *paths.Paths) error {
 	return err
 }
 
+const envDatabasePasswordFile = "PWIKIT_DATABASE_PASSWORD_FILE"
+
+func withPasswordFile(dsn string) (string, error) {
+	name := os.Getenv(envDatabasePasswordFile)
+	if name == "" || dsn == "" {
+		return dsn, nil
+	}
+	u, err := url.Parse(dsn)
+	if err != nil || u.User == nil {
+		return dsn, nil
+	}
+	if _, has := u.User.Password(); has {
+		return dsn, nil
+	}
+	secret, err := os.ReadFile(name)
+	if err != nil {
+		return "", fmt.Errorf("read the database password from %s: %w", name, err)
+	}
+	u.User = url.UserPassword(u.User.Username(), strings.TrimSpace(string(secret)))
+	return u.String(), nil
+}
+
 func resolveDatabase(ctx context.Context, explicit, dataDir string) (string, func(), error) {
 	if explicit != "" {
-		return explicit, func() {}, nil
+		dsn, err := withPasswordFile(explicit)
+		return dsn, func() {}, err
 	}
 	p, err := paths.New(dataDir)
 	if err != nil {
@@ -47,7 +72,8 @@ func resolveDatabase(ctx context.Context, explicit, dataDir string) (string, fun
 		return "", nil, err
 	}
 	if file.Database != "" {
-		return file.Database, func() {}, nil
+		dsn, err := withPasswordFile(file.Database)
+		return dsn, func() {}, err
 	}
 	cfg := bundledConfig(p, slog.Default())
 

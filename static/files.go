@@ -1,4 +1,4 @@
-//go:build bundle
+//go:build bundle || assets
 
 // Package static carries the frontend asset bundle inside the binary.
 package static
