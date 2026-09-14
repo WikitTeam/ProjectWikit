@@ -155,8 +155,12 @@ func checkMigrations(r *Report, m Manifest) {
 		}
 	}
 	if len(unknown) > 0 {
-		r.problem("the backup was made by a newer pwikit; it carries %s, which this build does not know. Restore it with the pwikit that made it",
-			strings.Join(unknown, ", "))
+		maker := "the pwikit that made it"
+		if m.Pwikit != "" {
+			maker = "pwikit " + m.Pwikit + " or a newer release"
+		}
+		r.problem("the backup was made by a newer pwikit; it carries %s, which this build does not know. Restore it with %s",
+			strings.Join(unknown, ", "), maker)
 	}
 	if m.PGVersion != 0 && m.PGVersion < MinimumPGVersion {
 		r.note("the backup came from postgres %s, which is older than this build was tested against", Describe(m.PGVersion))

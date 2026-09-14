@@ -1,3 +1,4 @@
+-- compat: breaking
 ALTER TABLE web_externallink ADD COLUMN from_site_id bigint REFERENCES web_site (id);
 
 -- An include may name a page on another site, so the two ends of a reference do

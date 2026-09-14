@@ -1,3 +1,4 @@
+-- compat: compatible
 -- A site has nothing above it to follow, so its own rows name a value. The
 -- values written here are the ones the code fell back to. Categories keep
 -- following the site, which is still an answer they can give.

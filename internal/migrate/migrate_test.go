@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"os"
@@ -121,7 +122,13 @@ func TestRunAdoptsASchemaBuiltBeforeGoOwnedIt(t *testing.T) {
 	}
 }
 
-func TestRunRefusesASchemaNewerThanTheBinary(t *testing.T) {
+func TestEveryMigrationDeclaresCompatibility(t *testing.T) {
+	if err := Declarations(); err != nil {
+		t.Errorf("Declarations() = %v, want nil", err)
+	}
+}
+
+func TestRunRefusesABreakingSchemaNewerThanTheBinary(t *testing.T) {
 	fresh := scratch(t)
 	ctx := context.Background()
 
@@ -130,22 +137,101 @@ func TestRunRefusesASchemaNewerThanTheBinary(t *testing.T) {
 	}
 	conn := connect(t, fresh)
 	if _, err := conn.Exec(ctx,
-		`INSERT INTO `+versionTable+` (name) VALUES ('9999_from_the_future.sql')`); err != nil {
+		`INSERT INTO `+versionTable+` (name, breaking, applied_by) VALUES ('9999_from_the_future.sql', true, 'v9.0.0')`); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := Run(ctx, fresh); err == nil {
-		t.Error("Run() over a newer schema = nil, want an error")
-	} else if !strings.Contains(err.Error(), "9999_from_the_future.sql") {
-		t.Errorf("Run() err = %q, want it to name the unknown migration", err)
+	_, err := Run(ctx, fresh)
+	var newer *NewerSchemaError
+	if !errors.As(err, &newer) {
+		t.Fatalf("Run() over a newer breaking schema err = %v, want a NewerSchemaError", err)
+	}
+	if !slices.Equal(newer.Migrations, []string{"9999_from_the_future.sql"}) {
+		t.Errorf("NewerSchemaError.Migrations = %v, want [9999_from_the_future.sql]", newer.Migrations)
+	}
+	if newer.AppliedBy != "v9.0.0" {
+		t.Errorf("NewerSchemaError.AppliedBy = %q, want %q", newer.AppliedBy, "v9.0.0")
 	}
 
 	state, err := Status(ctx, fresh)
 	if err != nil {
 		t.Fatalf("Status() err = %v, want nil", err)
 	}
-	if !slices.Equal(state.Unknown, []string{"9999_from_the_future.sql"}) {
-		t.Errorf("Status().Unknown = %v, want [9999_from_the_future.sql]", state.Unknown)
+	if !slices.Equal(state.UnknownBreaking, []string{"9999_from_the_future.sql"}) {
+		t.Errorf("Status().UnknownBreaking = %v, want [9999_from_the_future.sql]", state.UnknownBreaking)
+	}
+}
+
+func TestRunRunsAlongsideACompatibleNewerMigration(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	conn := connect(t, fresh)
+	if _, err := conn.Exec(ctx,
+		`INSERT INTO `+versionTable+` (name, breaking, applied_by) VALUES ('9999_from_the_future.sql', false, 'v9.0.0')`); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := Run(ctx, fresh)
+	if err != nil {
+		t.Fatalf("Run() over a newer compatible schema err = %v, want nil", err)
+	}
+	if !slices.Equal(result.Newer, []string{"9999_from_the_future.sql"}) {
+		t.Errorf("Run().Newer = %v, want [9999_from_the_future.sql]", result.Newer)
+	}
+}
+
+func TestRunRefusesNewerMigrationsWhileItsOwnArePending(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	last := Names()[len(Names())-1]
+	conn := connect(t, fresh)
+	if _, err := conn.Exec(ctx, `DELETE FROM `+versionTable+` WHERE name = $1`, last); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := conn.Exec(ctx,
+		`INSERT INTO `+versionTable+` (name, breaking) VALUES ('9999_from_the_future.sql', false)`); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Run(ctx, fresh); err == nil || !strings.Contains(err.Error(), last) {
+		t.Errorf("Run() with its own migration pending err = %v, want one naming %s", err, last)
+	}
+}
+
+func TestRunRecordsDeclarationsInAnOlderLedger(t *testing.T) {
+	fresh := scratch(t)
+	ctx := context.Background()
+
+	conn := connect(t, fresh)
+	if _, err := conn.Exec(ctx, `CREATE TABLE `+versionTable+` (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() err = %v, want nil", err)
+	}
+	if _, err := conn.Exec(ctx, `UPDATE `+versionTable+` SET breaking = false`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Run(ctx, fresh); err != nil {
+		t.Fatalf("Run() second time err = %v, want nil", err)
+	}
+
+	for _, name := range Names() {
+		var got bool
+		if err := conn.QueryRow(ctx, `SELECT breaking FROM `+versionTable+` WHERE name = $1`, name).Scan(&got); err != nil {
+			t.Fatal(err)
+		}
+		if got != Breaking(name) {
+			t.Errorf("ledger breaking for %s = %t, want %t", name, got, Breaking(name))
+		}
 	}
 }
 

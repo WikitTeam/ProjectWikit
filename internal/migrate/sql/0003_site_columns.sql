@@ -1,3 +1,4 @@
+-- compat: breaking
 ALTER TABLE web_user ADD COLUMN wikidot_user_id bigint;
 
 -- The archive keys every author and voter by this number while usernames drift,

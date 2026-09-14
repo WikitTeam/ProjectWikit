@@ -250,6 +250,10 @@ func serve(ctx context.Context, args []string) (err error) {
 		for _, name := range result.Applied {
 			log.Info("pwikit applied a migration", "name", name)
 		}
+		if len(result.Newer) > 0 {
+			log.Warn("the database holds migrations from a newer pwikit that this one runs alongside",
+				"migrations", strings.Join(result.Newer, ", "))
+		}
 	}
 	conn, err := db.Open(ctx, dsn)
 	if err != nil {
@@ -661,7 +665,11 @@ func migrateCommand(args []string) error {
 		fmt.Fprintf(w, "applied\t%s\n", name)
 	}
 	for _, name := range state.Unknown {
-		fmt.Fprintf(w, "unknown\t%s\n", name)
+		status := "newer"
+		if slices.Contains(state.UnknownBreaking, name) {
+			status = "newer-breaking"
+		}
+		fmt.Fprintf(w, "%s\t%s\n", status, name)
 	}
 	for _, name := range state.Pending {
 		status := "pending"

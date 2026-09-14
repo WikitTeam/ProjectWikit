@@ -1,3 +1,4 @@
+-- compat: compatible
 -- The addresses an account has been seen at, one row per pair rather than one
 -- per action, so the table stays small enough to read whole.
 CREATE TABLE pwikit_user_address (

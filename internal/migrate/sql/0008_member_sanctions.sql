@@ -1,3 +1,4 @@
+-- compat: breaking
 -- What a site has done to one of its members. Accounts are shared by every
 -- site of an instance, so a sanction that belongs to one site cannot live on
 -- the account row.
