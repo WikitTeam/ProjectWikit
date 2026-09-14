@@ -13,18 +13,6 @@ on:
       - "ftml/**"
       - "ftml-capi/**"
       - ".github/workflows/go.yml"
-  push:
-    branches: [main]
-    paths:
-      - "**.go"
-      - "go.mod"
-      - "go.sum"
-      - "internal/migrate/sql/**"
-      - "internal/i18n/locales/**"
-      - "internal/**/templates/**"
-      - "ftml/**"
-      - "ftml-capi/**"
-      - ".github/workflows/go.yml"
 
 permissions:
   contents: read
