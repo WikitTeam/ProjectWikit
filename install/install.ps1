@@ -1,0 +1,116 @@
+# Installs a ProjectWikit release on Windows.
+#
+#   irm https://github.com/WikitTeam/ProjectWikit/releases/latest/download/install.ps1 | iex
+#
+# Piped into iex, the script takes its options from environment variables:
+# PWIKIT_VERSION, PWIKIT_DIR, PWIKIT_MIRROR and PWIKIT_NO_PATH. Saved to a file,
+# it also takes them as parameters:
+#
+#   .\install.ps1 -Version v1.0.0 -Dir D:\pwikit -Mirror <url> -NoPath
+param(
+    [string]$Version = $env:PWIKIT_VERSION,
+    [string]$Dir = $env:PWIKIT_DIR,
+    [string]$Mirror = $env:PWIKIT_MIRROR,
+    [switch]$NoPath = [bool]$env:PWIKIT_NO_PATH
+)
+
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+function Fail([string]$Message) {
+    Write-Host "install.ps1: $Message" -ForegroundColor Red
+    throw $Message
+}
+
+$Releases = if ($env:PWIKIT_RELEASES_URL) { $env:PWIKIT_RELEASES_URL } else { 'https://github.com/WikitTeam/ProjectWikit/releases' }
+if ($Mirror) { $Mirror = $Mirror.TrimEnd('/') }
+if (-not $Dir) { $Dir = Join-Path $HOME 'pwikit' }
+
+if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64' -and $env:PROCESSOR_ARCHITEW6432 -ne 'AMD64') {
+    if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') {
+        Write-Host 'No ARM64 build exists; installing the x64 build, which Windows 11 runs through emulation.'
+    } else {
+        Fail "no release is built for $($env:PROCESSOR_ARCHITECTURE)"
+    }
+}
+
+if (Test-Path (Join-Path $Dir 'pwikit.exe')) {
+    Fail "$Dir already holds pwikit; update it with: $Dir\pwikit.exe update"
+}
+if ((Test-Path $Dir) -and (Get-ChildItem -Force $Dir | Select-Object -First 1)) {
+    Fail "$Dir is not empty; pass -Dir with a new or empty directory"
+}
+
+function Get-ReleaseFile([string]$Path, [string]$OutFile) {
+    try {
+        Invoke-WebRequest -UseBasicParsing -TimeoutSec 60 -Uri "$Releases/$Path" -OutFile $OutFile
+        return
+    } catch {
+        if (-not $Mirror) { throw }
+    }
+    $mirrored = $Path -replace '^latest/download/', '' -replace '^download/', ''
+    Write-Host "GitHub could not be reached, trying $Mirror"
+    Invoke-WebRequest -UseBasicParsing -TimeoutSec 600 -Uri "$Mirror/$mirrored" -OutFile $OutFile
+}
+
+$work = Join-Path ([IO.Path]::GetTempPath()) ("pwikit-install-" + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $work | Out-Null
+try {
+    $platform = 'windows-amd64'
+    if (-not $Version) {
+        try { Get-ReleaseFile 'latest/download/latest.json' (Join-Path $work 'latest.json') }
+        catch { Fail 'could not fetch latest.json; check the network, or pass -Mirror' }
+        $latest = Get-Content -Raw (Join-Path $work 'latest.json') | ConvertFrom-Json
+        $Version = $latest.version
+        $entry = $latest.packages.$platform
+        if (-not $entry) { Fail "latest.json has no package for $platform" }
+        $file = $entry.file
+        $want = $entry.sha256
+    } else {
+        if (-not $Version.StartsWith('v')) { $Version = "v$Version" }
+        $file = "pwikit-$Version-$platform.zip"
+        try { Get-ReleaseFile "download/$Version/SHA256SUMS" (Join-Path $work 'SHA256SUMS') }
+        catch { Fail "could not fetch the checksums of $Version; does that release exist?" }
+        $want = $null
+        foreach ($line in Get-Content (Join-Path $work 'SHA256SUMS')) {
+            $parts = $line -split '\s+'
+            if ($parts.Count -ge 2 -and $parts[1] -eq $file) { $want = $parts[0] }
+        }
+        if (-not $want) { Fail "release $Version has no package for $platform" }
+    }
+
+    Write-Host "Downloading pwikit $Version for $platform"
+    $archive = Join-Path $work $file
+    try { Get-ReleaseFile "download/$Version/$file" $archive }
+    catch { Fail "could not download $file" }
+    $got = (Get-FileHash -Algorithm SHA256 $archive).Hash.ToLowerInvariant()
+    if ($got -ne $want.ToLowerInvariant()) {
+        Fail "$file has sha256 $got, want $want; the download is damaged or was altered"
+    }
+
+    $unpacked = Join-Path $work 'unpacked'
+    Expand-Archive -Path $archive -DestinationPath $unpacked
+    $top = Join-Path $unpacked "pwikit-$Version-$platform"
+    if (-not (Test-Path (Join-Path $top 'pwikit.exe'))) { Fail "$file does not hold pwikit.exe" }
+
+    New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+    Copy-Item (Join-Path $top 'pwikit.exe') $Dir
+    if (Test-Path (Join-Path $top 'LICENSE')) { Copy-Item (Join-Path $top 'LICENSE') $Dir }
+    Write-Host "Installed pwikit $Version into $Dir"
+
+    if (-not $NoPath) {
+        & (Join-Path $Dir 'pwikit.exe') path install
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "pwikit is installed, but could not be made runnable by name; run $Dir\pwikit.exe path install later"
+        }
+    }
+
+    Write-Host ''
+    Write-Host 'Next, create the site from that directory:'
+    Write-Host "  cd $Dir"
+    Write-Host '  .\pwikit.exe createsite -slug main -title "My Wiki" -headline "A wiki" -domain wiki.example.org -media-domain files.example.org'
+    Write-Host 'Then follow the quick start: https://github.com/WikitTeam/ProjectWikit/blob/main/docs/en/quickstart.md'
+} finally {
+    Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
+}
