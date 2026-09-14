@@ -1,0 +1,101 @@
+name: Go
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "internal/migrate/sql/**"
+      - "internal/i18n/locales/**"
+      - "internal/**/templates/**"
+      - "ftml/**"
+      - "ftml-capi/**"
+      - ".github/workflows/go.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "internal/migrate/sql/**"
+      - "internal/i18n/locales/**"
+      - "internal/**/templates/**"
+      - "ftml/**"
+      - "ftml-capi/**"
+      - ".github/workflows/go.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: format and vet
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l cmd internal tools static)
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet -tags nocgo ./...
+
+  migrations:
+    name: migration declarations
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Every migration declares whether older releases can run on it
+        run: go test -tags nocgo -run TestEveryMigrationDeclaresCompatibility ./internal/migrate
+
+  test:
+    name: build and test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ftml-capi
+
+      - name: Build the ftml library
+        working-directory: ftml-capi
+        run: cargo build --release
+
+      - name: Build
+        run: |
+          go build ./...
+          go build -tags nocgo ./...
+
+      - name: Vet with cgo
+        run: go vet ./...
+
+      - name: Test
+        run: go test -p 1 ./...

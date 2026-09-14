@@ -183,13 +183,18 @@ func download(dir, baseURL, target string) error {
 	}
 	client := &http.Client{Timeout: 10 * time.Minute}
 	for _, name := range []string{libraryName, metadataName} {
-		url := strings.TrimSuffix(baseURL, "/") + "/" + target + "/" + name
+		url := strings.TrimSuffix(baseURL, "/") + "/" + releaseAssetName(name, target)
 		if err := fetch(client, url, filepath.Join(dir, name)); err != nil {
 			return err
 		}
 		fmt.Printf("downloaded %s\n", url)
 	}
 	return nil
+}
+
+func releaseAssetName(name, target string) string {
+	ext := filepath.Ext(name)
+	return strings.TrimSuffix(name, ext) + "-" + target + ext
 }
 
 func fetch(client *http.Client, url, dest string) error {
