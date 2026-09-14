@@ -19,7 +19,6 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/admin"
-	"github.com/WikitTeam/ProjectWikit/internal/archive"
 	"github.com/WikitTeam/ProjectWikit/internal/backup"
 	"github.com/WikitTeam/ProjectWikit/internal/compress"
 	"github.com/WikitTeam/ProjectWikit/internal/config"
@@ -115,6 +114,8 @@ func run(args []string) error {
 		return backupCommand(args[1:])
 	case "seed":
 		return seedPages(args[1:])
+	case "import":
+		return importCommand(args[1:])
 	case "reindex":
 		return reindex(args[1:])
 	case "service":
@@ -144,6 +145,7 @@ Commands:
   admin       create an administrator or give an account every right
   backup      write, check, list or put back a backup
   seed        write the pages a new site starts with
+  import      import an unpacked wikidot backup
   reindex     put every page of a site back into the search index
   service     start pwikit whenever the machine boots
   path        make pwikit runnable by name from any directory
@@ -514,13 +516,7 @@ func seedPages(args []string) error {
 	fs := flag.NewFlagSet("seed", flag.ContinueOnError)
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	slug := fs.String("site", "", "slug of the site to write into; needed once a database holds more than one")
-	archivePath := fs.String("archive", "", "directory of an unpacked wikitCLI backup to import instead of the starter pages")
-	from := fs.String("from", "", "slug of the site inside the backup; needed when it holds more than one")
-	forceTags := fs.Bool("force-tags", false, "create tags this site would otherwise refuse")
-	noVotes := fs.Bool("no-votes", false, "leave the ratings behind")
-	noFiles := fs.Bool("no-files", false, "leave the attachments behind")
-	noAccounts := fs.Bool("no-accounts", false, "import even when the backup holds no accounts, leaving every author off")
-	dataDir := fs.String("data-dir", "", "state directory attachments are copied into; defaults to the directory holding the executable")
+	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return nil
@@ -542,26 +538,6 @@ func seedPages(args []string) error {
 	current, err := resolveSite(ctx, conn, *slug)
 	if err != nil {
 		return err
-	}
-
-	if *archivePath != "" {
-		files := ""
-		if !*noFiles {
-			p, err := paths.New(*dataDir)
-			if err != nil {
-				return err
-			}
-			if err := p.EnsureBase(); err != nil {
-				return err
-			}
-			files = p.Files()
-		}
-		return importArchive(ctx, conn, current, *archivePath, *from, archive.Options{
-			ForceTags:       *forceTags,
-			Votes:           !*noVotes,
-			Files:           files,
-			WithoutAccounts: *noAccounts,
-		})
 	}
 
 	written, err := seed.Run(ctx, conn, current.ID)
@@ -765,37 +741,6 @@ func resolveSite(ctx context.Context, conn *db.DB, slug string) (*db.Site, error
 		return conn.SiteBySlug(ctx, slugs[0])
 	}
 	return nil, fmt.Errorf("this database holds %d sites, name one with -site", len(slugs))
-}
-
-func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, from string, opts archive.Options) error {
-	found, err := archive.Open(path)
-	if err != nil {
-		return err
-	}
-
-	slugs := found.Sites()
-	switch {
-	case from == "" && len(slugs) > 1:
-		return fmt.Errorf("the backup holds %d sites, name one with -from", len(slugs))
-	case from == "":
-		from = slugs[0]
-	case !slices.Contains(slugs, from):
-		return fmt.Errorf("the backup has no site %q", from)
-	}
-
-	fmt.Printf("importing %s into %s\n", from, current.Slug)
-	opts.Report = func(line string) { fmt.Println(line) }
-	result, err := archive.ImportPages(ctx, conn, current.ID, found, from, opts)
-	if errors.Is(err, archive.ErrNoAccounts) {
-		return fmt.Errorf("%w, so nothing was imported. The accounts are in a _users directory, "+
-			"usually beside the site directory; pass the directory holding both to -archive, "+
-			"or pass -no-accounts to import without authors", err)
-	}
-	fmt.Printf("%d pages, %d already there, %d revisions, %d parents, %d files, %d accounts\n",
-		result.Pages, result.Skipped, result.Revisions, result.Parents, result.Files, result.Users)
-	fmt.Printf("%d forum categories, %d threads, %d posts\n",
-		result.Categories, result.Threads, result.Posts)
-	return err
 }
 
 func siteCommand(args []string) error {
