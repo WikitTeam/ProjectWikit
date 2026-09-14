@@ -480,6 +480,7 @@ func seedPages(args []string) error {
 	forceTags := fs.Bool("force-tags", false, "create tags this site would otherwise refuse")
 	noVotes := fs.Bool("no-votes", false, "leave the ratings behind")
 	noFiles := fs.Bool("no-files", false, "leave the attachments behind")
+	noAccounts := fs.Bool("no-accounts", false, "import even when the backup holds no accounts, leaving every author off")
 	dataDir := fs.String("data-dir", "", "state directory attachments are copied into; defaults to the directory holding the executable")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -516,7 +517,12 @@ func seedPages(args []string) error {
 			}
 			files = p.Files()
 		}
-		return importArchive(ctx, conn, current, *archivePath, *from, *forceTags, !*noVotes, files)
+		return importArchive(ctx, conn, current, *archivePath, *from, archive.Options{
+			ForceTags:       *forceTags,
+			Votes:           !*noVotes,
+			Files:           files,
+			WithoutAccounts: *noAccounts,
+		})
 	}
 
 	written, err := seed.Run(ctx, conn, current.ID)
@@ -718,9 +724,7 @@ func resolveSite(ctx context.Context, conn *db.DB, slug string) (*db.Site, error
 	return nil, fmt.Errorf("this database holds %d sites, name one with -site", len(slugs))
 }
 
-func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, from string,
-	forceTags, votes bool, files string) error {
-
+func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, from string, opts archive.Options) error {
 	found, err := archive.Open(path)
 	if err != nil {
 		return err
@@ -737,12 +741,13 @@ func importArchive(ctx context.Context, conn *db.DB, current *db.Site, path, fro
 	}
 
 	fmt.Printf("importing %s into %s\n", from, current.Slug)
-	result, err := archive.ImportPages(ctx, conn, current.ID, found, from, archive.Options{
-		ForceTags: forceTags,
-		Votes:     votes,
-		Files:     files,
-		Report:    func(line string) { fmt.Println(line) },
-	})
+	opts.Report = func(line string) { fmt.Println(line) }
+	result, err := archive.ImportPages(ctx, conn, current.ID, found, from, opts)
+	if errors.Is(err, archive.ErrNoAccounts) {
+		return fmt.Errorf("%w, so nothing was imported. The accounts are in a _users directory, "+
+			"usually beside the site directory; pass the directory holding both to -archive, "+
+			"or pass -no-accounts to import without authors", err)
+	}
 	fmt.Printf("%d pages, %d already there, %d revisions, %d parents, %d files, %d accounts\n",
 		result.Pages, result.Skipped, result.Revisions, result.Parents, result.Files, result.Users)
 	fmt.Printf("%d forum categories, %d threads, %d posts\n",

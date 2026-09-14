@@ -25,7 +25,11 @@ type Options struct {
 
 	// Report is called with a line worth showing while a long import runs.
 	Report func(string)
+
+	WithoutAccounts bool
 }
+
+var ErrNoAccounts = errors.New("the backup names authors but holds no accounts")
 
 type Result struct {
 	Users     int
@@ -62,6 +66,9 @@ func ImportPages(ctx context.Context, d *db.DB, siteID int64, a *Archive, slug s
 	im.users, err = im.importUsers(ctx)
 	if err != nil {
 		return out, err
+	}
+	if len(im.users) == 0 && !opts.WithoutAccounts && namesAuthors(pages) {
+		return out, ErrNoAccounts
 	}
 	out.Users = len(im.users)
 	report(opts, fmt.Sprintf("%d accounts, %d pages", out.Users, len(pages)))
@@ -123,6 +130,27 @@ func ImportPages(ctx context.Context, d *db.DB, siteID int64, a *Archive, slug s
 		return out, err
 	}
 	return out, nil
+}
+
+func namesAuthors(pages []Page) bool {
+	for _, page := range pages {
+		for _, rev := range page.Revisions {
+			if rev.Author > 0 {
+				return true
+			}
+		}
+		for _, vote := range page.Votings {
+			if vote.UserID > 0 {
+				return true
+			}
+		}
+		for _, file := range page.Files {
+			if file.Author > 0 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (im *importer) importUsers(ctx context.Context) (map[int64]int64, error) {

@@ -1,6 +1,8 @@
 package archive
 
 import (
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -80,6 +82,43 @@ func TestOpenRefusesAFile(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unpack") {
 		t.Errorf("Open(a file) err = %v, want it to say to unpack the backup", err)
+	}
+}
+
+func TestImportPagesRefusesABackupWithoutAccounts(t *testing.T) {
+	dir := site(t, t.TempDir(), "my-wiki")
+	page := `{"name":"start","title":"Start","revisions":[{"revision":0,"author":42,"stamp":1600000000,"flags":"N"}]}`
+	if err := os.WriteFile(filepath.Join(dir, metaDir, pagesDir, "start.json"), []byte(page), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	found, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = ImportPages(context.Background(), nil, 1, found, "my-wiki", Options{})
+	if !errors.Is(err, ErrNoAccounts) {
+		t.Errorf("ImportPages(no accounts) err = %v, want %v", err, ErrNoAccounts)
+	}
+}
+
+func TestNamesAuthors(t *testing.T) {
+	cases := []struct {
+		name string
+		page Page
+		want bool
+	}{
+		{"no authors", Page{Revisions: []Revision{{Author: 0}}}, false},
+		{"revision author", Page{Revisions: []Revision{{Author: 0}, {Author: 42}}}, true},
+		{"voter", Page{Revisions: []Revision{{}}, Votings: []Vote{{UserID: 42, Value: 1}}}, true},
+		{"uploader", Page{Revisions: []Revision{{}}, Files: []File{{Author: 42}}}, true},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := namesAuthors([]Page{tt.page}); got != tt.want {
+				t.Errorf("namesAuthors(%+v) = %t, want %t", tt.page, got, tt.want)
+			}
+		})
 	}
 }
 
