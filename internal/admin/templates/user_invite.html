@@ -1,0 +1,19 @@
+{{define "user_invite.html"}}
+{{template "form_error" .Error}}
+{{template "made_link" .}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-link"></i><h5>{{t "admin.new-invite-link"}}</h5></div>
+    <div class="widget-content">
+      <p class="hint">{{t "admin.h-invite-link"}}</p>
+      {{template "row_text" dict "n" "email" "k" "admin.f-email" "v" "" "w" "narrow-5"}}
+      {{template "role_picks" .}}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-link"></i>{{t "admin.make-link"}}</button>
+        <a class="btn" href="{{esc .Back}}">{{t "admin.invites"}}</a>
+      </div>
+    </div>
+  </div>
+</form>
+{{end}}

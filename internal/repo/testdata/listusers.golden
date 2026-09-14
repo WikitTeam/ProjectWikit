@@ -1,0 +1,72 @@
+=== anonymous-without-always
+
+=== anonymous-always
+<p>-1 <span class="wj-raw" style="white-space: pre-wrap;">[匿名]</span> <span class="wj-raw" style="white-space: pre-wrap;">[匿名]</span> /-/static/images/default_avatar.png false</p>
+=== anonymous-named
+<p>-1 Guest Guest /-/static/images/default_avatar.png false</p>
+=== anonymous-named-empty
+<p>-1   /-/static/images/default_avatar.png false</p>
+=== viewer-with-display-name
+<p>30 Probe Author probe-author /-/static/images/default_avatar.png true</p>
+=== viewer-without-display-name
+<p>32 probevoter probevoter /-/static/images/default_avatar.png true</p>
+=== viewer-from-wikidot
+<p>31 Probe WD 576c0df3-8a28-4468-9770-ede851d88c67 /-/static/images/default_avatar.png true</p>
+=== viewer-with-always-off
+<p>30 Probe Author probe-author /-/static/images/default_avatar.png true</p>
+=== uppercase-name
+<p>Probe Author</p>
+=== unknown-name
+<p>%%nope%%</p>
+=== empty-body
+
+=== authors
+<p>Probe Author wd:Probe WD</p>
+=== authors-linked
+<p><span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span> <span class="printuser w-user avatarhover" data-user-id="31" data-user-name="probe-wd-original">
+            
+                <a href="/-/users/probe-wd-original"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="wd:Probe WD"></a>
+            
+            <a href="/-/users/probe-wd-original">wd:Probe WD</a>
+            
+                
+                
+            
+        </span></p>
+=== authors-both
+<p>Probe Author is <span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+            
+                <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
+            
+            <a href="/-/users/probe-author">Probe Author</a>
+            
+                
+                
+            
+        </span> wd:Probe WD is <span class="printuser w-user avatarhover" data-user-id="31" data-user-name="probe-wd-original">
+            
+                <a href="/-/users/probe-wd-original"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="wd:Probe WD"></a>
+            
+            <a href="/-/users/probe-wd-original">wd:Probe WD</a>
+            
+                
+                
+            
+        </span></p>
+=== authors-wikitext
+<p><strong>Probe Author</strong> <strong>wd:Probe WD</strong></p>
+=== authors-none
+
+=== authors-while-signed-in
+<p>Probe Author wd:Probe WD</p>
+=== authors-off
+<p>30 Probe Author probe-author /-/static/images/default_avatar.png true</p>

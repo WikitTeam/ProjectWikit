@@ -1,0 +1,17 @@
+{{define "forum_section_form.html"}}
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-list-alt"></i><h5>{{t "admin.forum-sections"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_text" dict "n" "name" "k" "admin.f-name" "v" .Section.Name "w" "narrow-4"}}
+      {{template "row_area" dict "n" "description" "k" "admin.f-description" "v" .Section.Description}}
+      {{template "row_number" dict "n" "order" "k" "admin.f-order" "v" .Section.Order}}
+      {{template "row_check" dict "n" "is_hidden" "k" "admin.f-hidden" "l" "admin.l-section-hidden" "v" .Section.IsHidden}}
+      {{template "row_check" dict "n" "is_hidden_for_users" "k" "admin.f-staff-only" "l" "admin.l-section-staff-only" "v" .Section.IsHiddenForUser}}
+      {{template "save_row" dict "back" .Back "del" .Section.ID}}
+    </div>
+  </div>
+</form>
+{{end}}

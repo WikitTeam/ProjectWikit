@@ -1,0 +1,56 @@
+=== empty
+head=""
+body=""
+foot=""
+=== plain
+head=""
+body=""
+foot=""
+=== head-only
+head="before"
+body=""
+foot=""
+=== body-only
+head=""
+body="%%title%%"
+foot=""
+=== foot-only
+head=""
+body=""
+foot="after"
+=== all-three
+head="before"
+body="%%title%%"
+foot="after"
+=== no-newline-after-open
+head="before"
+body=""
+foot=""
+=== uppercase-tags
+head="before"
+body=""
+foot=""
+=== multiline-body
+head=""
+body="one\ntwo\nthree"
+foot=""
+=== leading-text
+head=""
+body="row"
+foot=""
+=== empty-body
+head=""
+body=""
+foot=""
+=== blank-line-after-open
+head="||~ Title||"
+body="||%%title%%||"
+foot=""
+=== table-rows
+head="||~ Title||"
+body="||%%title%%||"
+foot="||~ End||"
+=== body-before-head
+head="top"
+body=""
+foot=""

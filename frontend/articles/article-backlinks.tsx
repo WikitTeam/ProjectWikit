@@ -1,0 +1,126 @@
+import { t } from '~util/i18n'
+import * as React from 'react'
+import { useEffect, useState } from 'react'
+import styled from 'styled-components'
+import { ArticleBacklinks, fetchArticleBacklinks } from '../api/articles'
+import useConstCallback from '../util/const-callback'
+import Loader from '../util/loader'
+import WikidotModal from '../util/wikidot-modal'
+
+interface Props {
+  pageId: string
+  onClose?: () => void
+}
+
+const Styles = styled.div`
+  .text {
+    &.loading {
+      .loader {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        z-index: 1;
+      }
+    }
+  }
+`
+
+const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<ArticleBacklinks | null>(null)
+  const [error, setError] = useState<string>('')
+  const [fatalError, setFatalError] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchArticleBacklinks(pageId)
+      .then(data => {
+        setData(data)
+      })
+      .catch(e => {
+        setFatalError(true)
+        setError(e.error || t('common.server-unreachable'))
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  const onCancel = useConstCallback(e => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (onClose) onClose()
+  })
+
+  const onCloseError = useConstCallback(() => {
+    setError('')
+    if (fatalError) {
+      onCancel(null)
+    }
+  })
+
+  return (
+    <Styles>
+      {error && (
+        <WikidotModal buttons={[{ title: t('articles.backlinks.error-dismiss'), onClick: onCloseError }]} isError>
+          <p>
+            <strong>{t('articles.backlinks.error-label')}</strong> {error}
+          </p>
+        </WikidotModal>
+      )}
+      <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>
+        {t('articles.backlinks.close')}
+      </a>
+      <h1>{t('articles.backlinks.title')}</h1>
+      {loading && <Loader className="loader" />}
+      {data?.links?.length ? (
+        <>
+          <h2>{t('articles.backlinks.links-heading')}</h2>
+          <ul>
+            {data.links.map((x, i) => (
+              <li key={i}>
+                <a href={`/${x.id}`} className={x.exists ? '' : 'newpage'}>
+                  {x.title || x.id} ({x.id})
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {data?.includes?.length ? (
+        <>
+          <h2>{t('articles.backlinks.includes-heading')}</h2>
+          <ul>
+            {data.includes.map((x, i) => (
+              <li key={i}>
+                <a href={`/${x.id}`} className={x.exists ? '' : 'newpage'}>
+                  {x.title || x.id} ({x.id})
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {data?.children?.length ? (
+        <>
+          <h2>{t('articles.backlinks.children-heading')}</h2>
+          <ul>
+            {data.children.map((x, i) => (
+              <li key={i}>
+                <a href={`/${x.id}`} className={x.exists ? '' : 'newpage'}>
+                  {x.title || x.id} ({x.id})
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {!data?.children?.length && !data?.links?.length && !data?.includes?.length && !loading && <p>{t('articles.backlinks.empty')}</p>}
+    </Styles>
+  )
+}
+
+export default ArticleBacklinksView

@@ -1,0 +1,322 @@
+[
+  {
+    "name": "all",
+    "viewer": ""
+  },
+  {
+    "name": "signed-in",
+    "viewer": "probe-author",
+    "path": {
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "second-page",
+    "viewer": "",
+    "path": {
+      "p": "2"
+    }
+  },
+  {
+    "name": "last-page",
+    "viewer": "",
+    "path": {
+      "p": "4"
+    }
+  },
+  {
+    "name": "past-the-end",
+    "viewer": "",
+    "path": {
+      "p": "99",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "below-one",
+    "viewer": "",
+    "path": {
+      "p": "-3",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "junk-page",
+    "viewer": "",
+    "path": {
+      "p": "later",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "perpage-10",
+    "viewer": "",
+    "path": {
+      "p": "3",
+      "perpage": "10"
+    }
+  },
+  {
+    "name": "perpage-200",
+    "viewer": "",
+    "path": {
+      "category": "nav",
+      "perpage": "200"
+    }
+  },
+  {
+    "name": "last-partial-page",
+    "viewer": "",
+    "path": {
+      "p": "12",
+      "perpage": "7"
+    }
+  },
+  {
+    "name": "perpage-junk",
+    "viewer": "",
+    "path": {
+      "perpage": "many"
+    }
+  },
+  {
+    "name": "perpage-zero",
+    "viewer": "",
+    "path": {
+      "perpage": "0"
+    }
+  },
+  {
+    "name": "perpage-negative",
+    "viewer": "",
+    "path": {
+      "perpage": "-5"
+    }
+  },
+  {
+    "name": "perpage-bare",
+    "viewer": "",
+    "bare": [
+      "perpage"
+    ]
+  },
+  {
+    "name": "category-probe",
+    "viewer": "",
+    "path": {
+      "category": "probe",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "category-uppercase",
+    "viewer": "",
+    "path": {
+      "category": "PROBE",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "category-default",
+    "viewer": "",
+    "path": {
+      "category": "_default",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "category-star",
+    "viewer": "",
+    "path": {
+      "category": "*",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "category-missing",
+    "viewer": "",
+    "path": {
+      "category": "nosuchcategory",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "category-bare",
+    "viewer": "",
+    "bare": [
+      "category"
+    ]
+  },
+  {
+    "name": "user-exact",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "probe-author"
+    }
+  },
+  {
+    "name": "user-uppercase",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "PROBE-AUTHOR"
+    }
+  },
+  {
+    "name": "user-padded",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "  probe-author  "
+    }
+  },
+  {
+    "name": "user-wikidot",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "probe-wd-original"
+    }
+  },
+  {
+    "name": "user-system",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "system"
+    }
+  },
+  {
+    "name": "user-unknown",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "nobody-at-all"
+    }
+  },
+  {
+    "name": "user-partial",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "~probe"
+    }
+  },
+  {
+    "name": "user-partial-system",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "~sys"
+    }
+  },
+  {
+    "name": "user-partial-empty",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "~"
+    }
+  },
+  {
+    "name": "user-partial-wildcard",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "username": "~%"
+    }
+  },
+  {
+    "name": "types-source",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "source": "true"
+    }
+  },
+  {
+    "name": "types-tags",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "tags": "true"
+    }
+  },
+  {
+    "name": "types-revert",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "revert": "true"
+    }
+  },
+  {
+    "name": "types-title",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "title": "true"
+    }
+  },
+  {
+    "name": "types-two",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "source": "true",
+      "title": "true"
+    }
+  },
+  {
+    "name": "types-not-true",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "source": "false"
+    }
+  },
+  {
+    "name": "types-mixed-case",
+    "viewer": "",
+    "path": {
+      "perpage": "5",
+      "source": "TRUE"
+    }
+  },
+  {
+    "name": "types-unknown",
+    "viewer": "",
+    "path": {
+      "nosuchtype": "true",
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "types-bare",
+    "viewer": "",
+    "bare": [
+      "source"
+    ]
+  },
+  {
+    "name": "with-params",
+    "viewer": "",
+    "params": {
+      "limit": "5"
+    },
+    "path": {
+      "perpage": "5"
+    }
+  },
+  {
+    "name": "everything-at-once",
+    "viewer": "probe-author",
+    "path": {
+      "category": "probe",
+      "perpage": "5",
+      "source": "true",
+      "username": "~probe"
+    }
+  }
+]

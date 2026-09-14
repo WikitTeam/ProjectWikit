@@ -1,0 +1,86 @@
+[
+  {
+    "name": "all",
+    "viewer": ""
+  },
+  {
+    "name": "all-signed-in",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "second-page",
+    "viewer": "",
+    "path": {
+      "p": "2"
+    }
+  },
+  {
+    "name": "past-the-end",
+    "viewer": "",
+    "path": {
+      "p": "99"
+    }
+  },
+  {
+    "name": "below-one",
+    "viewer": "",
+    "path": {
+      "p": "-3"
+    }
+  },
+  {
+    "name": "junk-page",
+    "viewer": "",
+    "path": {
+      "p": "later"
+    }
+  },
+  {
+    "name": "one-category",
+    "viewer": "",
+    "category": "Probe Talk"
+  },
+  {
+    "name": "empty-category",
+    "viewer": "",
+    "category": "Probe Quiet"
+  },
+  {
+    "name": "comments-category",
+    "viewer": "",
+    "category": "Probe Comments"
+  },
+  {
+    "name": "hidden-section-category",
+    "viewer": "",
+    "category": "Probe Hidden Chat"
+  },
+  {
+    "name": "star",
+    "viewer": "",
+    "path": {
+      "c": "*"
+    }
+  },
+  {
+    "name": "missing-category",
+    "viewer": "",
+    "path": {
+      "c": "999999"
+    }
+  },
+  {
+    "name": "junk-category",
+    "viewer": "",
+    "path": {
+      "c": "not-a-number"
+    }
+  },
+  {
+    "name": "with-params",
+    "viewer": "",
+    "params": {
+      "limit": "5"
+    }
+  }
+]

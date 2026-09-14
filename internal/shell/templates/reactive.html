@@ -1,0 +1,23 @@
+{{define "reactive.html"}}
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{.Asset "fontawesome/css/all.css"}}">
+    <link rel="stylesheet" type="text/css" href="{{.Asset "wikidot-base.css"}}">
+{{if .ThemeURL}}    <link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">
+{{end}}    <link rel="stylesheet" type="text/css" href="{{.Asset "app.css"}}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{.Asset "wikit-tokens.css"}}">
+    <link rel="stylesheet" type="text/css" href="{{.Asset "wikit-shell.css"}}">
+    <script src="{{.Asset "app.js"}}" type="text/javascript"></script>
+</head>
+<body>
+    <div id="reactive-root" data-config="{{esc .Config}}"></div>
+    <div id="w-modals"></div>
+</body>
+</html>
+{{end}}

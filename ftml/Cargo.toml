@@ -14,7 +14,7 @@ edition = "2021" # this is *not* the same as the current year
 
 [lib]
 name = "ftml"
-crate-type = ["cdylib", "lib"]
+crate-type = ["staticlib", "cdylib", "lib"]
 
 [features]
 default  = ["html"]
@@ -36,7 +36,6 @@ maplit = "1"
 md5 = "0.7.0"
 pest = "2"
 pest_derive = "2"
-pyo3 = { version = "0.16.5", features = ["extension-module"] }
 rand = { version = "0.8", features = ["small_rng"] }
 ref-map = "0.1"
 regex = "1"

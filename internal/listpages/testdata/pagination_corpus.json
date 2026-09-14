@@ -1,0 +1,404 @@
+[
+  {
+    "name": "single-page",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 1
+  },
+  {
+    "name": "no-pages",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 0
+  },
+  {
+    "name": "total-2-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 2
+  },
+  {
+    "name": "total-2-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 2
+  },
+  {
+    "name": "total-2-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 2
+  },
+  {
+    "name": "total-2-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 2
+  },
+  {
+    "name": "total-3-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 3
+  },
+  {
+    "name": "total-3-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 3
+  },
+  {
+    "name": "total-3-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 3
+  },
+  {
+    "name": "total-3-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 3
+  },
+  {
+    "name": "total-3-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 3
+  },
+  {
+    "name": "total-4-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 4
+  },
+  {
+    "name": "total-4-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 4
+  },
+  {
+    "name": "total-4-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 4
+  },
+  {
+    "name": "total-4-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 4
+  },
+  {
+    "name": "total-4-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 4
+  },
+  {
+    "name": "total-4-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 4
+  },
+  {
+    "name": "total-5-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 5
+  },
+  {
+    "name": "total-5-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 5
+  },
+  {
+    "name": "total-5-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 5
+  },
+  {
+    "name": "total-5-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 5
+  },
+  {
+    "name": "total-5-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 5
+  },
+  {
+    "name": "total-5-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 5
+  },
+  {
+    "name": "total-5-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 5
+  },
+  {
+    "name": "total-6-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 6
+  },
+  {
+    "name": "total-6-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 6
+  },
+  {
+    "name": "total-7-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 7
+  },
+  {
+    "name": "total-7-page-7",
+    "base_path": "/main",
+    "page": 7,
+    "total_pages": 7
+  },
+  {
+    "name": "total-9-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-8",
+    "base_path": "/main",
+    "page": 8,
+    "total_pages": 9
+  },
+  {
+    "name": "total-9-page-9",
+    "base_path": "/main",
+    "page": 9,
+    "total_pages": 9
+  },
+  {
+    "name": "total-12-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-11",
+    "base_path": "/main",
+    "page": 11,
+    "total_pages": 12
+  },
+  {
+    "name": "total-12-page-12",
+    "base_path": "/main",
+    "page": 12,
+    "total_pages": 12
+  },
+  {
+    "name": "total-30-page-1",
+    "base_path": "/main",
+    "page": 1,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-2",
+    "base_path": "/main",
+    "page": 2,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-3",
+    "base_path": "/main",
+    "page": 3,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-4",
+    "base_path": "/main",
+    "page": 4,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-5",
+    "base_path": "/main",
+    "page": 5,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-6",
+    "base_path": "/main",
+    "page": 6,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-29",
+    "base_path": "/main",
+    "page": 29,
+    "total_pages": 30
+  },
+  {
+    "name": "total-30-page-30",
+    "base_path": "/main",
+    "page": 30,
+    "total_pages": 30
+  },
+  {
+    "name": "hash-base",
+    "base_path": "#",
+    "page": 3,
+    "total_pages": 9
+  },
+  {
+    "name": "base-with-params",
+    "base_path": "/scp:series/tag/euclid",
+    "page": 2,
+    "total_pages": 4
+  },
+  {
+    "name": "base-needing-escape",
+    "base_path": "/main/q/a\"b\u0026c",
+    "page": 2,
+    "total_pages": 4
+  }
+]

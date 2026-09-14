@@ -15,6 +15,7 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming token by placing WikiScript variable contents");
+    parser.check_page_syntax()?;
 
     let ExtractedToken { slice, .. } = parser.current();
 

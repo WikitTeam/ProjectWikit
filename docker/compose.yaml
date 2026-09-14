@@ -1,0 +1,54 @@
+name: pwikit
+
+services:
+  password:
+    image: postgres:18
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        if [ ! -s /run/pwikit/db-password ]; then
+          umask 022
+          head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > /run/pwikit/db-password
+        fi
+    volumes:
+      - secrets:/run/pwikit
+    restart: "no"
+
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    depends_on:
+      password:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_USER: pwikit
+      POSTGRES_DB: pwikit
+      POSTGRES_PASSWORD_FILE: /run/pwikit/db-password
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - secrets:/run/pwikit:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pwikit -d pwikit"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  pwikit:
+    image: ${PWIKIT_IMAGE:-ghcr.io/wikitteam/pwikit:latest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://pwikit@postgres:5432/pwikit?sslmode=disable
+      PWIKIT_DATABASE_PASSWORD_FILE: /run/pwikit/db-password
+    volumes:
+      - data:/data
+      - secrets:/run/pwikit:ro
+    ports:
+      - "${PWIKIT_PORT:-8080}:8080"
+
+volumes:
+  data:
+  pgdata:
+  secrets:

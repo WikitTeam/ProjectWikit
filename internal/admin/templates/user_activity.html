@@ -1,0 +1,75 @@
+{{define "user_activity.html"}}
+<ul class="nav nav-pills">
+  {{range $.Tabs}}
+  <li{{if eq . $.Show}} class="active"{{end}}><a href="{{esc $.Action}}?show={{urlq .}}">{{enum "admin.activity-" .}}</a></li>
+  {{end}}
+</ul>
+
+{{if eq .Show "votes"}}
+<table class="table changes-list">
+  <tbody>
+    {{range .Votes}}
+    <tr>
+      {{if $.Dated}}
+      <td class="date">{{if .At}}{{.At.Format "2006-01-02"}}<br><strong>{{.At.Format "15:04:05"}}</strong>{{else}}<span class="muted">&mdash;</span>{{end}}</td>
+      {{end}}
+      <td>
+        <span class="state">{{esc .Rate}}</span>
+        <div><a class="title" href="{{esc .Href}}">{{esc .Title}}</a></div>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+
+{{else if eq .Show "posts"}}
+<table class="table changes-list">
+  <tbody>
+    {{range .Posts}}
+    <tr>
+      <td class="date">{{.CreatedAt.Format "2006-01-02"}}<br><strong>{{.CreatedAt.Format "15:04:05"}}</strong></td>
+      <td>
+        {{if .Article}}<span class="state">{{esc .Article}}</span>{{end}}
+        <div><a class="title" href="{{esc .Href}}">{{if .Name}}{{esc .Name}}{{else}}{{esc .Thread}}{{end}}</a></div>
+        {{if .Name}}<div class="comment">{{esc .Thread}}</div>{{end}}
+      </td>
+    </tr>
+    {{else}}
+    <tr><td class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+
+{{else}}
+<table class="table changes-list">
+  <tbody>
+    {{range .Edits}}
+    <tr>
+      <td class="date">{{.CreatedAt.Format "2006-01-02"}}<br><strong>{{.CreatedAt.Format "15:04:05"}}</strong></td>
+      <td>
+        {{range .Flags}}<span class="state" title="{{esc .Desc}}">{{esc .Desc}}</span>{{end}}
+        <div><a class="title" href="{{esc .Href}}">{{esc .Title}}</a></div>
+        {{if .Comment}}<div class="comment">{{esc .Comment}}</div>{{end}}
+      </td>
+    </tr>
+    {{else}}
+    <tr><td class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+
+<div class="pagination">
+  <ul>
+    {{if gt .Page 1}}<li><a href="{{esc .Action}}?show={{urlq .Show}}&page={{sub .Page 1}}">&lsaquo;</a></li>{{end}}
+    <li class="active"><span>{{.Page}}</span></li>
+    {{if .More}}<li><a href="{{esc .Action}}?show={{urlq .Show}}&page={{add .Page 1}}">&rsaquo;</a></li>{{end}}
+  </ul>
+</div>
+
+<div class="form-actions">
+  <a class="btn" href="{{esc .Back}}">{{t "admin.back"}}</a>
+</div>
+{{end}}

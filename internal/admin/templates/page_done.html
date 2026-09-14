@@ -1,0 +1,14 @@
+{{define "page_done.html"}}
+<table class="table">
+  <thead><tr><th>{{t "admin.f-page"}}</th><th>{{t "admin.f-result"}}</th></tr></thead>
+  <tbody>
+    {{range .Results}}
+    <tr>
+      <td><code>{{esc .Full}}</code></td>
+      <td>{{if .Problem}}<span class="state bad">{{esc .Problem}}</span>{{else}}<span class="state on">{{t "admin.done"}}</span>{{end}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+<div class="form-actions"><a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a></div>
+{{end}}

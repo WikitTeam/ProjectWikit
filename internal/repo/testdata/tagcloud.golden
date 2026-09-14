@@ -1,0 +1,393 @@
+=== bare
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== categories
+<div class="pages-tag-cloud-box">
+                
+                    <div class="w-collapsible collapsible-block">
+                        <div class="collapsible-block-folded" style="display: none;">
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ lang</a></h2>
+                        </div>
+                        <div class="collapsible-block-unfolded" style="display: block;">
+                            <div class="collapsible-block-unfolded-link">
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- lang</a></h2>
+                            </div>
+                            <div class="collapsible-block-content">
+                                
+                                <hr style="margin: auto">
+                                
+                                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">aaa</a>
+                                
+                                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">en</a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                
+                    <div class="w-collapsible collapsible-block">
+                        <div class="collapsible-block-folded" style="display: none;">
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ Probe Topic <pre style="display: inline; font-size: 60%">[topic]</pre></a></h2>
+                        </div>
+                        <div class="collapsible-block-unfolded" style="display: block;">
+                            <div class="collapsible-block-unfolded-link">
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- Probe Topic <pre style="display: inline; font-size: 60%">[topic]</pre></a></h2>
+                            </div>
+                            <div class="collapsible-block-content">
+                                <h4>what a page is about</h4>
+                                <hr style="margin: auto">
+                                
+                                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">scp</a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                
+                    <div class="w-collapsible collapsible-block">
+                        <div class="collapsible-block-folded" style="display: none;">
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ 默认</a></h2>
+                        </div>
+                        <div class="collapsible-block-unfolded" style="display: block;">
+                            <div class="collapsible-block-unfolded-link">
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- 默认</a></h2>
+                            </div>
+                            <div class="collapsible-block-content">
+                                
+                                <hr style="margin: auto">
+                                
+                                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                                
+                                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                
+            </div>
+=== categories-no
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== categories-junk
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== limit
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 100.0000%; color: #8080c0">topic:scp</a>
+                
+            </div>
+=== limit-one
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 100.0000%; color: #8080c0">alpha</a>
+                
+            </div>
+=== limit-zero
+<div class="pages-tag-cloud-box">
+                
+            </div>
+=== limit-past-the-end
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== limit-junk
+!error: 处理模块 'TagCloud' 时出错
+=== limit-negative
+!error: 处理模块 'TagCloud' 时出错
+=== limit-underscore
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== limit-padded
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 100.0000%; color: #8080c0">topic:scp</a>
+                
+            </div>
+=== limit-signed
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 100.0000%; color: #8080c0">topic:scp</a>
+                
+            </div>
+=== target
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/probe:tagged/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/probe:tagged/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/probe:tagged/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/probe:tagged/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/probe:tagged/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== target-empty
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="//tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="//tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="//tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="//tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="//tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== font-sizes
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 80.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 160.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 80.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 133.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 106.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== font-sizes-px
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 10.0000px; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 40.0000px; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 10.0000px; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 30.0000px; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 20.0000px; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== font-size-min-only
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== font-size-fraction
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 1.0000.5em; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 3.0000.5em; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 1.0000.5em; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 2.3333.5em; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 1.6667.5em; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== font-size-mixed-units
+!error: 最大和最小字体大小的单位不同：10px 和 200%
+=== font-size-junk
+!error: 无效的字体大小：big
+=== colors-hex
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #ff0000">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #0000ff">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #ff0000">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #5500aa">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #aa0055">zeta</a>
+                
+            </div>
+=== colors-short-hex
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #ff0000">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #0000ff">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #ff0000">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #5500aa">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #aa0055">zeta</a>
+                
+            </div>
+=== colors-rgb
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #ff0000">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #0000ff">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #ff0000">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #5500aa">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #aa0055">zeta</a>
+                
+            </div>
+=== colors-bare
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #ff0000">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #0000ff">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #ff0000">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #5500aa">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #aa0055">zeta</a>
+                
+            </div>
+=== colors-out-of-range
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #ff0000">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #ff0000">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #ff0000">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #ff0000">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #ff0000">zeta</a>
+                
+            </div>
+=== colors-min-only
+<div class="pages-tag-cloud-box">
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aaaa" style="font-size: 100.0000%; color: #8080c0">lang:aaa</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/alpha" style="font-size: 300.0000%; color: #404080">alpha</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/lang%3Aen" style="font-size: 100.0000%; color: #8080c0">lang:en</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/topic%3Ascp" style="font-size: 233.3333%; color: #555595">topic:scp</a>
+                
+                    <a class="tag" href="/system:page-tags/tag/zeta" style="font-size: 166.6667%; color: #6a6aaa">zeta</a>
+                
+            </div>
+=== colors-junk
+!error: 无效的颜色：red
+=== colors-bad-hex
+!error: 无效的颜色：#ff00
+=== everything
+<div class="pages-tag-cloud-box">
+                
+                    <div class="w-collapsible collapsible-block">
+                        <div class="collapsible-block-folded" style="display: none;">
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ Probe Topic <pre style="display: inline; font-size: 60%">[topic]</pre></a></h2>
+                        </div>
+                        <div class="collapsible-block-unfolded" style="display: block;">
+                            <div class="collapsible-block-unfolded-link">
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- Probe Topic <pre style="display: inline; font-size: 60%">[topic]</pre></a></h2>
+                            </div>
+                            <div class="collapsible-block-content">
+                                <h4>what a page is about</h4>
+                                <hr style="margin: auto">
+                                
+                                    <a class="tag" href="/probe:tagged/tag/topic%3Ascp" style="font-size: 170.0000%; color: #6c4231">scp</a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                
+                    <div class="w-collapsible collapsible-block">
+                        <div class="collapsible-block-folded" style="display: none;">
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ 默认</a></h2>
+                        </div>
+                        <div class="collapsible-block-unfolded" style="display: block;">
+                            <div class="collapsible-block-unfolded-link">
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- 默认</a></h2>
+                            </div>
+                            <div class="collapsible-block-content">
+                                
+                                <hr style="margin: auto">
+                                
+                                    <a class="tag" href="/probe:tagged/tag/alpha" style="font-size: 250.0000%; color: #c86432">alpha</a>
+                                
+                                    <a class="tag" href="/probe:tagged/tag/zeta" style="font-size: 90.0000%; color: #102030">zeta</a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                
+            </div>

@@ -24,13 +24,14 @@ use crate::parsing::collect::{collect_text, collect_text_keep};
 use crate::parsing::condition::ParseCondition;
 use crate::parsing::consume::consume;
 use crate::parsing::rule::impls::prelude::check_step;
-use crate::parsing::strip::{strip_newlines, strip_whitespace};
+use crate::parsing::strip::{strip_block_newlines, strip_newlines, strip_whitespace};
 use crate::parsing::{
     gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
     ParseWarningKind, Parser, Token, ParseException
 };
 use crate::tree::Element;
 use regex::Regex;
+use std::borrow::Cow;
 
 lazy_static! {
     static ref ARGUMENT_KEY: Regex = Regex::new(r"[A-Za-z0-9_\-]+").unwrap();
@@ -135,6 +136,109 @@ where
             // Check if it's valid
             Ok(name.eq_ignore_ascii_case(closing_name))
         })
+    }
+
+    fn verify_start_block(&mut self, block_name: &str) -> Option<&'r ExtractedToken<'t>> {
+        self.save_evaluate_fn(|parser| {
+            parser.get_token(Token::LeftBlock, ParseWarningKind::BlockMissingName)?;
+            parser.get_optional_space()?;
+
+            let (name, _) = parser.get_block_name_internal(ParseWarningKind::BlockMissingName)?;
+            Ok(name.eq_ignore_ascii_case(block_name))
+        })
+    }
+
+    /// A module that takes a body opens a level of its own. One that does not
+    /// has no closing tag, so counting it would eat the outer block's.
+    fn verify_start_module(&mut self, block_name: &str) -> bool {
+        self.save_evaluate_fn(|parser| {
+            parser.get_token(Token::LeftBlock, ParseWarningKind::BlockMissingName)?;
+            parser.get_optional_space()?;
+
+            let (name, in_head) =
+                parser.get_block_name_internal(ParseWarningKind::BlockMissingName)?;
+            if !in_head || !name.eq_ignore_ascii_case(block_name) {
+                return Ok(false);
+            }
+
+            let (subname, _) =
+                parser.get_block_name_internal(ParseWarningKind::ModuleMissingName)?;
+            Ok(parser.page_callbacks().module_has_body(Cow::from(subname)))
+        })
+        .is_some()
+    }
+
+    /// Collect a block's body to its end, counting the blocks of the same name
+    /// that open inside it. Wikidot nests modules, so the first closing tag in
+    /// a module body need not be the one that ends it.
+    pub fn get_body_text_nested(
+        &mut self,
+        block_rule: &BlockRule,
+        closing_name: &str,
+    ) -> Result<&'t str, ParseWarning> {
+        info!("Getting nested block body as text (rule {})", block_rule.name);
+
+        let mut first = true;
+        let mut depth = 0usize;
+        let start = self.current();
+
+        loop {
+            if let Some(end) = self.verify_end_block(first, block_rule, closing_name) {
+                if depth == 0 {
+                    return Ok(self.full_text().slice_partial(start, end));
+                }
+                depth -= 1;
+                first = false;
+                continue;
+            }
+
+            if self.verify_start_module(closing_name) {
+                depth += 1;
+                first = false;
+                continue;
+            }
+
+            self.step()?;
+            first = false;
+        }
+    }
+
+    /// Walks past a body without building elements from it.
+    ///
+    /// A conditional block whose condition failed discards its body, so the body
+    /// never has to be well formed. Stepping over the tokens instead of parsing
+    /// them lets a body that opens a block in one include and closes it in
+    /// another survive, which is how theme warning banners are written.
+    pub fn skip_body(
+        &mut self,
+        block_rule: &BlockRule,
+        block_name: &str,
+    ) -> Result<(), ParseWarning> {
+        let mut first = true;
+        let mut depth = 0usize;
+
+        loop {
+            if self
+                .verify_end_block(first, block_rule, block_name)
+                .is_some()
+            {
+                if depth == 0 {
+                    return Ok(());
+                }
+                depth -= 1;
+                first = false;
+                continue;
+            }
+
+            if self.verify_start_block(block_name).is_some() {
+                depth += 1;
+                first = false;
+                continue;
+            }
+
+            first = false;
+            self.step()?;
+        }
     }
 
     // Body parsing
@@ -280,6 +384,7 @@ where
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);
+                strip_block_newlines(&mut all_elements);
                 all_exceptions.push(ParseException::Warning(self.make_warn(ParseWarningKind::ManualBreak)));
                 return ok!(paragraph_safe; all_elements, all_exceptions);
             }
@@ -287,6 +392,7 @@ where
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);
+                strip_block_newlines(&mut all_elements);
                 return ok!(paragraph_safe; all_elements, all_exceptions);
             }
 
@@ -381,8 +487,14 @@ where
                     self.get_optional_space()?;
                     let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
-                    // Parse the string
-                    let mut value = parse_string(value_raw);
+                    // The newlines a value picks up by running across lines are source
+                    // layout rather than part of the value.
+                    let mut value = if value_raw.contains('\n') {
+                        let joined = value_raw.replace('\r', "").replace('\n', "");
+                        Cow::Owned(parse_string(&joined).into_owned())
+                    } else {
+                        parse_string(value_raw)
+                    };
                     self.replace_variables(value.to_mut());
                     
                     // Add to argument map
@@ -418,8 +530,9 @@ where
                     self.step()?;
                     break
                 }
+                // Wikidot lets a quoted value run across lines, so a newline does not
+                // close it.
                 Token::InputEnd => return Err(self.make_warn(kind)),
-                Token::LineBreak | Token::ParagraphBreak => return Err(self.make_warn(kind)),
                 _ => {}
             }
             self.step()?;

@@ -110,6 +110,15 @@ pub fn validate_href(url: &str, strict: bool) -> bool {
     if url.starts_with(':') {
         return false
     }
+    // The scheme a reader can be sent to carries the page's own content, so the
+    // refused ones are answered before any rule that lets a scheme through.
+    let lowered = url.trim().to_ascii_lowercase();
+    if lowered != "javascript:;" && lowered.starts_with("javascript:") {
+        return false
+    }
+    if lowered.starts_with("data:") {
+        return false
+    }
     // this attempts to match an URL that makes sense.
     // if it starts with a scheme, then it's definitely valid and allowed
     if is_known_scheme(url) {
@@ -117,14 +126,6 @@ pub fn validate_href(url: &str, strict: bool) -> bool {
     }
     // if it starts with a weird character, it's not valid and not allowed
     if !URL_REGEX.is_match(url) {
-        return false
-    }
-    // if it starts with invalid protocol, it's not allowed
-    let lowered = url.trim().to_ascii_lowercase();
-    if lowered != "javascript:;" && lowered.starts_with("javascript:") {
-        return false
-    }
-    if lowered.starts_with("data:") {
         return false
     }
     // strict mode is used to disambiguate between [##green|FORBIDDEN PLACE##] and [#anchor text on the anchor]

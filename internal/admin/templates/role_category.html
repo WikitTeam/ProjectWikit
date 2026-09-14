@@ -1,0 +1,34 @@
+{{define "role_category.html"}}
+{{template "form_error" .Error}}
+<table class="table">
+  <thead><tr><th>{{t "admin.f-name"}}</th><th>{{t "admin.f-roles"}}</th><th class="right"></th></tr></thead>
+  <tbody>
+    {{range .Categories}}
+    <tr>
+      <td>
+        <form method="POST" action="{{esc $.Action}}" class="inline-form">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <input type="text" name="name" value="{{esc .Name}}" class="narrow-4">
+          <button type="submit" class="btn btn-mini">{{t "admin.save"}}</button>
+          {{if not .Roles}}<button type="submit" name="delete" value="1" class="btn btn-mini btn-danger">{{t "admin.delete"}}</button>{{end}}
+        </form>
+      </td>
+      <td class="num">{{.Roles}}</td>
+      <td class="right"></td>
+    </tr>
+    {{end}}
+    <tr>
+      <td>
+        <form method="POST" action="{{esc .Action}}" class="inline-form">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+          <input type="text" name="name" placeholder="{{t "admin.new-role-category"}}" class="narrow-4">
+          <button type="submit" class="btn btn-primary btn-mini"><i class="fas fa-plus"></i>{{t "admin.add"}}</button>
+        </form>
+      </td>
+      <td></td>
+      <td class="right"></td>
+    </tr>
+  </tbody>
+</table>
+{{end}}

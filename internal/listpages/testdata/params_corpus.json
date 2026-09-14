@@ -1,0 +1,763 @@
+[
+  {
+    "name": "no-page",
+    "page": "",
+    "viewer": "",
+    "params": {
+      "category": "*"
+    },
+    "path": null
+  },
+  {
+    "name": "no-page-dot-category",
+    "page": "",
+    "viewer": "",
+    "params": {},
+    "path": null
+  },
+  {
+    "name": "bare",
+    "page": "main",
+    "viewer": "",
+    "params": null,
+    "path": null
+  },
+  {
+    "name": "whole-site",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*"
+    },
+    "path": null
+  },
+  {
+    "name": "this-page",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "name": "."
+    },
+    "path": null
+  },
+  {
+    "name": "this-range",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "range": "."
+    },
+    "path": null
+  },
+  {
+    "name": "full-name",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "fullname": "nav:side"
+    },
+    "path": null
+  },
+  {
+    "name": "full-name-missing",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "fullname": "no-such-page"
+    },
+    "path": null
+  },
+  {
+    "name": "hidden-pages",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "pagetype": "hidden"
+    },
+    "path": null
+  },
+  {
+    "name": "bogus-pagetype",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "pagetype": "sideways"
+    },
+    "path": null
+  },
+  {
+    "name": "name-prefix",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "name": "NAV%"
+    },
+    "path": null
+  },
+  {
+    "name": "name-star-prefix",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "name": "nav*"
+    },
+    "path": null
+  },
+  {
+    "name": "name-exact",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "name": "Main"
+    },
+    "path": null
+  },
+  {
+    "name": "name-equals",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "name": "="
+    },
+    "path": null
+  },
+  {
+    "name": "name-star",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "name": "*"
+    },
+    "path": null
+  },
+  {
+    "name": "category-list",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "forum, nav"
+    },
+    "path": null
+  },
+  {
+    "name": "category-negated",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "* -forum"
+    },
+    "path": null
+  },
+  {
+    "name": "category-with-colon",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "forum:thing"
+    },
+    "path": null
+  },
+  {
+    "name": "category-dot-in-list",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": ". forum"
+    },
+    "path": null
+  },
+  {
+    "name": "tags-none",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "tags": "-"
+    },
+    "path": null
+  },
+  {
+    "name": "tags-own",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "tags": "="
+    },
+    "path": null
+  },
+  {
+    "name": "tags-own-exact",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "tags": "=="
+    },
+    "path": null
+  },
+  {
+    "name": "tags-unknown",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "tags": "nosuchtag"
+    },
+    "path": null
+  },
+  {
+    "name": "tags-unknown-required",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "tags": "+nosuchtag"
+    },
+    "path": null
+  },
+  {
+    "name": "tags-unknown-absent",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "tags": "-nosuchtag"
+    },
+    "path": null
+  },
+  {
+    "name": "parent-none",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "parent": "-"
+    },
+    "path": null
+  },
+  {
+    "name": "parent-own",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "parent": "="
+    },
+    "path": null
+  },
+  {
+    "name": "parent-not-own",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "parent": "-="
+    },
+    "path": null
+  },
+  {
+    "name": "parent-self",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "parent": "."
+    },
+    "path": null
+  },
+  {
+    "name": "parent-named",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "parent": "NAV:side"
+    },
+    "path": null
+  },
+  {
+    "name": "parent-missing",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "parent": "no-such-page"
+    },
+    "path": null
+  },
+  {
+    "name": "created-by-missing",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_by": "nobody"
+    },
+    "path": null
+  },
+  {
+    "name": "created-by-anonymous",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_by": "."
+    },
+    "path": null
+  },
+  {
+    "name": "created-by-wikidot",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_by": "wd:nobody"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-year",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2021"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-month",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2021-02"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-leap",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2020-02"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-day",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2021-02-09"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-clamped",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2021-13-99"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-zeroes",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2021-00-00"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-gt",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "\u003e2021"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-gte",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "\u003e=2021"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-lt",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "\u003c2021"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-lte",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "\u003c=2021"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-outside",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "\u003c\u003e2021"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-own-day",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "="
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-junk",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "twenty"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-trailing-dash",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "2021-"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-negative",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "-5"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-zero-year",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "0"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-too-far",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": "10000"
+    },
+    "path": null
+  },
+  {
+    "name": "created-at-leading-space",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "created_at": " \u003e2021"
+    },
+    "path": null
+  },
+  {
+    "name": "legacy-date",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "date": "2021"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-int",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "5"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-float",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "3.5"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-negative",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "-2"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-gte",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "\u003e=5"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-ne",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "\u003c\u003e5"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-junk",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "high"
+    },
+    "path": null
+  },
+  {
+    "name": "rating-own",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "rating": "="
+    },
+    "path": null
+  },
+  {
+    "name": "votes-int",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "votes": "2"
+    },
+    "path": null
+  },
+  {
+    "name": "votes-float",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "votes": "2.5"
+    },
+    "path": null
+  },
+  {
+    "name": "votes-own",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "votes": "="
+    },
+    "path": null
+  },
+  {
+    "name": "popularity-gt",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "popularity": "\u003e50"
+    },
+    "path": null
+  },
+  {
+    "name": "popularity-own",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "popularity": "="
+    },
+    "path": null
+  },
+  {
+    "name": "order-name",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": "name"
+    },
+    "path": null
+  },
+  {
+    "name": "order-name-desc",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": "name desc"
+    },
+    "path": null
+  },
+  {
+    "name": "order-name-asc",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": "name asc"
+    },
+    "path": null
+  },
+  {
+    "name": "order-three-words",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": "name desc extra"
+    },
+    "path": null
+  },
+  {
+    "name": "order-unknown",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": "nosuchcolumn"
+    },
+    "path": null
+  },
+  {
+    "name": "order-empty",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": ""
+    },
+    "path": null
+  },
+  {
+    "name": "order-rating",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "order": "rating"
+    },
+    "path": null
+  },
+  {
+    "name": "window",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "limit": "40",
+      "offset": "5",
+      "perpage": "300"
+    },
+    "path": null
+  },
+  {
+    "name": "window-junk",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*",
+      "limit": "y",
+      "offset": "x",
+      "perpage": "z"
+    },
+    "path": null
+  },
+  {
+    "name": "window-page",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*"
+    },
+    "path": {
+      "p": "3"
+    }
+  },
+  {
+    "name": "window-page-zero",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*"
+    },
+    "path": {
+      "p": "0"
+    }
+  },
+  {
+    "name": "window-page-junk",
+    "page": "main",
+    "viewer": "",
+    "params": {
+      "category": "*"
+    },
+    "path": {
+      "p": "x"
+    }
+  }
+]

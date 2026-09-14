@@ -30,6 +30,7 @@ use crate::next_index::{NextIndex, TableOfContentsIndex};
 use crate::render::Handle;
 use crate::settings::WikitextSettings;
 use crate::tree::{Element, VariableScopes};
+use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::num::NonZeroUsize;
 use std::rc::Rc;
@@ -67,6 +68,8 @@ where
     code_snippet_index: NonZeroUsize,
     table_of_contents_index: usize,
     equation_index: NonZeroUsize,
+    equation_names: HashMap<String, NonZeroUsize>,
+    equation_references: Vec<String>,
     footnote_index: NonZeroUsize,
 }
 
@@ -98,6 +101,8 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
             code_snippet_index: NonZeroUsize::new(1).unwrap(),
             table_of_contents_index: 0,
             equation_index: NonZeroUsize::new(1).unwrap(),
+            equation_names: HashMap::new(),
+            equation_references: Vec::new(),
             footnote_index: NonZeroUsize::new(1).unwrap(),
         }
     }
@@ -206,6 +211,17 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
         index
     }
 
+    pub fn name_equation(&mut self, name: &str, index: NonZeroUsize) {
+        self.equation_names.entry(str!(name)).or_insert(index);
+    }
+
+    // A reference may come before the equation it names, so it leaves a slot
+    // that is filled in after the whole page is rendered.
+    pub fn equation_reference_slot(&mut self, name: &str) -> String {
+        self.equation_references.push(str!(name));
+        format!("<wj-equation-slot-{}>", self.equation_references.len() - 1)
+    }
+
     pub fn next_footnote_index(&mut self) -> NonZeroUsize {
         let index = self.footnote_index;
         self.footnote_index = NonZeroUsize::new(index.get() + 1).unwrap();
@@ -259,12 +275,25 @@ impl<'i, 'h, 'e, 't> From<HtmlContext<'i, 'h, 'e, 't>> for HtmlOutput {
     #[inline]
     fn from(ctx: HtmlContext<'i, 'h, 'e, 't>) -> HtmlOutput {
         let HtmlContext {
-            body,
+            mut body,
             styles,
             meta,
             backlinks,
+            equation_names,
+            equation_references,
             ..
         } = ctx;
+
+        for (slot, name) in equation_references.iter().enumerate() {
+            let target = format!("<wj-equation-slot-{slot}>");
+            let reference = match equation_names.get(name) {
+                Some(index) => format!(
+                    "<a class=\"wj-equation-ref eref\" href=\"#equation-{index}\">{index}</a>",
+                ),
+                None => str!("<span class=\"wj-equation-ref wj-equation-ref-missing\">??</span>"),
+            };
+            body = body.replacen(&target, &reference, 1);
+        }
 
         HtmlOutput {
             body,

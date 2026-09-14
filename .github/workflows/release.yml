@@ -1,0 +1,209 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.pick.outputs.version }}
+      image: ${{ steps.pick.outputs.image }}
+    steps:
+      - id: pick
+        shell: bash
+        run: |
+          echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/pwikit" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-amd64
+            runner: ubuntu-24.04
+            manylinux: quay.io/pypa/manylinux_2_28_x86_64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            manylinux: quay.io/pypa/manylinux_2_28_aarch64
+          - platform: darwin-amd64
+            runner: macos-15-intel
+          - platform: darwin-arm64
+            runner: macos-15
+          - platform: windows-amd64
+            runner: windows-2022
+    runs-on: ${{ matrix.runner }}
+    name: build ${{ matrix.platform }}
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Build the page assets
+        shell: bash
+        working-directory: frontend
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Build the package in manylinux
+        if: runner.os == 'Linux'
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src -e VERSION="$VERSION" ${{ matrix.manylinux }} sh tools/release/linux.sh
+          sudo chown -R "$(id -u):$(id -g)" dist
+
+      - uses: actions/setup-go@v5
+        if: runner.os != 'Linux'
+        with:
+          go-version-file: go.mod
+
+      - name: Install the Rust toolchain
+        if: runner.os == 'macOS'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install the Rust toolchain for the GNU linker
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
+          gcc --version
+
+      - name: Build the package
+        if: runner.os != 'Linux'
+        shell: bash
+        run: go run ./tools/release build -version "$VERSION" -out dist -skip-frontend
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pwikit-${{ matrix.platform }}
+          path: |
+            dist/pwikit-*
+            dist/libftml_capi-*
+          if-no-files-found: error
+          retention-days: 14
+
+  image:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    name: image ${{ matrix.arch }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          build-args: VERSION=${{ needs.version.outputs.version }}
+          outputs: type=image,name=${{ needs.version.outputs.image }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Keep the digest
+        run: |
+          mkdir -p digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "digests/${digest#sha256:}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: digests/*
+          retention-days: 1
+
+  publish:
+    needs: [version, build, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      IMAGE: ${{ needs.version.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pwikit-*
+          path: dist
+          merge-multiple: true
+
+      - name: Write SHA256SUMS and latest.json
+        run: |
+          cp install/install.sh install/install.ps1 dist/
+          go run ./tools/release manifest -dir dist -version "$VERSION" -repository "$GITHUB_REPOSITORY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ env.VERSION }}
+          path: dist/*
+          retention-days: 14
+
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$VERSION" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$VERSION" \
+            --draft \
+            --verify-tag \
+            --notes "Release notes for $VERSION are written here before the draft is published."
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-*
+          path: digests
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Tag the image
+        working-directory: digests
+        run: |
+          tags="-t $IMAGE:$VERSION"
+          case "$VERSION" in *-*) ;; *) tags="$tags -t $IMAGE:latest" ;; esac
+          docker buildx imagetools create $tags $(printf "$IMAGE@sha256:%s " *)

@@ -76,6 +76,9 @@ fn parse_fn<'r, 't>(
     assert!(!flag_score, "Expression doesn't allow score flag");
 
     // syntax: [[#if|#ifexpr condition | truthy nodes | falsey nodes]]
+    if name.eq_ignore_ascii_case("#ifexpr") {
+        parser.check_page_syntax()?;
+    }
 
     let no_conditionals = parser.settings().no_conditionals;
     let rule = parser.rule();
@@ -173,6 +176,7 @@ fn parse_ifexpr_with_body<'r, 't>(
     assert!(!flag_star, "Expression doesn't allow star flag");
     assert!(!flag_score, "Expression doesn't allow score flag");
 
+    parser.check_page_syntax()?;
     parse_with_body(parser, name, &BLOCK_IFEXPR_WITH_BODY)
 }
 
@@ -204,6 +208,8 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
             // check for presence of "else"
             
             let found_else = parser.save_evaluate_fn(|parser| {
+                // Without the opening brackets the plain word "else" in the body would end it.
+                parser.get_token(Token::LeftBlock, ParseWarningKind::ManualBreak)?;
                 let (name, _) = parser.get_block_name(false)?;
 
                 if name == "else" {
@@ -268,6 +274,7 @@ fn parse_expr<'r, 't>(
     assert!(!flag_score, "Expression doesn't allow score flag");
 
     // syntax: [[#expr expression]]
+    parser.check_page_syntax()?;
 
     let condition = collect_text(
         parser,
@@ -278,7 +285,10 @@ fn parse_expr<'r, 't>(
         None,
     )?;
 
-    let result = evaluate_expr(parser, condition).to_string();
+    let mut expr = cow!(condition);
+    parser.replace_variables(expr.to_mut());
+
+    let result = evaluate_expr(parser, &expr).to_string();
 
     ok!(Element::Text(Cow::from(result)))
 }

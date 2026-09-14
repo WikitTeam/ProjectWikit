@@ -1,0 +1,197 @@
+[
+  {
+    "name": "bare"
+  },
+  {
+    "name": "categories",
+    "params": {
+      "categories": "yes"
+    }
+  },
+  {
+    "name": "categories-no",
+    "params": {
+      "categories": "no"
+    }
+  },
+  {
+    "name": "categories-junk",
+    "params": {
+      "categories": "true"
+    }
+  },
+  {
+    "name": "limit",
+    "params": {
+      "limit": "2"
+    }
+  },
+  {
+    "name": "limit-one",
+    "params": {
+      "limit": "1"
+    }
+  },
+  {
+    "name": "limit-zero",
+    "params": {
+      "limit": "0"
+    }
+  },
+  {
+    "name": "limit-past-the-end",
+    "params": {
+      "limit": "99"
+    }
+  },
+  {
+    "name": "limit-junk",
+    "params": {
+      "limit": "many"
+    }
+  },
+  {
+    "name": "limit-negative",
+    "params": {
+      "limit": "-1"
+    }
+  },
+  {
+    "name": "limit-underscore",
+    "params": {
+      "limit": "1_0"
+    }
+  },
+  {
+    "name": "limit-padded",
+    "params": {
+      "limit": " 2 "
+    }
+  },
+  {
+    "name": "limit-signed",
+    "params": {
+      "limit": "+2"
+    }
+  },
+  {
+    "name": "target",
+    "params": {
+      "target": "probe:tagged"
+    }
+  },
+  {
+    "name": "target-empty",
+    "params": {
+      "target": ""
+    }
+  },
+  {
+    "name": "font-sizes",
+    "params": {
+      "maxfontsize": "160%",
+      "minfontsize": "80%"
+    }
+  },
+  {
+    "name": "font-sizes-px",
+    "params": {
+      "maxfontsize": "40px",
+      "minfontsize": "10px"
+    }
+  },
+  {
+    "name": "font-size-min-only",
+    "params": {
+      "minfontsize": "80%"
+    }
+  },
+  {
+    "name": "font-size-fraction",
+    "params": {
+      "maxfontsize": "3.5em",
+      "minfontsize": "1.5em"
+    }
+  },
+  {
+    "name": "font-size-mixed-units",
+    "params": {
+      "maxfontsize": "200%",
+      "minfontsize": "10px"
+    }
+  },
+  {
+    "name": "font-size-junk",
+    "params": {
+      "maxfontsize": "bigger",
+      "minfontsize": "big"
+    }
+  },
+  {
+    "name": "colors-hex",
+    "params": {
+      "maxcolor": "#0000ff",
+      "mincolor": "#ff0000"
+    }
+  },
+  {
+    "name": "colors-short-hex",
+    "params": {
+      "maxcolor": "#00f",
+      "mincolor": "#f00"
+    }
+  },
+  {
+    "name": "colors-rgb",
+    "params": {
+      "maxcolor": "rgb(0,0,255)",
+      "mincolor": "rgb(255, 0, 0)"
+    }
+  },
+  {
+    "name": "colors-bare",
+    "params": {
+      "maxcolor": "0, 0, 255",
+      "mincolor": "255,0,0"
+    }
+  },
+  {
+    "name": "colors-out-of-range",
+    "params": {
+      "maxcolor": "999,0,0",
+      "mincolor": "300,0,0"
+    }
+  },
+  {
+    "name": "colors-min-only",
+    "params": {
+      "mincolor": "#ff0000"
+    }
+  },
+  {
+    "name": "colors-junk",
+    "params": {
+      "maxcolor": "blue",
+      "mincolor": "red"
+    }
+  },
+  {
+    "name": "colors-bad-hex",
+    "params": {
+      "maxcolor": "#0000ff",
+      "mincolor": "#ff00"
+    }
+  },
+  {
+    "name": "everything",
+    "params": {
+      "categories": "yes",
+      "limit": "3",
+      "maxcolor": "rgb(200, 100, 50)",
+      "maxfontsize": "250%",
+      "mincolor": "#102030",
+      "minfontsize": "90%",
+      "target": "probe:tagged"
+    }
+  }
+]

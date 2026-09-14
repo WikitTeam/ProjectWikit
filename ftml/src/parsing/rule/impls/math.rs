@@ -30,6 +30,7 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create inline math equation");
+    parser.check_page_syntax()?;
     check_step(parser, Token::LeftMath, ParseWarningKind::RuleFailed)?;
     let source = collect_text(
         parser,

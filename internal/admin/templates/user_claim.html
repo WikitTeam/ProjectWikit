@@ -1,0 +1,27 @@
+{{define "user_claim.html"}}
+{{template "form_error" .Error}}
+{{template "made_link" .}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-flag"></i><h5>{{t "admin.new-claim-link"}}</h5></div>
+    <div class="widget-content">
+      <p class="hint">{{t "admin.h-claim-link"}}</p>
+      <div class="control-group">
+        <label class="control-label" for="id_user">{{t "admin.f-wikidot-account"}}</label>
+        <div class="controls">
+          <select id="id_user" name="user" class="narrow-4">
+            {{range .Waiting}}<option value="{{.ID}}">{{esc .Name}}</option>{{end}}
+          </select>
+          {{if not .Waiting}}<span class="hint">{{t "admin.no-unclaimed"}}</span>{{end}}
+        </div>
+      </div>
+      {{template "role_picks" .}}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"{{if not .Waiting}} disabled{{end}}><i class="fas fa-link"></i>{{t "admin.make-link"}}</button>
+        <a class="btn" href="{{esc .Back}}">{{t "admin.invites"}}</a>
+      </div>
+    </div>
+  </div>
+</form>
+{{end}}

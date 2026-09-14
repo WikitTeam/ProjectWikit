@@ -1,0 +1,21 @@
+{{define "forum_category_list.html"}}
+<div class="btn-toolbar">
+  <div class="btn-group"><a class="btn btn-primary" href="{{esc .New}}"><i class="fas fa-plus"></i>{{t "admin.new-category"}}</a></div>
+</div>
+<table class="table table-hover">
+  <thead><tr><th>{{t "admin.f-name"}}</th><th>{{t "admin.f-section"}}</th><th>{{t "admin.f-order"}}</th><th>{{t "admin.f-for-comments"}}</th><th>{{t "admin.f-threads"}}</th></tr></thead>
+  <tbody>
+    {{range .Categories}}
+    <tr>
+      <td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td>
+      <td>{{esc .SectionName}}</td>
+      <td class="num">{{.Order}}</td>
+      <td>{{template "yes" .IsForComments}}</td>
+      <td class="num">{{.Threads}}</td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}

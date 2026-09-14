@@ -1,0 +1,22 @@
+{{define "role_picks"}}
+{{if .Roles}}
+<div class="control-group">
+  <span class="control-label">{{t "admin.f-roles"}}</span>
+  <div class="controls">
+    {{range .Roles}}
+    <label class="checkbox"><input type="checkbox" name="roles" value="{{.ID}}"> {{if .Name}}{{esc .Name}}{{else}}{{esc .Slug}}{{end}}</label>
+    {{end}}
+  </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "made_link"}}
+{{if .Link}}
+<div class="alert">
+  <h4>{{t "admin.link-made"}}</h4>
+  <p class="hint">{{t "admin.h-link-made"}}</p>
+  <input type="text" class="link-out" value="{{esc .Link}}" readonly onclick="this.select()">
+</div>
+{{end}}
+{{end}}

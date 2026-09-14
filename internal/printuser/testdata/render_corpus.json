@@ -1,0 +1,520 @@
+{
+  "roles": [
+    {
+      "slug": "staff",
+      "name": "工作人员",
+      "short_name": "",
+      "index": 0,
+      "category": "",
+      "inline_visual_mode": "badge",
+      "profile_visual_mode": "hidden",
+      "color": "#000000",
+      "icon": "",
+      "badge_text": "STAFF",
+      "badge_bg": "#112233",
+      "badge_text_color": "#ffeedd",
+      "badge_show_border": true
+    },
+    {
+      "slug": "no-text",
+      "name": "",
+      "short_name": "",
+      "index": 1,
+      "category": "",
+      "inline_visual_mode": "badge",
+      "profile_visual_mode": "hidden",
+      "color": "#000000",
+      "icon": "",
+      "badge_text": "",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    },
+    {
+      "slug": "cat-first",
+      "name": "先来的",
+      "short_name": "",
+      "index": 2,
+      "category": "status",
+      "inline_visual_mode": "badge",
+      "profile_visual_mode": "hidden",
+      "color": "#000000",
+      "icon": "",
+      "badge_text": "FIRST",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    },
+    {
+      "slug": "cat-second",
+      "name": "后来的",
+      "short_name": "",
+      "index": 3,
+      "category": "status",
+      "inline_visual_mode": "badge",
+      "profile_visual_mode": "hidden",
+      "color": "#000000",
+      "icon": "",
+      "badge_text": "SECOND",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    },
+    {
+      "slug": "cat-icon",
+      "name": "同类图标",
+      "short_name": "",
+      "index": 4,
+      "category": "status",
+      "inline_visual_mode": "icon",
+      "profile_visual_mode": "hidden",
+      "color": "#ff8800",
+      "icon": "-/roles/probe.svg",
+      "badge_text": "",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    },
+    {
+      "slug": "plain-icon",
+      "name": "图标",
+      "short_name": "",
+      "index": 5,
+      "category": "",
+      "inline_visual_mode": "icon",
+      "profile_visual_mode": "hidden",
+      "color": "#00aa55",
+      "icon": "-/roles/probe.svg",
+      "badge_text": "",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    },
+    {
+      "slug": "icon-no-file",
+      "name": "没有图标文件",
+      "short_name": "",
+      "index": 6,
+      "category": "",
+      "inline_visual_mode": "icon",
+      "profile_visual_mode": "hidden",
+      "color": "#000000",
+      "icon": "",
+      "badge_text": "",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    },
+    {
+      "slug": "hidden-role",
+      "name": "隐藏",
+      "short_name": "",
+      "index": 7,
+      "category": "",
+      "inline_visual_mode": "hidden",
+      "profile_visual_mode": "status",
+      "color": "#000000",
+      "icon": "",
+      "badge_text": "",
+      "badge_bg": "#808080",
+      "badge_text_color": "#ffffff",
+      "badge_show_border": false
+    }
+  ],
+  "icons": {
+    "-/roles/probe.svg": "\u003c?xml version=\"1.0\"?\u003e\n\u003csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"\u003e\u003cpath d=\"M1 2 L3 4\"/\u003e\u003c/svg\u003e\n"
+  },
+  "cases": [
+    {
+      "name": "system",
+      "kind": "system",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "system_bare",
+      "kind": "system",
+      "avatar": false,
+      "hover": false,
+      "external": "",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "anonymous",
+      "kind": "anonymous",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "anonymous_bare",
+      "kind": "anonymous",
+      "avatar": false,
+      "hover": false,
+      "external": "",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "external",
+      "kind": "external",
+      "avatar": true,
+      "hover": true,
+      "external": "Some User",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "external_bare",
+      "kind": "external",
+      "avatar": false,
+      "hover": false,
+      "external": "Some User",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "external_escaped",
+      "kind": "external",
+      "avatar": true,
+      "hover": true,
+      "external": "Tom \u0026 \"Jerry\"",
+      "user": null,
+      "roles": null
+    },
+    {
+      "name": "plain",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 101,
+        "type": "normal",
+        "username": "plain",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "plain_bare",
+      "kind": "user",
+      "avatar": false,
+      "hover": false,
+      "external": "",
+      "user": {
+        "id": 101,
+        "type": "normal",
+        "username": "plain",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "display_name_and_avatar",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 102,
+        "type": "normal",
+        "username": "displayed",
+        "wikidot_username": "",
+        "display_name": "显示名",
+        "avatar": "-/users/x.png",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "wikidot",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 103,
+        "type": "wikidot",
+        "username": "claimed",
+        "wikidot_username": "wd-name",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "wikidot_display_name",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 104,
+        "type": "wikidot",
+        "username": "wd-only",
+        "wikidot_username": "wd-only-name",
+        "display_name": "维基点",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "banned",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 105,
+        "type": "normal",
+        "username": "banned",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": false
+      },
+      "roles": null
+    },
+    {
+      "name": "banned_wikidot",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 106,
+        "type": "wikidot",
+        "username": "banned-wd",
+        "wikidot_username": "banned-wd-name",
+        "display_name": "",
+        "avatar": "",
+        "is_active": false
+      },
+      "roles": null
+    },
+    {
+      "name": "bot",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 107,
+        "type": "bot",
+        "username": "bot-account",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "banned_bot",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 108,
+        "type": "bot",
+        "username": "banned-bot",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": false
+      },
+      "roles": null
+    },
+    {
+      "name": "escaped_display_name",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 109,
+        "type": "normal",
+        "username": "escaper",
+        "wikidot_username": "",
+        "display_name": "a\u003cb\u003e\u0026\"'",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": null
+    },
+    {
+      "name": "badges",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "staff",
+        "no-text"
+      ]
+    },
+    {
+      "name": "same_category_keeps_lowest_index",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "cat-second",
+        "cat-first"
+      ]
+    },
+    {
+      "name": "same_category_different_modes",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "cat-first",
+        "cat-second",
+        "cat-icon"
+      ]
+    },
+    {
+      "name": "icons_before_badges",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "plain-icon",
+        "staff"
+      ]
+    },
+    {
+      "name": "icon_without_file",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "icon-no-file"
+      ]
+    },
+    {
+      "name": "hidden_role",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "hidden-role"
+      ]
+    },
+    {
+      "name": "roles_need_avatar",
+      "kind": "user",
+      "avatar": false,
+      "hover": false,
+      "external": "",
+      "user": {
+        "id": 110,
+        "type": "normal",
+        "username": "decorated",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": true
+      },
+      "roles": [
+        "staff",
+        "plain-icon"
+      ]
+    },
+    {
+      "name": "banned_beats_roles",
+      "kind": "user",
+      "avatar": true,
+      "hover": true,
+      "external": "",
+      "user": {
+        "id": 105,
+        "type": "normal",
+        "username": "banned",
+        "wikidot_username": "",
+        "display_name": "",
+        "avatar": "",
+        "is_active": false
+      },
+      "roles": [
+        "staff"
+      ]
+    }
+  ]
+}

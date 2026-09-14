@@ -52,12 +52,14 @@ fn parse_fn<'r, 't>(
     let mut body: Cow<'t, str>;
 
     if module_has_body {
-        body = Cow::from(parser.get_body_text(&BLOCK_MODULE, name)?);
+        body = Cow::from(parser.get_body_text_nested(&BLOCK_MODULE, name)?);
     } else {
         body = Cow::from("");
     }
 
     parser.replace_variables(body.to_mut());
 
-    return ok!(false; Elements::Single(Element::Module(Module::new(Cow::from(subname), arguments.to_hash_map(), body))), vec![]);
+    let inline = parser.page_callbacks().module_is_inline(Cow::from(subname));
+
+    return ok!(inline; Elements::Single(Element::Module(Module::new(Cow::from(subname), arguments.to_hash_map(), body))), vec![]);
 }

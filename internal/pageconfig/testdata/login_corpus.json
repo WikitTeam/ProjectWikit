@@ -1,0 +1,265 @@
+[
+  {
+    "name": "anonymous",
+    "kind": "anonymous",
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "system",
+    "kind": "system",
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "plain",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "with display name and avatar",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "Login Probe",
+      "wikidot_username": "",
+      "avatar": "-/users/loginprobe.png",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "wikidot with display name",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "wikidot",
+      "display_name": "Wd Display",
+      "wikidot_username": "Wd Original",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "wikidot without display name",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "wikidot",
+      "display_name": "",
+      "wikidot_username": "Wd Original",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "inactive",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": false,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "superuser",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": true
+    },
+    "editor": true,
+    "notification_count": 0
+  },
+  {
+    "name": "staff by role",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "roles": [
+      {
+        "slug": "probemoderator",
+        "index": 3,
+        "is_staff": true,
+        "group_votes": false,
+        "inline_visual_mode": "hidden",
+        "profile_visual_mode": "hidden",
+        "can_edit_articles": false
+      }
+    ],
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "visual roles",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "roles": [
+      {
+        "slug": "probebadged",
+        "index": 1,
+        "is_staff": false,
+        "group_votes": false,
+        "inline_visual_mode": "badge",
+        "profile_visual_mode": "hidden",
+        "can_edit_articles": false
+      },
+      {
+        "slug": "probeinvisible",
+        "index": 2,
+        "is_staff": false,
+        "group_votes": false,
+        "inline_visual_mode": "hidden",
+        "profile_visual_mode": "hidden",
+        "can_edit_articles": false
+      },
+      {
+        "slug": "probegrouped",
+        "index": 4,
+        "is_staff": false,
+        "group_votes": true,
+        "inline_visual_mode": "hidden",
+        "profile_visual_mode": "hidden",
+        "can_edit_articles": false
+      },
+      {
+        "slug": "probeprofiled",
+        "index": 5,
+        "is_staff": false,
+        "group_votes": false,
+        "inline_visual_mode": "hidden",
+        "profile_visual_mode": "status",
+        "can_edit_articles": false
+      }
+    ],
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "only hidden roles",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "roles": [
+      {
+        "slug": "probeinvisible",
+        "index": 2,
+        "is_staff": false,
+        "group_votes": false,
+        "inline_visual_mode": "hidden",
+        "profile_visual_mode": "hidden",
+        "can_edit_articles": false
+      }
+    ],
+    "editor": false,
+    "notification_count": 0
+  },
+  {
+    "name": "editor",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "roles": [
+      {
+        "slug": "probeeditor",
+        "index": 6,
+        "is_staff": false,
+        "group_votes": false,
+        "inline_visual_mode": "hidden",
+        "profile_visual_mode": "hidden",
+        "can_edit_articles": true
+      }
+    ],
+    "editor": true,
+    "notification_count": 0
+  },
+  {
+    "name": "with notifications",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 7
+  },
+  {
+    "name": "unicode display name",
+    "kind": "user",
+    "user": {
+      "username": "loginprobe",
+      "type": "normal",
+      "display_name": "中文 名字",
+      "wikidot_username": "",
+      "avatar": "",
+      "is_active": true,
+      "is_superuser": false
+    },
+    "editor": false,
+    "notification_count": 0
+  }
+]

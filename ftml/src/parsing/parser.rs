@@ -29,7 +29,7 @@ use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
 use std::borrow::Cow;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use regex::Regex;
 use std::vec;
@@ -43,6 +43,12 @@ lazy_static! {
 }
 
 const MAX_RECURSION_DEPTH: usize = 100;
+
+// Every parser transaction copies the variables, and a value can double itself
+// on each [[set]], so both what is stored and what is written out are capped.
+const MAX_VARIABLE_BYTES: usize = 1024;
+const MAX_SCOPE_BYTES: usize = 16 * 1024;
+const MAX_SUBSTITUTED_BYTES: usize = 1024 * 1024;
 
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -150,6 +156,7 @@ pub struct Parser<'r, 't> {
     remaining: &'r [ExtractedToken<'t>],
     full_text: FullText<'t>,
     ast_cache: Rc<RefCell<HashMap<usize, (usize, ParseSuccess<'r, 't, Elements<'t>>)>>>,
+    substituted: Rc<Cell<usize>>,
 
     // Rule state
     rule: Rule,
@@ -201,6 +208,7 @@ impl<'r, 't> Parser<'r, 't> {
             current,
             remaining,
             ast_cache: Rc::new(RefCell::new(HashMap::new())),
+            substituted: Rc::new(Cell::new(0)),
             full_text,
             rule: RULE_PAGE,
             depth: 0,
@@ -469,9 +477,18 @@ impl<'r, 't> Parser<'r, 't> {
         let scope = self.current_scope();
         
         match scope.get(&name) {
-            Some(value) => value.0.to_owned(),
-            None => Cow::from("")
+            Some(value) if self.substitute(value.0.len()) => value.0.to_owned(),
+            _ => Cow::from("")
         }
+    }
+
+    fn substitute(&self, bytes: usize) -> bool {
+        let total = self.substituted.get() + bytes;
+        if total > MAX_SUBSTITUTED_BYTES {
+            return false;
+        }
+        self.substituted.set(total);
+        true
     }
 
     // Setters
@@ -576,9 +593,21 @@ impl<'r, 't> Parser<'r, 't> {
         }
     }
 
-    pub fn push_variable(&mut self, name: Cow<'t, str>, value: Cow<'t, str>, override_: bool) {
+    pub fn push_variable(&mut self, name: Cow<'t, str>, value: Cow<'t, str>, override_: bool) -> bool {
+        if value.len() > MAX_VARIABLE_BYTES {
+            return false;
+        }
         let scope_depth = self.scope_depth();
         let current_scope = self.current_scope_mut();
+
+        let stored: usize = current_scope
+            .iter()
+            .filter(|(key, _)| key.as_ref() != name.as_ref())
+            .map(|(key, (value, _))| key.len() + value.len())
+            .sum();
+        if stored + name.len() + value.len() > MAX_SCOPE_BYTES {
+            return false;
+        }
 
         let new_depth = match override_ {
             false => if current_scope.contains_key(&name) { current_scope.get(&name).unwrap().1 } else { scope_depth },
@@ -586,6 +615,7 @@ impl<'r, 't> Parser<'r, 't> {
         };
 
         current_scope.insert(name, (value, new_depth));
+        true
     }
 
     pub fn replace_variables(&self, content: &mut String) {
@@ -597,7 +627,8 @@ impl<'r, 't> Parser<'r, 't> {
             let name = &capture["name"];
     
             if let Some(value) = variables.get(name) {
-                matches.push((&value.0, mtch.range()));
+                let value = if self.substitute(value.0.len()) { value.0.as_ref() } else { "" };
+                matches.push((value, mtch.range()));
             }
         }
     
@@ -618,7 +649,8 @@ impl<'r, 't> Parser<'r, 't> {
             let name = &capture["name"];
     
             if let Some(value) = variables.get(name) {
-                matches.push((&value.0, mtch.range()));
+                let value = if self.substitute(value.0.len()) { value.0.as_ref() } else { "" };
+                matches.push((value, mtch.range()));
             }
         }
     

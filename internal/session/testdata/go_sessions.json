@@ -1,0 +1,44 @@
+[
+  {
+    "data": {},
+    "encoded": "e30:1r31eq:C7MzTeb-tO2S7n4gdKgSVYEs4pn1OuYtQvWVq0BOUEA"
+  },
+  {
+    "data": {
+      "_auth_user_id": "1"
+    },
+    "encoded": "eyJfYXV0aF91c2VyX2lkIjoiMSJ9:1r31eq:901W1QvvDfVyPTJvUtlSLvIV3In2WsSSt0PqU6EW4Go"
+  },
+  {
+    "data": {
+      "_auth_user_backend": "django.contrib.auth.backends.ModelBackend",
+      "_auth_user_hash": "deadbeef",
+      "_auth_user_id": "42"
+    },
+    "encoded": ".eJyqVopPLC3JiC8tTi2KT0pMzk7NS1GyUkrJSsxLz9dLzs8rKcpM0gMp0YPKFuv55qek5jhB1eogG5CRWJwB0p2amJKUmpqGKpkJMtjESKkWEAAA___OMCmi:1r31eq:GJPWFBrIFBlN9KhaKi_gZ2nYV6bQgsniLaA7WKJpcAc"
+  },
+  {
+    "data": {
+      "中文键": "中文值"
+    },
+    "encoded": "eyJcdTRlMmRcdTY1ODdcdTk1MmUiOiJcdTRlMmRcdTY1ODdcdTUwM2MifQ:1r31eq:yrzNwDOi87FExCJPDDj--c0Eww9HFKIa2nAhG8uyq3o"
+  },
+  {
+    "data": {
+      "big": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    },
+    "encoded": ".eJyqVkrKTFeyUqocBSMOKNUCAgAA__-4Me9B:1r31eq:DoBCviyFla52u2sebgrtXFSQpQ0Cgxk5sucziuFwYpA"
+  },
+  {
+    "data": {
+      "nested": {
+        "a": 1,
+        "b": [
+          "x",
+          "y"
+        ]
+      }
+    },
+    "encoded": "eyJuZXN0ZWQiOnsiYSI6MSwiYiI6WyJ4IiwieSJdfX0:1r31eq:8r-trzr4k5HEqdBx8ylzpaQOznfZJcKKKUUANXX726I"
+  }
+]

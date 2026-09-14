@@ -1,0 +1,40 @@
+{
+  "canonical_url": "https://wiki.example/main/a/1",
+  "names": [
+    "path|a",
+    "path|A",
+    "path|missing",
+    "path|norender",
+    "path|",
+    "path_expr|a",
+    "path_expr|missing",
+    "path_expr|norender",
+    "path_expr|uni",
+    "path_expr|q",
+    "path_url|q",
+    "path_url|missing",
+    "path_url|norender",
+    "path_url|uni",
+    "canonical_url",
+    "PATH|a",
+    "other"
+  ],
+  "params": [
+    {
+      "key": "a",
+      "value": "1"
+    },
+    {
+      "key": "norender",
+      "value": null
+    },
+    {
+      "key": "q",
+      "value": "x y/z"
+    },
+    {
+      "key": "uni",
+      "value": "中"
+    }
+  ]
+}

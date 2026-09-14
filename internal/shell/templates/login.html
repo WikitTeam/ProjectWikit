@@ -1,0 +1,46 @@
+{{define "login.html"}}
+<div class="wikit-scope">
+  <div class="auth-shell">
+    <form method="POST" class="auth-column">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+
+      <div class="auth-mark">
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+      </div>
+
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "login.title"}}</h1>
+      </div>
+
+      {{if .Error}}
+      <div class="error-inline">
+        <span class="marker">ERR</span>
+        <span>{{esc .Error}}</span>
+      </div>
+      {{end}}
+
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label" for="id_username">{{.T "login.username"}}</label>
+          <input type="text" name="username" id="id_username" value="{{esc .Username}}" autocomplete="username" autocapitalize="none" maxlength="150" required autofocus placeholder="username">
+        </div>
+        <div class="form-row">
+          <label class="label" for="id_password">{{.T "login.password"}}</label>
+          <input type="password" name="password" id="id_password" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+      </div>
+
+      <button class="btn-primary" type="submit">{{.T "login.submit"}}</button>
+
+      <div class="action-row">
+        <a class="link-muted" href="/-/password_reset">{{.T "login.forgot"}}</a>
+        <div class="action-inline">
+          <span class="meta">{{.T "login.no-account"}}</span>
+          <a class="link-muted" href="/-/signup">{{.T "login.signup"}}</a>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+{{end}}

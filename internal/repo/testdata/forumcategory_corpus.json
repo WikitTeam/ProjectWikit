@@ -1,0 +1,105 @@
+[
+  {
+    "name": "chat",
+    "viewer": "",
+    "category": "Probe Chat"
+  },
+  {
+    "name": "chat-by-start",
+    "viewer": "",
+    "category": "Probe Chat",
+    "path": {
+      "sort": "start"
+    }
+  },
+  {
+    "name": "chat-by-junk-sort",
+    "viewer": "",
+    "category": "Probe Chat",
+    "path": {
+      "sort": "reply"
+    }
+  },
+  {
+    "name": "chat-signed-in",
+    "viewer": "probe-author",
+    "category": "Probe Chat"
+  },
+  {
+    "name": "empty",
+    "viewer": "",
+    "category": "Probe Quiet"
+  },
+  {
+    "name": "comments",
+    "viewer": "",
+    "category": "Probe Comments"
+  },
+  {
+    "name": "busy-first-page",
+    "viewer": "",
+    "category": "Probe Busy"
+  },
+  {
+    "name": "busy-second-page",
+    "viewer": "",
+    "category": "Probe Busy",
+    "path": {
+      "p": "2"
+    }
+  },
+  {
+    "name": "busy-past-the-end",
+    "viewer": "",
+    "category": "Probe Busy",
+    "path": {
+      "p": "99"
+    }
+  },
+  {
+    "name": "busy-below-one",
+    "viewer": "",
+    "category": "Probe Busy",
+    "path": {
+      "p": "-3"
+    }
+  },
+  {
+    "name": "busy-junk-page",
+    "viewer": "",
+    "category": "Probe Busy",
+    "path": {
+      "p": "later"
+    }
+  },
+  {
+    "name": "hidden-section-category",
+    "viewer": "",
+    "category": "Probe Hidden Chat"
+  },
+  {
+    "name": "missing",
+    "viewer": "",
+    "path": {
+      "c": "999999"
+    }
+  },
+  {
+    "name": "unparsable",
+    "viewer": "",
+    "path": {
+      "c": "not-a-number"
+    }
+  },
+  {
+    "name": "padded-id",
+    "viewer": "",
+    "path": {
+      "c": "0999999"
+    }
+  },
+  {
+    "name": "no-parameter",
+    "viewer": ""
+  }
+]

@@ -1,0 +1,28 @@
+=== anonymous
+{"user": {"type": "anonymous", "id": null, "name": "\u533f\u540d\u7528\u6237", "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": null}, "notificationCount": 0}
+=== system
+{"type": "system", "id": null, "name": null, "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": false, "admin": false, "staff": false, "editor": false, "roles": null}
+=== plain
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}
+=== with display name and avatar
+{"user": {"type": "normal", "id": 424242, "name": "Login Probe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": "/local--files/-/users/loginprobe.png", "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}
+=== wikidot with display name
+{"user": {"type": "wikidot", "id": 424242, "name": "wd:Wd Display", "username": "loginprobe", "urlName": "Wd Original", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}
+=== wikidot without display name
+{"user": {"type": "wikidot", "id": 424242, "name": "wd:Wd Original", "username": "loginprobe", "urlName": "Wd Original", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}
+=== inactive
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": false, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}
+=== superuser
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": true, "staff": true, "editor": true, "roles": []}, "notificationCount": 0}
+=== staff by role
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": true, "editor": false, "roles": []}, "notificationCount": 0}
+=== visual roles
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": ["probebadged", "probegrouped", "probeprofiled"]}, "notificationCount": 0}
+=== only hidden roles
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}
+=== editor
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": true, "roles": []}, "notificationCount": 0}
+=== with notifications
+{"user": {"type": "normal", "id": 424242, "name": "loginprobe", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 7}
+=== unicode display name
+{"user": {"type": "normal", "id": 424242, "name": "\u4e2d\u6587 \u540d\u5b57", "username": "loginprobe", "urlName": "loginprobe", "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": []}, "notificationCount": 0}

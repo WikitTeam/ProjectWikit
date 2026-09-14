@@ -1,0 +1,100 @@
+import { t } from '~util/i18n'
+import * as React from 'react'
+import { useEffect, useState } from 'react'
+import styled from 'styled-components'
+import { fetchArticle } from '../api/articles'
+import useConstCallback from '../util/const-callback'
+import Loader from '../util/loader'
+import WikidotModal from '../util/wikidot-modal'
+
+interface Props {
+  pageId: string
+  onClose: () => void
+  source?: string
+}
+
+const Styles = styled.div<{ loading?: boolean }>`
+  #source-code.loading {
+    position: relative;
+    min-height: calc(32px + 16px + 16px);
+    .loader {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 1;
+    }
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 600px;
+  }
+`
+
+const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDelegate, source: originalSource }) => {
+  const [loading, setLoading] = useState(false)
+  const [source, setSource] = useState(originalSource)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    loadSource()
+  }, [])
+
+  useEffect(() => {
+    if (originalSource) {
+      setSource(originalSource)
+    }
+  }, [originalSource])
+
+  const loadSource = useConstCallback(async () => {
+    if (!source) {
+      setLoading(true)
+      setError('')
+      try {
+        const article = await fetchArticle(pageId)
+        setError('')
+        setSource(article.source)
+      } catch (e) {
+        setError(e.error || t('common.server-unreachable'))
+      } finally {
+        setLoading(false)
+      }
+    }
+  })
+
+  const onClose = useConstCallback(e => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    onCloseDelegate?.()
+  })
+
+  const onCloseError = useConstCallback(() => {
+    setError('')
+    onClose(null)
+  })
+
+  return (
+    <Styles>
+      {error && (
+        <WikidotModal buttons={[{ title: t('articles.source.error-dismiss'), onClick: onCloseError }]} isError>
+          <p>
+            <strong>{t('articles.source.error-label')}</strong> {error}
+          </p>
+        </WikidotModal>
+      )}
+      <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>
+        {t('articles.source.close')}
+      </a>
+      <h1>{t('articles.source.title')}</h1>
+      <div id="source-code" className={`${loading ? 'loading' : ''}`}>
+        {loading && <Loader className="loader" />}
+        <textarea value={source || ''} readOnly />
+      </div>
+    </Styles>
+  )
+}
+
+export default ArticleSource

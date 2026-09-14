@@ -31,6 +31,7 @@ use crate::tree::{Elements, AcceptsPartial};
 use std::fmt::{self, Debug};
 
 mod arguments;
+mod end;
 mod mapping;
 mod parser;
 mod rule;
@@ -38,6 +39,7 @@ mod rule;
 pub mod blocks;
 
 pub use self::arguments::Arguments;
+pub use self::end::RULE_BLOCK_END;
 pub use self::rule::RULE_BLOCK;
 
 /// Define a rule for how to parse a block.

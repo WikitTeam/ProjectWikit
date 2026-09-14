@@ -1,0 +1,20 @@
+{{define "page_confirm.html"}}
+<div class="alert alert-block alert-error">
+  <h4><i class="fas fa-exclamation-triangle"></i>
+    {{if eq .What "delete"}}{{t "admin.confirm-delete" "n" (len .Picked)}}{{else}}{{t "admin.confirm-revert" "n" (len .Picked) "steps" .Steps}}{{end}}
+  </h4>
+  <p>{{if eq .What "delete"}}{{t "admin.warn-delete"}}{{else}}{{t "admin.warn-revert"}}{{end}}</p>
+  <ul>
+    {{range .Picked}}<li><code>{{esc .FullName}}</code></li>{{end}}
+  </ul>
+  <form method="POST" action="{{esc .Action}}" class="inline-form">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+    <input type="hidden" name="action" value="{{esc .What}}">
+    <input type="hidden" name="steps" value="{{.Steps}}">
+    <input type="hidden" name="confirm" value="1">
+    {{range .Picked}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+    <button type="submit" class="btn btn-danger">{{if eq .What "delete"}}{{t "admin.batch-delete"}}{{else}}{{t "admin.batch-revert"}}{{end}}</button>
+    <a class="btn" href="{{esc .Back}}">{{t "admin.cancel"}}</a>
+  </form>
+</div>
+{{end}}

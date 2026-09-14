@@ -1,0 +1,9 @@
+[package]
+name = "ftml-sidecar"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+ftml = { path = "../ftml", default-features = false, features = ["html", "mathml"] }
+serde_json = "1"

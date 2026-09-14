@@ -1,0 +1,75 @@
+=== text ===
+plain text with a
+newline in it
+=== paragraph ===
+<p>one</p><p>two</p>
+=== emphasis ===
+<p><em>a</em> <strong>b</strong> <b>c</b> <u>d</u> <strike>e</strike> <s>f</s></p>
+=== superscript ===
+<p><sup>up</sup> <sub>down</sub></p>
+=== line break ===
+<p>a<br>b</p>
+=== iframe ===
+<iframe src="https://example.test/x" width="300" class="frame"></iframe>
+=== printuser ===
+<span class="printuser"><a href="http://wikidot.com/user:info/probe-author">probe-author</a></span>
+=== printuser with avatar ===
+<span class="printuser avatarhover"><a href="http://wikidot.com/user:info/probe-author">probe-author</a></span>
+=== inline math ===
+<span class="math-inline">$x^2$</span>
+=== equation number ===
+<span class="equation-number">(1)</span>
+=== plain span ===
+<span style="color: red" class="fancy">red</span>
+=== blockquote ===
+<blockquote><p>one</p><p>two</p></blockquote>
+=== div with an allowed class ===
+<div class="rimg">inner</div>
+=== collapsible ===
+<div class="collapsible-block"><div class="collapsible-block-folded"><a class="collapsible-block-link">show me</a></div><div class="collapsible-block-unfolded"><div class="collapsible-block-unfolded-link"><a class="collapsible-block-link">hide me</a></div><div class="collapsible-block-content"><p>inside</p></div></div></div>
+=== tabview ===
+<div class="yui-navset"><ul class="yui-nav"><li>first</li><li>second</li></ul><div class="yui-content"><div><p>one</p></div><div><p>two</p></div></div></div>
+=== code block ===
+<div class="code"><pre><code>print(1)</code></pre></div>
+=== highlighted code block ===
+<div class="code"><div class="hl-main"><pre>print(2)</pre></div></div>
+=== footnote ===
+<p>text<sup class="footnoteref"><a href="#footnote-1">1</a></sup></p><div class="footnotes-footer"><div class="title">Footnotes</div><div class="footnote-footer"><a href="#footnoteref-1">1</a>. the note</div></div>
+=== bibliography ===
+<div class="bibitems"><div class="title">Bibliography</div><div class="bibitem">1. first item</div><div class="bibitem">2. second item</div></div>
+=== image container ===
+<div class="image-container floatright"><img src="/local--files/a.png" alt="a" width="50"></div>
+=== image container aligned ===
+<div class="image-container aligncenter"><img src="/local--files/b.png"></div>
+=== content separator ===
+<div class="content-separator"></div>
+=== math equation ===
+<div class="math-equation">x = 1</div>
+=== wiki note ===
+<div class="wiki-note"><p>noted</p></div>
+=== unknown div ===
+<div class="whatever" id="x">fallback</div>
+=== anchor ===
+<a href="/scp-173" class="link">SCP-173</a>
+=== image ===
+<img src="/local--files/c.png" alt="c" width="20">
+=== horizontal rule ===
+<hr>
+=== lists ===
+<ul><li>one</li><li>two</li></ul><ol><li>three</li></ol>
+=== headings ===
+<h1><span>one</span></h1><h3><span>three</span></h3>
+=== teletype ===
+<tt>code</tt>
+=== table ===
+<table class="wiki-content-table"><tbody><tr><th>head</th></tr><tr><td>cell</td></tr></tbody></table>
+=== script ===
+<script>alert(1)</script>
+=== definition list ===
+<dl><dt>term</dt><dd>meaning</dd><dt>other</dt><dd>second</dd></dl>
+=== quotes in attributes ===
+<span title="a &quot;quoted&quot; word">x</span>
+=== backslash in attributes ===
+<div class="rimg" data-path="a\b">x</div>
+=== nested markup ===
+<p><strong>bold <em>and italic</em></strong></p>

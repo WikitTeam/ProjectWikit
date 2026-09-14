@@ -1,0 +1,77 @@
+[
+  {
+    "name": "anonymous",
+    "viewer": ""
+  },
+  {
+    "name": "anonymous-hidden-shown",
+    "viewer": "",
+    "path": {
+      "hidden": "show"
+    }
+  },
+  {
+    "name": "anonymous-hidden-junk",
+    "viewer": "",
+    "path": {
+      "hidden": "maybe"
+    }
+  },
+  {
+    "name": "anonymous-open-section",
+    "viewer": "",
+    "section": "Probe Open"
+  },
+  {
+    "name": "anonymous-hidden-section",
+    "viewer": "",
+    "section": "Probe Hidden"
+  },
+  {
+    "name": "anonymous-staff-section",
+    "viewer": "",
+    "section": "Probe Staff"
+  },
+  {
+    "name": "anonymous-section-and-hidden",
+    "viewer": "",
+    "section": "Probe Open",
+    "path": {
+      "hidden": "show"
+    }
+  },
+  {
+    "name": "anonymous-missing-section",
+    "viewer": "",
+    "path": {
+      "s": "999999"
+    }
+  },
+  {
+    "name": "anonymous-unparsable-section",
+    "viewer": "",
+    "path": {
+      "s": "not-a-number"
+    }
+  },
+  {
+    "name": "registered",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "superuser",
+    "viewer": "probe-staff"
+  },
+  {
+    "name": "superuser-hidden-shown",
+    "viewer": "probe-staff",
+    "path": {
+      "hidden": "show"
+    }
+  },
+  {
+    "name": "superuser-staff-section",
+    "viewer": "probe-staff",
+    "section": "Probe Staff"
+  }
+]

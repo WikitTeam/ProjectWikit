@@ -1,0 +1,438 @@
+{
+  "assets": {
+    "app.css": "/-/static/app.css?v=d3e803eb",
+    "app.js": "/-/static/app.js?v=6cd23731",
+    "fontawesome/css/all.css": "/-/static/fontawesome/css/all.css?v=50b966c2",
+    "wikidot-base.css": "/-/static/wikidot-base.css?v=42062692"
+  },
+  "cases": [
+    {
+      "name": "minimal",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "",
+        "nav_side": "",
+        "title": "",
+        "content": "",
+        "breadcrumbs": null,
+        "tags_categories": null,
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{}",
+        "options_config": "{}"
+      }
+    },
+    {
+      "name": "full",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Main page",
+        "og_description": "an excerpt",
+        "og_image": "https://wiki.example/local--files/main/cover.png",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "#page-content .x { color: red }",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "Main page",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": [
+          {
+            "url": "/main",
+            "title": "Main"
+          },
+          {
+            "url": "/main:parent",
+            "title": "Parent"
+          },
+          {
+            "url": "/main:child",
+            "title": "Child"
+          }
+        ],
+        "tags_categories": [
+          {
+            "name": "默认",
+            "tags": [
+              {
+                "name": "scp",
+                "full_name": "scp"
+              },
+              {
+                "name": "euclid",
+                "full_name": "euclid"
+              }
+            ]
+          },
+          {
+            "name": "attribute",
+            "tags": [
+              {
+                "name": "co-authored",
+                "full_name": "attribute:co-authored"
+              },
+              {
+                "name": "_hidden",
+                "full_name": "attribute:_hidden"
+              }
+            ]
+          }
+        ],
+        "rev_number": 12,
+        "updated_at": "2026-08-25T14:03:07+08:00",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "escaping",
+      "kind": "page",
+      "page": {
+        "site_name": "Wik\u003cit\u003e \u0026 \"co\"",
+        "site_headline": "it's a wiki",
+        "site_title": "\u003cscript\u003ealert(1)\u003c/script\u003e",
+        "site_icon": "-/sites/it's.png",
+        "og_title": "A \u0026 B \u003cb\u003e",
+        "og_description": "it's \"quoted\" \u0026 \u003cmarked\u003e",
+        "og_image": "",
+        "og_url": "https://wiki.example/main?a=1\u0026b=2",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/theme/dark.css?v=1\u0026x=2",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "A \u0026 B \u003cb\u003e",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": [
+          {
+            "url": "/a?x=1\u0026y=2",
+            "title": "it's \u003cfirst\u003e"
+          },
+          {
+            "url": "/b",
+            "title": "\"last\" \u0026 final"
+          }
+        ],
+        "tags_categories": [
+          {
+            "name": "cat \u0026 \"co\"",
+            "tags": [
+              {
+                "name": "a\u0026b",
+                "full_name": "x:a\u0026b"
+              }
+            ]
+          }
+        ],
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"name\": \"it's \u003cme\u003e\"}}",
+        "options_config": "{\"pageId\": \"a\u0026b\"}"
+      }
+    },
+    {
+      "name": "noindex",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": true,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": null,
+        "tags_categories": null,
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "google_tag",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "G-AB1'2-3",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": null,
+        "tags_categories": null,
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "one_breadcrumb",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": [
+          {
+            "url": "/main",
+            "title": "Main"
+          }
+        ],
+        "tags_categories": null,
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "two_breadcrumbs",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": [
+          {
+            "url": "/main",
+            "title": "Main"
+          },
+          {
+            "url": "/main:parent",
+            "title": "Parent"
+          }
+        ],
+        "tags_categories": null,
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "hidden_tags_only",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": null,
+        "tags_categories": [
+          {
+            "name": "attribute",
+            "tags": [
+              {
+                "name": "_hidden",
+                "full_name": "attribute:_hidden"
+              }
+            ]
+          }
+        ],
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "unpadded_date",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": null,
+        "tags_categories": null,
+        "rev_number": 0,
+        "updated_at": "2026-01-05T09:07:00+08:00",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "date_crosses_midnight_in_utc",
+      "kind": "page",
+      "page": {
+        "site_name": "Wikit",
+        "site_headline": "a wiki",
+        "site_title": "Wikit",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": null,
+        "tags_categories": null,
+        "rev_number": 3,
+        "updated_at": "2026-03-01T00:30:00+08:00",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "unicode",
+      "kind": "page",
+      "page": {
+        "site_name": "维基",
+        "site_headline": "一个维基站点",
+        "site_title": "首页 - 维基",
+        "site_icon": "-/sites/icon.png",
+        "og_title": "Wikit",
+        "og_description": "an excerpt",
+        "og_image": "",
+        "og_url": "https://wiki.example/main",
+        "noindex": false,
+        "google_tag_id": "",
+        "theme_url": "/-/static/theme.css",
+        "computed_style": "",
+        "nav_top": "\u003cdiv class=\"top-bar\"\u003e\u003cul\u003e\u003cli\u003e\u003ca href=\"/main\"\u003eMain\u003c/a\u003e\u003c/li\u003e\u003c/ul\u003e\u003c/div\u003e",
+        "nav_side": "\u003cdiv class=\"side-block\"\u003e\u003cp\u003eside\u003c/p\u003e\u003c/div\u003e",
+        "title": "首页",
+        "content": "\u003cp\u003ehello \u003cem\u003eworld\u003c/em\u003e\u003c/p\u003e",
+        "breadcrumbs": null,
+        "tags_categories": [
+          {
+            "name": "分类",
+            "tags": [
+              {
+                "name": "中文标签",
+                "full_name": "分类:中文标签"
+              }
+            ]
+          }
+        ],
+        "rev_number": 0,
+        "updated_at": "",
+        "login_status_config": "{\"user\": {\"type\": \"anonymous\"}, \"notificationCount\": 0}",
+        "options_config": "{\"optionsEnabled\": true, \"pageId\": \"main\"}"
+      }
+    },
+    {
+      "name": "not_found",
+      "kind": "not_found",
+      "page_id": "no-such-page"
+    },
+    {
+      "name": "not_found_escaped",
+      "kind": "not_found",
+      "page_id": "a\u0026b\u003cc\u003e'd'"
+    },
+    {
+      "name": "not_found_create",
+      "kind": "not_found",
+      "page_id": "new-page",
+      "allow_create": true,
+      "options": "{\"page_id\": \"new-page\", \"pathParams\": {\"a\": \"b\"}}"
+    },
+    {
+      "name": "forbidden",
+      "kind": "forbidden",
+      "page_id": "secret:page"
+    },
+    {
+      "name": "forbidden_escaped",
+      "kind": "forbidden",
+      "page_id": "a\u0026b\u003cc\u003e'd'"
+    }
+  ]
+}

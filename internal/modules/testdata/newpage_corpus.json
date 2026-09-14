@@ -1,0 +1,73 @@
+[
+  {
+    "name": "bare"
+  },
+  {
+    "name": "example",
+    "params": {
+      "example": "scp-1000"
+    }
+  },
+  {
+    "name": "example-empty",
+    "params": {
+      "example": ""
+    }
+  },
+  {
+    "name": "category",
+    "params": {
+      "category": "scp"
+    }
+  },
+  {
+    "name": "category-empty",
+    "params": {
+      "category": ""
+    }
+  },
+  {
+    "name": "submit",
+    "params": {
+      "submit": "开始写"
+    }
+  },
+  {
+    "name": "submit-empty",
+    "params": {
+      "submit": ""
+    }
+  },
+  {
+    "name": "all",
+    "params": {
+      "category": "scp",
+      "example": "scp-1000",
+      "submit": "开始写"
+    }
+  },
+  {
+    "name": "quoted-example",
+    "params": {
+      "example": "a\"b'c\u003cd\u0026e"
+    }
+  },
+  {
+    "name": "quoted-category",
+    "params": {
+      "category": "a\"b'c\u003cd\u0026e"
+    }
+  },
+  {
+    "name": "quoted-submit",
+    "params": {
+      "submit": "a\"b'c\u003cd\u0026e"
+    }
+  },
+  {
+    "name": "unknown-param",
+    "params": {
+      "unknown": "x"
+    }
+  }
+]

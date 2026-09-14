@@ -1,0 +1,334 @@
+package db
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+)
+
+const (
+	UserTypeNormal  = "normal"
+	UserTypeWikidot = "wikidot"
+	UserTypeSystem  = "system"
+	UserTypeBot     = "bot"
+)
+
+type User struct {
+	ID              int64
+	Type            string
+	Username        string
+	WikidotUsername string
+	DisplayName     string
+	Avatar          string
+	IsActive        bool
+	InactiveUntil   *time.Time
+	IsSuperuser     bool
+
+	IsForumActive      bool
+	ForumInactiveUntil *time.Time
+
+	CanSendDirectMessages bool
+	EmailVerifiedAt       *time.Time
+
+	Language string
+}
+
+// A deadline in the future overrides the stored flag in both directions, so
+// is_active is ignored whenever inactive_until is set.
+func (u *User) ActiveAt(now time.Time) bool {
+	if u.InactiveUntil == nil {
+		return u.IsActive
+	}
+	return now.After(*u.InactiveUntil)
+}
+
+func (u *User) ForumActiveAt(now time.Time) bool {
+	if u.ForumInactiveUntil == nil {
+		return u.IsForumActive
+	}
+	return now.After(*u.ForumInactiveUntil)
+}
+
+func (u *User) DisplayLabel() string {
+	if u.Type == UserTypeWikidot {
+		return "wd:" + firstNonEmpty(u.DisplayName, u.WikidotUsername, u.Username)
+	}
+	return firstNonEmpty(u.DisplayName, u.Username)
+}
+
+func (u *User) URLName() string {
+	if u.Type == UserTypeWikidot {
+		return firstNonEmpty(u.WikidotUsername, u.Username)
+	}
+	return u.Username
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+const userColumns = `id, type, username, wikidot_username, display_name, avatar, is_active, inactive_until, is_superuser, is_forum_active, forum_inactive_until, can_send_direct_messages, email_verified_at, language`
+
+var qUserByName = register("UserByName", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE username = $1 OR wikidot_username = $1
+ORDER BY id
+LIMIT 1`)
+
+var qUserByWikidotName = register("UserByWikidotName", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE type = 'wikidot' AND wikidot_username = $1
+ORDER BY id
+LIMIT 1`)
+
+// UserByName looks up a canonical username against both the local and the
+// Wikidot name. Callers pass wikidot.CanonicalizeUsername output.
+func (d *DB) UserByName(ctx context.Context, canonical string) (*User, error) {
+	return d.scanUser(ctx, qUserByName, canonical)
+}
+
+var qUserByUsername = register("UserByUsername", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE username = $1
+ORDER BY id
+LIMIT 1`)
+
+// A page list that filters by author names the account as it is spelled here,
+// never as it was on the site an imported account came from.
+func (d *DB) UserByUsername(ctx context.Context, name string) (*User, error) {
+	return d.scanUser(ctx, qUserByUsername, name)
+}
+
+var qUserByID = register("UserByID", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE id = $1`)
+
+func (d *DB) UserByID(ctx context.Context, id int64) (*User, error) {
+	var u User
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserByID, id).Scan(dest...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("lookup user %d: %w", id, err)
+	}
+	finish()
+	return &u, nil
+}
+
+var qUserByDisplayName = register("UserByDisplayName", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE lower(display_name) = lower($1)
+ORDER BY id
+LIMIT 1`)
+
+// The oldest row wins so a later account cannot take over a name a page already
+// points at.
+func (d *DB) UserByDisplayName(ctx context.Context, name string) (*User, error) {
+	return d.scanUser(ctx, qUserByDisplayName, name)
+}
+
+// The stored name is whatever the other site displayed, so canonicalizing
+// first would compare a spaced name against a hyphenated one and never match.
+func (d *DB) UserByWikidotName(ctx context.Context, name string) (*User, error) {
+	return d.scanUser(ctx, qUserByWikidotName, name)
+}
+
+func (d *DB) scanUser(ctx context.Context, sql, canonical string) (*User, error) {
+	var u User
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, sql, canonical).Scan(dest...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("lookup user %q: %w", canonical, err)
+	}
+	finish()
+	return &u, nil
+}
+
+// userDest lists the scan targets for userColumns, in order. Three of the
+// columns are nullable text, so finish has to run before the user is read.
+func userDest(u *User) (dest []any, finish func()) {
+	var wikidotUsername, displayName, avatar *string
+	dest = []any{
+		&u.ID, &u.Type, &u.Username, &wikidotUsername, &displayName, &avatar,
+		&u.IsActive, &u.InactiveUntil, &u.IsSuperuser,
+		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDirectMessages, &u.EmailVerifiedAt,
+		&u.Language,
+	}
+	return dest, func() {
+		u.WikidotUsername = deref(wikidotUsername)
+		u.DisplayName = deref(displayName)
+		u.Avatar = deref(avatar)
+	}
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+var qUserForSession = register("UserForSession", `
+SELECT `+userColumns+`, password
+FROM web_user
+WHERE id = $1`)
+
+// UserForSession returns the password hash alongside the user because the
+// session carries a hash of it; a session opened under an older password has to
+// stop working. The hash is kept out of User so it cannot travel by accident.
+func (d *DB) UserForSession(ctx context.Context, id int64) (*User, string, error) {
+	var (
+		u        User
+		password string
+	)
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserForSession, id).Scan(append(dest, &password)...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", ErrNotFound
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("lookup user %d: %w", id, err)
+	}
+	finish()
+	return &u, password, nil
+}
+
+var qUsernamesLower = register("UsernamesLower", `SELECT lower(username) FROM web_user`)
+
+func (d *DB) UsernamesLower(ctx context.Context) (map[string]bool, error) {
+	rows, err := d.pool.Query(ctx, qUsernamesLower)
+	if err != nil {
+		return nil, fmt.Errorf("query usernames: %w", err)
+	}
+	defer rows.Close()
+
+	out := make(map[string]bool)
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("scan username: %w", err)
+		}
+		out[name] = true
+	}
+	return out, rows.Err()
+}
+
+var qAllUsers = register("AllUsers", `
+SELECT `+userColumns+`
+FROM web_user
+ORDER BY id`)
+
+func (d *DB) AllUsers(ctx context.Context) ([]User, error) {
+	rows, err := d.pool.Query(ctx, qAllUsers)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	defer rows.Close()
+
+	var out []User
+	for rows.Next() {
+		var u User
+		dest, finish := userDest(&u)
+		if err := rows.Scan(dest...); err != nil {
+			return nil, fmt.Errorf("scan user: %w", err)
+		}
+		finish()
+		out = append(out, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	return out, nil
+}
+
+var qUserByAnyName = register("UserByAnyName", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE upper(username) = upper($1)
+	OR upper(wikidot_username) = upper($1)
+	OR upper(display_name) = upper($2)
+ORDER BY id
+LIMIT 1`)
+
+func (d *DB) UserByAnyName(ctx context.Context, canonical, raw string) (*User, error) {
+	var u User
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserByAnyName, canonical, raw).Scan(dest...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("look up user %q: %w", raw, err)
+	}
+	finish()
+	return &u, nil
+}
+
+var qUserForLogin = register("UserForLogin", `
+SELECT `+userColumns+`, password
+FROM web_user
+WHERE username = $1`)
+
+func (d *DB) UserForLogin(ctx context.Context, username string) (*User, string, error) {
+	var (
+		u        User
+		password string
+	)
+	dest, finish := userDest(&u)
+	err := d.pool.QueryRow(ctx, qUserForLogin, username).Scan(append(dest, &password)...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", ErrNotFound
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("look up user %q: %w", username, err)
+	}
+	finish()
+	return &u, password, nil
+}
+
+var qSetPassword = register("SetPassword", `
+UPDATE web_user SET password = $2 WHERE id = $1`)
+
+func (d *DB) SetPassword(ctx context.Context, id int64, hash string) error {
+	if _, err := d.pool.Exec(ctx, qSetPassword, id, hash); err != nil {
+		return fmt.Errorf("store password of user %d: %w", id, err)
+	}
+	return nil
+}
+
+var qSetLastLogin = register("SetLastLogin", `
+UPDATE web_user SET last_login = $2 WHERE id = $1`)
+
+func (d *DB) SetLastLogin(ctx context.Context, id int64, at time.Time) error {
+	if _, err := d.pool.Exec(ctx, qSetLastLogin, id, at); err != nil {
+		return fmt.Errorf("store last login of user %d: %w", id, err)
+	}
+	return nil
+}
+
+var qBotByAPIKey = register("BotByAPIKey", `
+SELECT `+userColumns+`
+FROM web_user
+WHERE type = 'bot' AND api_key = $1`)
+
+func (d *DB) BotByAPIKey(ctx context.Context, key string) (*User, error) {
+	return d.scanUser(ctx, qBotByAPIKey, key)
+}

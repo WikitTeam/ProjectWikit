@@ -1,0 +1,36 @@
+{{define "invite_list.html"}}
+<p class="stamp">{{t "admin.count" "n" .Total}}</p>
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>{{t "admin.f-invite-kind"}}</th>
+      <th>{{t "admin.f-invite-to"}}</th>
+      <th>{{t "admin.f-created"}}</th>
+      <th>{{t "admin.f-activated"}}</th>
+      <th class="right"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Invites}}
+    <tr>
+      <td>{{enum "admin.invite-kind-" .Kind}}</td>
+      <td>{{if .Email}}{{esc .Email}}{{else if .WikidotUsername}}{{esc .WikidotUsername}}{{else}}<span class="muted">&mdash;</span>{{end}}</td>
+      <td class="stamp">{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+      <td>{{if .ActivatedAt}}<span class="printuser">{{esc .ActivatedUsername}}</span>{{else}}<span class="state pending">{{t "admin.invite-open"}}</span>{{end}}</td>
+      <td class="right">
+        {{if not .ActivatedAt}}
+        <form method="POST" action="{{esc $.Action}}">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button type="submit" name="delete" value="1" class="btn btn-mini btn-danger"><i class="fas fa-trash"></i>{{t "admin.revoke"}}</button>
+        </form>
+        {{end}}
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{template "pager" dict "Base" (printf "%s?" .Action) "Page" .Page "Pages" .Pages}}
+{{end}}

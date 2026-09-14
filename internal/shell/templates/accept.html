@@ -1,0 +1,35 @@
+{{define "accept.html"}}
+	<div class="login-form">
+	    {{if .Error}}
+            <div class="error">
+                <p>{{esc .Error}}</p>
+            </div>
+            <br>
+        {{end}}
+        {{if not .Fatal}}
+            <form method="POST">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+                <div class="text-input">
+                    <span class="icon begin">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <input type="text" placeholder="{{.T "accept.username"}}" name="username" autofocus="" value="{{esc .Username}}"
+                           {{if .IsWikidot}}disabled="disabled"{{end}} autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username">
+                </div>
+                <div class="text-input">
+                    <span class="icon begin">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" placeholder="{{.T "accept.password"}}" name="password" autocomplete="current-password" required id="id_password">
+                </div>
+                <div class="text-input">
+                    <span class="icon begin">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" placeholder="{{.T "accept.password2"}}" name="password2" autocomplete="current-password" required id="id_password">
+                </div>
+                <button type="submit" class="btn">{{.T "accept.submit"}}</button>
+            </form>
+        {{end}}
+	<div class="login-form">
+{{end}}

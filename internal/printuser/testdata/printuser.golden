@@ -1,0 +1,240 @@
+=== system
+<span class="printuser avatarhover"><strong>系统</strong></span>
+=== system_bare
+<span class="printuser"><strong>系统</strong></span>
+=== anonymous
+<span class="printuser avatarhover">
+                
+                    <a onclick="return false;"><img class="small" src="/-/static/images/anon_avatar.png" alt="匿名用户"></a>
+                
+                <a onclick="return false;">匿名用户</a></span>
+=== anonymous_bare
+<span class="printuser">
+                
+                <a onclick="return false;">匿名用户</a></span>
+=== external
+<span class="printuser w-user avatarhover" data-user-id="-1" data-user-name="some-user">
+            
+                <a href="https://www.wikidot.com/user:info/some-user" target="_blank"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="Some User"></a>
+            
+            <a href="https://www.wikidot.com/user:info/some-user" target="_blank">Some User</a></span>
+=== external_bare
+<span class="printuser w-user" data-user-id="-1" data-user-name="some-user">
+            
+            <a href="https://www.wikidot.com/user:info/some-user" target="_blank">Some User</a></span>
+=== external_escaped
+<span class="printuser w-user avatarhover" data-user-id="-1" data-user-name="tom-jerry">
+            
+                <a href="https://www.wikidot.com/user:info/tom-jerry" target="_blank"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="Tom &amp; &quot;Jerry&quot;"></a>
+            
+            <a href="https://www.wikidot.com/user:info/tom-jerry" target="_blank">Tom &amp; &quot;Jerry&quot;</a></span>
+=== plain
+<span class="printuser w-user avatarhover" data-user-id="101" data-user-name="plain">
+            
+                <a href="/-/users/plain"><img class="small" src="/-/static/images/default_avatar.png" alt="plain"></a>
+            
+            <a href="/-/users/plain">plain</a>
+            
+                
+                
+            
+        </span>
+=== plain_bare
+<span class="printuser w-user" data-user-id="101" data-user-name="plain">
+            
+            <a href="/-/users/plain">plain</a>
+            
+        </span>
+=== display_name_and_avatar
+<span class="printuser w-user avatarhover" data-user-id="102" data-user-name="displayed">
+            
+                <a href="/-/users/displayed"><img class="small" src="/local--files/-/users/x.png" alt="显示名"></a>
+            
+            <a href="/-/users/displayed">显示名</a>
+            
+                
+                
+            
+        </span>
+=== wikidot
+<span class="printuser w-user avatarhover" data-user-id="103" data-user-name="wd-name">
+            
+                <a href="/-/users/wd-name"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="wd:wd-name"></a>
+            
+            <a href="/-/users/wd-name">wd:wd-name</a>
+            
+                
+                
+            
+        </span>
+=== wikidot_display_name
+<span class="printuser w-user avatarhover" data-user-id="104" data-user-name="wd-only-name">
+            
+                <a href="/-/users/wd-only-name"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="wd:维基点"></a>
+            
+            <a href="/-/users/wd-only-name">wd:维基点</a>
+            
+                
+                
+            
+        </span>
+=== banned
+<span class="printuser w-user avatarhover" data-user-id="105" data-user-name="banned">
+            
+                <a href="/-/users/banned"><img class="small" src="/-/static/images/default_avatar.png" alt="banned"></a>
+            
+            <a href="/-/users/banned">banned</a>
+            
+                
+                
+                    <span class="badge" title="用户已被封禁" style="background: #000000; color: #FFFFFF; ">封禁</span>
+                
+            
+        </span>
+=== banned_wikidot
+<span class="printuser w-user avatarhover" data-user-id="106" data-user-name="banned-wd-name">
+            
+                <a href="/-/users/banned-wd-name"><img class="small" src="/-/static/images/wikidot_avatar.png" alt="wd:banned-wd-name"></a>
+            
+            <a href="/-/users/banned-wd-name">wd:banned-wd-name</a>
+            
+                
+                
+            
+        </span>
+=== bot
+<span class="printuser w-user avatarhover" data-user-id="107" data-user-name="bot-account">
+            
+                <a href="/-/users/bot-account"><img class="small" src="/-/static/images/default_avatar.png" alt="bot-account"></a>
+            
+            <a href="/-/users/bot-account">bot-account</a>
+            
+                
+                
+                    <span class="badge" title="机器账户" style="background: #77A; color: #FFFFFF; ">机器人</span>
+                
+            
+        </span>
+=== banned_bot
+<span class="printuser w-user avatarhover" data-user-id="108" data-user-name="banned-bot">
+            
+                <a href="/-/users/banned-bot"><img class="small" src="/-/static/images/default_avatar.png" alt="banned-bot"></a>
+            
+            <a href="/-/users/banned-bot">banned-bot</a>
+            
+                
+                
+                    <span class="badge" title="用户已被封禁" style="background: #000000; color: #FFFFFF; ">封禁</span>
+                
+            
+        </span>
+=== escaped_display_name
+<span class="printuser w-user avatarhover" data-user-id="109" data-user-name="escaper">
+            
+                <a href="/-/users/escaper"><img class="small" src="/-/static/images/default_avatar.png" alt="a&lt;b&gt;&amp;&quot;&#x27;"></a>
+            
+            <a href="/-/users/escaper">a&lt;b&gt;&amp;&quot;&#x27;</a>
+            
+                
+                
+            
+        </span>
+=== badges
+<span class="printuser w-user avatarhover" data-user-id="110" data-user-name="decorated">
+            
+                <a href="/-/users/decorated"><img class="small" src="/-/static/images/default_avatar.png" alt="decorated"></a>
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+                
+                
+                    <span class="badge" title="工作人员" style="background: #112233; color: #ffeedd; border: solid 1px #ffeedd">STAFF</span>
+                
+                    <span class="badge"  style="background: #808080; color: #ffffff; ">no-text</span>
+                
+            
+        </span>
+=== same_category_keeps_lowest_index
+<span class="printuser w-user avatarhover" data-user-id="110" data-user-name="decorated">
+            
+                <a href="/-/users/decorated"><img class="small" src="/-/static/images/default_avatar.png" alt="decorated"></a>
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+                
+                
+                    <span class="badge" title="先来的" style="background: #808080; color: #ffffff; ">FIRST</span>
+                
+            
+        </span>
+=== same_category_different_modes
+<span class="printuser w-user avatarhover" data-user-id="110" data-user-name="decorated">
+            
+                <a href="/-/users/decorated"><img class="small" src="/-/static/images/default_avatar.png" alt="decorated"></a>
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+                
+                    <span class="icon" title="同类图标"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cstyle%3Esvg%7Bcolor%3A%23ff8800%7D%3C/style%3E%3Cpath%20d%3D%22M1%202%20L3%204%22/%3E%3C/svg%3E%0A"/></span>
+                
+                
+                    <span class="badge" title="先来的" style="background: #808080; color: #ffffff; ">FIRST</span>
+                
+            
+        </span>
+=== icons_before_badges
+<span class="printuser w-user avatarhover" data-user-id="110" data-user-name="decorated">
+            
+                <a href="/-/users/decorated"><img class="small" src="/-/static/images/default_avatar.png" alt="decorated"></a>
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+                
+                    <span class="icon" title="图标"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cstyle%3Esvg%7Bcolor%3A%2300aa55%7D%3C/style%3E%3Cpath%20d%3D%22M1%202%20L3%204%22/%3E%3C/svg%3E%0A"/></span>
+                
+                
+                    <span class="badge" title="工作人员" style="background: #112233; color: #ffeedd; border: solid 1px #ffeedd">STAFF</span>
+                
+            
+        </span>
+=== icon_without_file
+<span class="printuser w-user avatarhover" data-user-id="110" data-user-name="decorated">
+            
+                <a href="/-/users/decorated"><img class="small" src="/-/static/images/default_avatar.png" alt="decorated"></a>
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+                
+                
+            
+        </span>
+=== hidden_role
+<span class="printuser w-user avatarhover" data-user-id="110" data-user-name="decorated">
+            
+                <a href="/-/users/decorated"><img class="small" src="/-/static/images/default_avatar.png" alt="decorated"></a>
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+                
+                
+            
+        </span>
+=== roles_need_avatar
+<span class="printuser w-user" data-user-id="110" data-user-name="decorated">
+            
+            <a href="/-/users/decorated">decorated</a>
+            
+        </span>
+=== banned_beats_roles
+<span class="printuser w-user avatarhover" data-user-id="105" data-user-name="banned">
+            
+                <a href="/-/users/banned"><img class="small" src="/-/static/images/default_avatar.png" alt="banned"></a>
+            
+            <a href="/-/users/banned">banned</a>
+            
+                
+                
+                    <span class="badge" title="用户已被封禁" style="background: #000000; color: #FFFFFF; ">封禁</span>
+                
+            
+        </span>

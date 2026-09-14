@@ -1,0 +1,38 @@
+{{define "page_edit.html"}}
+{{template "form_error" .Error}}
+
+<div class="widget-box">
+  <div class="widget-title"><i class="fas fa-file-alt"></i><h5>{{t "admin.page-source"}}</h5></div>
+  <div class="widget-content">
+    <form method="POST" action="{{esc .Action}}">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      {{template "row_static" dict "k" "admin.f-page" "v" .Full}}
+      {{template "row_static" dict "k" "admin.f-revisions" "v" (printf "#%d" .Head)}}
+      {{template "row_text" dict "n" "title" "k" "admin.f-title" "v" .Article.Title "w" "narrow-5"}}
+      <div class="control-group">
+        <label class="control-label" for="id_source">{{t "admin.f-source"}}</label>
+        <div class="controls"><textarea id="id_source" name="source" rows="24">{{esc .Source}}</textarea></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
+        <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
+        <a class="btn pull-right" href="/{{esc .Full}}" target="_blank" rel="noreferrer"><i class="fas fa-external-link-alt"></i>{{t "admin.open-page"}}</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="widget-box narrow">
+  <div class="widget-title"><i class="fas fa-i-cursor"></i><h5>{{t "admin.rename"}}</h5></div>
+  <div class="widget-content">
+    <form method="POST" action="{{esc .Action}}">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      <input type="hidden" name="action" value="rename">
+      {{template "row_text" dict "n" "full_name" "k" "admin.f-new-name" "v" .Full "w" "narrow-5" "h" "admin.h-rename"}}
+      <div class="form-actions">
+        <button type="submit" class="btn"><i class="fas fa-i-cursor"></i>{{t "admin.rename"}}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{{end}}

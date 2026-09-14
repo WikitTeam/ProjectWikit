@@ -85,6 +85,8 @@ pub fn render_container(ctx: &mut HtmlContext, container: &Container) {
             });
         }
 
+        ContainerType::WSScope => render_elements(ctx, container.elements()),
+
         // Render normally
         _ => render_container_internal(ctx, container),
     }

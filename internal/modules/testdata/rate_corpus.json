@@ -1,0 +1,162 @@
+[
+  {
+    "name": "probe-full-anonymous",
+    "page": "probe:full",
+    "viewer": ""
+  },
+  {
+    "name": "probe-full-probevoter",
+    "page": "probe:full",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probe-full-probe-author",
+    "page": "probe:full",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probe-full-probecrowd0",
+    "page": "probe:full",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probe-half-anonymous",
+    "page": "probe:half",
+    "viewer": ""
+  },
+  {
+    "name": "probe-half-probevoter",
+    "page": "probe:half",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probe-half-probe-author",
+    "page": "probe:half",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probe-half-probecrowd0",
+    "page": "probe:half",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probe-bare-anonymous",
+    "page": "probe:bare",
+    "viewer": ""
+  },
+  {
+    "name": "probe-bare-probevoter",
+    "page": "probe:bare",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probe-bare-probe-author",
+    "page": "probe:bare",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probe-bare-probecrowd0",
+    "page": "probe:bare",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probestars-rated-anonymous",
+    "page": "probestars:rated",
+    "viewer": ""
+  },
+  {
+    "name": "probestars-rated-probevoter",
+    "page": "probestars:rated",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probestars-rated-probe-author",
+    "page": "probestars:rated",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probestars-rated-probecrowd0",
+    "page": "probestars:rated",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probestars-unrated-anonymous",
+    "page": "probestars:unrated",
+    "viewer": ""
+  },
+  {
+    "name": "probestars-unrated-probevoter",
+    "page": "probestars:unrated",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probestars-unrated-probe-author",
+    "page": "probestars:unrated",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probestars-unrated-probecrowd0",
+    "page": "probestars:unrated",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probestars-third-anonymous",
+    "page": "probestars:third",
+    "viewer": ""
+  },
+  {
+    "name": "probestars-third-probevoter",
+    "page": "probestars:third",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probestars-third-probe-author",
+    "page": "probestars:third",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probestars-third-probecrowd0",
+    "page": "probestars:third",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probestars-quarter-anonymous",
+    "page": "probestars:quarter",
+    "viewer": ""
+  },
+  {
+    "name": "probestars-quarter-probevoter",
+    "page": "probestars:quarter",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probestars-quarter-probe-author",
+    "page": "probestars:quarter",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probestars-quarter-probecrowd0",
+    "page": "probestars:quarter",
+    "viewer": "probecrowd0"
+  },
+  {
+    "name": "probeoff-unratable-anonymous",
+    "page": "probeoff:unratable",
+    "viewer": ""
+  },
+  {
+    "name": "probeoff-unratable-probevoter",
+    "page": "probeoff:unratable",
+    "viewer": "probevoter"
+  },
+  {
+    "name": "probeoff-unratable-probe-author",
+    "page": "probeoff:unratable",
+    "viewer": "probe-author"
+  },
+  {
+    "name": "probeoff-unratable-probecrowd0",
+    "page": "probeoff:unratable",
+    "viewer": "probecrowd0"
+  }
+]
