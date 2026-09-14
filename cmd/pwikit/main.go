@@ -112,6 +112,8 @@ func run(args []string) error {
 		return serviceCommand(args[1:])
 	case "path":
 		return pathCommand(args[1:])
+	case "version", "-version", "--version":
+		return printVersion()
 	case "help", "-h", "--help":
 		usage()
 		return nil
@@ -137,6 +139,7 @@ Commands:
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
   modules     print the wikidot module list
+  version     show which release this is
   help        show this help
 `)
 }
