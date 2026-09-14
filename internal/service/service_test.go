@@ -179,3 +179,83 @@ func contains(list []string, item string) bool {
 	}
 	return false
 }
+
+func updateSpec() Spec {
+	return Spec{
+		Name:       "pwikit",
+		Executable: "/opt/pwikit/pwikit",
+		Root:       "/opt/pwikit",
+		User:       "wiki",
+		UpdateArgs: []string{"update", "-auto", "-service", "pwikit", "-data-dir", "/opt/pwikit", "--", "-listen", "127.0.0.1:8080"},
+	}
+}
+
+func TestSystemdUpdateRunsTheTaskAsRootOnATimer(t *testing.T) {
+	unit, timer := updateSpec().SystemdUpdate()
+	if strings.Contains(unit, "User=") {
+		t.Errorf("SystemdUpdate() unit = %q, want no User= so it runs as root", unit)
+	}
+	if !strings.Contains(unit, `ExecStart="/opt/pwikit/pwikit" "update" "-auto" "-service" "pwikit"`) {
+		t.Errorf("SystemdUpdate() unit = %q, want the update command", unit)
+	}
+	if !strings.Contains(unit, "Type=oneshot") {
+		t.Errorf("SystemdUpdate() unit = %q, want Type=oneshot", unit)
+	}
+	if !strings.Contains(timer, "OnUnitInactiveSec=600s") || !strings.Contains(timer, "Unit=pwikit-update.service") {
+		t.Errorf("SystemdUpdate() timer = %q, want a ten minute timer on pwikit-update.service", timer)
+	}
+}
+
+func TestLaunchdUpdateIsWellFormed(t *testing.T) {
+	plist := updateSpec().LaunchdUpdate()
+	var probe struct{}
+	if err := xml.NewDecoder(strings.NewReader(plist)).Decode(&probe); err != nil {
+		t.Errorf("LaunchdUpdate() = %q, err %v, want well-formed XML", plist, err)
+	}
+	for _, want := range []string{"<string>pwikit-update</string>", "<integer>600</integer>", "<string>-auto</string>"} {
+		if !strings.Contains(plist, want) {
+			t.Errorf("LaunchdUpdate() = %q, want it to contain %q", plist, want)
+		}
+	}
+}
+
+func TestTaskXMLRunsAsTheSystemAccount(t *testing.T) {
+	s := updateSpec()
+	s.Executable = `C:\Program Files\pwikit\pwikit.exe`
+	s.Root = `C:\Program Files\pwikit`
+	s.UpdateArgs = []string{"update", "-auto", "-data-dir", `C:\Program Files\pwikit`}
+	task := s.TaskXML()
+	var probe struct{}
+	decoder := xml.NewDecoder(strings.NewReader(strings.Replace(task, `encoding="UTF-16"`, `encoding="UTF-8"`, 1)))
+	if err := decoder.Decode(&probe); err != nil {
+		t.Fatalf("TaskXML() = %q, err %v, want well-formed XML", task, err)
+	}
+	for _, want := range []string{
+		"<UserId>S-1-5-18</UserId>",
+		"<Interval>PT10M</Interval>",
+		"<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>",
+		`<Arguments>update -auto -data-dir &#34;C:\Program Files\pwikit&#34;</Arguments>`,
+	} {
+		if !strings.Contains(task, want) {
+			t.Errorf("TaskXML() = %q, want it to contain %q", task, want)
+		}
+	}
+}
+
+func TestComposeArgs(t *testing.T) {
+	cases := []struct {
+		args []string
+		want string
+	}{
+		{[]string{"update", "-auto"}, `update -auto`},
+		{[]string{`C:\a b\c`}, `"C:\a b\c"`},
+		{[]string{`C:\a b\`}, `"C:\a b\\"`},
+		{[]string{`say "hi"`}, `"say \"hi\""`},
+		{[]string{""}, `""`},
+	}
+	for _, tt := range cases {
+		if got := composeArgs(tt.args); got != tt.want {
+			t.Errorf("composeArgs(%q) = %s, want %s", tt.args, got, tt.want)
+		}
+	}
+}

@@ -16,3 +16,5 @@ func Uninstall(string) error { return errUnsupported }
 func Start(string) error     { return errUnsupported }
 func Stop(string) error      { return errUnsupported }
 func Status(string) error    { return errUnsupported }
+
+func Running(string) (bool, error) { return false, errUnsupported }

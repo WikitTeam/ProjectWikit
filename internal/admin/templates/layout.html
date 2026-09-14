@@ -56,6 +56,25 @@
       </div>
 
       <div id="sm-action-area" class="span9">
+        {{range .Updates}}
+        <div class="alert{{if .Error}} alert-error{{end}}">
+          <p>{{.Text}}</p>
+          {{if .Detail}}<p><code>{{esc .Detail}}</code></p>{{end}}
+          {{if .Notes}}<p><a href="{{esc .Notes}}" target="_blank" rel="noopener">{{$.T "update.notes"}}</a></p>{{end}}
+          {{if .Actions}}
+          <div>
+            <form method="post" action="{{esc $.AdminURL}}update/postpone" style="display:inline">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+              <button type="submit" class="btn btn-mini">{{$.T "update.postpone"}}</button>
+            </form>
+            <form method="post" action="{{esc $.AdminURL}}update/skip" style="display:inline">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+              <button type="submit" class="btn btn-mini">{{$.T "update.skip"}}</button>
+            </form>
+          </div>
+          {{end}}
+        </div>
+        {{end}}
         <div class="page-header"><h1>{{esc .Title}}</h1></div>
         {{.Body}}
       </div>
@@ -87,6 +106,12 @@
     var d = new Date(Number(input.dataset.timestamp));
     input.value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
       'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  });
+  document.querySelectorAll('time[data-local-time]').forEach(function (el) {
+    var d = new Date(el.getAttribute('datetime'));
+    if (!isNaN(d.getTime())) {
+      el.textContent = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
   });
   document.querySelectorAll('input[data-browser-zone]').forEach(function (input) { input.value = zone; });
   document.querySelectorAll('[data-browser-zone-name]').forEach(function (el) {

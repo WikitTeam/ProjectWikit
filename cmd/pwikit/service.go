@@ -125,6 +125,9 @@ func serviceSpec(name, account, dataDir string, extra []string) (service.Spec, e
 
 	args := []string{"serve", "-data-dir", p.Root()}
 	spec := service.Spec{Name: name, Executable: exe, Root: p.Root(), User: account}
+	if !inContainer() {
+		spec.UpdateArgs = append([]string{"update", "-auto", "-service", name, "-data-dir", p.Root(), "--"}, extra...)
+	}
 	if runtime.GOOS != "linux" {
 		spec.LogFile = filepath.Join(p.Logs(), "pwikit.log")
 		args = append(args, "-log-file", spec.LogFile)

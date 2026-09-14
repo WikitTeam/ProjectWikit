@@ -27,6 +27,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
+	"github.com/WikitTeam/ProjectWikit/internal/update"
 )
 
 const (
@@ -47,6 +48,7 @@ type Deps struct {
 	Articles http.Handler
 	Mail     mail.Sender
 	Trust    *proxyheader.Trust
+	Updates  *update.Board
 
 	Log *slog.Logger
 }
@@ -172,7 +174,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r = r.WithContext(context.WithValue(ctx, grantKey{}, granted))
-	head, _, _ := strings.Cut(rest, "/")
+	head, tail, _ := strings.Cut(rest, "/")
+	if head == updateSlug {
+		h.finish(w, r, loc, h.updateAction(w, r, tail))
+		return
+	}
 	if head == "" {
 		h.finish(w, r, loc, h.index(w, r, loc, granted))
 		return
@@ -258,7 +264,9 @@ func (h *Handler) page(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		return err
 	}
 	var out strings.Builder
-	if err := tpl.ExecuteTemplate(&out, "layout.html", h.layout(r, loc, title, body.String())); err != nil {
+	view := h.layout(r, loc, title, body.String())
+	view.Updates = h.updateNotices(w, r, loc)
+	if err := tpl.ExecuteTemplate(&out, "layout.html", view); err != nil {
 		return err
 	}
 	return h.write(w, r, loc, title, out.String(), http.StatusOK)

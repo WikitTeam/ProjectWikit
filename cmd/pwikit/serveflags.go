@@ -8,10 +8,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/update"
 )
 
 type serveOptions struct {
@@ -34,6 +36,13 @@ type serveOptions struct {
 	acmeDirectory *string
 	logFile       *string
 	dev           *bool
+
+	updateAuto   *bool
+	updateBanner *bool
+	updateCheck  *bool
+	updateWindow *string
+	updateMinAge *string
+	updateMirror *string
 
 	automatic bool
 }
@@ -60,7 +69,49 @@ func newServeOptions() *serveOptions {
 		acmeDirectory: fs.String("acme-directory", "", "ACME directory URL; empty uses Let's Encrypt"),
 		logFile:       fs.String("log-file", "", "file log lines are appended to; empty writes them to standard error"),
 		dev:           fs.Bool("dev", false, "development mode; plain HTTP that only this machine can reach, whatever the sites and settings say; -listen 9000 picks another port"),
+		updateAuto:    fs.Bool("update-auto", true, "install new releases by themselves when pwikit runs as a system service"),
+		updateBanner:  fs.Bool("update-public-banner", true, "announce an automatic update to every visitor, not only to the people who can open the admin panel"),
+		updateCheck:   fs.Bool("update-check", true, "look for new releases at all"),
+		updateWindow:  fs.String("update-window", update.DefaultWindow, "hours, in this machine's time zone, in which releases are looked for and installed"),
+		updateMinAge:  fs.String("update-min-age", update.DefaultMinAge.String(), "how long a release must have been out before it is installed by itself"),
+		updateMirror:  fs.String("update-mirror", "", "mirror to download releases from when GitHub cannot be reached"),
 	}
+}
+
+func (o *serveOptions) updateSettings(cfg config.File) (update.Settings, error) {
+	boolean := func(name, env string, file *bool) (bool, error) {
+		fileValue := ""
+		if file != nil {
+			fileValue = strconv.FormatBool(*file)
+		}
+		raw := setting(o.fs, name, env, fileValue, o.fs.Lookup(name).DefValue)
+		value, err := strconv.ParseBool(raw)
+		if err != nil {
+			return false, fmt.Errorf("-%s %q is not true or false", name, raw)
+		}
+		return value, nil
+	}
+	var s update.Settings
+	var err error
+	if s.Auto, err = boolean("update-auto", envUpdateAuto, cfg.Update.Auto); err != nil {
+		return s, err
+	}
+	if s.PublicBanner, err = boolean("update-public-banner", envUpdateBanner, cfg.Update.PublicBanner); err != nil {
+		return s, err
+	}
+	if s.Check, err = boolean("update-check", envUpdateCheck, cfg.Update.Check); err != nil {
+		return s, err
+	}
+	window := setting(o.fs, "update-window", envUpdateWindow, cfg.Update.Window, update.DefaultWindow)
+	if s.Window, err = update.ParseWindow(window); err != nil {
+		return s, err
+	}
+	age := setting(o.fs, "update-min-age", envUpdateMinAge, cfg.Update.MinAge, update.DefaultMinAge.String())
+	if s.MinAge, err = time.ParseDuration(age); err != nil || s.MinAge < 0 {
+		return s, fmt.Errorf("update min age %q is not a duration such as 24h", age)
+	}
+	s.Mirror = setting(o.fs, "update-mirror", envUpdateMirror, cfg.Update.Mirror, "")
+	return s, nil
 }
 
 func (o *serveOptions) resolve(cfg config.File) (entry.Mode, error) {

@@ -19,6 +19,11 @@ func Preview(s Spec) (string, error) {
 		s.User = u.Username
 	}
 	text := "# " + unitPath(s.Name) + "\n" + s.Systemd()
+	if len(s.UpdateArgs) > 0 {
+		unit, timer := s.SystemdUpdate()
+		text += "\n# " + filepath.Join(unitDir, UpdateName(s.Name)+".service") + "\n" + unit
+		text += "\n# " + filepath.Join(unitDir, UpdateName(s.Name)+".timer") + "\n" + timer
+	}
 	if len(s.Ports) > 0 {
 		text += fmt.Sprintf("\n# Install also opens %v/tcp when firewalld or ufw is running and they are closed.\n", s.Ports)
 	}
@@ -53,10 +58,44 @@ func Install(s Spec) error {
 		closePorts(s.Opened)
 		return fmt.Errorf("write %s: %w", path, err)
 	}
+	if len(s.UpdateArgs) > 0 {
+		unit, timer := s.SystemdUpdate()
+		if err := os.WriteFile(filepath.Join(unitDir, UpdateName(s.Name)+".service"), []byte(unit), 0o644); err != nil {
+			return fmt.Errorf("write the update unit: %w", err)
+		}
+		if err := os.WriteFile(filepath.Join(unitDir, UpdateName(s.Name)+".timer"), []byte(timer), 0o644); err != nil {
+			return fmt.Errorf("write the update timer: %w", err)
+		}
+	}
 	if err := runTool("systemctl", "daemon-reload"); err != nil {
 		return err
 	}
-	return runTool("systemctl", "enable", "--now", s.Name+".service")
+	if err := runTool("systemctl", "enable", "--now", s.Name+".service"); err != nil {
+		return err
+	}
+	if len(s.UpdateArgs) > 0 {
+		return runTool("systemctl", "enable", "--now", UpdateName(s.Name)+".timer")
+	}
+	return nil
+}
+
+func Running(name string) (bool, error) {
+	err := exec.Command("systemctl", "is-active", "--quiet", name+".service").Run()
+	var exit *exec.ExitError
+	if errors.As(err, &exit) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
+func removeUpdateTask(name string) {
+	timer := filepath.Join(unitDir, UpdateName(name)+".timer")
+	if _, err := os.Stat(timer); err != nil {
+		return
+	}
+	runTool("systemctl", "disable", "--now", UpdateName(name)+".timer")
+	os.Remove(timer)
+	os.Remove(filepath.Join(unitDir, UpdateName(name)+".service"))
 }
 
 func Uninstall(name string) error {
@@ -68,6 +107,7 @@ func Uninstall(name string) error {
 	if err != nil {
 		return fmt.Errorf("no service named %s is installed", name)
 	}
+	removeUpdateTask(name)
 	if err := runTool("systemctl", "disable", "--now", name+".service"); err != nil {
 		return err
 	}

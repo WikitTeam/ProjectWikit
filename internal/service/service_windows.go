@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode/utf16"
 
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
@@ -101,7 +102,71 @@ func Install(spec Spec) (err error) {
 	if err := s.Start(); err != nil {
 		return fmt.Errorf("start service %s: %w", spec.Name, err)
 	}
+	if len(spec.UpdateArgs) > 0 {
+		if err := createUpdateTask(spec); err != nil {
+			return fmt.Errorf("register the update task: %w", err)
+		}
+	}
 	return nil
+}
+
+func taskName(name string) string {
+	return `\ProjectWikit\` + UpdateName(name)
+}
+
+// schtasks takes a command of at most 261 characters, which a data directory
+// deep in a profile outgrows, while a task definition file has no such limit.
+func createUpdateTask(spec Spec) error {
+	definition := spec.TaskXML()
+	units := utf16.Encode([]rune(definition))
+	body := make([]byte, 2+2*len(units))
+	body[0], body[1] = 0xFF, 0xFE
+	for i, u := range units {
+		body[2+2*i] = byte(u)
+		body[3+2*i] = byte(u >> 8)
+	}
+	file, err := os.CreateTemp("", "pwikit-update-task-*.xml")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
+	if _, err := file.Write(body); err != nil {
+		file.Close()
+		return err
+	}
+	file.Close()
+	out, err := exec.Command("schtasks", "/Create", "/TN", taskName(spec.Name), "/XML", file.Name(), "/F").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("schtasks: %w: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+func removeUpdateTask(name string) {
+	exec.Command("schtasks", "/Delete", "/TN", taskName(name), "/F").Run()
+}
+
+func Running(name string) (bool, error) {
+	h, err := windows.OpenSCManager(nil, nil, windows.SC_MANAGER_CONNECT)
+	if err != nil {
+		return false, err
+	}
+	defer windows.CloseServiceHandle(h)
+	target, err := windows.UTF16PtrFromString(name)
+	if err != nil {
+		return false, err
+	}
+	sh, err := windows.OpenService(h, target, windows.SERVICE_QUERY_STATUS)
+	if err != nil {
+		return false, nil
+	}
+	s := &mgr.Service{Name: name, Handle: sh}
+	defer s.Close()
+	st, err := s.Query()
+	if err != nil {
+		return false, err
+	}
+	return st.State == svc.Running, nil
 }
 
 func grant(dir, who string) error {
@@ -120,6 +185,7 @@ func Uninstall(name string) error {
 	}
 	defer m.Disconnect()
 	defer s.Close()
+	removeUpdateTask(name)
 	if err := stopAndWait(s); err != nil {
 		return err
 	}

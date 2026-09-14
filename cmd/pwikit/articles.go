@@ -24,6 +24,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
+	"github.com/WikitTeam/ProjectWikit/internal/update"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
 	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 )
@@ -66,7 +67,7 @@ type limits struct {
 	hard int64
 }
 
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret string, cfg config.File, log *slog.Logger) (*pageStack, error) {
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret string, cfg config.File, board *update.Board, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
@@ -77,6 +78,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		return nil, err
 	}
 	icons := roles.FileIcons(p.Files())
+	board.Bundle = bundle
 
 	pages := articlepage.New(articlepage.Deps{
 		DB:          conn,
@@ -149,7 +151,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	adminPages, err := admin.New(admin.Deps{
 		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(),
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
-		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Log: log,
+		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Updates: board, Log: log,
 	}, next)
 	if err != nil {
 		return nil, err

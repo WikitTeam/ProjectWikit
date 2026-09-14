@@ -23,8 +23,16 @@ type Spec struct {
 	CrashFile  string
 	Args       []string
 
+	UpdateArgs []string
+
 	Ports  []int
 	Opened Firewall
+}
+
+const UpdateEvery = 10 * 60
+
+func UpdateName(name string) string {
+	return name + "-update"
 }
 
 // Only ports install itself opened, so uninstall never closes one another program needs.
@@ -128,6 +136,114 @@ func (s Spec) Systemd() string {
 	b.WriteString("[Install]\n")
 	b.WriteString("WantedBy=multi-user.target\n")
 	return b.String()
+}
+
+func (s Spec) SystemdUpdate() (service, timer string) {
+	quoted := make([]string, 0, len(s.UpdateArgs)+1)
+	for _, arg := range append([]string{s.Executable}, s.UpdateArgs...) {
+		quoted = append(quoted, systemdQuote(arg))
+	}
+	var b strings.Builder
+	b.WriteString("[Unit]\n")
+	fmt.Fprintf(&b, "Description=%s update\n", systemdEscape(DisplayName(s.Name)))
+	b.WriteString("Wants=network-online.target\n")
+	b.WriteString("After=network-online.target\n\n")
+	b.WriteString("[Service]\n")
+	b.WriteString("Type=oneshot\n")
+	fmt.Fprintf(&b, "WorkingDirectory=%s\n", systemdEscape(s.Root))
+	fmt.Fprintf(&b, "ExecStart=%s\n", strings.Join(quoted, " "))
+	b.WriteString("TimeoutStartSec=4h\n")
+	service = b.String()
+
+	b.Reset()
+	b.WriteString("[Unit]\n")
+	fmt.Fprintf(&b, "Description=%s update check\n\n", systemdEscape(DisplayName(s.Name)))
+	b.WriteString("[Timer]\n")
+	b.WriteString("OnBootSec=5min\n")
+	fmt.Fprintf(&b, "OnUnitInactiveSec=%ds\n", UpdateEvery)
+	b.WriteString("AccuracySec=1min\n")
+	fmt.Fprintf(&b, "Unit=%s.service\n\n", UpdateName(s.Name))
+	b.WriteString("[Install]\n")
+	b.WriteString("WantedBy=timers.target\n")
+	return service, b.String()
+}
+
+func (s Spec) LaunchdUpdate() string {
+	var b strings.Builder
+	b.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
+	b.WriteString(`<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">` + "\n")
+	b.WriteString(`<plist version="1.0">` + "\n<dict>\n")
+	plistString(&b, "Label", UpdateName(s.Name))
+	b.WriteString("\t<key>ProgramArguments</key>\n\t<array>\n")
+	for _, arg := range append([]string{s.Executable}, s.UpdateArgs...) {
+		b.WriteString("\t\t<string>" + xmlText(arg) + "</string>\n")
+	}
+	b.WriteString("\t</array>\n")
+	plistString(&b, "WorkingDirectory", s.Root)
+	fmt.Fprintf(&b, "\t<key>StartInterval</key>\n\t<integer>%d</integer>\n", UpdateEvery)
+	b.WriteString("\t<key>RunAtLoad</key>\n\t<false/>\n")
+	if s.CrashFile != "" {
+		updateLog := strings.TrimSuffix(s.CrashFile, "pwikit-stderr.log") + "update-stderr.log"
+		plistString(&b, "StandardOutPath", updateLog)
+		plistString(&b, "StandardErrorPath", updateLog)
+	}
+	b.WriteString("</dict>\n</plist>\n")
+	return b.String()
+}
+
+func (s Spec) TaskXML() string {
+	var b strings.Builder
+	b.WriteString(`<?xml version="1.0" encoding="UTF-16"?>` + "\n")
+	b.WriteString(`<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">` + "\n")
+	b.WriteString("  <RegistrationInfo><Description>" + xmlText("Looks for and installs new releases of "+DisplayName(s.Name)) + "</Description></RegistrationInfo>\n")
+	b.WriteString("  <Triggers><TimeTrigger>")
+	fmt.Fprintf(&b, "<Repetition><Interval>PT%dM</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition>", UpdateEvery/60)
+	b.WriteString("<StartBoundary>2026-01-01T00:00:00</StartBoundary><Enabled>true</Enabled></TimeTrigger></Triggers>\n")
+	b.WriteString("  <Principals><Principal id=\"Author\"><UserId>S-1-5-18</UserId><RunLevel>HighestAvailable</RunLevel></Principal></Principals>\n")
+	b.WriteString("  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>")
+	b.WriteString("<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>")
+	b.WriteString("<StartWhenAvailable>true</StartWhenAvailable><AllowStartOnDemand>true</AllowStartOnDemand><Enabled>true</Enabled>")
+	b.WriteString("<ExecutionTimeLimit>PT4H</ExecutionTimeLimit></Settings>\n")
+	b.WriteString("  <Actions Context=\"Author\"><Exec>")
+	b.WriteString("<Command>" + xmlText(s.Executable) + "</Command>")
+	b.WriteString("<Arguments>" + xmlText(composeArgs(s.UpdateArgs)) + "</Arguments>")
+	b.WriteString("<WorkingDirectory>" + xmlText(s.Root) + "</WorkingDirectory>")
+	b.WriteString("</Exec></Actions>\n</Task>\n")
+	return b.String()
+}
+
+func composeArgs(args []string) string {
+	quoted := make([]string, 0, len(args))
+	for _, arg := range args {
+		if arg != "" && !strings.ContainsAny(arg, " \t\"") {
+			quoted = append(quoted, arg)
+			continue
+		}
+		var b strings.Builder
+		b.WriteByte('"')
+		slashes := 0
+		for _, r := range arg {
+			switch r {
+			case '\\':
+				slashes++
+			case '"':
+				b.WriteString(strings.Repeat(`\`, slashes*2+1))
+				b.WriteRune(r)
+				slashes = 0
+				continue
+			default:
+				if slashes > 0 {
+					b.WriteString(strings.Repeat(`\`, slashes))
+					slashes = 0
+				}
+				b.WriteRune(r)
+			}
+		}
+		b.WriteString(strings.Repeat(`\`, slashes*2))
+		b.WriteByte('"')
+		quoted = append(quoted, b.String())
+	}
+	return strings.Join(quoted, " ")
 }
 
 func systemdEscape(value string) string {

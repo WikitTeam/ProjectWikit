@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func asDaemon() bool {
@@ -88,7 +90,40 @@ func Install(s Spec) error {
 		}
 		return err
 	}
+	if len(s.UpdateArgs) > 0 {
+		updatePath, err := plistPath(UpdateName(s.Name))
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(updatePath, []byte(s.LaunchdUpdate()), 0o644); err != nil {
+			return fmt.Errorf("write %s: %w", updatePath, err)
+		}
+		if err := runTool("launchctl", "bootstrap", domain(), updatePath); err != nil {
+			os.Remove(updatePath)
+			return err
+		}
+	}
 	return nil
+}
+
+func Running(name string) (bool, error) {
+	out, err := exec.Command("launchctl", "print", domain()+"/"+name).Output()
+	if err != nil {
+		return false, nil
+	}
+	return strings.Contains(string(out), "state = running"), nil
+}
+
+func removeUpdateTask(name string) {
+	path, err := plistPath(UpdateName(name))
+	if err != nil {
+		return
+	}
+	if _, err := os.Stat(path); err != nil {
+		return
+	}
+	runTool("launchctl", "bootout", domain()+"/"+UpdateName(name))
+	os.Remove(path)
 }
 
 func Uninstall(name string) error {
@@ -100,6 +135,7 @@ func Uninstall(name string) error {
 		return fmt.Errorf("no service named %s is installed%s", name, elsewhere())
 	}
 	exe := programIn(path)
+	removeUpdateTask(name)
 	runTool("launchctl", "bootout", domain()+"/"+name)
 	if err := os.Remove(path); err != nil {
 		return err

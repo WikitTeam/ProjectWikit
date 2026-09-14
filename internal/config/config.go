@@ -19,6 +19,16 @@ type File struct {
 	TLS       TLS       `toml:"tls"`
 	Mail      Mail      `toml:"mail"`
 	Analytics Analytics `toml:"analytics"`
+	Update    Update    `toml:"update"`
+}
+
+type Update struct {
+	Auto         *bool  `toml:"auto"`
+	PublicBanner *bool  `toml:"public_banner"`
+	Check        *bool  `toml:"check"`
+	Window       string `toml:"window"`
+	MinAge       string `toml:"min_age"`
+	Mirror       string `toml:"mirror"`
 }
 
 type Server struct {
@@ -143,4 +153,20 @@ const Template = `# Settings for pwikit. A line starting with # is an example an
 
 [analytics]
 # google_tag_id = ""
+
+[update]
+# pwikit installed as a system service looks for a new release once a day and
+# installs it by itself.
+# auto = true
+# Whether every visitor sees the banner announcing an automatic update, or only
+# the people who can open the admin panel.
+# public_banner = true
+# false stops pwikit from asking for new releases at all.
+# check = true
+# The hours, in this machine's time zone, in which updates are looked for and installed.
+# window = "03:00-05:00"
+# How long a release must have been out before it is installed automatically.
+# min_age = "24h"
+# A mirror to download from when GitHub cannot be reached. Use only a mirror you trust.
+# mirror = ""
 `

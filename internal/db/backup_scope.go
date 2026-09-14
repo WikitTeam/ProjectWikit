@@ -158,6 +158,7 @@ var rules = map[string]rule{
 	"web_user_groups":                           {left, "", "roles took over from groups"},
 	"web_user_user_permissions":                 {left, "", "roles took over from per-account rights"},
 	"dynamic_preferences_globalpreferencemodel": {left, "", "it belongs to the instance"},
+	"pwikit_update":                             {left, "", "it tracks the release the instance runs, not a site"},
 }
 
 // An empty return means the table does not travel.

@@ -34,6 +34,7 @@ type layoutView struct {
 	Groups    []navGroup
 	Open      *navGroup
 	Body      string
+	Updates   []updateNotice
 
 	loc *i18n.Localizer
 }

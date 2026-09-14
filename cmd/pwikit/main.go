@@ -30,6 +30,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/pgbundle"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/respheader"
 	"github.com/WikitTeam/ProjectWikit/internal/routing"
@@ -37,7 +38,9 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/seed"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/update"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
+	"github.com/WikitTeam/ProjectWikit/internal/version"
 	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 	staticfiles "github.com/WikitTeam/ProjectWikit/static"
 )
@@ -62,6 +65,12 @@ const (
 	envTLSListen    = "PWIKIT_TLS_LISTEN"
 	envACMEEmail    = "PWIKIT_ACME_EMAIL"
 	envACMEDir      = "PWIKIT_ACME_DIRECTORY"
+	envUpdateAuto   = "PWIKIT_UPDATE_AUTO"
+	envUpdateBanner = "PWIKIT_UPDATE_PUBLIC_BANNER"
+	envUpdateCheck  = "PWIKIT_UPDATE_CHECK"
+	envUpdateWindow = "PWIKIT_UPDATE_WINDOW"
+	envUpdateMinAge = "PWIKIT_UPDATE_MIN_AGE"
+	envUpdateMirror = "PWIKIT_UPDATE_MIRROR"
 	defaultListen   = "127.0.0.1:8080"
 	defaultTLSPlain = ":80"
 	defaultTLSAddr  = ":443"
@@ -112,6 +121,8 @@ func run(args []string) error {
 		return serviceCommand(args[1:])
 	case "path":
 		return pathCommand(args[1:])
+	case "update":
+		return updateCommand(args[1:])
 	case "version", "-version", "--version":
 		return printVersion()
 	case "help", "-h", "--help":
@@ -136,6 +147,7 @@ Commands:
   reindex     put every page of a site back into the search index
   service     start pwikit whenever the machine boots
   path        make pwikit runnable by name from any directory
+  update      install a newer release, or put back the one before it
   render      render wikitext read from stdin or a file
   migrate     apply or inspect the schema migrations
   modules     print the wikidot module list
@@ -168,6 +180,10 @@ func serve(ctx context.Context, args []string) (err error) {
 	if err != nil {
 		return err
 	}
+	updates, err := o.updateSettings(cfg)
+	if err != nil {
+		return err
+	}
 	if *o.secret == "" {
 		if *o.secret, err = secretfile.Ensure(p.Secrets(), sessionKeyFile); err != nil {
 			return err
@@ -188,7 +204,9 @@ func serve(ctx context.Context, args []string) (err error) {
 	defer stopSignals()
 
 	dsn := *o.database
+	bundledPostgres := ""
 	if dsn == "" {
+		bundledPostgres = pgbundle.Version
 		bundled, err := startBundled(ctx, p, log)
 		if err != nil {
 			return err
@@ -286,8 +304,12 @@ func serve(ctx context.Context, args []string) (err error) {
 		return fmt.Errorf("parse -storage-limit: %w", err)
 	}
 
+	board := &update.Board{
+		DB: conn, Settings: updates, Current: version.String(),
+		BundledPostgres: bundledPostgres, Container: inContainer(),
+	}
 	stack, err := newPageStack(conn, p, assets, notFound, trust, limits{soft: soft, hard: hard},
-		*o.sidecar, *o.secret, cfg, log)
+		*o.sidecar, *o.secret, cfg, board, log)
 	if err != nil {
 		return err
 	}
@@ -295,7 +317,7 @@ func serve(ctx context.Context, args []string) (err error) {
 	// Only the page handler answers a name a person typed, so only it explains
 	// an unresolved one. The rest are reached from inside a page.
 	served := func(h http.Handler) http.Handler {
-		return compress.New(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*o.listen), h, stack.unresolved)))
+		return compress.New(board.Wrap(respheader.VaryCookie(site.NewHostRules(conn, listenPort(*o.listen), h, stack.unresolved))))
 	}
 	articles := served(stack.articles)
 	codeHandler := served(stack.code)
@@ -402,7 +424,8 @@ func serve(ctx context.Context, args []string) (err error) {
 		return errors.New("-tls=auto needs -database to know which hosts to obtain certificates for")
 	}
 
-	return entry.Serve(ctx, entry.Config{
+	handler := respheader.OriginPolicy(mux)
+	serving := entry.Config{
 		Mode:      mode,
 		Plain:     *o.listen,
 		Secure:    *o.tlsListen,
@@ -412,9 +435,15 @@ func serve(ctx context.Context, args []string) (err error) {
 		Email:     *o.acmeEmail,
 		Directory: *o.acmeDirectory,
 		Hosts:     hosts,
-		Handler:   respheader.OriginPolicy(mux),
+		Handler:   handler,
 		Logger:    log,
-	})
+	}
+	stopHealth, err := serveHealth(p, serving, conn, handler, log)
+	if err != nil {
+		return err
+	}
+	defer stopHealth()
+	return entry.Serve(ctx, serving)
 }
 
 func given(fs *flag.FlagSet, name string) bool {
