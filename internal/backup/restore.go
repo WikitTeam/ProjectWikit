@@ -41,6 +41,7 @@ var ErrNotEmpty = errors.New("the database already holds data")
 var seeded = map[string]bool{
 	"auth_permission":      true,
 	"django_content_type":  true,
+	"pwikit_update":        true,
 	"web_role":             true,
 	"web_role_permissions": true,
 	"web_rolecategory":     true,
