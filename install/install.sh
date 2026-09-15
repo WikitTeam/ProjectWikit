@@ -6,10 +6,11 @@
 #
 # Options:
 #   --version <vX.Y.Z>  release to install; defaults to the newest
-#   --dir <directory>   where pwikit and all of its data go
+#   --dir <directory>   where pwikit and all of its data go; defaults to the
+#                       current directory, which has to be empty
 #   --mirror <url>      mirror to use when GitHub cannot be reached
 #   --user <account>    account that owns the directory when run as root;
-#                       defaults to the sudo account, or a new pwikit account
+#                       defaults to the account sudo was run from
 #   --no-path           do not make pwikit runnable by name
 set -eu
 
@@ -65,34 +66,40 @@ else
 fi
 command -v tar >/dev/null 2>&1 || fail "tar is needed"
 
-create_owner=0
 if [ "$(id -u)" -eq 0 ]; then
-  if [ -z "$owner" ]; then
-    if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
-      owner="$SUDO_USER"
-    else
-      owner=pwikit
-    fi
+  if [ -z "$owner" ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
+    owner="$SUDO_USER"
   fi
-  [ "$owner" != root ] || fail "pwikit does not run as root; pass another account to --user"
-  [ -n "$dir" ] || dir=/opt/pwikit
-  if ! id "$owner" >/dev/null 2>&1; then
-    [ "$owner" = pwikit ] || fail "no account named $owner"
-    [ "$os" = linux ] || fail "pwikit does not run as root; create an account for it and pass it to --user"
-    command -v useradd >/dev/null 2>&1 || command -v adduser >/dev/null 2>&1 ||
-      fail "pwikit does not run as root, and there is no useradd to create an account for it; create one and pass it to --user"
-    create_owner=1
-  fi
+  [ "$owner" != root ] || owner=""
+  [ -z "$owner" ] || id "$owner" >/dev/null 2>&1 || fail "no account named $owner"
+  [ -n "$owner" ] || [ "$os" = linux ] || fail "on macOS pwikit does not run as root; run this from an ordinary account, or pass --user <account>"
 else
   [ -z "$owner" ] || fail "--user only applies when running as root"
-  [ -n "$dir" ] || dir="$HOME/pwikit"
 fi
+[ -n "$dir" ] || dir="$PWD"
+case "$dir" in
+  /*) ;;
+  *) dir="$PWD/$dir" ;;
+esac
 
 if [ -e "$dir/pwikit" ]; then
   fail "$dir already holds pwikit; update it with: $dir/pwikit update"
 fi
 if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
-  fail "$dir is not empty; pass --dir with a new or empty directory"
+  fail "$dir is not empty; run this from an empty directory, or pass --dir with a new or empty one"
+fi
+if [ "$(id -u)" -eq 0 ] && [ -z "$owner" ]; then
+  parent="$dir"
+  while [ ! -d "$parent" ]; do
+    parent="$(dirname "$parent")"
+  done
+  while :; do
+    mode="$(stat -c %a "$parent" 2>/dev/null || echo 755)"
+    [ $(( ${mode#"${mode%?}"} & 1 )) -eq 1 ] ||
+      fail "$parent is closed to other accounts, and pwikit runs its PostgreSQL under an account of its own that could not reach $dir; install somewhere like /opt/pwikit or /srv/pwikit"
+    [ "$parent" != / ] || break
+    parent="$(dirname "$parent")"
+  done
 fi
 
 work="$(mktemp -d)"
@@ -147,27 +154,11 @@ tar -xzf "$work/$file" -C "$work/unpacked"
 top="$work/unpacked/pwikit-$version-$os-$arch"
 [ -x "$top/pwikit" ] || fail "$file does not hold pwikit"
 
-if [ "$create_owner" -eq 1 ]; then
-  shell=/bin/false
-  for candidate in /usr/sbin/nologin /sbin/nologin; do
-    if [ -x "$candidate" ]; then
-      shell="$candidate"
-      break
-    fi
-  done
-  if command -v useradd >/dev/null 2>&1; then
-    useradd --system --user-group --home-dir "$dir" --no-create-home --shell "$shell" "$owner" ||
-      fail "could not create the account $owner; create one and pass it to --user"
-  else
-    adduser -S -D -H -h "$dir" -s "$shell" "$owner" ||
-      fail "could not create the account $owner; create one and pass it to --user"
-  fi
-  say "Created the account $owner, which pwikit runs as"
-fi
-
 mkdir -p "$dir"
 cp "$top/pwikit" "$dir/pwikit"
-[ ! -f "$top/LICENSE" ] || cp "$top/LICENSE" "$dir/LICENSE"
+for doc in LICENSE NOTICE; do
+  [ ! -f "$top/$doc" ] || cp "$top/$doc" "$dir/$doc"
+done
 chmod 755 "$dir/pwikit"
 if [ -n "$owner" ]; then
   chown -R "$owner" "$dir"

@@ -25,7 +25,7 @@ function Fail([string]$Message) {
 
 $Releases = if ($env:PWIKIT_RELEASES_URL) { $env:PWIKIT_RELEASES_URL } else { 'https://github.com/WikitTeam/ProjectWikit/releases' }
 if ($Mirror) { $Mirror = $Mirror.TrimEnd('/') }
-if (-not $Dir) { $Dir = Join-Path $HOME 'pwikit' }
+if (-not $Dir) { $Dir = (Get-Location).Path }
 
 if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64' -and $env:PROCESSOR_ARCHITEW6432 -ne 'AMD64') {
     if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') {
@@ -39,7 +39,7 @@ if (Test-Path (Join-Path $Dir 'pwikit.exe')) {
     Fail "$Dir already holds pwikit; update it with: $Dir\pwikit.exe update"
 }
 if ((Test-Path $Dir) -and (Get-ChildItem -Force $Dir | Select-Object -First 1)) {
-    Fail "$Dir is not empty; pass -Dir with a new or empty directory"
+    Fail "$Dir is not empty; run this from an empty directory, or pass -Dir with a new or empty one"
 }
 
 function Get-ReleaseFile([string]$Path, [string]$OutFile) {
@@ -96,7 +96,9 @@ try {
 
     New-Item -ItemType Directory -Force -Path $Dir | Out-Null
     Copy-Item (Join-Path $top 'pwikit.exe') $Dir
-    if (Test-Path (Join-Path $top 'LICENSE')) { Copy-Item (Join-Path $top 'LICENSE') $Dir }
+    foreach ($doc in 'LICENSE', 'NOTICE') {
+        if (Test-Path (Join-Path $top $doc)) { Copy-Item (Join-Path $top $doc) $Dir }
+    }
     Write-Host "Installed pwikit $Version into $Dir"
 
     if (-not $NoPath) {
