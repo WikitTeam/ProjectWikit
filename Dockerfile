@@ -12,7 +12,7 @@ COPY frontend/ ./
 COPY static/ /src/static/
 RUN yarn build
 
-FROM golang:1.26-bookworm AS build
+FROM golang:1.27-bookworm AS build
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
 ENV PATH=/root/.cargo/bin:$PATH
 WORKDIR /src
