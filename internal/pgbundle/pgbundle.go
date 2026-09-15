@@ -30,9 +30,16 @@ const (
 	longestSocket = ".s.PGSQL.65535"
 
 	windowsRole = "pwikit"
+
+	identMap = "pwikit"
 )
 
 var binaries = []string{"initdb", "pg_ctl", "postgres"}
+
+type account struct {
+	name     string
+	uid, gid int
+}
 
 type Layout struct {
 	Root    string
@@ -113,6 +120,7 @@ type Plan struct {
 	Password string
 	Auth     string
 	Logs     string
+	Peers    []string
 }
 
 func PlanFor(goos string, l Layout, port int, user, password string) Plan {
@@ -132,10 +140,23 @@ func SocketDir(l Layout) string {
 }
 
 func (p Plan) HBA() string {
+	if p.Socket != "" && len(p.Peers) > 0 {
+		return "local all all peer map=" + identMap + "\n"
+	}
 	if p.Socket != "" {
 		return "local all all peer\n"
 	}
 	return "host all all 127.0.0.1/32 scram-sha-256\n"
+}
+
+// Peer authentication matches the OS account to the role, so an account other
+// than the one PostgreSQL runs under only gets in through this map.
+func (p Plan) Ident() string {
+	var b strings.Builder
+	for _, peer := range p.Peers {
+		fmt.Fprintf(&b, "%s %s %s\n", identMap, peer, p.User)
+	}
+	return b.String()
 }
 
 // An empty listen_addresses turns TCP off entirely.
@@ -275,6 +296,10 @@ func WireConf(data string) error {
 func WriteHBA(data string, p Plan) error {
 	name := filepath.Join(data, "pg_hba.conf")
 	if err := os.WriteFile(name, []byte(p.HBA()), 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	name = filepath.Join(data, "pg_ident.conf")
+	if err := os.WriteFile(name, []byte(p.Ident()), 0o600); err != nil {
 		return fmt.Errorf("write %s: %w", name, err)
 	}
 	return nil

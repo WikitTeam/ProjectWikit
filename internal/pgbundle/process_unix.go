@@ -6,13 +6,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
+
+const systemAccount = "pwikit"
 
 type process struct {
 	cmd *exec.Cmd
@@ -31,6 +37,7 @@ func (s *Server) launch(ctx context.Context) error {
 	cmd.Stdout, cmd.Stderr = out, out
 	cmd.Env = toolEnv()
 	detach(cmd)
+	runAs(cmd, s.as, s.cfg.Data)
 	setDeathSignal(cmd.SysProcAttr)
 
 	started := make(chan error, 1)
@@ -117,25 +124,190 @@ func detach(cmd *exec.Cmd) {
 	cmd.SysProcAttr.Setpgid = true
 }
 
-func refuseSuperuser() error {
+// PostgreSQL refuses to run as root, so root hands it to the account that owns
+// the data, or to an account made for it.
+func postgresAccount(cfg Config) (*account, error) {
 	if os.Geteuid() != 0 {
-		return nil
+		return nil, nil
 	}
-	return errors.New("the bundled PostgreSQL will not run as root.\n" +
-		"  Start pwikit from an ordinary account, or install it as a service with\n" +
-		"  sudo pwikit service install, which runs it as the account you used sudo from")
+	if runtime.GOOS != "linux" {
+		return nil, errors.New("the bundled PostgreSQL will not run as root.\n" +
+			"  Start pwikit from an ordinary account, or install it as a service with\n" +
+			"  sudo pwikit service install, which runs it as the account you used sudo from")
+	}
+	for _, dir := range []string{cfg.Data, cfg.Root} {
+		if a := ownerOf(dir); a != nil {
+			return a, nil
+		}
+	}
+	if _, err := user.Lookup(systemAccount); err != nil {
+		if err := createAccount(systemAccount, cfg.Root); err != nil {
+			return nil, err
+		}
+	}
+	u, err := user.Lookup(systemAccount)
+	if err != nil {
+		return nil, fmt.Errorf("look up the account %s: %w", systemAccount, err)
+	}
+	return accountOf(u)
 }
 
-func privateDir(dir string) error {
+func peerRole(cfg Config) (string, error) {
+	if os.Geteuid() == 0 {
+		if a := ownerOf(cfg.Data); a != nil {
+			return a.name, nil
+		}
+	}
+	return accountName()
+}
+
+func ownerOf(dir string) *account {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return nil
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || st.Uid == 0 {
+		return nil
+	}
+	u, err := user.LookupId(strconv.FormatUint(uint64(st.Uid), 10))
+	if err != nil {
+		return nil
+	}
+	a, err := accountOf(u)
+	if err != nil {
+		return nil
+	}
+	return a
+}
+
+func accountOf(u *user.User) (*account, error) {
+	uid, err := strconv.Atoi(u.Uid)
+	if err != nil {
+		return nil, fmt.Errorf("account %s has uid %q: %w", u.Username, u.Uid, err)
+	}
+	gid, err := strconv.Atoi(u.Gid)
+	if err != nil {
+		return nil, fmt.Errorf("account %s has gid %q: %w", u.Username, u.Gid, err)
+	}
+	return &account{name: u.Username, uid: uid, gid: gid}, nil
+}
+
+func createAccount(name, home string) error {
+	shell := "/bin/false"
+	for _, candidate := range []string{"/usr/sbin/nologin", "/sbin/nologin"} {
+		if _, err := os.Stat(candidate); err == nil {
+			shell = candidate
+			break
+		}
+	}
+	var cmd *exec.Cmd
+	switch {
+	case lookPath("useradd"):
+		cmd = exec.Command("useradd", "--system", "--user-group", "--home-dir", home, "--no-create-home", "--shell", shell, name)
+	case lookPath("adduser"):
+		cmd = exec.Command("adduser", "-S", "-D", "-H", "-h", home, "-s", shell, name)
+	default:
+		return fmt.Errorf("pwikit runs as root, and the bundled PostgreSQL needs an ordinary account to run under.\n"+
+			"  Neither useradd nor adduser is here to make one. Create an account named %s, or start pwikit from an ordinary account", name)
+	}
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("create the account %s for the bundled PostgreSQL: %w\n%s", name, err, indent(strings.TrimSpace(string(out))))
+	}
+	return nil
+}
+
+func lookPath(name string) bool {
+	_, err := exec.LookPath(name)
+	return err == nil
+}
+
+func runAs(cmd *exec.Cmd, a *account, dir string) {
+	if a == nil {
+		return
+	}
+	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(a.uid), Gid: uint32(a.gid), Groups: []uint32{}}
+	cmd.Dir = dir
+}
+
+func handOver(a *account, dir string) error {
+	if a == nil {
+		return nil
+	}
+	info, err := os.Stat(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if st, ok := info.Sys().(*syscall.Stat_t); ok && int(st.Uid) == a.uid && int(st.Gid) == a.gid {
+		return nil
+	}
+	return filepath.WalkDir(dir, func(path string, _ fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		return os.Lchown(path, a.uid, a.gid)
+	})
+}
+
+func own(a *account, paths ...string) error {
+	if a == nil {
+		return nil
+	}
+	for _, path := range paths {
+		if err := os.Lchown(path, a.uid, a.gid); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("hand %s to %s: %w", path, a.name, err)
+		}
+	}
+	return nil
+}
+
+func reach(a *account, paths ...string) error {
+	if a == nil {
+		return nil
+	}
+	for _, path := range paths {
+		for dir := filepath.Dir(path); ; dir = filepath.Dir(dir) {
+			info, err := os.Stat(dir)
+			if err != nil {
+				return err
+			}
+			st, ok := info.Sys().(*syscall.Stat_t)
+			mode := info.Mode().Perm()
+			open := !ok || mode&0o001 != 0 ||
+				(int(st.Uid) == a.uid && mode&0o100 != 0) ||
+				(int(st.Gid) == a.gid && mode&0o010 != 0)
+			if !open {
+				return fmt.Errorf("the bundled PostgreSQL runs as %s, which cannot enter %s.\n"+
+					"  Move the pwikit directory somewhere every account can reach, such as /opt/pwikit or /srv/pwikit", a.name, dir)
+			}
+			if dir == filepath.Dir(dir) {
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func privateDir(dir string, a *account) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("create %s: %w", dir, err)
+	}
+	if err := own(a, dir); err != nil {
+		return err
+	}
+	want := os.Geteuid()
+	if a != nil {
+		want = a.uid
 	}
 	info, err := os.Lstat(dir)
 	if err != nil {
 		return err
 	}
 	st, ok := info.Sys().(*syscall.Stat_t)
-	if !info.IsDir() || !ok || int(st.Uid) != os.Geteuid() {
+	if !info.IsDir() || !ok || int(st.Uid) != want {
 		return fmt.Errorf("%s belongs to another account, so the PostgreSQL socket cannot be placed there", dir)
 	}
 	if info.Mode().Perm()&0o077 != 0 {

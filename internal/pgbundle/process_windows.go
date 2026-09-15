@@ -112,11 +112,29 @@ func detach(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: windows.CREATE_NEW_PROCESS_GROUP}
 }
 
-func refuseSuperuser() error {
+func postgresAccount(Config) (*account, error) {
+	return nil, nil
+}
+
+func peerRole(Config) (string, error) {
+	return accountName()
+}
+
+func runAs(*exec.Cmd, *account, string) {}
+
+func handOver(*account, string) error {
 	return nil
 }
 
-func privateDir(dir string) error {
+func own(*account, ...string) error {
+	return nil
+}
+
+func reach(*account, ...string) error {
+	return nil
+}
+
+func privateDir(dir string, _ *account) error {
 	return os.MkdirAll(dir, 0o700)
 }
 

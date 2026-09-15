@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,14 +21,17 @@ func serviceUser(given string) (*user.User, error) {
 	if name == "" {
 		name = os.Getenv("SUDO_USER")
 	}
-	if name == "" && os.Geteuid() != 0 {
-		if u, err := user.Current(); err == nil {
+	if name == "" {
+		if u, err := user.Current(); err == nil && (u.Uid != "0" || runtime.GOOS == "linux") {
 			return u, nil
 		}
 	}
-	if name == "" || name == "root" {
+	if (name == "" || name == "root") && runtime.GOOS != "linux" {
 		return nil, errors.New("the bundled PostgreSQL will not run as root, so the service needs an ordinary account.\n" +
 			"  Run the install with sudo from that account, or name it with -user")
+	}
+	if name == "" {
+		name = "root"
 	}
 	u, err := user.Lookup(name)
 	if err != nil {
@@ -38,6 +42,9 @@ func serviceUser(given string) (*user.User, error) {
 
 func checkAccess(root string, u *user.User) error {
 	uid, _ := strconv.Atoi(u.Uid)
+	if uid == 0 {
+		return nil
+	}
 	groups, _ := u.GroupIds()
 	groups = append(groups, u.Gid)
 

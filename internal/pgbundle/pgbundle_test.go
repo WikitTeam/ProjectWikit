@@ -174,6 +174,24 @@ func TestPlanForUnixUsesThePeerOverASocketAndNoPort(t *testing.T) {
 	}
 }
 
+func TestHBAMapsPeersWhenGiven(t *testing.T) {
+	p := PlanFor("linux", layout(t), 54321, "pwikit", "")
+	p.Peers = []string{"root", "pwikit"}
+	if got, want := p.HBA(), "local all all peer map=pwikit\n"; got != want {
+		t.Errorf("HBA() = %q, want %q", got, want)
+	}
+	if got, want := p.Ident(), "pwikit root pwikit\npwikit pwikit pwikit\n"; got != want {
+		t.Errorf("Ident() = %q, want %q", got, want)
+	}
+}
+
+func TestIdentIsEmptyWithoutPeers(t *testing.T) {
+	p := PlanFor("linux", layout(t), 54321, "kakushi", "")
+	if got := p.Ident(); got != "" {
+		t.Errorf("Ident() = %q, want empty", got)
+	}
+}
+
 func TestSocketDirStaysInsideAShortStateDirectory(t *testing.T) {
 	l := Layout{Root: "/srv/wiki", Data: "/srv/wiki/pgdata"}
 	if got := SocketDir(l); got != "/srv/wiki/pgdata" {

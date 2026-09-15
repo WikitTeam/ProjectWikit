@@ -53,6 +53,7 @@ type Server struct {
 	cfg    Config
 	layout Layout
 	plan   Plan
+	as     *account
 	lock   *Lock
 	proc   *process
 	exited chan struct{}
@@ -60,19 +61,20 @@ type Server struct {
 }
 
 func Start(ctx context.Context, cfg Config, owner Owner) (_ *Server, err error) {
-	if err := refuseSuperuser(); err != nil {
-		return nil, err
-	}
 	for _, dir := range []string{cfg.Root, cfg.Logs} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return nil, fmt.Errorf("create %s: %w", dir, err)
 		}
 	}
+	as, err := postgresAccount(cfg)
+	if err != nil {
+		return nil, err
+	}
 	lock, err := TryLock(filepath.Join(cfg.Root, lockFile), owner)
 	if err != nil {
 		return nil, err
 	}
-	s := &Server{cfg: cfg, layout: cfg.layout(), lock: lock, exited: make(chan struct{})}
+	s := &Server{cfg: cfg, layout: cfg.layout(), as: as, lock: lock, exited: make(chan struct{})}
 	defer func() {
 		if err != nil {
 			s.abandon()
@@ -93,6 +95,12 @@ func Start(ctx context.Context, cfg Config, owner Owner) (_ *Server, err error) 
 			return nil, fmt.Errorf("this pwikit was built without a PostgreSQL of its own and found none in %s.\n"+
 				"  Point it at a PostgreSQL you run yourself with -database or DATABASE_URL", cfg.Postgres)
 		}
+		return nil, err
+	}
+	if err := reach(s.as, cfg.Data, s.layout.Bin); err != nil {
+		return nil, err
+	}
+	if err := s.handLogs(); err != nil {
 		return nil, err
 	}
 
@@ -117,14 +125,21 @@ func Start(ctx context.Context, cfg Config, owner Owner) (_ *Server, err error) 
 			return nil, err
 		}
 	}
+	if err := handOver(s.as, cfg.Data); err != nil {
+		return nil, err
+	}
 	if err := WriteConf(cfg.Data, s.plan); err != nil {
 		return nil, err
 	}
 	if err := WriteHBA(cfg.Data, s.plan); err != nil {
 		return nil, err
 	}
+	if err := own(s.as, filepath.Join(cfg.Data, overrideFile), filepath.Join(cfg.Data, "postgresql.conf"),
+		filepath.Join(cfg.Data, "pg_hba.conf"), filepath.Join(cfg.Data, "pg_ident.conf")); err != nil {
+		return nil, err
+	}
 	if s.plan.Socket != "" && s.plan.Socket != cfg.Data {
-		if err := privateDir(s.plan.Socket); err != nil {
+		if err := privateDir(s.plan.Socket, s.as); err != nil {
 			return nil, err
 		}
 	}
@@ -151,7 +166,7 @@ func Attach(ctx context.Context, cfg Config) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	account, err := accountName()
+	account, err := peerRole(cfg)
 	if err != nil {
 		return "", err
 	}
@@ -235,9 +250,24 @@ func (s *Server) makePlan(fresh bool) (Plan, error) {
 			return Plan{}, err
 		}
 	}
-	p := PlanFor(goos, s.layout, port, RoleFor(goos, account), password)
+	role := RoleFor(goos, account)
+	if s.as != nil {
+		role = s.as.name
+	}
+	p := PlanFor(goos, s.layout, port, role, password)
 	p.Logs = s.cfg.Logs
+	if s.as != nil {
+		p.Peers = []string{"root", s.as.name}
+	}
 	return p, nil
+}
+
+func (s *Server) handLogs() error {
+	logs, err := filepath.Glob(filepath.Join(s.cfg.Logs, "postgresql-*.log"))
+	if err != nil {
+		return err
+	}
+	return own(s.as, append([]string{s.cfg.Logs}, logs...)...)
 }
 
 func (s *Server) initdb(ctx context.Context) error {
@@ -248,6 +278,11 @@ func (s *Server) initdb(ctx context.Context) error {
 	staging := data + ".initdb"
 	if err := os.RemoveAll(staging); err != nil {
 		return fmt.Errorf("clear %s: %w", staging, err)
+	}
+	if s.as != nil {
+		if err := privateDir(staging, s.as); err != nil {
+			return err
+		}
 	}
 
 	args := []string{"-D", staging, "-U", s.plan.User, "-E", "UTF8", "--locale=C"}
@@ -283,6 +318,7 @@ func (s *Server) tool(ctx context.Context, name string, args ...string) error {
 	cmd.Stdout, cmd.Stderr = out, out
 	cmd.Env = toolEnv()
 	detach(cmd)
+	runAs(cmd, s.as, s.cfg.Root)
 	if err := cmd.Run(); err != nil {
 		tail := logTail(logName, 6)
 		return fmt.Errorf("%s failed: %w\n%s", name, err, indent(tail))
