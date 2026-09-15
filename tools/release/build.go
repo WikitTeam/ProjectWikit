@@ -84,6 +84,9 @@ func buildCommand(args []string) error {
 	if err := copyFile("LICENSE", filepath.Join(stage, "LICENSE"), 0o644); err != nil {
 		return err
 	}
+	if err := step("notices", ".", nil, "go", "run", "./tools/notices", "-version", *version, "-out", filepath.Join(stage, "NOTICE")); err != nil {
+		return err
+	}
 
 	target := filepath.Join(*out, packageFile(*version, runtime.GOOS, runtime.GOARCH))
 	if runtime.GOOS == "windows" {
