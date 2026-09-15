@@ -1065,10 +1065,10 @@ shallowequal@1.1.0, shallowequal@^1.1.0:
   resolved "https://registry.yarnpkg.com/shallowequal/-/shallowequal-1.1.0.tgz#188d521de95b9087404fd4dcb68b13df0ae4e7f8"
   integrity sha512-y0m1JoUZSlPAjXVtPPW70aZWfIL/dSP7AFkRnniLCrK/8MDKog3TySTBmckD+RObVxH0v4Tox67+F14PdED2oQ==
 
-sigma@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/sigma/-/sigma-3.0.2.tgz#3bf9ea22c0871ad122e2b40ffc29235565bd1a1a"
-  integrity sha512-/BUbeOwPGruiBOm0YQQ6ZMcLIZ6tf/W+Jcm7dxZyAX0tK3WP9/sq7/NAWBxPIxVahdGjCJoGwej0Gdrv0DxlQQ==
+sigma@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/sigma/-/sigma-3.0.3.tgz#7143a558b74896e37632643bccba90118f3d59c9"
+  integrity sha512-5H0zFlx6/NTQpqBg4Rm569ZOpnBOXMaS25UQThIWMU3XyzI5AhmorK/gnl87BvJBLhQd0tW4C0LIp3enWzMoNw==
   dependencies:
     events "^3.3.0"
     graphology-utils "^2.5.2"
