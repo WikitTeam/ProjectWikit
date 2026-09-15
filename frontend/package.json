@@ -36,7 +36,7 @@
     "styled-components": "^6.1.19",
     "ts-node": "10.6.0",
     "typescript": ">=2.7",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.2"
   },
   "scripts": {
     "build": "npx ts-node build.ts",
