@@ -30,7 +30,7 @@ Options:
 	database := flags.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	slug := flags.String("site", "", "slug of the site to write into; needed once a database holds more than one")
 	from := flags.String("from", "", "slug of the site inside the backup; needed when it holds more than one")
-	forceTags := flags.Bool("force-tags", false, "create tags this site would otherwise refuse")
+	noTags := flags.Bool("no-tags", false, "leave the tags behind")
 	noVotes := flags.Bool("no-votes", false, "leave the ratings behind")
 	noFiles := flags.Bool("no-files", false, "leave the attachments behind")
 	noAccounts := flags.Bool("no-accounts", false, "import even when the backup holds no accounts, leaving every author off")
@@ -86,7 +86,7 @@ Options:
 		files = p.Files()
 	}
 	return importArchive(ctx, conn, current, found, *from, archive.Options{
-		ForceTags:       *forceTags,
+		Tags:            !*noTags,
 		Votes:           !*noVotes,
 		Files:           files,
 		WithoutAccounts: *noAccounts,

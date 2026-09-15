@@ -11,9 +11,9 @@ import (
 )
 
 type Options struct {
-	// ForceTags creates tags the site would otherwise refuse, which is what an
-	// import of somebody else's wiki almost always needs.
-	ForceTags bool
+	// A new site has none of the backup's tags, so the missing tags and tag
+	// categories are created rather than dropped.
+	Tags bool
 
 	// Votes is off when only the text is wanted, since ratings are the part an
 	// owner most often means to start over.
@@ -218,8 +218,8 @@ func (im *importer) importPage(ctx context.Context, page Page) (int64, string, i
 			write.Votes = append(write.Votes, db.ImportVote{UserID: *user, Rate: vote.Value})
 		}
 	}
-	if len(page.Tags) > 0 {
-		ids, err := im.db.EnsureTags(ctx, im.siteID, page.Tags, im.opts.ForceTags)
+	if im.opts.Tags && len(page.Tags) > 0 {
+		ids, err := im.db.EnsureTags(ctx, im.siteID, page.Tags)
 		if err != nil {
 			return 0, "", 0, err
 		}

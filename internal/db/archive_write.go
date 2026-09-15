@@ -280,7 +280,7 @@ func lowered(s string) string { return strings.ToLower(s) }
 // EnsureTags resolves the tag names an archive carries, creating the ones this
 // site has never had. It is the import's way in to the same resolution the
 // editor uses, so a tag written here is the tag the editor would have made.
-func (d *DB) EnsureTags(ctx context.Context, siteID int64, names []string, allowCreate bool) ([]int64, error) {
+func (d *DB) EnsureTags(ctx context.Context, siteID int64, names []string) ([]int64, error) {
 	if len(names) == 0 {
 		return nil, nil
 	}
@@ -290,7 +290,7 @@ func (d *DB) EnsureTags(ctx context.Context, siteID int64, names []string, allow
 	}
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
-	tags, err := resolveTags(ctx, tx, siteID, names, allowCreate)
+	tags, err := resolveTags(ctx, tx, siteID, names, true)
 	if err != nil {
 		return nil, err
 	}
