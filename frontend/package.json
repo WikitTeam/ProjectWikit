@@ -31,7 +31,7 @@
     "react-router-dom": "6",
     "resize-observer-polyfill": "^1.5.1",
     "seedrandom": "^3.0.5",
-    "sigma": "^3.0.2",
+    "sigma": "^3.0.3",
     "sprintf-js": "^1.1.2",
     "styled-components": "^6.1.19",
     "ts-node": "10.6.0",
