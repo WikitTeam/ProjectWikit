@@ -28,23 +28,26 @@ import (
 const (
 	defaultDir = "internal/pgbundle/archive"
 	mavenBase  = "https://repo1.maven.org/maven2/io/zonky/test/postgres"
+	linuxBase  = "https://github.com/kakushi-w/pwikit-postgres/releases/download"
+	linuxBuild = "2"
 )
 
 type target struct {
-	platform string
-	source   string
-	cpu      macho.Cpu
+	zonky  string
+	linux  string
+	source string
+	cpu    macho.Cpu
 }
 
 var targets = map[string]target{
-	"windows/amd64": {platform: "windows-amd64", source: "d059b085ea761279769613678af306129b08a190fd16c4f6ef71a124c931af40"},
-	"linux/amd64":   {platform: "linux-amd64", source: "63999c2914366d62c68e51794e597588c336e75ed2958d53c558e8deca5e13fc"},
-	"linux/arm64":   {platform: "linux-arm64v8", source: "2eb24d67326da41a81064d116b0bce412dff543c835d6fcc1c099e4abcf18836"},
-	"darwin/amd64":  {platform: "darwin-amd64", source: "f4db5df0b13e3e72149c0547ccd1eee177cfe67accb8c296e8d0e46ef3601f01", cpu: macho.CpuAmd64},
-	"darwin/arm64":  {platform: "darwin-arm64v8", source: "f4db5df0b13e3e72149c0547ccd1eee177cfe67accb8c296e8d0e46ef3601f01", cpu: macho.CpuArm64},
+	"windows/amd64": {zonky: "windows-amd64", source: "d059b085ea761279769613678af306129b08a190fd16c4f6ef71a124c931af40"},
+	"linux/amd64":   {linux: "amd64", source: "a19e0453ae6301f044637b00d5d0f67cb57158353f7d838ed249362777010a35"},
+	"linux/arm64":   {linux: "arm64", source: "679dbb60a4da104fe46895052caff06b0559c7ebf068c51695d5abe3324bfac9"},
+	"darwin/amd64":  {zonky: "darwin-amd64", source: "f4db5df0b13e3e72149c0547ccd1eee177cfe67accb8c296e8d0e46ef3601f01", cpu: macho.CpuAmd64},
+	"darwin/arm64":  {zonky: "darwin-arm64v8", source: "f4db5df0b13e3e72149c0547ccd1eee177cfe67accb8c296e8d0e46ef3601f01", cpu: macho.CpuArm64},
 }
 
-var droppedDirs = []string{"include/", "share/doc/", "share/locale/", "lib/pgxs/", "lib/pkgconfig/"}
+var droppedDirs = []string{"include/", "share/doc/", "share/locale/", "lib/pgxs/", "lib/postgresql/pgxs/", "lib/pkgconfig/"}
 
 var droppedSuffixes = []string{".a", ".lib", ".pdb"}
 
@@ -60,7 +63,7 @@ func run(args []string) error {
 	goos := fs.String("goos", runtime.GOOS, "operating system the archive is for")
 	goarch := fs.String("goarch", runtime.GOARCH, "architecture the archive is for")
 	dir := fs.String("dir", defaultDir, "directory the archive is written into")
-	from := fs.String("from", "", "jar already downloaded, instead of fetching it")
+	from := fs.String("from", "", "archive already downloaded, instead of fetching it: a zonky jar, or a Linux .txz")
 	force := fs.Bool("force", false, "rebuild the archive even when it is up to date")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -84,16 +87,12 @@ func run(args []string) error {
 		}
 	}
 
-	jar, err := readJar(*from, t.platform)
-	if err != nil {
-		return err
-	}
-	txz, err := archiveInJar(jar)
+	txz, err := readArchive(*from, t)
 	if err != nil {
 		return err
 	}
 	if got := sum(txz); got != t.source {
-		return fmt.Errorf("the PostgreSQL %s archive for %s has sha256 %s, want %s", pgbundle.Version, t.platform, got, t.source)
+		return fmt.Errorf("the PostgreSQL %s archive for %s/%s has sha256 %s, want %s", pgbundle.Version, *goos, *goarch, got, t.source)
 	}
 
 	var out bytes.Buffer
@@ -119,12 +118,30 @@ func run(args []string) error {
 	return nil
 }
 
-func readJar(from, platform string) ([]byte, error) {
+func readArchive(from string, t target) ([]byte, error) {
+	var url string
+	if t.linux != "" {
+		tag := pgbundle.Version + "-" + linuxBuild
+		url = fmt.Sprintf("%s/%s/postgresql-%s-linux-%s.txz", linuxBase, tag, tag, t.linux)
+	} else {
+		name := "embedded-postgres-binaries-" + t.zonky
+		url = fmt.Sprintf("%s/%s/%s/%s-%s.jar", mavenBase, name, pgbundle.Version, name, pgbundle.Version)
+	}
+	data, err := readOrFetch(from, url)
+	if err != nil || t.linux != "" {
+		return data, err
+	}
+	return archiveInJar(data)
+}
+
+func readOrFetch(from, url string) ([]byte, error) {
 	if from != "" {
 		return os.ReadFile(from)
 	}
-	name := "embedded-postgres-binaries-" + platform
-	url := fmt.Sprintf("%s/%s/%s/%s-%s.jar", mavenBase, name, pgbundle.Version, name, pgbundle.Version)
+	return fetch(url)
+}
+
+func fetch(url string) ([]byte, error) {
 	fmt.Println("fetching", url)
 	client := &http.Client{Timeout: 10 * time.Minute}
 	resp, err := client.Get(url)
