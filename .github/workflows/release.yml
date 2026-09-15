@@ -67,7 +67,7 @@ jobs:
           docker run --rm -v "$PWD:/src" -w /src -e VERSION="$VERSION" ${{ matrix.manylinux }} sh tools/release/linux.sh
           sudo chown -R "$(id -u):$(id -g)" dist
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         if: runner.os != 'Linux'
         with:
           go-version-file: go.mod
@@ -155,7 +155,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
