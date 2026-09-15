@@ -159,7 +159,7 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: pwikit-*
           path: dist
@@ -187,7 +187,7 @@ jobs:
             --verify-tag \
             --notes "Release notes for $VERSION are written here before the draft is published."
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: digest-*
           path: digests
