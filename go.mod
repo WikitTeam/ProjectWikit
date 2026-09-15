@@ -9,10 +9,10 @@ require (
 	github.com/klauspost/compress v1.19.0
 	github.com/tdewolff/minify/v2 v2.24.17
 	github.com/ulikunitz/xz v0.5.15
-	golang.org/x/crypto v0.46.0
-	golang.org/x/net v0.48.0
+	golang.org/x/crypto v0.52.0
+	golang.org/x/net v0.54.0
 	golang.org/x/sys v0.47.0
-	golang.org/x/term v0.38.0
+	golang.org/x/term v0.43.0
 	golang.org/x/text v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
