@@ -88,7 +88,7 @@ jobs:
         shell: bash
         run: go run ./tools/release build -version "$VERSION" -out dist -skip-frontend
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: pwikit-${{ matrix.platform }}
           path: |
@@ -137,7 +137,7 @@ jobs:
           digest="${{ steps.build.outputs.digest }}"
           touch "digests/${digest#sha256:}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: digest-${{ matrix.arch }}
           path: digests/*
@@ -170,7 +170,7 @@ jobs:
           cp install/install.sh install/install.ps1 dist/
           go run ./tools/release manifest -dir dist -version "$VERSION" -repository "$GITHUB_REPOSITORY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ env.VERSION }}
           path: dist/*
