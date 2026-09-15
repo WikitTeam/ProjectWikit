@@ -58,6 +58,15 @@ func (r *fakeRepo) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetche
 	return out, nil
 }
 
+func message(t *testing.T, id string, args ...any) string {
+	t.Helper()
+	bundle, err := i18n.Load("")
+	if err != nil {
+		t.Fatalf("i18n.Load() err = %v, want nil", err)
+	}
+	return bundle.Localizer(i18n.DefaultLanguage).T(id, args...)
+}
+
 func newCallbacks(t *testing.T, repo Repository) *Callbacks {
 	t.Helper()
 	bundle, err := i18n.Load("")
@@ -162,7 +171,7 @@ func TestRenderUserNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RenderUser() err = %v, want nil", err)
 	}
-	want := `<span class="error-inline">用户 'kaku&lt;shi' 不存在</span>`
+	want := `<span class="error-inline">` + message(t, "user-not-found", "name", "kaku&lt;shi") + `</span>`
 	if got != want {
 		t.Errorf("RenderUser() = %q, want %q", got, want)
 	}
@@ -174,8 +183,8 @@ func TestGetI18nMessage(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"button-copy-clipboard", "复制"},
-		{"toc-open", "展开"},
+		{"button-copy-clipboard", message(t, "button-copy-clipboard")},
+		{"toc-open", message(t, "toc-open")},
 		{"no-such-message", "no-such-message"},
 	}
 	for _, tt := range tests {
@@ -295,7 +304,8 @@ func TestNoSuchIncludeReportsMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
 	}
-	want := `[[div class="error-block"]]插入的页面 "scp-173" 不存在 ([[a href="/scp-173/edit/true" target="_blank"]]立刻创建[[/a]])[[/div]]`
+	want := `[[div class="error-block"]]` + message(t, "include-missing", "name", "scp-173") +
+		` ([[a href="/scp-173/edit/true" target="_blank"]]` + message(t, "include-create") + `[[/a]])[[/div]]`
 	if got != want {
 		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
 	}
@@ -314,7 +324,7 @@ func TestNoSuchIncludeReportsLoopAfterOverflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
 	}
-	want := `[[div class="error-block"]]插入的页面 "SCP 173" 导致了无限包含循环[[/div]]`
+	want := `[[div class="error-block"]]` + message(t, "include-loop", "name", "SCP 173") + `[[/div]]`
 	if got != want {
 		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
 	}
@@ -421,7 +431,8 @@ func TestNoSuchIncludeTakesARefNamingThisWikiAsLocal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
 	}
-	want := `[[div class="error-block"]]插入的页面 "missing" 不存在 ([[a href="/missing/edit/true" target="_blank"]]立刻创建[[/a]])[[/div]]`
+	want := `[[div class="error-block"]]` + message(t, "include-missing", "name", "missing") +
+		` ([[a href="/missing/edit/true" target="_blank"]]` + message(t, "include-create") + `[[/a]])[[/div]]`
 	if got != want {
 		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
 	}
@@ -475,7 +486,7 @@ func TestNoSuchIncludeReportsAnOffSiteRef(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
 	}
-	want := `[[div class="error-block"]]取不到插入的页面 ":other:component:box"，可能是站点缩写写错了，也可能是你在那个站点上看不到它[[/div]]`
+	want := `[[div class="error-block"]]` + message(t, "include-off-site", "name", ":other:component:box") + `[[/div]]`
 	if got != want {
 		t.Errorf("NoSuchInclude() = %q, want %q", got, want)
 	}

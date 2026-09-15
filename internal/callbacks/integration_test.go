@@ -88,8 +88,8 @@ func TestRealRenderUsesCallbacks(t *testing.T) {
 		{"red link", "[[[missing|红]]]", `class="newpage"`},
 		{"existing link is not a red link", "[[[exists|蓝]]]", `href="/exists"`},
 		{"user", "[[user kakushi]]", `<span class="user">kakushi</span>`},
-		{"user not found", "[[user nobody]]", "用户 'nobody' 不存在"},
-		{"include miss", "[[include :other:page]]", "不存在"},
+		{"user not found", "[[user nobody]]", message(t, "user-not-found", "name", "nobody")},
+		{"include miss", "[[include :other:page]]", strings.SplitN(message(t, "include-off-site", "name", ":other:page"), `"`, 2)[0]},
 		{"include hit", "[[include exists]]", "<strong>被包含的内容</strong>"},
 	}
 	for _, tt := range tests {
@@ -104,8 +104,9 @@ func TestRealRenderUsesCallbacks(t *testing.T) {
 
 func TestRealRenderUsesI18nCatalog(t *testing.T) {
 	got := renderWith(t, "正文[[footnote]]脚注内容[[/footnote]]")
-	if !strings.Contains(got, "脚注") {
-		t.Errorf("RenderHTML() = %q, want substring %q", got, "脚注")
+	want := message(t, "footnote-block-title")
+	if !strings.Contains(got, want) {
+		t.Errorf("RenderHTML() = %q, want substring %q", got, want)
 	}
 }
 
