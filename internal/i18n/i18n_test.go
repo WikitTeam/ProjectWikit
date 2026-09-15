@@ -51,8 +51,8 @@ func TestTFallsBackToDefaultLanguage(t *testing.T) {
 	if got := l.T("toc-open"); got != "Expand" {
 		t.Errorf("T(%q) = %q, want %q", "toc-open", got, "Expand")
 	}
-	if got := l.T("toc-close"); got != "关闭" {
-		t.Errorf("T(%q) = %q, want fallback %q", "toc-close", got, "关闭")
+	if got := l.T("toc-close"); got != "收起" {
+		t.Errorf("T(%q) = %q, want fallback %q", "toc-close", got, "收起")
 	}
 }
 
@@ -94,15 +94,15 @@ func TestLoadMergesOverrideDir(t *testing.T) {
 	if got := l.T("toc-open"); got != "打开" {
 		t.Errorf("T(%q) = %q, want override %q", "toc-open", got, "打开")
 	}
-	if got := l.T("toc-close"); got != "关闭" {
-		t.Errorf("T(%q) = %q, want builtin %q", "toc-close", got, "关闭")
+	if got := l.T("toc-close"); got != "收起" {
+		t.Errorf("T(%q) = %q, want builtin %q", "toc-close", got, "收起")
 	}
 }
 
 func TestLoadIgnoresMissingOverrideDir(t *testing.T) {
 	l := load(t, filepath.Join(t.TempDir(), "missing")).Localizer(DefaultLanguage)
-	if got := l.T("toc-close"); got != "关闭" {
-		t.Errorf("T(%q) = %q, want %q", "toc-close", got, "关闭")
+	if got := l.T("toc-close"); got != "收起" {
+		t.Errorf("T(%q) = %q, want %q", "toc-close", got, "收起")
 	}
 }
 
