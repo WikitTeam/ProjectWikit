@@ -45,7 +45,10 @@ fn parse_fn<'r, 't>(
     let mut arguments = parser.get_head_map(&BLOCK_CODE, in_head)?;
     let language = arguments.get("type");
     
+    // The line break before the closing tag belongs to the tag, as on Wikidot,
+    // or every block would end on an empty line.
     let code = parser.get_body_text(&BLOCK_CODE, name)?;
+    let code = code.strip_suffix('\n').unwrap_or(code);
 
     parser.push_code(language.to_owned().unwrap_or(cow!("plain")).as_ref().to_owned(), code.to_owned());
 

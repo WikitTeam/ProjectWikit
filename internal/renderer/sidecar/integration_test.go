@@ -108,6 +108,8 @@ func TestRealSidecarRendersHTML(t *testing.T) {
 		{"comment removed", "[!-- 注释 --]文本", "<p>文本</p>"},
 		{"monospace", "{{等宽}}", `<tt class="wj-monospace">等宽</tt>`},
 		{"include miss", "[[include :other:page]]", "missing"},
+		{"code keeps its own blank lines", "[[code]]\n\na\n\n[[/code]]", "<pre>\n\na\n</pre>"},
+		{"code drops the break before its closing tag", "[[code]]\na\n[[/code]]", "<pre>a</pre>"},
 	}
 
 	for _, tt := range tests {
