@@ -28,6 +28,7 @@
   </div>
 
   {{if .MayGrant}}
+  <p class="hint">{{t "admin.h-category-permissions"}}</p>
   {{range .Cells}}
   {{$rid := .Role.ID}}
   <div class="widget-box">
