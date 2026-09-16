@@ -10,6 +10,7 @@ export const Container = styled.div`
   min-height: 44px;
   background: ${({ theme }) => theme.windowPadding};
   overflow-x: auto;
+  overflow-y: hidden;
 `
 
 const linkStyle = css`
