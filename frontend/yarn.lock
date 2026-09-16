@@ -241,10 +241,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@react-sigma/core@^5.0.4":
-  version "5.0.4"
-  resolved "https://registry.yarnpkg.com/@react-sigma/core/-/core-5.0.4.tgz#8207e340c2103a3aad7871be5a6d31b27d198072"
-  integrity sha512-C0hjr069x9oLlVe7t+Y1vE8Qi9UV1dhvrwxNi96TWxrFcTSHO5ntduj5yKTGnUF4SiIszAz6Xmjga8SHT/836Q==
+"@react-sigma/core@^5.0.6":
+  version "5.0.6"
+  resolved "https://registry.yarnpkg.com/@react-sigma/core/-/core-5.0.6.tgz#2c57b9ffcfb652f2e99898a922b4ec32fc22bd18"
+  integrity sha512-Xu2qXyvDZIhmvGC1n8d7Kcxm5Ntcz4HbPIM7CPDD2e4h3s/oxVpVPX7wtsNreJRRPj9mK+3oqB6SWXNI4mTqVg==
 
 "@remix-run/router@1.23.0":
   version "1.23.0"
