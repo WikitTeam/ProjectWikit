@@ -7,6 +7,7 @@ import (
 )
 
 type RatedArticle struct {
+	SiteID  int64
 	Article Article
 	Rate    float64
 	VotedAt *time.Time
@@ -24,15 +25,31 @@ func (d *DB) RatedByCountOf(ctx context.Context, userID int64) (int, error) {
 }
 
 var qRatedBy = register("RatedBy", `
-SELECT `+prefixedArticleColumns+`, v.rate, v.date
+SELECT a.site_id, `+prefixedArticleColumns+`, v.rate, v.date
 FROM web_vote v
 JOIN web_article a ON a.id = v.article_id
 WHERE v.user_id = $1 AND a.site_id = $4
 ORDER BY v.date DESC NULLS LAST, v.id DESC
 OFFSET $2 LIMIT $3`)
 
+var qRatedByOnEverySite = register("RatedByOnEverySite", `
+SELECT a.site_id, `+prefixedArticleColumns+`, v.rate, v.date
+FROM web_vote v
+JOIN web_article a ON a.id = v.article_id
+WHERE v.user_id = $1
+ORDER BY v.date DESC NULLS LAST, v.id DESC
+OFFSET $2 LIMIT $3`)
+
 func (d *DB) RatedBy(ctx context.Context, siteID, userID int64, offset, limit int) ([]RatedArticle, error) {
-	rows, err := d.pool.Query(ctx, qRatedBy, userID, offset, limit, siteID)
+	return d.ratedBy(ctx, userID, qRatedBy, userID, offset, limit, siteID)
+}
+
+func (d *DB) RatedByOnEverySite(ctx context.Context, userID int64, offset, limit int) ([]RatedArticle, error) {
+	return d.ratedBy(ctx, userID, qRatedByOnEverySite, userID, offset, limit)
+}
+
+func (d *DB) ratedBy(ctx context.Context, userID int64, sql string, args ...any) ([]RatedArticle, error) {
+	rows, err := d.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list votes of user %d: %w", userID, err)
 	}
@@ -42,7 +59,7 @@ func (d *DB) RatedBy(ctx context.Context, siteID, userID int64, offset, limit in
 	for rows.Next() {
 		var one RatedArticle
 		a := &one.Article
-		if err := rows.Scan(&a.ID, &a.Category, &a.Name, &a.Title, &a.ParentID,
+		if err := rows.Scan(&one.SiteID, &a.ID, &a.Category, &a.Name, &a.Title, &a.ParentID,
 			&a.Locked, &a.CreatedAt, &a.UpdatedAt, &a.MediaName, &one.Rate, &one.VotedAt); err != nil {
 			return nil, fmt.Errorf("scan vote: %w", err)
 		}
@@ -55,6 +72,7 @@ func (d *DB) RatedBy(ctx context.Context, siteID, userID int64, offset, limit in
 }
 
 type LikedPost struct {
+	SiteID     int64
 	Post       ForumThreadPost
 	ThreadName string
 	LikedAt    time.Time
@@ -72,17 +90,17 @@ func (d *DB) LikedPostCountOf(ctx context.Context, userID int64) (int, error) {
 }
 
 var qLikedPostsOf = register("LikedPostsOf", `
-SELECT p.id, p.thread_id, p.name, p.created_at, p.updated_at, p.author_id, p.reply_to_id,
+SELECT t.site_id, p.id, p.thread_id, p.name, p.created_at, p.updated_at, p.author_id, p.reply_to_id,
        coalesce(t.name, ''), l.created_at
 FROM web_forumpostlike l
 JOIN web_forumpost p ON p.id = l.post_id
 JOIN web_forumthread t ON t.id = p.thread_id
-WHERE l.user_id = $1 AND t.site_id = $4
+WHERE l.user_id = $1
 ORDER BY l.created_at DESC, l.id DESC
 OFFSET $2 LIMIT $3`)
 
-func (d *DB) LikedPostsOf(ctx context.Context, siteID, userID int64, offset, limit int) ([]LikedPost, error) {
-	rows, err := d.pool.Query(ctx, qLikedPostsOf, userID, offset, limit, siteID)
+func (d *DB) LikedPostsOf(ctx context.Context, userID int64, offset, limit int) ([]LikedPost, error) {
+	rows, err := d.pool.Query(ctx, qLikedPostsOf, userID, offset, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list likes of user %d: %w", userID, err)
 	}
@@ -92,7 +110,7 @@ func (d *DB) LikedPostsOf(ctx context.Context, siteID, userID int64, offset, lim
 	for rows.Next() {
 		var one LikedPost
 		p := &one.Post
-		if err := rows.Scan(&p.ID, &p.ThreadID, &p.Name, &p.CreatedAt, &p.UpdatedAt,
+		if err := rows.Scan(&one.SiteID, &p.ID, &p.ThreadID, &p.Name, &p.CreatedAt, &p.UpdatedAt,
 			&p.AuthorID, &p.ReplyToID, &one.ThreadName, &one.LikedAt); err != nil {
 			return nil, fmt.Errorf("scan like: %w", err)
 		}

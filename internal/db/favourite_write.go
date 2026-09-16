@@ -51,22 +51,23 @@ func (d *DB) RemoveFavourite(ctx context.Context, articleID, userID int64) error
 }
 
 type Favourite struct {
+	SiteID  int64
 	Article Article
 	AddedAt time.Time
 }
 
 var qFavouritesOf = register("FavouritesOf", `
-SELECT `+prefixedArticleColumns+`, f.created_at
+SELECT a.site_id, `+prefixedArticleColumns+`, f.created_at
 FROM web_articlefavourite f
 JOIN web_article a ON a.id = f.article_id
-WHERE f.user_id = $1 AND a.site_id = $4
+WHERE f.user_id = $1
 ORDER BY f.created_at DESC, f.id DESC
 OFFSET $2 LIMIT $3`)
 
 // Only the owner ever reads this, so no permission filter runs here. Whoever
 // calls it has already established that the rows belong to the reader.
-func (d *DB) FavouritesOf(ctx context.Context, siteID, userID int64, offset, limit int) ([]Favourite, error) {
-	rows, err := d.pool.Query(ctx, qFavouritesOf, userID, offset, limit, siteID)
+func (d *DB) FavouritesOf(ctx context.Context, userID int64, offset, limit int) ([]Favourite, error) {
+	rows, err := d.pool.Query(ctx, qFavouritesOf, userID, offset, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list favourites of user %d: %w", userID, err)
 	}
@@ -76,7 +77,7 @@ func (d *DB) FavouritesOf(ctx context.Context, siteID, userID int64, offset, lim
 	for rows.Next() {
 		var one Favourite
 		a := &one.Article
-		if err := rows.Scan(&a.ID, &a.Category, &a.Name, &a.Title, &a.ParentID,
+		if err := rows.Scan(&one.SiteID, &a.ID, &a.Category, &a.Name, &a.Title, &a.ParentID,
 			&a.Locked, &a.CreatedAt, &a.UpdatedAt, &a.MediaName, &one.AddedAt); err != nil {
 			return nil, fmt.Errorf("scan favourite: %w", err)
 		}

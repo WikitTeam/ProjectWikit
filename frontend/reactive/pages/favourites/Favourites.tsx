@@ -52,9 +52,9 @@ const Favourites: React.FC = () => {
         <>
           <Styled.List>
             {listing.favourites.map(one => (
-              <Styled.Item key={one.pageId}>
-                <Styled.Title href={`/${one.pageId}`}>{one.title}</Styled.Title>
-                <Styled.Name>{one.pageId}</Styled.Name>
+              <Styled.Item key={one.url}>
+                <Styled.Title href={one.url}>{one.title}</Styled.Title>
+                <Styled.Name>{one.site} · {one.pageId}</Styled.Name>
                 <Styled.Added>{one.addedAt.slice(0, 10)}</Styled.Added>
               </Styled.Item>
             ))}

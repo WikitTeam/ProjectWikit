@@ -54,7 +54,7 @@ const LikedPosts: React.FC = () => {
             {listing.posts.map(one => (
               <Styled.Item key={one.postId}>
                 <Styled.Title href={one.url}>{one.name || t('own-likes.untitled')}</Styled.Title>
-                <Styled.Name>{one.threadName}</Styled.Name>
+                <Styled.Name>{one.site} · {one.threadName}</Styled.Name>
                 <Styled.Added>{one.likedAt.slice(0, 10)}</Styled.Added>
               </Styled.Item>
             ))}

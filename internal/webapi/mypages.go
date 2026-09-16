@@ -58,9 +58,15 @@ func (h *OwnRows) ratings(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 	}
 	page, pages := pageOf(r, total)
 
-	found, err := h.deps.DB.RatedBy(ctx, siteID(ctx), user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
+	found, err := h.deps.DB.RatedByOnEverySite(ctx, user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
 	if err != nil {
 		h.deps.log().Error("list ratings", "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+	sites, err := loadSiteLinks(ctx, h.deps.DB)
+	if err != nil {
+		h.deps.log().Error("list sites", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
 		return
 	}
@@ -77,6 +83,8 @@ func (h *OwnRows) ratings(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 		}
 		rendered = append(rendered, wikijson.Object{
 			{Key: "pageId", Value: one.Article.FullName()},
+			{Key: "site", Value: sites.title(one.SiteID)},
+			{Key: "url", Value: sites.href(one.SiteID, "/"+one.Article.FullName())},
 			{Key: "title", Value: title},
 			{Key: "rate", Value: one.Rate},
 			{Key: "votedAt", Value: votedAt},
@@ -95,9 +103,15 @@ func (h *OwnRows) likedPosts(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 	page, pages := pageOf(r, total)
 
-	found, err := h.deps.DB.LikedPostsOf(ctx, siteID(ctx), user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
+	found, err := h.deps.DB.LikedPostsOf(ctx, user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
 	if err != nil {
 		h.deps.log().Error("list liked posts", "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+	sites, err := loadSiteLinks(ctx, h.deps.DB)
+	if err != nil {
+		h.deps.log().Error("list sites", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
 		return
 	}
@@ -109,7 +123,8 @@ func (h *OwnRows) likedPosts(w http.ResponseWriter, r *http.Request, loc *i18n.L
 			{Key: "postId", Value: one.Post.ID},
 			{Key: "name", Value: strings.TrimSpace(one.Post.Name)},
 			{Key: "threadName", Value: one.ThreadName},
-			{Key: "url", Value: thread + "#post-" + strconv.FormatInt(one.Post.ID, 10)},
+			{Key: "site", Value: sites.title(one.SiteID)},
+			{Key: "url", Value: sites.href(one.SiteID, thread+"#post-"+strconv.FormatInt(one.Post.ID, 10))},
 			{Key: "likedAt", Value: isoTime(one.LikedAt)},
 		})
 	}

@@ -21,6 +21,8 @@ export async function fetchFavouriteState(pageId: string) {
 
 export interface FavouriteEntry {
   pageId: string
+  site: string
+  url: string
   title: string
   addedAt: string
 }

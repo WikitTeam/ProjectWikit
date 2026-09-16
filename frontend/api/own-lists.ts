@@ -2,6 +2,8 @@ import { wFetch } from '../util/fetch-util'
 
 export interface RatingEntry {
   pageId: string
+  site: string
+  url: string
   title: string
   rate: number
   votedAt: string | null
@@ -18,6 +20,7 @@ export interface LikedPostEntry {
   postId: number
   name: string
   threadName: string
+  site: string
   url: string
   likedAt: string
 }

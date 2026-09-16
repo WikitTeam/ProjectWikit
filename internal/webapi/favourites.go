@@ -61,16 +61,22 @@ func (h *Favourites) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		page = pages
 	}
 
-	found, err := h.deps.DB.FavouritesOf(ctx, siteID(ctx), user.ID, (page-1)*favouritesPerPage, favouritesPerPage)
+	found, err := h.deps.DB.FavouritesOf(ctx, user.ID, (page-1)*favouritesPerPage, favouritesPerPage)
 	if err != nil {
 		h.deps.log().Error("list favourites", "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+	sites, err := loadSiteLinks(ctx, h.deps.DB)
+	if err != nil {
+		h.deps.log().Error("list sites", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
 		return
 	}
 
 	rendered := make(wikijson.Array, 0, len(found))
 	for _, one := range found {
-		rendered = append(rendered, favouriteJSON(one))
+		rendered = append(rendered, favouriteJSON(sites, one))
 	}
 	body, err := wikijson.Marshal(wikijson.Object{
 		{Key: "page", Value: page},
@@ -85,13 +91,15 @@ func (h *Favourites) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, body)
 }
 
-func favouriteJSON(one db.Favourite) wikijson.Object {
+func favouriteJSON(sites siteLinks, one db.Favourite) wikijson.Object {
 	title := one.Article.Title
 	if title == "" {
 		title = one.Article.FullName()
 	}
 	return wikijson.Object{
 		{Key: "pageId", Value: one.Article.FullName()},
+		{Key: "site", Value: sites.title(one.SiteID)},
+		{Key: "url", Value: sites.href(one.SiteID, "/"+one.Article.FullName())},
 		{Key: "title", Value: title},
 		{Key: "addedAt", Value: isoTime(one.AddedAt)},
 	}
