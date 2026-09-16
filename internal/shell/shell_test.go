@@ -455,6 +455,31 @@ func TestProfileEditCarriesTheToken(t *testing.T) {
 	}
 }
 
+func TestProfileEditRendersOnlyTheOpenTab(t *testing.T) {
+	got, err := profileTestRenderer(t).ProfileEdit(ProfileEdit{
+		DisplayName: "probe-author",
+		Tab:         SettingsTabPassword,
+		Tabs: []ProfileTab{
+			{Label: "basic", URL: "/-/profile/edit"},
+			{Label: "password", URL: "/-/profile/edit?tab=password", Active: true},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ProfileEdit() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `<a href="/-/profile/edit?tab=password" class="active">password</a>`) {
+		t.Error("ProfileEdit() does not mark the open tab")
+	}
+	if !strings.Contains(got, `action="/-/profile/password"`) {
+		t.Error("ProfileEdit() does not show the password form on its tab")
+	}
+	for _, other := range []string{`action="/-/profile/email"`, `action="/-/profile/name"`, `name="bio"`} {
+		if strings.Contains(got, other) {
+			t.Errorf("Contains(ProfileEdit(), %q) = true, want false", other)
+		}
+	}
+}
+
 func TestProfileEditMarksTheChosenLanguage(t *testing.T) {
 	got, err := profileTestRenderer(t).ProfileEdit(ProfileEdit{
 		DisplayName: "probe-author",

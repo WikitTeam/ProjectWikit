@@ -23,6 +23,25 @@ func TestTabOf(t *testing.T) {
 	}
 }
 
+func TestSettingsTab(t *testing.T) {
+	cases := []struct{ query, want string }{
+		{"", shell.SettingsTabBasic},
+		{"?saved=1", shell.SettingsTabBasic},
+		{"?tab=password", shell.SettingsTabPassword},
+		{"?said=email-sent", shell.SettingsTabEmail},
+		{"?said=name-cooldown", shell.SettingsTabName},
+		{"?said=password-wrong", shell.SettingsTabPassword},
+		{"?said=unknown-thing", shell.SettingsTabBasic},
+		{"?tab=elsewhere", shell.SettingsTabBasic},
+	}
+	for _, c := range cases {
+		r := httptest.NewRequest("GET", "/-/profile/edit"+c.query, nil)
+		if got := settingsTab(r); got != c.want {
+			t.Errorf("settingsTab(%q) = %q, want %q", c.query, got, c.want)
+		}
+	}
+}
+
 func TestSiteSetHref(t *testing.T) {
 	current := &db.Site{ID: 1, Domain: "wiki.example"}
 	other := &db.Site{ID: 2, Domain: "other.example"}

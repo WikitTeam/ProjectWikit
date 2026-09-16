@@ -200,6 +200,40 @@ func splitFullName(value string) (first, last string) {
 	return value, ""
 }
 
+var settingsTabList = []struct{ tab, label string }{
+	{shell.SettingsTabBasic, "profile.tab-basic"},
+	{shell.SettingsTabEmail, "profile.tab-email"},
+	{shell.SettingsTabPassword, "profile.tab-password"},
+	{shell.SettingsTabName, "profile.tab-name"},
+}
+
+// The email, password and name forms post elsewhere and come back with only an
+// outcome, so the outcome names the tab to reopen.
+func settingsTab(r *http.Request) string {
+	wanted := r.URL.Query().Get("tab")
+	if wanted == "" {
+		wanted, _, _ = strings.Cut(account.Outcome(r.URL.Query().Get("said")), "-")
+	}
+	for _, t := range settingsTabList {
+		if t.tab == wanted {
+			return wanted
+		}
+	}
+	return shell.SettingsTabBasic
+}
+
+func settingsTabs(loc *i18n.Localizer, active string) []shell.ProfileTab {
+	out := make([]shell.ProfileTab, 0, len(settingsTabList))
+	for _, t := range settingsTabList {
+		href := EditPrefix
+		if t.tab != shell.SettingsTabBasic {
+			href += "?tab=" + t.tab
+		}
+		out = append(out, shell.ProfileTab{Label: loc.T(t.label), URL: href, Active: t.tab == active})
+	}
+	return out
+}
+
 func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	viewer *db.User, token, problem string) (string, error) {
 
@@ -238,10 +272,13 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		EmailPending:   state.Pending,
 		CanRename:      renamedAt == nil || time.Since(*renamedAt) >= account.RenameCooldown,
 		Said:           account.Outcome(r.URL.Query().Get("said")),
+		Tab:            settingsTab(r),
 		CSRF:           token,
 		Error:          problem,
 		Saved:          problem == "" && r.URL.Query().Get("saved") == "1",
 	}
+
+	data.Tabs = settingsTabs(loc, data.Tab)
 
 	render := shell.New(loc, h.deps.Assets)
 	content, err := render.ProfileEdit(data)

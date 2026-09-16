@@ -229,6 +229,13 @@ type Profile struct {
 }
 
 const (
+	SettingsTabBasic    = ""
+	SettingsTabEmail    = "email"
+	SettingsTabPassword = "password"
+	SettingsTabName     = "name"
+)
+
+const (
 	ProfileTabAbout = ""
 	ProfileTabEdits = "edits"
 	ProfileTabPosts = "posts"
@@ -342,6 +349,9 @@ type ProfileEdit struct {
 	EmailVerified bool
 	EmailPending  string
 	CanRename     bool
+
+	Tab  string
+	Tabs []ProfileTab
 
 	Said  string
 	CSRF  string
