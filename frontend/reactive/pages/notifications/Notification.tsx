@@ -24,6 +24,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
       case 'welcome': return 'WELCOME'
       case 'direct_message': return 'PM'
       case 'post_like': return 'LIKE'
+      case 'release_available': return 'UPDATE'
       default: return 'INFO'
     }
   }, [notification.type])
@@ -107,6 +108,18 @@ const Notification: React.FC<Props> = ({ notification }) => {
           <Styled.PostName>
             <a href={notification.post.url}>{notification.post.name || t('notifications.item.view-post')}</a>
           </Styled.PostName>
+        </>
+      )
+    } else if (notification.type === 'release_available') {
+      return (
+        <>
+          <Styled.TypeName>{t('notifications.item.type-release', { version: notification.version })}</Styled.TypeName>
+          <Styled.PostContent>{t('notifications.item.release-hint')}</Styled.PostContent>
+          {notification.notes && (
+            <Styled.PostName>
+              <a href={notification.notes} target="_blank" rel="noopener noreferrer">{t('notifications.item.release-notes')}</a>
+            </Styled.PostName>
+          )}
         </>
       )
     } else if (notification.type === 'direct_message') {

@@ -69,6 +69,14 @@ func (b *Board) Postpone(ctx context.Context) error {
 	return b.change(ctx, func(st *db.UpdateState) { Postpone(st, time.Now()) })
 }
 
+func (b *Board) StartNow(ctx context.Context) error {
+	return b.change(ctx, func(st *db.UpdateState) { StartNow(st, b.Facts(time.Now())) })
+}
+
+func (b *Board) Startable(ctx context.Context) bool {
+	return Startable(b.State(ctx), b.Facts(time.Now()))
+}
+
 func (b *Board) Skip(ctx context.Context) error {
 	return b.change(ctx, func(st *db.UpdateState) { Skip(st) })
 }

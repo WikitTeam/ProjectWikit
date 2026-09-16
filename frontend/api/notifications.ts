@@ -78,6 +78,12 @@ interface NotificationPostLike extends BaseNotification {
   post: NotificationEntity
 }
 
+interface NotificationReleaseAvailable extends BaseNotification {
+  type: 'release_available'
+  version: string
+  notes: string
+}
+
 export type Notification =
   | NotificationNewPostReply
   | NotificationNewThreadPost
@@ -86,6 +92,7 @@ export type Notification =
   | NotificationForumMention
   | NotificationDirectMessage
   | NotificationPostLike
+  | NotificationReleaseAvailable
 
 export interface NotificationsResponse {
   cursor: number

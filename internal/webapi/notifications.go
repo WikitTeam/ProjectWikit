@@ -29,6 +29,7 @@ var notificationKinds = []string{
 	db.NotifyForumMention,
 	db.NotifyDirectMessage,
 	db.NotifyPostLike,
+	db.NotifyReleaseAvailable,
 }
 
 type Notifications struct {

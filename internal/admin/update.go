@@ -15,12 +15,13 @@ import (
 const updateSlug = "update"
 
 type updateNotice struct {
-	Error   bool
-	Text    string
-	Detail  string
-	Notes   string
-	Actions bool
-	CSRF    string
+	Error    bool
+	Text     string
+	Detail   string
+	Notes    string
+	Actions  bool
+	StartNow bool
+	CSRF     string
 }
 
 func (h *Handler) updateNotices(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) []updateNotice {
@@ -39,6 +40,7 @@ func (h *Handler) updateNotices(w http.ResponseWriter, r *http.Request, loc *i18
 		case update.NoticeAvailable:
 			v.Text = loc.T("update.notice-available", "version", escape.HTML(n.Version))
 			v.Detail = loc.T("update.reason-"+n.Reason.Code, "detail", n.Reason.Detail)
+			v.StartNow = super && h.deps.Updates.Startable(r.Context())
 		case update.NoticeUpdated:
 			v.Text = loc.T("update.notice-updated", "version", escape.HTML(n.Version), "from", escape.HTML(n.From))
 		case update.NoticeRolledBack:
@@ -48,7 +50,7 @@ func (h *Handler) updateNotices(w http.ResponseWriter, r *http.Request, loc *i18
 				v.Detail = n.Error
 			}
 		}
-		if v.Actions && w != nil {
+		if (v.Actions || v.StartNow) && w != nil {
 			v.CSRF = csrf.Issue(w, r)
 		}
 		out = append(out, v)
@@ -76,6 +78,8 @@ func (h *Handler) updateAction(w http.ResponseWriter, r *http.Request, action st
 		err = h.deps.Updates.Postpone(r.Context())
 	case "skip":
 		err = h.deps.Updates.Skip(r.Context())
+	case "now":
+		err = h.deps.Updates.StartNow(r.Context())
 	default:
 		h.next.ServeHTTP(w, r)
 		return nil

@@ -14,6 +14,7 @@ const (
 	NotifyForumMention       = "forum_mention"
 	NotifyDirectMessage      = "direct_message"
 	NotifyPostLike           = "post_like"
+	NotifyReleaseAvailable   = "release_available"
 )
 
 var (
@@ -51,6 +52,35 @@ func (d *DB) SendNotification(ctx context.Context, kind, meta string, recipients
 		return fmt.Errorf("commit notification %q: %w", kind, err)
 	}
 	return nil
+}
+
+var qReleaseAudience = register("ReleaseAudience", `
+SELECT u.id
+FROM web_user u
+WHERE CASE WHEN u.inactive_until IS NULL THEN u.is_active ELSE u.inactive_until < now() END
+  AND (u.is_superuser OR EXISTS (
+	SELECT 1
+	FROM web_user_roles ur
+	JOIN web_role r ON r.id = ur.role_id
+	WHERE ur.user_id = u.id AND r.is_staff))
+ORDER BY u.id`)
+
+func (d *DB) ReleaseAudience(ctx context.Context) ([]int64, error) {
+	rows, err := d.pool.Query(ctx, qReleaseAudience)
+	if err != nil {
+		return nil, fmt.Errorf("list release audience: %w", err)
+	}
+	defer rows.Close()
+
+	var out []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan release audience: %w", err)
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
 }
 
 var qArticleSubscribers = register("ArticleSubscribers", `

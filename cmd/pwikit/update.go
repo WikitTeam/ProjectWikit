@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math/rand/v2"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -247,7 +246,8 @@ func autoUpdate(p *paths.Paths, name string, serveArgs []string) error {
 		return err
 	}
 	var tick struct {
-		Apply string `json:"apply"`
+		Apply  string `json:"apply"`
+		ByHand bool   `json:"by_hand"`
 	}
 	if err := json.Unmarshal(lastJSONLine(out), &tick); err != nil {
 		return fmt.Errorf("read the scheduled check: %w", err)
@@ -255,7 +255,7 @@ func autoUpdate(p *paths.Paths, name string, serveArgs []string) error {
 	if tick.Apply == "" {
 		return nil
 	}
-	return installRelease(p, name, serveArgs, tick.Apply, "", true)
+	return installRelease(p, name, serveArgs, tick.Apply, "", true, tick.ByHand)
 }
 
 func manualUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
@@ -282,10 +282,10 @@ func manualUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 	if *f.to != "" && !update.Newer(target, version.String()) {
 		pin = target
 	}
-	return installRelease(p, *f.name, serveArgs, target, pin, false)
+	return installRelease(p, *f.name, serveArgs, target, pin, false, true)
 }
 
-func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin string, auto bool) error {
+func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin string, auto, allowPostgresMove bool) error {
 	l := openUpdateLog(p)
 	defer l.close(p)
 	unlock, err := update.Lock(p.Updates())
@@ -347,7 +347,7 @@ func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin
 		applier.Maintenance = nil
 		applier.Offline = true
 	}
-	outcome := applier.Apply(ctx, update.Target{Version: target, File: file, SHA256: sum, AllowPostgresMove: !auto})
+	outcome := applier.Apply(ctx, update.Target{Version: target, File: file, SHA256: sum, AllowPostgresMove: allowPostgresMove})
 
 	record := []string{"update", "record", "-data-dir", p.Root(), "-from", outcome.From, "-target", outcome.To, "-kind", outcome.Kind}
 	switch {
@@ -496,12 +496,31 @@ func tickUpdate(p *paths.Paths, serveArgs []string) error {
 	}
 	src := update.NewSource(in.settings.Mirror)
 	facts := update.Facts{Current: version.String(), BundledPostgres: in.bundledPostgres(), Container: inContainer(), Now: now}
-	apply := update.Tick(&st, in.settings, facts, func() (update.Manifest, error) { return src.Latest(ctx) },
-		rand.New(rand.NewPCG(uint64(now.UnixNano()), uint64(os.Getpid()))))
+	previous := st.LatestVersion
+	apply := update.Tick(&st, in.settings, facts, func() (update.Manifest, error) { return src.Latest(ctx) })
 	if err := conn.SaveUpdateState(ctx, st); err != nil {
 		return err
 	}
-	return json.NewEncoder(os.Stdout).Encode(map[string]string{"apply": apply})
+	// The state is saved first, so a notification that fails to send is never
+	// retried into a duplicate, and it never holds up the update itself.
+	if update.NewlyFound(previous, st, version.String()) {
+		if err := announceRelease(ctx, conn, st, now); err != nil {
+			fmt.Fprintf(os.Stderr, "pwikit: tell the administrators about %s: %v\n", st.LatestVersion, err)
+		}
+	}
+	return json.NewEncoder(os.Stdout).Encode(map[string]any{"apply": apply, "by_hand": apply != "" && st.ScheduledByHand})
+}
+
+func announceRelease(ctx context.Context, conn *db.DB, st db.UpdateState, now time.Time) error {
+	audience, err := conn.ReleaseAudience(ctx)
+	if err != nil {
+		return err
+	}
+	meta, err := json.Marshal(map[string]string{"version": st.LatestVersion, "notes": st.LatestNotes})
+	if err != nil {
+		return err
+	}
+	return conn.SendNotification(ctx, db.NotifyReleaseAvailable, string(meta), audience, now)
 }
 
 func preflightUpdate(p *paths.Paths, serveArgs []string) error {
@@ -563,17 +582,17 @@ func recordUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 	case update.OutcomeUpdated:
 		expires := now.Add(update.RollbackKept)
 		st.RollbackVersion, st.RollbackKind, st.RollbackExpiresAt = *f.from, *f.kind, &expires
-		st.ScheduledVersion, st.ScheduledAt = "", nil
+		st.ScheduledVersion, st.ScheduledAt, st.ScheduledByHand = "", nil, false
 		st.PinnedVersion = ""
 	case update.OutcomeRolledBack:
 		if !slices.Contains(st.FailedVersions, *f.target) {
 			st.FailedVersions = append(st.FailedVersions, *f.target)
 		}
-		st.ScheduledVersion, st.ScheduledAt = "", nil
+		st.ScheduledVersion, st.ScheduledAt, st.ScheduledByHand = "", nil, false
 		st.RollbackVersion, st.RollbackKind, st.RollbackExpiresAt = "", "", nil
 	case "manual-rollback":
 		st.RollbackVersion, st.RollbackKind, st.RollbackExpiresAt = "", "", nil
-		st.ScheduledVersion, st.ScheduledAt = "", nil
+		st.ScheduledVersion, st.ScheduledAt, st.ScheduledByHand = "", nil, false
 	}
 	if *f.pin != "" {
 		st.PinnedVersion = *f.pin
@@ -666,7 +685,11 @@ func printUpdateStatus(st db.UpdateState, in instanceSettings, now time.Time) {
 		fmt.Printf("newest       %s, released %s\n", st.LatestVersion, stamp(st.LatestPublishedAt))
 	}
 	if st.ScheduledVersion != "" {
-		fmt.Printf("scheduled    %s at %s\n", st.ScheduledVersion, stamp(st.ScheduledAt))
+		by := ""
+		if st.ScheduledByHand {
+			by = ", asked for from the admin panel"
+		}
+		fmt.Printf("scheduled    %s at %s%s\n", st.ScheduledVersion, stamp(st.ScheduledAt), by)
 	} else if _, reason := update.Eligible(st, in.settings, facts); reason.Code != "" {
 		fmt.Printf("not planned  %s\n", reason)
 	}

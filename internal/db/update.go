@@ -20,6 +20,7 @@ type UpdateState struct {
 	LatestNotes       string
 	ScheduledVersion  string
 	ScheduledAt       *time.Time
+	ScheduledByHand   bool
 	PostponedUntil    *time.Time
 	SkippedVersion    string
 	FailedVersions    []string
@@ -37,14 +38,14 @@ type UpdateState struct {
 const updateColumns = `checked_at, check_error, next_check_at, latest_version, latest_published_at,
 latest_postgres, latest_notes, scheduled_version, scheduled_at, postponed_until, skipped_version,
 failed_versions, pinned_version, last_from, last_to, last_outcome, last_error, last_at,
-rollback_version, rollback_kind, rollback_expires_at`
+rollback_version, rollback_kind, rollback_expires_at, scheduled_by_hand`
 
 var (
 	qUpdateState = register("UpdateState", `SELECT `+updateColumns+` FROM pwikit_update WHERE id = 1`)
 
 	qSaveUpdateState = register("SaveUpdateState", `
 INSERT INTO pwikit_update (id, `+updateColumns+`)
-VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
 ON CONFLICT (id) DO UPDATE SET
 	checked_at = EXCLUDED.checked_at, check_error = EXCLUDED.check_error,
 	next_check_at = EXCLUDED.next_check_at, latest_version = EXCLUDED.latest_version,
@@ -56,7 +57,8 @@ ON CONFLICT (id) DO UPDATE SET
 	last_to = EXCLUDED.last_to, last_outcome = EXCLUDED.last_outcome,
 	last_error = EXCLUDED.last_error, last_at = EXCLUDED.last_at,
 	rollback_version = EXCLUDED.rollback_version, rollback_kind = EXCLUDED.rollback_kind,
-	rollback_expires_at = EXCLUDED.rollback_expires_at`)
+	rollback_expires_at = EXCLUDED.rollback_expires_at,
+	scheduled_by_hand = EXCLUDED.scheduled_by_hand`)
 
 	qSiteDomains = register("SiteDomains", `SELECT domain FROM web_site ORDER BY id`)
 
@@ -72,7 +74,8 @@ func (d *DB) UpdateState(ctx context.Context) (UpdateState, error) {
 		&s.CheckedAt, &s.CheckError, &s.NextCheckAt, &s.LatestVersion, &s.LatestPublishedAt,
 		&s.LatestPostgres, &s.LatestNotes, &s.ScheduledVersion, &s.ScheduledAt, &s.PostponedUntil,
 		&s.SkippedVersion, &s.FailedVersions, &s.PinnedVersion, &s.LastFrom, &s.LastTo,
-		&s.LastOutcome, &s.LastError, &s.LastAt, &s.RollbackVersion, &s.RollbackKind, &s.RollbackExpiresAt)
+		&s.LastOutcome, &s.LastError, &s.LastAt, &s.RollbackVersion, &s.RollbackKind, &s.RollbackExpiresAt,
+		&s.ScheduledByHand)
 	var pgErr *pgconn.PgError
 	if errors.Is(err, pgx.ErrNoRows) || (errors.As(err, &pgErr) && pgErr.Code == "42P01") {
 		return UpdateState{}, nil
@@ -91,7 +94,8 @@ func (d *DB) SaveUpdateState(ctx context.Context, s UpdateState) error {
 		s.CheckedAt, s.CheckError, s.NextCheckAt, s.LatestVersion, s.LatestPublishedAt,
 		s.LatestPostgres, s.LatestNotes, s.ScheduledVersion, s.ScheduledAt, s.PostponedUntil,
 		s.SkippedVersion, s.FailedVersions, s.PinnedVersion, s.LastFrom, s.LastTo,
-		s.LastOutcome, s.LastError, s.LastAt, s.RollbackVersion, s.RollbackKind, s.RollbackExpiresAt)
+		s.LastOutcome, s.LastError, s.LastAt, s.RollbackVersion, s.RollbackKind, s.RollbackExpiresAt,
+		s.ScheduledByHand)
 	if err != nil {
 		return fmt.Errorf("write the update state: %w", err)
 	}

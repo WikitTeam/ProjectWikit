@@ -72,7 +72,7 @@ func newServeOptions() *serveOptions {
 		updateAuto:    fs.Bool("update-auto", true, "install new releases by themselves when pwikit runs as a system service"),
 		updateBanner:  fs.Bool("update-public-banner", true, "announce an automatic update to every visitor, not only to the people who can open the admin panel"),
 		updateCheck:   fs.Bool("update-check", true, "look for new releases at all"),
-		updateWindow:  fs.String("update-window", update.DefaultWindow, "hours, in this machine's time zone, in which releases are looked for and installed"),
+		updateWindow:  fs.String("update-window", update.DefaultWindow, "hours, in this machine's time zone, in which releases are installed by themselves"),
 		updateMinAge:  fs.String("update-min-age", update.DefaultMinAge.String(), "how long a release must have been out before it is installed by itself"),
 		updateMirror:  fs.String("update-mirror", "", "mirror to download releases from when GitHub cannot be reached"),
 	}

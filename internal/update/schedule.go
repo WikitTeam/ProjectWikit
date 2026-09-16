@@ -2,7 +2,6 @@ package update
 
 import (
 	"fmt"
-	"math/rand/v2"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 
 const (
 	AnnounceAhead = 30 * time.Minute
+	CheckEvery    = time.Hour
 	DefaultWindow = "03:00-05:00"
 	DefaultMinAge = 24 * time.Hour
 
@@ -81,19 +81,15 @@ func (w Window) String() string {
 	return format(w.start) + "-" + format(w.end)
 }
 
-func (w Window) NextCheck(now time.Time, r *rand.Rand) time.Time {
-	span := w.length() - AnnounceAhead
+// An update is only planned while the half hour of warning before it still ends
+// inside the window.
+func (w Window) Open(now time.Time) bool {
 	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	base := midnight.Add(w.start)
-	if !base.Add(span).After(now) {
-		midnight = midnight.AddDate(0, 0, 1)
-		base = midnight.Add(w.start)
+	at := now.Sub(midnight)
+	if at < w.start {
+		at += 24 * time.Hour
 	}
-	at := base.Add(time.Duration(r.Int64N(int64(span))))
-	if !at.After(now) {
-		at = now.Add(time.Minute)
-	}
-	return at
+	return at <= w.start+w.length()-AnnounceAhead
 }
 
 type Facts struct {
@@ -171,18 +167,40 @@ func isRelease(v string) bool {
 	return ok
 }
 
-func Tick(st *db.UpdateState, s Settings, f Facts, fetch func() (Manifest, error), r *rand.Rand) string {
+// Asking by hand sets aside the window, the age of the release and any earlier
+// skip, postponement or hold, so only what rules an update out is checked.
+func Startable(st db.UpdateState, f Facts) bool {
+	return !f.Container && isRelease(f.Current) && Newer(st.LatestVersion, f.Current)
+}
+
+func StartNow(st *db.UpdateState, f Facts) bool {
+	if !Startable(*st, f) {
+		return false
+	}
+	at := f.Now.Add(AnnounceAhead)
+	st.ScheduledVersion, st.ScheduledAt, st.ScheduledByHand = st.LatestVersion, &at, true
+	st.PostponedUntil = nil
+	return true
+}
+
+func scheduled(st db.UpdateState, s Settings, f Facts) string {
+	if st.ScheduledByHand {
+		if Startable(db.UpdateState{LatestVersion: st.ScheduledVersion}, f) {
+			return st.ScheduledVersion
+		}
+		return ""
+	}
+	version, _ := Eligible(st, s, f)
+	return version
+}
+
+func Tick(st *db.UpdateState, s Settings, f Facts, fetch func() (Manifest, error)) string {
 	now := f.Now
-	if !s.Check {
+	if !s.Check && !st.ScheduledByHand {
 		clearSchedule(st)
 		return ""
 	}
-	if st.NextCheckAt == nil {
-		next := s.Window.NextCheck(now, r)
-		st.NextCheckAt = &next
-		return ""
-	}
-	if !now.Before(*st.NextCheckAt) {
+	if s.Check && (st.NextCheckAt == nil || !now.Before(*st.NextCheckAt)) {
 		checked := now
 		st.CheckedAt = &checked
 		if m, err := fetch(); err != nil {
@@ -198,21 +216,20 @@ func Tick(st *db.UpdateState, s Settings, f Facts, fetch func() (Manifest, error
 				st.LatestPublishedAt = nil
 			}
 		}
-		next := s.Window.NextCheck(now.Add(time.Minute), r)
+		next := now.Add(CheckEvery)
 		st.NextCheckAt = &next
+	}
+	if (st.ScheduledVersion == "" || st.ScheduledAt == nil) && s.Window.Open(now) {
 		if version, _ := Eligible(*st, s, f); version != "" {
-			if st.ScheduledVersion == "" || st.ScheduledAt == nil {
-				at := now.Add(AnnounceAhead)
-				st.ScheduledAt = &at
-			}
-			st.ScheduledVersion = version
+			at := now.Add(AnnounceAhead)
+			st.ScheduledVersion, st.ScheduledAt, st.ScheduledByHand = version, &at, false
 		}
 	}
 
 	if st.ScheduledVersion == "" || st.ScheduledAt == nil {
 		return ""
 	}
-	version, _ := Eligible(*st, s, f)
+	version := scheduled(*st, s, f)
 	if version == "" || now.After(st.ScheduledAt.Add(MissedAfter)) {
 		clearSchedule(st)
 		return ""
@@ -227,6 +244,7 @@ func Tick(st *db.UpdateState, s Settings, f Facts, fetch func() (Manifest, error
 func clearSchedule(st *db.UpdateState) {
 	st.ScheduledVersion = ""
 	st.ScheduledAt = nil
+	st.ScheduledByHand = false
 }
 
 func Postpone(st *db.UpdateState, now time.Time) {
@@ -246,7 +264,7 @@ func Skip(st *db.UpdateState) string {
 }
 
 func Banner(st db.UpdateState, s Settings, now time.Time) (time.Time, bool) {
-	if !s.Auto || !s.PublicBanner || st.ScheduledVersion == "" || st.ScheduledAt == nil {
+	if !(s.Auto || st.ScheduledByHand) || !s.PublicBanner || st.ScheduledVersion == "" || st.ScheduledAt == nil {
 		return time.Time{}, false
 	}
 	at := *st.ScheduledAt
@@ -283,7 +301,7 @@ func Notices(st db.UpdateState, s Settings, f Facts) []Notice {
 	if st.LastOutcome == OutcomeUpdated && st.LastAt != nil && f.Now.Sub(*st.LastAt) < UpdatedShown && st.LastTo == f.Current {
 		out = append(out, Notice{Kind: NoticeUpdated, Version: st.LastTo, From: st.LastFrom, At: *st.LastAt, Notes: releaseNotes(st.LastTo, st)})
 	}
-	if st.ScheduledVersion != "" && st.ScheduledAt != nil && s.Auto {
+	if st.ScheduledVersion != "" && st.ScheduledAt != nil && (s.Auto || st.ScheduledByHand) {
 		out = append(out, Notice{Kind: NoticeScheduled, Version: st.ScheduledVersion, At: *st.ScheduledAt, Notes: st.LatestNotes})
 		return out
 	}
@@ -292,6 +310,12 @@ func Notices(st db.UpdateState, s Settings, f Facts) []Notice {
 		out = append(out, Notice{Kind: NoticeAvailable, Version: st.LatestVersion, Reason: reason, Notes: st.LatestNotes})
 	}
 	return out
+}
+
+// A release is announced once, when a check first finds it, and only when it is
+// newer than what runs, so a rollback back onto an old number stays quiet.
+func NewlyFound(previous string, st db.UpdateState, current string) bool {
+	return st.LatestVersion != "" && st.LatestVersion != previous && Newer(st.LatestVersion, current)
 }
 
 func releaseNotes(version string, st db.UpdateState) string {

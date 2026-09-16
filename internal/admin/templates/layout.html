@@ -61,6 +61,14 @@
           <p>{{.Text}}</p>
           {{if .Detail}}<p><code>{{esc .Detail}}</code></p>{{end}}
           {{if .Notes}}<p><a href="{{esc .Notes}}" target="_blank" rel="noopener">{{$.T "update.notes"}}</a></p>{{end}}
+          {{if .StartNow}}
+          <div>
+            <form method="post" action="{{esc $.AdminURL}}update/now" style="display:inline">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+              <button type="submit" class="btn btn-mini btn-primary">{{$.T "update.start-now"}}</button>
+            </form>
+          </div>
+          {{end}}
           {{if .Actions}}
           <div>
             <form method="post" action="{{esc $.AdminURL}}update/postpone" style="display:inline">
