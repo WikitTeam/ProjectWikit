@@ -1,10 +1,42 @@
 package userpage
 
 import (
+	"net/http/httptest"
 	"testing"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/shell"
 )
+
+func TestTabOf(t *testing.T) {
+	cases := []struct{ query, want string }{
+		{"", shell.ProfileTabAbout},
+		{"?tab=edits", shell.ProfileTabEdits},
+		{"?tab=posts&posts=2", shell.ProfileTabPosts},
+		{"?tab=unknown", shell.ProfileTabAbout},
+	}
+	for _, c := range cases {
+		r := httptest.NewRequest("GET", "/-/users/1-probe"+c.query, nil)
+		if got := tabOf(r); got != c.want {
+			t.Errorf("tabOf(%q) = %q, want %q", c.query, got, c.want)
+		}
+	}
+}
+
+func TestSiteSetHref(t *testing.T) {
+	current := &db.Site{ID: 1, Domain: "wiki.example"}
+	other := &db.Site{ID: 2, Domain: "other.example"}
+	sites := &siteSet{byID: map[int64]*db.Site{1: current, 2: other}, current: current}
+	if got, want := sites.href(current, "/scp-173"), "/scp-173"; got != want {
+		t.Errorf("href(current, /scp-173) = %q, want %q", got, want)
+	}
+	if got, want := sites.href(other, "/scp-173"), "//other.example/scp-173"; got != want {
+		t.Errorf("href(other, /scp-173) = %q, want %q", got, want)
+	}
+	if got := sites.of(9); got != current {
+		t.Errorf("of(9) = %v, want the current site", got)
+	}
+}
 
 func TestNumericIDTakesTheDjangoShape(t *testing.T) {
 	cases := []struct {

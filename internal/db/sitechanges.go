@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +14,9 @@ type SiteChangeFilter struct {
 	SiteID int64
 
 	Hidden []string
+
+	AllSites     bool
+	HiddenBySite map[int64][]string
 
 	Types []string
 
@@ -24,6 +29,7 @@ type SiteChangeFilter struct {
 }
 
 type SiteChange struct {
+	SiteID    int64
 	RevNumber int
 	Type      string
 	Meta      []byte
@@ -39,9 +45,17 @@ type SiteChange struct {
 // A revert carries the types it undid in meta rather than in the type column,
 // so asking for one type has to reach both places.
 func (f SiteChangeFilter) build(b *listBuilder) string {
-	b.where = append(b.where, "a.site_id = "+b.arg(f.SiteID))
-	if len(f.Hidden) > 0 {
-		b.where = append(b.where, "NOT (a.category = ANY("+b.arg(f.Hidden)+"))")
+	if f.AllSites {
+		for _, id := range slices.Sorted(maps.Keys(f.HiddenBySite)) {
+			if hidden := f.HiddenBySite[id]; len(hidden) > 0 {
+				b.where = append(b.where, "NOT (a.site_id = "+b.arg(id)+" AND a.category = ANY("+b.arg(hidden)+"))")
+			}
+		}
+	} else {
+		b.where = append(b.where, "a.site_id = "+b.arg(f.SiteID))
+		if len(f.Hidden) > 0 {
+			b.where = append(b.where, "NOT (a.category = ANY("+b.arg(f.Hidden)+"))")
+		}
 	}
 	if len(f.Types) > 0 {
 		ors := []string{"e.type = ANY(" + b.arg(f.Types) + ")"}
@@ -69,7 +83,7 @@ func (f SiteChangeFilter) build(b *listBuilder) string {
 }
 
 func (f SiteChangeFilter) selectSQL(b *listBuilder, offset, limit int) string {
-	sql := `SELECT e.rev_number, e.type, e.meta, e.comment, e.created_at, e.user_id,
+	sql := `SELECT a.site_id, e.rev_number, e.type, e.meta, e.comment, e.created_at, e.user_id,
        a.title, a.category, a.name
 ` + f.build(b) + "\nORDER BY e.created_at DESC" +
 		"\nLIMIT " + b.arg(limit) + "\nOFFSET " + b.arg(offset)
@@ -96,7 +110,7 @@ func (d *DB) SiteChanges(ctx context.Context, f SiteChangeFilter, offset, limit 
 	var out []SiteChange
 	for rows.Next() {
 		var c SiteChange
-		if err := rows.Scan(&c.RevNumber, &c.Type, &c.Meta, &c.Comment, &c.CreatedAt,
+		if err := rows.Scan(&c.SiteID, &c.RevNumber, &c.Type, &c.Meta, &c.Comment, &c.CreatedAt,
 			&c.UserID, &c.ArticleTitle, &c.ArticleCategory, &c.ArticleName); err != nil {
 			return nil, fmt.Errorf("scan site change: %w", err)
 		}

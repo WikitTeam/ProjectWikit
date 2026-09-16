@@ -10,6 +10,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
@@ -28,11 +29,19 @@ func (m moduleData) HiddenCategories(user *db.User) ([]string, error) {
 }
 
 func HiddenCategories(ctx context.Context, d *db.DB, user *db.User) ([]string, error) {
-	names, err := d.CategoryNames(ctx, ctxSiteID(ctx))
+	return HiddenCategoriesOn(ctx, d, site.FromContext(ctx), user)
+}
+
+func HiddenCategoriesOn(ctx context.Context, d *db.DB, s *db.Site, user *db.User) ([]string, error) {
+	var siteID int64
+	if s != nil {
+		siteID = s.ID
+	}
+	names, err := d.CategoryNames(ctx, siteID)
 	if err != nil {
 		return nil, err
 	}
-	resolver := NewPerms(ctx, d)
+	resolver := NewPermsOn(ctx, d, s)
 	subject, err := resolver.Subject(user, time.Now())
 	if err != nil {
 		return nil, err
@@ -250,11 +259,11 @@ func (m moduleData) ForumPostContents(postIDs []int64) (map[int64]db.ForumPostCo
 }
 
 func (m moduleData) RecentPostCount(categoryIDs []int64, comments bool) (int, error) {
-	return m.repo.db.RecentPostCount(m.repo.ctx, categoryIDs, comments)
+	return m.repo.db.RecentPostCount(m.repo.ctx, m.repo.siteID(), categoryIDs, comments)
 }
 
 func (m moduleData) RecentPosts(categoryIDs []int64, comments bool, offset, limit int) ([]db.RecentPost, error) {
-	return m.repo.db.RecentPosts(m.repo.ctx, categoryIDs, comments, offset, limit)
+	return m.repo.db.RecentPosts(m.repo.ctx, m.repo.siteID(), categoryIDs, comments, offset, limit)
 }
 
 func (m moduleData) UsernamesLower() (map[string]bool, error) {

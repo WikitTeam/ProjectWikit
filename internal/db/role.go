@@ -44,6 +44,51 @@ func (d *DB) RolesByUser(ctx context.Context, siteID, userID int64) ([]roles.Rol
 	return out, nil
 }
 
+type SiteRoles struct {
+	SiteID int64
+	Roles  []roles.Role
+}
+
+var qRolesOfUserOnEverySite = register("RolesOfUserOnEverySite", `
+SELECT r.site_id, r.id, r.slug, r.name, r.short_name, r.category_id, r.index,
+       r.is_staff, r.group_votes, r.inline_visual_mode, r.profile_visual_mode,
+       r.color, r.icon, r.badge_text, r.badge_bg, r.badge_text_color, r.badge_show_border
+FROM web_role r
+JOIN web_user_roles ur ON ur.role_id = r.id
+WHERE ur.user_id = $1
+ORDER BY r.site_id, r.index, r.id`)
+
+func (d *DB) RolesOfUserOnEverySite(ctx context.Context, userID int64) ([]SiteRoles, error) {
+	rows, err := d.pool.Query(ctx, qRolesOfUserOnEverySite, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list roles of user %d on every site: %w", userID, err)
+	}
+	defer rows.Close()
+
+	var out []SiteRoles
+	for rows.Next() {
+		var siteID int64
+		var role roles.Role
+		if err := rows.Scan(
+			&siteID,
+			&role.ID, &role.Slug, &role.Name, &role.ShortName, &role.CategoryID, &role.Index,
+			&role.IsStaff, &role.GroupVotes, &role.InlineVisualMode, &role.ProfileVisualMode,
+			&role.Color, &role.Icon, &role.BadgeText, &role.BadgeBg, &role.BadgeTextColor,
+			&role.BadgeShowBorder,
+		); err != nil {
+			return nil, fmt.Errorf("scan role of user %d: %w", userID, err)
+		}
+		if len(out) == 0 || out[len(out)-1].SiteID != siteID {
+			out = append(out, SiteRoles{SiteID: siteID})
+		}
+		out[len(out)-1].Roles = append(out[len(out)-1].Roles, role)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list roles of user %d on every site: %w", userID, err)
+	}
+	return out, nil
+}
+
 var qRolesByUsers = register("RolesByUsers", `
 SELECT ur.user_id, r.id, r.slug, r.name, r.short_name, r.category_id, r.index,
        r.is_staff, r.group_votes, r.inline_visual_mode, r.profile_visual_mode,

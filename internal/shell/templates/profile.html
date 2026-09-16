@@ -46,6 +46,15 @@
         </div>
       </div>
 
+      <nav class="profile-tabs">
+        {{range .Tabs}}<a href="{{esc .URL}}"{{if .Active}} class="active"{{end}}>{{esc .Label}}</a>{{end}}
+      </nav>
+
+      {{if eq .Tab "edits"}}
+      {{template "profile_feed.html" (feed $ "" .Edits (.T "profile.no-edits"))}}
+      {{else if eq .Tab "posts"}}
+      {{template "profile_feed.html" (feed $ "" .Posts (.T "profile.no-posts"))}}
+      {{else}}
       <dl class="dl">
         {{if .FromWikidot}}
           <dt>{{.T "profile.account-state"}}</dt><dd>{{.T "profile.imported"}}</dd>
@@ -78,9 +87,7 @@
         </ul>
       </section>
       {{end}}
-
-      {{template "profile_feed.html" (feed $ (.T "profile.edits") .Edits (.T "profile.no-edits"))}}
-      {{template "profile_feed.html" (feed $ (.T "profile.posts") .Posts (.T "profile.no-posts"))}}
+      {{end}}
 
     </main>
 

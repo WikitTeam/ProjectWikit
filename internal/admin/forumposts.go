@@ -66,7 +66,7 @@ func (h *Handler) recentPosts(ctx context.Context, comments bool, offset, limit 
 		named[c.ID] = c.Name
 	}
 
-	posts, err := h.deps.DB.RecentPosts(ctx, ids, comments, offset, limit)
+	posts, err := h.deps.DB.RecentPosts(ctx, siteID(ctx), ids, comments, offset, limit)
 	if err != nil {
 		return nil, err
 	}

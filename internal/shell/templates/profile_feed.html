@@ -1,6 +1,6 @@
 {{define "profile_feed.html"}}
       <section class="profile-section">
-        <span class="label">{{esc .Label}}</span>
+        {{if .Label}}<span class="label">{{esc .Label}}</span>{{end}}
         {{if .Feed.Items}}
         <ul class="feed">
           {{range .Feed.Items}}
@@ -11,6 +11,7 @@
             </span>
             <span class="when">{{$.View.ODate .At}}</span>
             <span class="from">{{esc .Site}}{{if .Comment}}<span class="sep">·</span>{{esc .Comment}}{{end}}</span>
+            {{if .Content}}<div class="post-body">{{.Content}}</div>{{end}}
           </li>
           {{end}}
         </ul>

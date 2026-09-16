@@ -425,7 +425,32 @@ body.wikit-page .system-content .content form label.label {
 .wikit-scope .avatar-row .avatar-now img { width: 100%; height: 100%; object-fit: cover; }
 .wikit-scope .avatar-row input[type=file] { font-size: 13px; color: var(--muted); }
 
+.wikit-scope .profile-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 24px;
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.wikit-scope .profile-tabs a {
+  padding: 10px 14px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wikit-scope .profile-tabs a:hover { color: var(--ink); }
+.wikit-scope .profile-tabs a.active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 500;
+}
+
 .wikit-scope .profile-section { margin-top: 36px; }
+.wikit-scope .profile-tabs + .profile-section { margin-top: 0; }
 .wikit-scope .feed .what-line { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
 .wikit-scope .feed .flags {
   display: inline-flex;
@@ -474,10 +499,25 @@ body.wikit-page .system-content .content form label.label {
   grid-template-columns: 1fr auto;
   gap: 3px 16px;
   align-items: baseline;
-  padding: 12px 0;
-  border-top: 1px solid var(--rule);
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-sm);
 }
-.wikit-scope .feed li:last-child { border-bottom: 1px solid var(--rule); }
+.wikit-scope .feed li + li { margin-top: 8px; }
+.wikit-scope .feed .post-body {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  overflow-x: auto;
+}
+.wikit-scope .feed .post-body > :first-child { margin-top: 0; }
+.wikit-scope .feed .post-body > :last-child { margin-bottom: 0; }
 .wikit-scope .feed .what { color: var(--ink); text-decoration: none; }
 .wikit-scope .feed .what:hover { text-decoration: underline; }
 .wikit-scope .feed .when {
@@ -493,9 +533,9 @@ body.wikit-page .system-content .content form label.label {
 }
 .wikit-scope .feed .from .sep { margin: 0 7px; }
 .wikit-scope .profile-section .empty {
-  padding: 12px 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-sm);
   font-size: 13px;
   color: var(--muted);
 }

@@ -69,6 +69,32 @@ WHERE slug = $1`)
 
 var qSiteSlugs = register("SiteSlugs", `SELECT slug FROM web_site ORDER BY id`)
 
+var qSites = register("Sites", `
+SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
+       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
+       membership_password_enabled, membership_password, membership_password_role_id,
+       default_role_id, verified_role_id, email_policy, language, time_zone
+FROM web_site
+ORDER BY id`)
+
+func (d *DB) Sites(ctx context.Context) ([]Site, error) {
+	rows, err := d.pool.Query(ctx, qSites)
+	if err != nil {
+		return nil, fmt.Errorf("list sites: %w", err)
+	}
+	defer rows.Close()
+
+	var out []Site
+	for rows.Next() {
+		var s Site
+		if err := scanSite(rows, &s); err != nil {
+			return nil, fmt.Errorf("scan site: %w", err)
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
 func (d *DB) SiteBySlug(ctx context.Context, slug string) (*Site, error) {
 	var s Site
 	err := scanSite(d.pool.QueryRow(ctx, qSiteBySlug, slug), &s)

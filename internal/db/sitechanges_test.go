@@ -16,6 +16,7 @@ func siteChangeFilterVariants() map[string]SiteChangeFilter {
 		"users":      {HasUser: true, UserIDs: int64s(1, 2)},
 		"users-none": {HasUser: true},
 		"system":     {HasUser: true, UserIDs: int64s(1), WithSystem: true},
+		"all-sites":  {AllSites: true, HiddenBySite: map[int64][]string{1: {"admin"}, 2: {}}, HasUser: true, UserIDs: int64s(1)},
 		"everything": {Hidden: []string{"admin"}, Types: []string{"tags"}, Category: "probe", HasCategory: true, HasUser: true, UserIDs: int64s(1), WithSystem: true},
 	}
 }

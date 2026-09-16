@@ -137,7 +137,7 @@ func (e *Env) store() *repo.Repository {
 		Site:              e.site,
 		User:              e.user,
 		Render:            e.nested,
-		RenderMessage:     e.message,
+		RenderMessage:     e.Message,
 		RenderMessageText: e.messageText,
 		Vars:              repo.NewVarSource(e.ctx, e.deps.DB, e.site),
 		ClientIP:          e.ip,
@@ -159,7 +159,7 @@ func (e *Env) nested(source string, pc *page.Context) (string, error) {
 	return html.Body, nil
 }
 
-func (e *Env) message(source string) (string, error) {
+func (e *Env) Message(source string) (string, error) {
 	pc := page.NewContext(nil, nil, nil, e.user)
 	info, err := e.PageInfo(nil)
 	if err != nil {

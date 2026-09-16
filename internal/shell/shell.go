@@ -221,9 +221,23 @@ type Profile struct {
 	JoinedAt    time.Time
 	TimeZone    *time.Location
 
+	Tab   string
+	Tabs  []ProfileTab
 	Roles []ProfileRoles
 	Edits ProfileFeed
 	Posts ProfileFeed
+}
+
+const (
+	ProfileTabAbout = ""
+	ProfileTabEdits = "edits"
+	ProfileTabPosts = "posts"
+)
+
+type ProfileTab struct {
+	Label  string
+	URL    string
+	Active bool
 }
 
 type ProfileRoles struct {
@@ -249,6 +263,7 @@ type ProfileItem struct {
 	At      time.Time
 	Flags   []ProfileFlag
 	Comment string
+	Content string
 }
 
 type feed struct {

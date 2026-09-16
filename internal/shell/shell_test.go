@@ -354,6 +354,7 @@ func TestProfileFeedRendersOneRowPerItem(t *testing.T) {
 	got, err := profileTestRenderer(t).Profile(Profile{
 		DisplayName: "probe-author",
 		JoinedAt:    at,
+		Tab:         ProfileTabEdits,
 		Edits: ProfileFeed{Items: []ProfileItem{
 			{URL: "/scp-173", Title: "SCP-173", Site: "Test Wiki", At: at,
 				Flags: []ProfileFlag{{ID: "S", Desc: "source"}}, Comment: "typo"},
@@ -381,15 +382,58 @@ func TestProfileFeedRendersOneRowPerItem(t *testing.T) {
 }
 
 func TestProfileFeedFallsBackToTheEmptyLine(t *testing.T) {
-	got, err := profileTestRenderer(t).Profile(Profile{DisplayName: "probe-author"})
+	got, err := profileTestRenderer(t).Profile(Profile{DisplayName: "probe-author", Tab: ProfileTabPosts})
 	if err != nil {
 		t.Fatalf("Profile() err = %v, want nil", err)
 	}
-	if n := strings.Count(got, `class="empty"`); n != 2 {
-		t.Errorf("count of empty feeds = %d, want 2", n)
+	if n := strings.Count(got, `class="empty"`); n != 1 {
+		t.Errorf("count of empty feeds = %d, want 1", n)
 	}
 	if strings.Contains(got, `<ul class="feed">`) {
 		t.Error("Profile() renders a feed list with no items")
+	}
+}
+
+func TestProfileRendersOnlyTheOpenTab(t *testing.T) {
+	got, err := profileTestRenderer(t).Profile(Profile{
+		DisplayName: "probe-author",
+		Tabs: []ProfileTab{
+			{Label: "about", URL: "/-/users/1-probe", Active: true},
+			{Label: "edits", URL: "/-/users/1-probe?tab=edits"},
+		},
+		Roles: []ProfileRoles{{Site: "Other Wiki", URL: "//other.example/", Names: "Member"}},
+		Edits: ProfileFeed{Items: []ProfileItem{{URL: "/scp-173", Title: "SCP-173"}}},
+	})
+	if err != nil {
+		t.Fatalf("Profile() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `<a href="/-/users/1-probe" class="active">about</a>`) {
+		t.Error("Profile() does not mark the open tab")
+	}
+	if !strings.Contains(got, `href="//other.example/">Other Wiki</a>`) {
+		t.Error("Profile() does not list the roles of another site")
+	}
+	if strings.Contains(got, "SCP-173") {
+		t.Error("Profile() renders the edits of a closed tab")
+	}
+}
+
+func TestProfilePostShowsItsContent(t *testing.T) {
+	got, err := profileTestRenderer(t).Profile(Profile{
+		DisplayName: "probe-author",
+		Tab:         ProfileTabPosts,
+		Posts: ProfileFeed{Items: []ProfileItem{
+			{URL: "/forum/t-1/x#post-2", Title: "x", Content: "<p>hello</p>"},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("Profile() err = %v, want nil", err)
+	}
+	if !strings.Contains(got, `<div class="post-body"><p>hello</p></div>`) {
+		t.Error("Profile() does not show the content of a post")
+	}
+	if !strings.Contains(got, `href="/forum/t-1/x#post-2"`) {
+		t.Error("Profile() does not link a post to its thread")
 	}
 }
 
