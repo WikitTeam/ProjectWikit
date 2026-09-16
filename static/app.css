@@ -20,6 +20,7 @@
 .printuser.avatarhover img.small {
   padding: 0;
   border: 1px solid #777;
+  max-width: none;
 }
 
 .printuser {
