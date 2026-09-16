@@ -176,7 +176,7 @@
   "admin.h-favicon": "浏览器标签页上显示的图标。支持 PNG、JPEG、GIF、WebP、ICO 格式，大小不超过 2 MB。",
   "admin.h-footer-license": "可使用 wikitext。[[module time]] 会被渲染，其余模块将按纯文本处理。",
   "admin.h-granted-role": "状态变更为通过时立即发放",
-  "admin.h-icon": "SVG 格式的图标文件。仅在「用户名旁显示方式」设为图标时使用，颜色由下方的「图标颜色」决定。",
+  "admin.h-icon": "SVG 格式的图标文件。仅在「用户名旁显示方式」设为图标时使用，颜色由「图标颜色」决定。",
   "admin.h-icon-color": "该颜色将写入图标 SVG 中",
   "admin.h-invite-link": "系统将先创建一个停用状态的占位账号，对方通过链接完成操作后才会启用。",
   "admin.h-language": "访客的浏览器未指定其他语言时，使用该语言显示。",
