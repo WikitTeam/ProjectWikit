@@ -44,6 +44,16 @@ attachApiMessageListener()
 makeButtons()
 makeLightbox()
 
+// Posts also arrive after the first load, when a thread changes page or a reply
+// is saved, so the like widget is mounted wherever one appears, once.
+function makePostLikes(node: HTMLElement) {
+  if ((node as any)._postLikes) return
+  ;(node as any)._postLikes = true
+  const props = { postId: Number(node.dataset.postId), liked: node.dataset.liked === 'true', count: Number(node.dataset.count) }
+  node.innerHTML = ''
+  renderTo(node, <PostLikes {...props} />)
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#create-new-page').forEach((node: HTMLElement) => renderTo(node, <Page404 {...JSON.parse(node.dataset.config!)} />))
   document
@@ -56,11 +66,6 @@ window.addEventListener('DOMContentLoaded', () => {
     .querySelectorAll('.w-forum-new-thread')
     .forEach((node: HTMLElement) => renderTo(node, <ForumNewThread {...JSON.parse(node.dataset.config!)} />))
   document.querySelectorAll('.w-forum-new-post').forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config!)} />))
-  document.querySelectorAll('.w-post-likes').forEach((node: HTMLElement) => {
-    const props = { postId: Number(node.dataset.postId), liked: node.dataset.liked === 'true', count: Number(node.dataset.count) }
-    node.innerHTML = ''
-    renderTo(node, <PostLikes {...props} />)
-  })
   document
     .querySelectorAll('.w-forum-thread-options')
     .forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config!)} />))
@@ -87,6 +92,8 @@ window.addEventListener('DOMContentLoaded', () => {
         makeWantedPages(node)
       } else if (node.classList.contains('w-toc')) {
         makeTOC(node)
+      } else if (node.classList.contains('w-post-likes')) {
+        makePostLikes(node)
       } else if (node.classList.contains('w-forum-post-options')) {
         renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config!)} />)
       } else if (node.classList.contains('w-forum-thread')) {
