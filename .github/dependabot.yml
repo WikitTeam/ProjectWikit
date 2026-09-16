@@ -3,12 +3,12 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: weekly
+      interval: daily
     ignore:
       - dependency-name: "*"
         update-types: [version-update:semver-major]
@@ -18,7 +18,7 @@ updates:
       - /ftml-capi
       - /ftml-sidecar
     schedule:
-      interval: weekly
+      interval: daily
     ignore:
       - dependency-name: "*"
         update-types: [version-update:semver-major]
@@ -26,9 +26,9 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
 
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
