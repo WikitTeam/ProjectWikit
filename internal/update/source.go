@@ -108,9 +108,8 @@ func (s Source) each(ctx context.Context, path string, attempt func(url string) 
 	if err == nil || s.Mirror == "" || ctx.Err() != nil {
 		return err
 	}
-	rest := strings.TrimPrefix(strings.TrimPrefix(path, "latest/download/"), "download/")
 	s.note(fmt.Sprintf("GitHub could not be reached (%v), trying %s", err, s.Mirror))
-	if mirrorErr := attempt(s.Mirror + "/" + rest); mirrorErr != nil {
+	if mirrorErr := attempt(s.Mirror + "/" + path); mirrorErr != nil {
 		return fmt.Errorf("%w; the mirror failed too: %v", err, mirrorErr)
 	}
 	return nil

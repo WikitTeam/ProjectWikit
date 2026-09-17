@@ -33,7 +33,7 @@ import (
 )
 
 func updateUsage() {
-	fmt.Fprint(os.Stderr, `Usage: pwikit update [check|status|rollback|unpin|postpone|skip] [options] [-- serve options]
+	fmt.Fprint(os.Stderr, `Usage: pwikit update [check|status|rollback|unpin|postpone|skip|mirror] [options] [-- serve options]
 
   (none)    install the newest release now
   check     say whether a newer release exists
@@ -42,6 +42,8 @@ func updateUsage() {
   unpin     let automatic updates run again after pwikit update -to held a release
   postpone  put off the scheduled automatic update by 24 hours
   skip      never install the release that is scheduled or newest automatically
+  mirror    show the mirror in pwikit.toml, or set it with pwikit update mirror <address>;
+            an empty address clears it
 
 Options:
   -to        release to install instead of the newest; an older one is held until unpin
@@ -111,7 +113,7 @@ func updateCommand(args []string) error {
 		}
 		return err
 	}
-	if f.fs.NArg() > 0 {
+	if f.fs.NArg() > 0 && !(sub == "mirror" && f.fs.NArg() == 1) {
 		updateUsage()
 		return fmt.Errorf("unexpected %q", f.fs.Arg(0))
 	}
@@ -135,6 +137,11 @@ func updateCommand(args []string) error {
 			return err
 		}
 		return editUpdateState(p, sub, serveArgs)
+	case "mirror":
+		if handled, err := asOwner(p.Root()); handled || err != nil {
+			return err
+		}
+		return updateMirror(p, f.fs.Args())
 	case "tick":
 		return tickUpdate(p, serveArgs)
 	case "preflight":
@@ -471,6 +478,31 @@ func checkUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 	}
 	fmt.Printf("notes     %s\n", m.Notes)
 	fmt.Println("install it with: pwikit update")
+	return nil
+}
+
+func updateMirror(p *paths.Paths, args []string) error {
+	if len(args) == 0 {
+		cfg, err := config.Load(p.Config())
+		if err != nil {
+			return err
+		}
+		if cfg.Update.Mirror == "" {
+			fmt.Println("no mirror is set")
+			return nil
+		}
+		fmt.Println(cfg.Update.Mirror)
+		return nil
+	}
+	mirror := strings.TrimSuffix(strings.TrimSpace(args[0]), "/")
+	if err := config.SetUpdateMirror(p.Config(), mirror); err != nil {
+		return err
+	}
+	if mirror == "" {
+		fmt.Printf("cleared the mirror in %s\n", p.Config())
+		return nil
+	}
+	fmt.Printf("set the mirror in %s to %s\n", p.Config(), mirror)
 	return nil
 }
 

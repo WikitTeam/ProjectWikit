@@ -2,22 +2,26 @@
 # Installs a ProjectWikit release on Linux or macOS.
 #
 #   curl -fsSL https://github.com/WikitTeam/ProjectWikit/releases/latest/download/install.sh | sh
-#   curl -fsSL <mirror>/install.sh | sh -s -- --mirror <mirror>
+#   curl -fsSL <mirror>/latest/download/install.sh | sh
 #
 # Options:
 #   --version <vX.Y.Z>  release to install; defaults to the newest
 #   --dir <directory>   where pwikit and all of its data go; defaults to the
 #                       current directory, which has to be empty
-#   --mirror <url>      mirror to use when GitHub cannot be reached
+#   --mirror <url>      mirror to use when GitHub cannot be reached; it is also
+#                       written into pwikit.toml for later updates
 #   --user <account>    account that owns the directory when run as root;
 #                       defaults to the account sudo was run from
 #   --no-path           do not make pwikit runnable by name
 set -eu
 
 releases="${PWIKIT_RELEASES_URL:-https://github.com/WikitTeam/ProjectWikit/releases}"
+# A mirror that hands out this script writes its own address here, so the
+# script downloads from that mirror without trying GitHub first.
+served_by=""
 version=""
 dir=""
-mirror="${PWIKIT_MIRROR:-}"
+mirror="${PWIKIT_MIRROR:-$served_by}"
 owner=""
 add_path=1
 
@@ -38,6 +42,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 mirror="${mirror%/}"
+if [ -n "$served_by" ] && [ -z "${PWIKIT_RELEASES_URL:-}" ]; then
+  releases="$served_by"
+fi
+releases="${releases%/}"
 
 case "$(uname -s)" in
   Linux) os=linux ;;
@@ -109,13 +117,9 @@ download() {
   if fetch "$releases/$1" "$2" 2>/dev/null; then
     return 0
   fi
-  if [ -n "$mirror" ]; then
-    case "$1" in
-      latest/download/*) mirrored="$mirror/${1#latest/download/}" ;;
-      download/*) mirrored="$mirror/${1#download/}" ;;
-    esac
+  if [ -n "$mirror" ] && [ "$mirror" != "$releases" ]; then
     say "GitHub could not be reached, trying $mirror"
-    fetch "$mirrored" "$2" && return 0
+    fetch "$mirror/$1" "$2" && return 0
   fi
   return 1
 }
@@ -160,6 +164,10 @@ for doc in LICENSE NOTICE; do
   [ ! -f "$top/$doc" ] || cp "$top/$doc" "$dir/$doc"
 done
 chmod 755 "$dir/pwikit"
+if [ -n "$mirror" ]; then
+  "$dir/pwikit" update mirror -data-dir "$dir" "$mirror" >/dev/null 2>&1 ||
+    say "Could not write the mirror into $dir/pwikit.toml; set it later with: $dir/pwikit update mirror $mirror"
+fi
 if [ -n "$owner" ]; then
   chown -R "$owner" "$dir"
 fi

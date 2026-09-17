@@ -1,6 +1,7 @@
 # Installs a ProjectWikit release on Windows.
 #
 #   irm https://github.com/WikitTeam/ProjectWikit/releases/latest/download/install.ps1 | iex
+#   irm <mirror>/latest/download/install.ps1 | iex
 #
 # Piped into iex, the script takes its options from environment variables:
 # PWIKIT_VERSION, PWIKIT_DIR, PWIKIT_MIRROR and PWIKIT_NO_PATH. Saved to a file,
@@ -23,8 +24,15 @@ function Fail([string]$Message) {
     throw $Message
 }
 
-$Releases = if ($env:PWIKIT_RELEASES_URL) { $env:PWIKIT_RELEASES_URL } else { 'https://github.com/WikitTeam/ProjectWikit/releases' }
+# A mirror that hands out this script writes its own address here, so the
+# script downloads from that mirror without trying GitHub first.
+$ServedBy = ''
+
+$Releases = if ($env:PWIKIT_RELEASES_URL) { $env:PWIKIT_RELEASES_URL } elseif ($ServedBy) { $ServedBy } else { 'https://github.com/WikitTeam/ProjectWikit/releases' }
+$Releases = $Releases.TrimEnd('/')
+if (-not $Mirror) { $Mirror = $ServedBy }
 if ($Mirror) { $Mirror = $Mirror.TrimEnd('/') }
+$FirstTimeout = if ($ServedBy -and $Releases -eq $ServedBy.TrimEnd('/')) { 600 } else { 60 }
 if (-not $Dir) { $Dir = (Get-Location).Path }
 
 if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64' -and $env:PROCESSOR_ARCHITEW6432 -ne 'AMD64') {
@@ -44,14 +52,13 @@ if ((Test-Path $Dir) -and (Get-ChildItem -Force $Dir | Select-Object -First 1)) 
 
 function Get-ReleaseFile([string]$Path, [string]$OutFile) {
     try {
-        Invoke-WebRequest -UseBasicParsing -TimeoutSec 60 -Uri "$Releases/$Path" -OutFile $OutFile
+        Invoke-WebRequest -UseBasicParsing -TimeoutSec $FirstTimeout -Uri "$Releases/$Path" -OutFile $OutFile
         return
     } catch {
-        if (-not $Mirror) { throw }
+        if (-not $Mirror -or $Mirror -eq $Releases) { throw }
     }
-    $mirrored = $Path -replace '^latest/download/', '' -replace '^download/', ''
     Write-Host "GitHub could not be reached, trying $Mirror"
-    Invoke-WebRequest -UseBasicParsing -TimeoutSec 600 -Uri "$Mirror/$mirrored" -OutFile $OutFile
+    Invoke-WebRequest -UseBasicParsing -TimeoutSec 600 -Uri "$Mirror/$Path" -OutFile $OutFile
 }
 
 $work = Join-Path ([IO.Path]::GetTempPath()) ("pwikit-install-" + [Guid]::NewGuid().ToString('N'))
@@ -100,6 +107,16 @@ try {
         if (Test-Path (Join-Path $top $doc)) { Copy-Item (Join-Path $top $doc) $Dir }
     }
     Write-Host "Installed pwikit $Version into $Dir"
+
+    if ($Mirror) {
+        $saved = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        & (Join-Path $Dir 'pwikit.exe') update mirror -data-dir $Dir $Mirror *> $null
+        $ErrorActionPreference = $saved
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Could not write the mirror into $Dir\pwikit.toml; set it later with: $Dir\pwikit.exe update mirror $Mirror"
+        }
+    }
 
     if (-not $NoPath) {
         & (Join-Path $Dir 'pwikit.exe') path install
