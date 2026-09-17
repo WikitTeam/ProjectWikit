@@ -87,7 +87,7 @@ func run(args []string) error {
 	}
 	w.raw("\nSource code for this release: " + sourceBase + ref + "\n")
 
-	rufoundation, err := os.ReadFile(filepath.Join("third_party", "RuFoundation", "LICENSE"))
+	rufoundation, err := os.ReadFile(filepath.Join("third_party", "RuFoundation-LICENSE"))
 	if err != nil {
 		return err
 	}

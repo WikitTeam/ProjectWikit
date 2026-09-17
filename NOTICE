@@ -9,7 +9,7 @@ This project began as a fork of RuFoundation
 and rewritten in Go. The database schema, parts of the module logic,
 and much of the frontend are derived from RuFoundation,
 Copyright (c) 2022 ZZYZX, MIT License.
-See third_party/RuFoundation/LICENSE.
+See third_party/RuFoundation-LICENSE.
 
 ftml/ is a hard fork of FTML (https://github.com/scpwiki/ftml),
 Copyright (C) 2019-2022 Wikijump Team, obtained through RuFoundation's
