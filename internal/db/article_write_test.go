@@ -240,6 +240,28 @@ func TestReplaceArticleLinksWritesBothKinds(t *testing.T) {
 	}
 }
 
+func TestReplaceArticleLinksKeepsTheSameLinkOnTwoSites(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	other := scratchSite(t, d)
+	from := scratchLinkOwner(t, d)
+
+	links := []ArticleLink{{To: "nav:top-impl", Kind: LinkInclude}}
+	for _, site := range []int64{seedSiteID(t, d), other} {
+		if err := d.ReplaceArticleLinks(ctx, site, from, links); err != nil {
+			t.Fatalf("ReplaceArticleLinks(site %d) err = %v, want nil", site, err)
+		}
+	}
+
+	var got int
+	if err := d.pool.QueryRow(ctx, `SELECT count(*) FROM web_externallink WHERE link_from = $1`, from).Scan(&got); err != nil {
+		t.Fatalf("count links err = %v, want nil", err)
+	}
+	if got != 2 {
+		t.Errorf("count(links of %q) = %d, want 2", from, got)
+	}
+}
+
 func TestReplaceArticleLinksDropsWhatIsGone(t *testing.T) {
 	d := writeTestDB(t)
 	ctx := context.Background()
