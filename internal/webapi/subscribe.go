@@ -129,7 +129,7 @@ func (h *Subscriptions) apply(r *http.Request, user *db.User, input subscribeReq
 		return http.StatusOK, nil
 
 	case input.ThreadID > 0:
-		thread, err := h.deps.DB.ForumThread(ctx, input.ThreadID)
+		thread, err := h.deps.DB.ForumThread(ctx, siteID(ctx), input.ThreadID)
 		if errors.Is(err, db.ErrNotFound) {
 			return 0, errNotFound
 		}

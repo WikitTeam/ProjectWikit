@@ -179,7 +179,7 @@ func (m moduleData) ForumSections() ([]db.ForumSection, error) {
 }
 
 func (m moduleData) ForumSection(id int64) (*db.ForumSection, error) {
-	return m.repo.db.ForumSection(m.repo.ctx, id)
+	return m.repo.db.ForumSection(m.repo.ctx, m.repo.siteID(), id)
 }
 
 func (m moduleData) ForumCategories() ([]db.ForumCategory, error) {
@@ -211,7 +211,7 @@ func (m moduleData) ForumSectionObject(s *db.ForumSection) *perms.Object {
 }
 
 func (m moduleData) ForumCategory(id int64) (*db.ForumCategory, error) {
-	return m.repo.db.ForumCategory(m.repo.ctx, id)
+	return m.repo.db.ForumCategory(m.repo.ctx, m.repo.siteID(), id)
 }
 
 func (m moduleData) ForumThreads(categoryID int64, sort db.ForumThreadSort, offset, limit int) ([]db.ForumThread, error) {
@@ -231,7 +231,7 @@ func (m moduleData) ForumThreadLastPost(threadID int64, count int) (*db.ForumPos
 }
 
 func (m moduleData) ForumThread(id int64) (*db.ForumThread, error) {
-	return m.repo.db.ForumThread(m.repo.ctx, id)
+	return m.repo.db.ForumThread(m.repo.ctx, m.repo.siteID(), id)
 }
 
 func (m moduleData) ForumRootPostCount(threadID int64) (int, error) {
@@ -251,7 +251,7 @@ func (m moduleData) ForumPostReplies(postID int64) ([]db.ForumThreadPost, error)
 }
 
 func (m moduleData) ForumPost(id int64) (*db.ForumThreadPost, error) {
-	return m.repo.db.ForumPost(m.repo.ctx, id)
+	return m.repo.db.ForumPost(m.repo.ctx, m.repo.siteID(), id)
 }
 
 func (m moduleData) ForumPostContents(postIDs []int64) (map[int64]db.ForumPostContent, error) {

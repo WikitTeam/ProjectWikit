@@ -71,11 +71,11 @@ func (d *DB) ForumSections(ctx context.Context, siteID int64) ([]ForumSection, e
 var qForumSection = register("ForumSection", `
 SELECT `+forumSectionColumns+`
 FROM web_forumsection
-WHERE id = $1`)
+WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) ForumSection(ctx context.Context, id int64) (*ForumSection, error) {
+func (d *DB) ForumSection(ctx context.Context, siteID, id int64) (*ForumSection, error) {
 	var s ForumSection
-	err := d.pool.QueryRow(ctx, qForumSection, id).Scan(
+	err := d.pool.QueryRow(ctx, qForumSection, id, siteID).Scan(
 		&s.ID, &s.Name, &s.Description, &s.IsHidden, &s.IsHiddenForUsers)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
@@ -358,11 +358,11 @@ func (d *DB) ForumThreadLastPost(ctx context.Context, threadID int64, count int)
 var qForumCategory = register("ForumCategory", `
 SELECT id, section_id, name, description, is_for_comments
 FROM web_forumcategory
-WHERE id = $1`)
+WHERE id = $1 AND section_id IN (SELECT id FROM web_forumsection WHERE site_id = $2)`)
 
-func (d *DB) ForumCategory(ctx context.Context, id int64) (*ForumCategory, error) {
+func (d *DB) ForumCategory(ctx context.Context, siteID, id int64) (*ForumCategory, error) {
 	var c ForumCategory
-	err := d.pool.QueryRow(ctx, qForumCategory, id).Scan(
+	err := d.pool.QueryRow(ctx, qForumCategory, id, siteID).Scan(
 		&c.ID, &c.SectionID, &c.Name, &c.Description, &c.IsForComments)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
@@ -376,11 +376,11 @@ func (d *DB) ForumCategory(ctx context.Context, id int64) (*ForumCategory, error
 var qForumThread = register("ForumThread", `
 SELECT `+forumThreadColumns+`
 FROM web_forumthread
-WHERE id = $1`)
+WHERE id = $1 AND site_id = $2`)
 
-func (d *DB) ForumThread(ctx context.Context, id int64) (*ForumThread, error) {
+func (d *DB) ForumThread(ctx context.Context, siteID, id int64) (*ForumThread, error) {
 	var t ForumThread
-	err := d.pool.QueryRow(ctx, qForumThread, id).Scan(&t.ID, &t.Name, &t.Description,
+	err := d.pool.QueryRow(ctx, qForumThread, id, siteID).Scan(&t.ID, &t.Name, &t.Description,
 		&t.CategoryID, &t.ArticleID, &t.AuthorID, &t.IsPinned, &t.IsLocked, &t.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
@@ -462,11 +462,11 @@ func (d *DB) ForumPostReplies(ctx context.Context, postID int64) ([]ForumThreadP
 var qForumPost = register("ForumPost", `
 SELECT `+forumPostColumns+`
 FROM web_forumpost
-WHERE id = $1`)
+WHERE id = $1 AND thread_id IN (SELECT id FROM web_forumthread WHERE site_id = $2)`)
 
-func (d *DB) ForumPost(ctx context.Context, id int64) (*ForumThreadPost, error) {
+func (d *DB) ForumPost(ctx context.Context, siteID, id int64) (*ForumThreadPost, error) {
 	var p ForumThreadPost
-	err := d.pool.QueryRow(ctx, qForumPost, id).Scan(&p.ID, &p.ThreadID, &p.Name,
+	err := d.pool.QueryRow(ctx, qForumPost, id, siteID).Scan(&p.ID, &p.ThreadID, &p.Name,
 		&p.CreatedAt, &p.UpdatedAt, &p.AuthorID, &p.ReplyToID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound

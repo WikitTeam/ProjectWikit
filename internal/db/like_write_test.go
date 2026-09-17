@@ -12,9 +12,9 @@ func scratchThread(t *testing.T, d *DB) int64 {
 	article := scratchArticle(t, d)
 	var id int64
 	err := d.pool.QueryRow(ctx, `
-INSERT INTO web_forumthread (article_id, name, description, created_at, updated_at, is_pinned, is_locked)
-VALUES ($1, 'Probe Like Thread', '', now(), now(), false, false)
-RETURNING id`, article).Scan(&id)
+INSERT INTO web_forumthread (article_id, name, description, created_at, updated_at, is_pinned, is_locked, site_id)
+VALUES ($1, 'Probe Like Thread', '', now(), now(), false, false, $2)
+RETURNING id`, article, seedSiteID(t, d)).Scan(&id)
 	if err != nil {
 		t.Fatalf("insert scratch thread err = %v, want nil", err)
 	}

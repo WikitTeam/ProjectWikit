@@ -57,11 +57,12 @@ func TestForumSectionsComeBackInOrder(t *testing.T) {
 
 func TestForumSectionByID(t *testing.T) {
 	d, ctx := forumDB(t)
-	sections, err := d.ForumSections(ctx, seedSiteID(t, d))
+	site := seedSiteID(t, d)
+	sections, err := d.ForumSections(ctx, site)
 	if err != nil {
 		t.Fatalf("ForumSections() err = %v, want nil", err)
 	}
-	got, err := d.ForumSection(ctx, sections[0].ID)
+	got, err := d.ForumSection(ctx, site, sections[0].ID)
 	if err != nil {
 		t.Fatalf("ForumSection(%d) err = %v, want nil", sections[0].ID, err)
 	}
@@ -72,7 +73,7 @@ func TestForumSectionByID(t *testing.T) {
 
 func TestForumSectionOfAnUnknownID(t *testing.T) {
 	d, ctx := forumDB(t)
-	if _, err := d.ForumSection(ctx, -1); !errors.Is(err, ErrNotFound) {
+	if _, err := d.ForumSection(ctx, seedSiteID(t, d), -1); !errors.Is(err, ErrNotFound) {
 		t.Errorf("ForumSection(-1) err = %v, want ErrNotFound", err)
 	}
 }
