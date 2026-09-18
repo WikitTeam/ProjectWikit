@@ -57,3 +57,12 @@ func grantGroups(catalog, allow, deny []string) []grantGroup {
 	}
 	return groups
 }
+
+// A category override is only read when the question is about a page or the
+// comments under one, so the site-wide groups would change nothing there.
+func pageScoped(catalog []string) []string {
+	return slices.DeleteFunc(slices.Clone(catalog), func(name string) bool {
+		group := perms.GroupOf(name)
+		return group != "articles" && group != "forum"
+	})
+}

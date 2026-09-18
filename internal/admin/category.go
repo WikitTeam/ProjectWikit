@@ -72,6 +72,7 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 	if err != nil {
 		return err
 	}
+	catalog = pageScoped(catalog)
 	granted, _, err := h.access(ctx)
 	if err != nil {
 		return err
@@ -88,11 +89,11 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 	}
 	cells := make([]cell, 0, len(roleList))
 	for _, one := range roleList {
-		override, present := byRole[one.ID]
+		override := byRole[one.ID]
 		cells = append(cells, cell{
 			Role:    one,
 			Grants:  grantGroups(catalog, override.Allow, override.Deny),
-			Present: present,
+			Present: len(override.Allow)+len(override.Deny) > 0,
 		})
 	}
 
@@ -179,6 +180,7 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	if err != nil {
 		return err
 	}
+	catalog = pageScoped(catalog)
 	var overrides []db.CategoryOverride
 	for _, one := range roleList {
 		if r.PostFormValue("override_"+strconv.FormatInt(one.ID, 10)) == "" {
@@ -192,6 +194,11 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 			case "deny":
 				next.Deny = append(next.Deny, name)
 			}
+		}
+		// Ticking the box only opens the table, so a role left on inherit
+		// throughout has nothing to store.
+		if len(next.Allow)+len(next.Deny) == 0 {
+			continue
 		}
 		overrides = append(overrides, next)
 	}

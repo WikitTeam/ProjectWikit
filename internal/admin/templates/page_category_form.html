@@ -28,44 +28,49 @@
   </div>
 
   {{if .MayGrant}}
-  <p class="hint">{{t "admin.h-category-permissions"}}</p>
-  {{range .Cells}}
-  {{$rid := .Role.ID}}
-  <div class="widget-box">
-    <div class="widget-title"><i class="fas fa-key"></i><h5>{{esc .Role.Label}}</h5></div>
+  <div class="widget-box" data-tabs>
+    <div class="widget-title"><i class="fas fa-key"></i><h5>{{t "admin.permissions"}}</h5></div>
     <div class="widget-content">
-      <div class="control-group">
-        <span class="control-label">{{t "admin.f-override"}}</span>
-        <div class="controls">
-          <label class="checkbox"><input type="checkbox" name="override_{{$rid}}" value="1"{{if .Present}} checked{{end}}> {{t "admin.l-override"}}</label>
+      <p class="hint">{{t "admin.h-category-permissions"}}</p>
+      <ul class="nav nav-pills role-tabs">
+        {{range $i, $c := .Cells}}<li{{if eq $i 0}} class="active"{{end}}><a href="#role-{{.Role.ID}}" data-tab="role-{{.Role.ID}}"{{if .Present}} class="overridden"{{end}}>{{esc .Role.Label}}</a></li>{{end}}
+      </ul>
+      {{range $i, $c := .Cells}}
+      {{$rid := .Role.ID}}
+      <div id="role-{{$rid}}" data-tab-panel="role-{{$rid}}"{{if $i}} hidden{{end}}>
+        <div class="control-group">
+          <span class="control-label">{{t "admin.f-override"}}</span>
+          <div class="controls">
+            <label class="checkbox"><input type="checkbox" name="override_{{$rid}}" value="1" data-reveals="matrix-{{$rid}}" data-mark="role-{{$rid}}"{{if .Present}} checked{{end}}> {{t "admin.l-override"}}</label>
+          </div>
         </div>
+        <table id="matrix-{{$rid}}" class="table table-condensed perm-matrix"{{if not .Present}} hidden{{end}}>
+          <thead>
+            <tr>
+              <th>{{t "admin.f-permission"}}</th>
+              <th class="opt">{{t "admin.perm-allow"}}</th>
+              <th class="opt">{{t "admin.perm-inherit"}}</th>
+              <th class="opt">{{t "admin.perm-deny"}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Grants}}
+            <tr class="perm-group"><td colspan="4">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</td></tr>
+            {{range .Rows}}
+            <tr>
+              <td>{{enum "admin.perm-" .Name}}<span class="perm-code">{{esc .Name}}</span></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
+            </tr>
+            {{end}}
+            {{end}}
+          </tbody>
+        </table>
       </div>
-      <table class="table table-condensed perm-matrix">
-        <thead>
-          <tr>
-            <th>{{t "admin.f-permission"}}</th>
-            <th class="opt">{{t "admin.perm-allow"}}</th>
-            <th class="opt">{{t "admin.perm-inherit"}}</th>
-            <th class="opt">{{t "admin.perm-deny"}}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Grants}}
-          <tr class="perm-group"><td colspan="4">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</td></tr>
-          {{range .Rows}}
-          <tr>
-            <td>{{enum "admin.perm-" .Name}}<span class="perm-code">{{esc .Name}}</span></td>
-            <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
-            <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
-            <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
-          </tr>
-          {{end}}
-          {{end}}
-        </tbody>
-      </table>
+      {{end}}
     </div>
   </div>
-  {{end}}
   {{end}}
 
   {{template "save_row" dict "back" .Back "del" .Category.ID}}
