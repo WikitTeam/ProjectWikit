@@ -4,7 +4,7 @@
 #   docker build -t pwikit --build-arg VERSION=v1.0.0 .
 #   docker build --target binary --output dist .
 
-FROM node:20-bookworm AS frontend
+FROM node:25-bookworm AS frontend
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/yarn.lock ./
 RUN yarn install --frozen-lockfile
