@@ -73,10 +73,13 @@
   </div>
 
   {{if .MayGrant}}
-  <div class="widget-box">
+  <div class="widget-box" data-tabs>
     <div class="widget-title"><i class="fas fa-key"></i><h5>{{t "admin.permissions"}}</h5></div>
     <div class="widget-content">
       <p class="hint">{{t "admin.h-permissions"}}</p>
+      <ul class="nav nav-pills perm-tabs">
+        {{range $i, $g := .Grants}}<li{{if eq $i 0}} class="active"{{end}}><a href="#perm-{{or .Key "other"}}" data-tab="perm-{{or .Key "other"}}">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</a></li>{{end}}
+      </ul>
       <table class="table table-condensed perm-matrix">
         <thead>
           <tr>
@@ -86,9 +89,8 @@
             <th class="opt">{{t "admin.perm-deny"}}</th>
           </tr>
         </thead>
-        <tbody>
-          {{range .Grants}}
-          <tr class="perm-group"><td colspan="4">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</td></tr>
+        {{range $i, $g := .Grants}}
+        <tbody id="perm-{{or .Key "other"}}" data-tab-panel="perm-{{or .Key "other"}}"{{if $i}} hidden{{end}}>
           {{range .Rows}}
           <tr>
             <td>{{enum "admin.perm-" .Name}}<span class="perm-code">{{esc .Name}}</span></td>
@@ -97,8 +99,8 @@
             <td class="opt"><input type="radio" name="perm_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
           </tr>
           {{end}}
-          {{end}}
         </tbody>
+        {{end}}
       </table>
     </div>
   </div>

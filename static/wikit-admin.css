@@ -212,6 +212,8 @@ body.admin .system-content .content .btn.pull-right { margin-left: auto; }
 }
 .admin-shell .nav-pills > li > a:hover { color: var(--ink); }
 .admin-shell .nav-pills > li.active > a { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+.admin-shell .role-tabs > li > a.overridden::after { content: "\2022"; margin-left: 2px; }
+.admin-shell .perm-matrix[hidden], .admin-shell .perm-matrix tbody[hidden] { display: none; }
 
 .admin-shell .pagination { margin-top: 16px; }
 .admin-shell .pagination ul { list-style: none; display: flex; gap: 2px; margin: 0; padding: 0; }

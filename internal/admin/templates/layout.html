@@ -105,6 +105,30 @@
   });
 })();
 (function () {
+  document.querySelectorAll('[data-tabs]').forEach(function (box) {
+    var links = box.querySelectorAll('[data-tab]');
+    var panels = box.querySelectorAll('[data-tab-panel]');
+    box.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-tab]');
+      if (!a) { return; }
+      e.preventDefault();
+      links.forEach(function (l) { l.parentElement.classList.toggle('active', l === a); });
+      panels.forEach(function (p) { p.hidden = p.dataset.tabPanel !== a.dataset.tab; });
+    });
+  });
+  document.querySelectorAll('input[data-reveals]').forEach(function (input) {
+    var target = document.getElementById(input.dataset.reveals);
+    var tab = document.querySelector('[data-tab="' + input.dataset.mark + '"]');
+    function update() {
+      if (target) { target.hidden = !input.checked; }
+      var set = target && target.querySelector('input[type="radio"]:checked:not([value=""])');
+      if (tab) { tab.classList.toggle('overridden', input.checked && !!set); }
+    }
+    input.addEventListener('change', update);
+    if (target) { target.addEventListener('change', update); }
+  });
+})();
+(function () {
   var zone = '';
   try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
   if (!zone) { return; }
