@@ -44,11 +44,17 @@ type body struct {
 }
 
 func (h *Handler) render(req *request) (*result, error) {
-	navTop, topStyle, err := h.nav(req, "nav:top")
+	category, _ := wikidot.Split(req.name)
+	look, err := h.deps.DB.CategoryLook(req.ctx, req.site.ID, category)
 	if err != nil {
 		return nil, err
 	}
-	navSide, sideStyle, err := h.nav(req, "nav:side")
+	req.look = look
+	navTop, topStyle, err := h.nav(req, firstNonEmpty(look.NavTop, "nav:top"))
+	if err != nil {
+		return nil, err
+	}
+	navSide, sideStyle, err := h.nav(req, firstNonEmpty(look.NavSide, "nav:side"))
 	if err != nil {
 		return nil, err
 	}
@@ -490,6 +496,9 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 }
 
 func (h *Handler) themeURL(req *request) (string, error) {
+	if req.look.ThemeID != nil {
+		return site.ThemeURLByID(req.ctx, h.deps.DB, req.look.ThemeID)
+	}
 	return site.ThemeURLByID(req.ctx, h.deps.DB, req.site.ThemeID)
 }
 

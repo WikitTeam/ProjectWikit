@@ -88,6 +88,8 @@ var qDetachTheme = register("DetachTheme", `UPDATE web_site SET
 	active_theme_id = CASE WHEN active_theme_id = $1 THEN NULL ELSE active_theme_id END,
 	system_theme_id = CASE WHEN system_theme_id = $1 THEN NULL ELSE system_theme_id END`)
 
+var qDetachCategoryTheme = register("DetachCategoryTheme", `UPDATE web_category SET theme_id = NULL WHERE theme_id = $1 AND site_id = $2`)
+
 func (d *DB) DeleteTheme(ctx context.Context, siteID, id int64) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
@@ -97,6 +99,9 @@ func (d *DB) DeleteTheme(ctx context.Context, siteID, id int64) error {
 
 	if _, err := tx.Exec(ctx, qDetachTheme, id); err != nil {
 		return fmt.Errorf("detach theme %d: %w", id, err)
+	}
+	if _, err := tx.Exec(ctx, qDetachCategoryTheme, id, siteID); err != nil {
+		return fmt.Errorf("detach theme %d from categories: %w", id, err)
 	}
 	if _, err := tx.Exec(ctx, qDeleteTheme, id, siteID); err != nil {
 		return fmt.Errorf("delete theme %d: %w", id, err)

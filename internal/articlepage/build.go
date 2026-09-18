@@ -39,6 +39,7 @@ type request struct {
 	article   *db.Article
 	forbidden bool
 	perms     perms.Set
+	look      db.CategoryLook
 
 	csrf    string
 	csrfNew bool

@@ -155,6 +155,30 @@ func (d *DB) CategoryIndexed(ctx context.Context, siteID int64, name string) (bo
 	return indexed, nil
 }
 
+type CategoryLook struct {
+	ThemeID *int64
+	NavTop  string
+	NavSide string
+}
+
+var qCategoryLook = register("CategoryLook", `
+SELECT theme_id, nav_top, nav_side
+FROM web_category
+WHERE site_id = $1 AND name = $2`)
+
+// A category nobody has saved yet has no row, and it looks like the site.
+func (d *DB) CategoryLook(ctx context.Context, siteID int64, name string) (CategoryLook, error) {
+	var look CategoryLook
+	err := d.pool.QueryRow(ctx, qCategoryLook, siteID, name).Scan(&look.ThemeID, &look.NavTop, &look.NavSide)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return CategoryLook{}, nil
+	}
+	if err != nil {
+		return CategoryLook{}, fmt.Errorf("query the look of category %q: %w", name, err)
+	}
+	return look, nil
+}
+
 const (
 	ThemeInline   = "inline"
 	ThemeExternal = "external"

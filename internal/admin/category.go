@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
 
 const pageCategorySlug = "page-categories"
@@ -73,6 +76,18 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 		return err
 	}
 	catalog = pageScoped(catalog)
+	themes, err := h.deps.DB.Themes(ctx, siteID(ctx))
+	if err != nil {
+		return err
+	}
+	followTheme := loc.T("admin.theme-none")
+	if current := site.FromContext(ctx); current != nil && current.ThemeID != nil {
+		for _, one := range themes {
+			if one.ID == *current.ThemeID {
+				followTheme = one.Name
+			}
+		}
+	}
 	granted, _, err := h.access(ctx)
 	if err != nil {
 		return err
@@ -102,6 +117,8 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 		"Cells":       cells,
 		"RatingModes": settingChoices(loc, "admin.rating-", categoryRatingModes, siteSetting(fallback.RatingMode, "updown")),
 		"TagModes":    settingChoices(loc, "admin.tagmode-", categoryTagModes, siteSetting(fallback.CreateTags, db.CreateTagsDisabled)),
+		"Themes":      themes,
+		"FollowTheme": loc.T("admin.setting-follow", "mode", followTheme),
 		"MayGrant":    granted.Has(perms.ManagePermissions),
 		"CSRF":        csrf.Issue(w, r),
 		"Error":       problem,
@@ -122,6 +139,9 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 			RatingMode: r.PostFormValue("rating_mode"),
 			CreateTags: r.PostFormValue("can_user_create_tags"),
 		},
+		ThemeID: optionalID(r.PostFormValue("theme")),
+		NavTop:  navPage(r.PostFormValue("nav_top")),
+		NavSide: navPage(r.PostFormValue("nav_side")),
 	}
 	if rest != "new" {
 		id, err := strconv.ParseInt(rest, 10, 64)
@@ -144,6 +164,15 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	}
 	if !contains(categoryRatingModes, row.Settings.RatingMode) || !contains(categoryTagModes, row.Settings.CreateTags) {
 		return h.pageCategoryForm(w, r, loc, rest, loc.T("admin.site-bad-mode"))
+	}
+	if row.ThemeID != nil {
+		themes, err := h.deps.DB.Themes(ctx, siteID(ctx))
+		if err != nil {
+			return err
+		}
+		if !slices.ContainsFunc(themes, func(t db.ThemeRow) bool { return t.ID == *row.ThemeID }) {
+			return h.pageCategoryForm(w, r, loc, rest, loc.T("admin.category-bad-theme"))
+		}
 	}
 	did := db.AdminChanged
 	if row.ID == 0 {
@@ -208,4 +237,12 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	h.noteID(r, did, pageCategorySlug, row.ID, row.Name)
 	redirect(w, Prefix+pageCategorySlug+"/")
 	return nil
+}
+
+func navPage(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	return wikidot.Normalize(raw)
 }
