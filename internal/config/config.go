@@ -166,7 +166,7 @@ const Template = `# Settings for pwikit. A line starting with # is an example an
 # The hours, in this machine's time zone, in which updates are installed.
 # window = "03:00-05:00"
 # How long a release must have been out before it is installed automatically.
-# min_age = "24h"
+# min_age = "12h"
 # A mirror to download from when GitHub cannot be reached. Use only a mirror you trust.
 # pwikit update mirror <address> sets this line.
 # mirror = ""

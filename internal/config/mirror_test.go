@@ -22,7 +22,7 @@ func TestSetUpdateMirrorWritesTheTemplateFirst(t *testing.T) {
 		t.Errorf("Load().Update.Mirror = %q, want %q", f.Update.Mirror, testMirror)
 	}
 	raw, _ := os.ReadFile(path)
-	if !strings.Contains(string(raw), "# min_age = \"24h\"") {
+	if !strings.Contains(string(raw), "# min_age = \"12h\"") {
 		t.Errorf("SetUpdateMirror() file = %q, want the template comments kept", raw)
 	}
 	if strings.Contains(string(raw), `# mirror = ""`) {

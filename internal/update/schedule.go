@@ -14,7 +14,7 @@ const (
 	AnnounceAhead = 30 * time.Minute
 	CheckEvery    = time.Hour
 	DefaultWindow = "03:00-05:00"
-	DefaultMinAge = 24 * time.Hour
+	DefaultMinAge = 12 * time.Hour
 
 	MissedAfter = 2 * time.Hour
 
