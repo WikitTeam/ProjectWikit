@@ -83,10 +83,10 @@ var groups = []struct {
 	entries []railEntry
 }{
 	{"site", "admin.group-site", "fa-cog", []railEntry{
-		{pageSlug, "fa-file-alt"},
 		{siteSlug, "fa-cog"},
-		{themeSlug, "fa-palette"},
+		{pageSlug, "fa-file-alt"},
 		{pageCategorySlug, "fa-folder-open"},
+		{themeSlug, "fa-palette"},
 		{tagSlug, "fa-tag"},
 		{tagCategorySlug, "fa-tags"},
 	}},
