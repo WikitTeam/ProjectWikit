@@ -1,5 +1,5 @@
 === anonymous
-{"user": {"type": "anonymous", "id": null, "name": "\u533f\u540d\u7528\u6237", "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": null}, "notificationCount": 0}
+{"user": {"type": "anonymous", "id": null, "name": "[user-anonymous]", "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": true, "admin": false, "staff": false, "editor": false, "roles": null}, "notificationCount": 0}
 === system
 {"type": "system", "id": null, "name": null, "username": null, "urlName": null, "isActive": true, "avatar": null, "showAvatar": false, "admin": false, "staff": false, "editor": false, "roles": null}
 === plain

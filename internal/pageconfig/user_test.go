@@ -122,9 +122,9 @@ func corpus() []caseSpec {
 
 func localizer(t *testing.T) *i18n.Localizer {
 	t.Helper()
-	b, err := i18n.Load("")
+	b, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	return b.Localizer(i18n.DefaultLanguage)
 }

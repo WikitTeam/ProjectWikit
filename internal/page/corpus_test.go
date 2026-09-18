@@ -90,7 +90,7 @@ func TestVarsMatchOracle(t *testing.T) {
 		t.Fatalf("SiteByHosts(%q) = %v, want nil; set %s", host, err, envHost)
 	}
 
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
 		t.Fatalf("Load() = %v, want nil", err)
 	}

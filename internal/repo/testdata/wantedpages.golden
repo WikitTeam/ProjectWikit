@@ -6,7 +6,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/scp-173">scp-173</a></td>
@@ -50,7 +50,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -130,7 +130,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -174,7 +174,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -224,7 +224,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/scp-173">scp-173</a></td>
@@ -268,7 +268,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                     </tbody>
                 </table>
@@ -282,7 +282,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -314,7 +314,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/scp-173">scp-173</a></td>
@@ -340,7 +340,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -402,7 +402,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -452,7 +452,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -476,7 +476,7 @@
                 data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;3&quot;}"
                 data-wanted-pages-page-id="main">
                 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=4]</span>
                 
                 
                     
@@ -500,12 +500,12 @@
                     
                 
                 
-                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -528,7 +528,7 @@
                     </tbody>
                 </table>
                 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=4]</span>
                 
                 
                     
@@ -552,7 +552,7 @@
                     
                 
                 
-                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
                 </div>
@@ -562,9 +562,9 @@
                 data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;3&quot;}"
                 data-wanted-pages-page-id="main">
                 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp页; 共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=4]</span>
                 
-                    <span class="target"><a href="#" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="#" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -588,12 +588,12 @@
                     
                 
                 
-                    <span class="target"><a href="#" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probeoff:unratable">Probe Unratable</a></td>
@@ -616,9 +616,9 @@
                     </tbody>
                 </table>
                 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp页; 共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=4]</span>
                 
-                    <span class="target"><a href="#" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="#" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -642,7 +642,7 @@
                     
                 
                 
-                    <span class="target"><a href="#" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
                 </div>
@@ -652,9 +652,9 @@
                 data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;3&quot;}"
                 data-wanted-pages-page-id="main">
                 <div class="pager">
-                <span class="pager-no">第&nbsp;99&nbsp页; 共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=99 total=4]</span>
                 
-                    <span class="target"><a href="#" data-pagination-target="98">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="#" data-pagination-target="98">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -683,14 +683,14 @@
             </div>
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                     </tbody>
                 </table>
                 <div class="pager">
-                <span class="pager-no">第&nbsp;99&nbsp页; 共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=99 total=4]</span>
                 
-                    <span class="target"><a href="#" data-pagination-target="98">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="#" data-pagination-target="98">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -724,7 +724,7 @@
                 data-wanted-pages-params="{&quot;category&quot;: &quot;*&quot;, &quot;perpage&quot;: &quot;1&quot;}"
                 data-wanted-pages-page-id="main">
                 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;11&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=11]</span>
                 
                 
                     
@@ -754,12 +754,12 @@
                     
                 
                 
-                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -770,7 +770,7 @@
                     </tbody>
                 </table>
                 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp页; 共&nbsp;11&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=11]</span>
                 
                 
                     
@@ -800,7 +800,7 @@
                     
                 
                 
-                    <span class="target"><a href="#" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
                 </div>
@@ -812,7 +812,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -892,7 +892,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -972,7 +972,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -1052,7 +1052,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                         <tr>
                             <td><a href="/probestars:quarter">Probe Quarter</a></td>
@@ -1096,7 +1096,7 @@
                 
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>源页面</th><th>缺失的链接</th></tr>
+                        <tr><th>[module-wantedpages-source]</th><th>[module-wantedpages-missing]</th></tr>
                         
                     </tbody>
                 </table>

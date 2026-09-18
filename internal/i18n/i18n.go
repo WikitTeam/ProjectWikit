@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -46,6 +47,39 @@ func Load(overrideDir string) (*Bundle, error) {
 		return nil, err
 	}
 	return b, nil
+}
+
+// Goldens rendered with this bundle pin which message lands where without
+// pinning its wording, so a rewording does not force every golden to be redone.
+func LoadKeys() (*Bundle, error) {
+	b, err := Load("")
+	if err != nil {
+		return nil, err
+	}
+	keys := make(map[string]string, len(b.catalogs[DefaultLanguage]))
+	for id, text := range b.catalogs[DefaultLanguage] {
+		keys[id] = "[" + id + placeholderList(text) + "]"
+	}
+	b.catalogs = map[string]map[string]string{DefaultLanguage: keys}
+	if err := b.buildMatcher(); err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+var placeholder = regexp.MustCompile(`\{[A-Za-z0-9_]+\}`)
+
+func placeholderList(text string) string {
+	var out strings.Builder
+	var seen []string
+	for _, p := range placeholder.FindAllString(text, -1) {
+		if slices.Contains(seen, p) {
+			continue
+		}
+		seen = append(seen, p)
+		out.WriteString(" " + strings.Trim(p, "{}") + "=" + p)
+	}
+	return out.String()
 }
 
 func (b *Bundle) merge(fsys fs.FS, dir string) error {

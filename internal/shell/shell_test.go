@@ -85,9 +85,9 @@ var bundle = fstest.MapFS{
 
 func testRenderer(t *testing.T) *Renderer {
 	t.Helper()
-	b, err := i18n.Load("")
+	b, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	return New(b.Localizer(i18n.DefaultLanguage), static.NewAssets(bundle))
 }
@@ -342,9 +342,9 @@ func writeCorpus(t *testing.T, c corpusFile) {
 
 func profileTestRenderer(t *testing.T) *Renderer {
 	t.Helper()
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	return New(bundle.Localizer(i18n.DefaultLanguage), static.NewAssets(nil))
 }

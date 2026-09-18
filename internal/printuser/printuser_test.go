@@ -23,9 +23,9 @@ const (
 
 func testRenderer(t *testing.T, c corpusFile) *Renderer {
 	t.Helper()
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	load := func(name string) (string, error) {
 		svg, ok := c.Icons[name]

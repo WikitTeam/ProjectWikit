@@ -185,11 +185,11 @@ False
 === probe:bare created_by_linked_plain
 
 === probe:bare updated_by
-系统
+[user-system]
 === probe:bare updated_by_linked
-系统
+[user-system]
 === probe:bare updated_by_linked_plain
-系统
+[user-system]
 === probe:bare authors_count
 0
 === probe:bare tags

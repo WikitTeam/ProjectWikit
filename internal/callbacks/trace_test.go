@@ -130,9 +130,9 @@ func TestCallbackTrace(t *testing.T) {
 	if binary == "" {
 		t.Skipf("%s not set, skipping the callback trace test", sidecar.EnvBinary)
 	}
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 
 	var out strings.Builder

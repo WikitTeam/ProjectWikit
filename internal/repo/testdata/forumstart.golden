@@ -1,10 +1,10 @@
 === anonymous
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -19,10 +19,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -34,7 +34,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -45,9 +45,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -61,7 +61,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -72,9 +72,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -100,7 +100,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -111,9 +111,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -127,7 +127,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -138,9 +138,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -153,16 +153,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+                <a href="/forum/start/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === anonymous-hidden-shown
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -177,10 +177,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -192,7 +192,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -203,9 +203,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -219,7 +219,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -230,9 +230,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -258,7 +258,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -269,9 +269,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -285,7 +285,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -296,9 +296,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -317,10 +317,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -343,16 +343,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/start">隐藏隐藏版块</a>
+                <a href="/forum/start">[module-forumstart-hide-hidden]</a>
             
         </p>
 === anonymous-hidden-junk
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -367,10 +367,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -382,7 +382,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -393,9 +393,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -409,7 +409,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -420,9 +420,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -448,7 +448,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -459,9 +459,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -475,7 +475,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -486,9 +486,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -501,16 +501,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+                <a href="/forum/start/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === anonymous-open-section
-title: 论坛 — Probe Open
+title: [module-forum-title-named name=Probe Open]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -525,10 +525,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -540,7 +540,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -551,9 +551,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -567,7 +567,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -578,9 +578,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -606,7 +606,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -617,9 +617,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -633,7 +633,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -644,9 +644,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -659,16 +659,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/s-71/hidden/show">显示隐藏版块</a>
+                <a href="/forum/s-71/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === anonymous-hidden-section
-title: 论坛 — Probe Hidden
+title: [module-forum-title-named name=Probe Hidden]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Hidden
                 </div>
@@ -683,10 +683,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -709,16 +709,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/s-72/hidden/show">显示隐藏版块</a>
+                <a href="/forum/s-72/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === anonymous-staff-section
-title: 论坛 — Probe Staff
+title: [module-forum-title-named name=Probe Staff]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Staff
                 </div>
@@ -727,16 +727,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/s-73/hidden/show">显示隐藏版块</a>
+                <a href="/forum/s-73/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === anonymous-section-and-hidden
-title: 论坛 — Probe Open
+title: [module-forum-title-named name=Probe Open]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -751,10 +751,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -766,7 +766,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -777,9 +777,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -793,7 +793,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -804,9 +804,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -832,7 +832,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -843,9 +843,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -859,7 +859,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -870,9 +870,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -885,24 +885,24 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/s-71/probe-open">隐藏隐藏版块</a>
+                <a href="/forum/s-71/probe-open">[module-forumstart-hide-hidden]</a>
             
         </p>
 === anonymous-missing-section
-title: 论坛版块
+title: [module-forumstart-title]
 status: 404
-!error: 未找到版块 "999999"
+!error: [module-forum-not-found name=999999]
 === anonymous-unparsable-section
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
-!error: 处理模块 'ForumStart' 时出错
+!error: [module-failed name=ForumStart]
 === registered
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -917,10 +917,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -932,7 +932,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -943,9 +943,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -959,7 +959,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -970,9 +970,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -998,7 +998,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -1009,9 +1009,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1025,7 +1025,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -1036,9 +1036,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1051,16 +1051,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+                <a href="/forum/start/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === superuser
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -1075,10 +1075,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -1090,7 +1090,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -1101,9 +1101,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1117,7 +1117,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -1128,9 +1128,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1156,7 +1156,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -1167,9 +1167,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1183,7 +1183,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -1194,9 +1194,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1215,10 +1215,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -1241,16 +1241,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/start/hidden/show">显示隐藏版块</a>
+                <a href="/forum/start/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>
 === superuser-hidden-shown
-title: 论坛版块
+title: [module-forumstart-title]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Open
                 </div>
@@ -1265,10 +1265,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -1280,7 +1280,7 @@ status: 200
                                 <td class="posts">6</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -1291,9 +1291,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:17 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694344633000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=17 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-99/probe-pinned-thread#post-27">查看</a>
+                                        <a href="/forum/t-99/probe-pinned-thread#post-27">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1307,7 +1307,7 @@ status: 200
                                 <td class="posts">4</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -1318,9 +1318,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:42 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694346133000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=42 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-14/probe-full#post-2">查看</a>
+                                        <a href="/forum/t-14/probe-full#post-2">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1346,7 +1346,7 @@ status: 200
                                 <td class="posts">21</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="30" data-user-name="probe-author">
             
                 <a href="/-/users/probe-author"><img class="small" src="/-/static/images/default_avatar.png" alt="Probe Author"></a>
             
@@ -1357,9 +1357,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="%m.%d.%Y %H:%M">09.10.2023 11:38 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694345893000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=11 minute=38 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-120/probe-busy-20#post-48">查看</a>
+                                        <a href="/forum/t-120/probe-busy-20#post-48">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1373,7 +1373,7 @@ status: 200
                                 <td class="posts">18</td>
                                 <td class="last">
                                     
-                                        作者：<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
+                                        [module-forum-author]<span class="printuser w-user avatarhover" data-user-id="32" data-user-name="probevoter">
             
                 <a href="/-/users/probevoter"><img class="small" src="/-/static/images/default_avatar.png" alt="probevoter"></a>
             
@@ -1384,9 +1384,9 @@ status: 200
             
         </span>
                                         <br>
-                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="%m.%d.%Y %H:%M">09.10.2023 12:00 (UTC)</span>
+                                        <span class="odate w-date" style="display: inline" data-timestamp="1694347213000" data-format="[module-date-format-js]">[module-date-format month=09 day=10 year=2023 hour=12 minute=00 zone=UTC]</span>
                                         <br>
-                                        <a href="/forum/t-122/probe-long-thread#post-65">查看</a>
+                                        <a href="/forum/t-122/probe-long-thread#post-65">[module-forum-view-post]</a>
                                     
                                 </td>
                             </tr>
@@ -1405,10 +1405,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -1437,10 +1437,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -1463,16 +1463,16 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/start">隐藏隐藏版块</a>
+                <a href="/forum/start">[module-forumstart-hide-hidden]</a>
             
         </p>
 === superuser-staff-section
-title: 论坛 — Probe Staff
+title: [module-forum-title-named name=Probe Staff]
 status: 200
 <div class="forum-start-box">
             
                 <div class="forum-breadcrumbs">
-                    <a href="/forum/start">论坛</a>
+                    <a href="/forum/start">[module-forum-title]</a>
                     &raquo;
                     Probe Staff
                 </div>
@@ -1487,10 +1487,10 @@ status: 200
                         <table>
                         <tbody>
                         <tr class="head">
-                            <td>版块名称</td>
-                            <td>主题数</td>
-                            <td>帖子数</td>
-                            <td>最后回复</td>
+                            <td>[module-forumstart-section]</td>
+                            <td>[module-forumstart-threads]</td>
+                            <td>[module-forumstart-posts]</td>
+                            <td>[module-forum-last-post]</td>
                         </tr>
                         
                             <tr>
@@ -1513,6 +1513,6 @@ status: 200
         </div>
         <p style="text-align: right">
             
-                <a href="/forum/s-73/hidden/show">显示隐藏版块</a>
+                <a href="/forum/s-73/hidden/show">[module-forumstart-show-hidden]</a>
             
         </p>

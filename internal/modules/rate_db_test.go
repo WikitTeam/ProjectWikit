@@ -134,9 +134,9 @@ func TestRenderRateMatchesGolden(t *testing.T) {
 
 func rateLocalizer(t *testing.T) *i18n.Localizer {
 	t.Helper()
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	return bundle.Localizer(i18n.DefaultLanguage)
 }

@@ -4,7 +4,7 @@
 
 === total-2-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;2&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=2]</span>
                 
                 
                     
@@ -20,14 +20,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-2-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;2&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=2]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -46,7 +46,7 @@
             </div>
 === total-2-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;2&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=2]</span>
                 
                 
                     
@@ -62,14 +62,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-2-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;2&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=2]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -88,7 +88,7 @@
             </div>
 === total-3-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;3&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=3]</span>
                 
                 
                     
@@ -108,14 +108,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-3-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;3&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=3]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -135,14 +135,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-3-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;3&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=3]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -165,9 +165,9 @@
             </div>
 === total-3-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;3&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=3]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -187,14 +187,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-3-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;3&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=3]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -217,7 +217,7 @@
             </div>
 === total-4-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=4]</span>
                 
                 
                     
@@ -241,14 +241,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-4-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=4]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -272,14 +272,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-4-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=4]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -303,14 +303,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-4-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=4]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -337,9 +337,9 @@
             </div>
 === total-4-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=4]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -363,14 +363,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-4-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=4]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -397,7 +397,7 @@
             </div>
 === total-5-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=5]</span>
                 
                 
                     
@@ -425,14 +425,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-5-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=5]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -460,14 +460,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-5-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=5]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -495,14 +495,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-5-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=5]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -530,14 +530,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-5-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=5]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -568,9 +568,9 @@
             </div>
 === total-5-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=5]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -598,14 +598,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-5-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;5&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=5]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -636,7 +636,7 @@
             </div>
 === total-6-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=6]</span>
                 
                 
                     
@@ -666,14 +666,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-6-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -705,14 +705,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-6-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -744,14 +744,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-6-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -783,14 +783,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-6-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -822,14 +822,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-6-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -866,9 +866,9 @@
             </div>
 === total-6-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -900,14 +900,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-6-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;6&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=6]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -944,7 +944,7 @@
             </div>
 === total-7-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=7]</span>
                 
                 
                     
@@ -974,14 +974,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1015,14 +1015,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1058,14 +1058,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1101,14 +1101,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1144,14 +1144,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1185,14 +1185,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/7" data-pagination-target="7">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/7" data-pagination-target="7">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1226,14 +1226,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/7" data-pagination-target="7">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/7" data-pagination-target="7">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-7-page-7
 <div class="pager">
-                <span class="pager-no">第&nbsp;7&nbsp;页，共&nbsp;7&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=7 total=7]</span>
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1270,7 +1270,7 @@
             </div>
 === total-9-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=9]</span>
                 
                 
                     
@@ -1300,14 +1300,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1341,14 +1341,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1386,14 +1386,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1435,14 +1435,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1486,14 +1486,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1535,14 +1535,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/7" data-pagination-target="7">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/7" data-pagination-target="7">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-8
 <div class="pager">
-                <span class="pager-no">第&nbsp;8&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=8 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/7" data-pagination-target="7">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/7" data-pagination-target="7">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1576,14 +1576,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/9" data-pagination-target="9">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/9" data-pagination-target="9">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-9-page-9
 <div class="pager">
-                <span class="pager-no">第&nbsp;9&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=9 total=9]</span>
                 
-                    <span class="target"><a href="/main/p/8" data-pagination-target="8">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/8" data-pagination-target="8">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1620,7 +1620,7 @@
             </div>
 === total-12-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=12]</span>
                 
                 
                     
@@ -1650,14 +1650,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1691,14 +1691,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1736,14 +1736,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1785,14 +1785,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1838,14 +1838,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1893,14 +1893,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/7" data-pagination-target="7">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/7" data-pagination-target="7">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-11
 <div class="pager">
-                <span class="pager-no">第&nbsp;11&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=11 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/10" data-pagination-target="10">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/10" data-pagination-target="10">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1934,14 +1934,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/12" data-pagination-target="12">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/12" data-pagination-target="12">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-12-page-12
 <div class="pager">
-                <span class="pager-no">第&nbsp;12&nbsp;页，共&nbsp;12&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=12 total=12]</span>
                 
-                    <span class="target"><a href="/main/p/11" data-pagination-target="11">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/11" data-pagination-target="11">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -1978,7 +1978,7 @@
             </div>
 === total-30-page-1
 <div class="pager">
-                <span class="pager-no">第&nbsp;1&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=1 total=30]</span>
                 
                 
                     
@@ -2008,14 +2008,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-2
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2049,14 +2049,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-3
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2094,14 +2094,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-4
 <div class="pager">
-                <span class="pager-no">第&nbsp;4&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=4 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/3" data-pagination-target="3">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/3" data-pagination-target="3">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2143,14 +2143,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-5
 <div class="pager">
-                <span class="pager-no">第&nbsp;5&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=5 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/4" data-pagination-target="4">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/4" data-pagination-target="4">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2196,14 +2196,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/6" data-pagination-target="6">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/6" data-pagination-target="6">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-6
 <div class="pager">
-                <span class="pager-no">第&nbsp;6&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=6 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/5" data-pagination-target="5">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/5" data-pagination-target="5">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2251,14 +2251,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/7" data-pagination-target="7">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/7" data-pagination-target="7">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-29
 <div class="pager">
-                <span class="pager-no">第&nbsp;29&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=29 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/28" data-pagination-target="28">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/28" data-pagination-target="28">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2292,14 +2292,14 @@
                     
                 
                 
-                    <span class="target"><a href="/main/p/30" data-pagination-target="30">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/p/30" data-pagination-target="30">[module-listpages-pager-next]</a></span>
                 
             </div>
 === total-30-page-30
 <div class="pager">
-                <span class="pager-no">第&nbsp;30&nbsp;页，共&nbsp;30&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=30 total=30]</span>
                 
-                    <span class="target"><a href="/main/p/29" data-pagination-target="29">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/p/29" data-pagination-target="29">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2336,9 +2336,9 @@
             </div>
 === hash-base
 <div class="pager">
-                <span class="pager-no">第&nbsp;3&nbsp;页，共&nbsp;9&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=3 total=9]</span>
                 
-                    <span class="target"><a href="#/p/2" data-pagination-target="2">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="#/p/2" data-pagination-target="2">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2376,14 +2376,14 @@
                     
                 
                 
-                    <span class="target"><a href="#/p/4" data-pagination-target="4">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="#/p/4" data-pagination-target="4">[module-listpages-pager-next]</a></span>
                 
             </div>
 === base-with-params
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=4]</span>
                 
-                    <span class="target"><a href="/scp:series/tag/euclid/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/scp:series/tag/euclid/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2407,14 +2407,14 @@
                     
                 
                 
-                    <span class="target"><a href="/scp:series/tag/euclid/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/scp:series/tag/euclid/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>
 === base-needing-escape
 <div class="pager">
-                <span class="pager-no">第&nbsp;2&nbsp;页，共&nbsp;4&nbsp;页</span>
+                <span class="pager-no">[module-listpages-pager-count page=2 total=4]</span>
                 
-                    <span class="target"><a href="/main/q/a&quot;b&amp;c/p/1" data-pagination-target="1">&laquo;&nbsp;上一页</a></span>
+                    <span class="target"><a href="/main/q/a&quot;b&amp;c/p/1" data-pagination-target="1">[module-listpages-pager-prev]</a></span>
                 
                 
                     
@@ -2438,6 +2438,6 @@
                     
                 
                 
-                    <span class="target"><a href="/main/q/a&quot;b&amp;c/p/3" data-pagination-target="3">下一页&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="/main/q/a&quot;b&amp;c/p/3" data-pagination-target="3">[module-listpages-pager-next]</a></span>
                 
             </div>

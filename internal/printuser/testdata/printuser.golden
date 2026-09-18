@@ -1,17 +1,17 @@
 === system
-<span class="printuser avatarhover"><strong>系统</strong></span>
+<span class="printuser avatarhover"><strong>[user-system]</strong></span>
 === system_bare
-<span class="printuser"><strong>系统</strong></span>
+<span class="printuser"><strong>[user-system]</strong></span>
 === anonymous
 <span class="printuser avatarhover">
                 
-                    <a onclick="return false;"><img class="small" src="/-/static/images/anon_avatar.png" alt="匿名用户"></a>
+                    <a onclick="return false;"><img class="small" src="/-/static/images/anon_avatar.png" alt="[user-anonymous]"></a>
                 
-                <a onclick="return false;">匿名用户</a></span>
+                <a onclick="return false;">[user-anonymous]</a></span>
 === anonymous_bare
 <span class="printuser">
                 
-                <a onclick="return false;">匿名用户</a></span>
+                <a onclick="return false;">[user-anonymous]</a></span>
 === external
 <span class="printuser w-user avatarhover" data-user-id="-1" data-user-name="some-user">
             
@@ -87,7 +87,7 @@
             
                 
                 
-                    <span class="badge" title="用户已被封禁" style="background: #000000; color: #FFFFFF; ">封禁</span>
+                    <span class="badge" title="[user-banned-tooltip]" style="background: #000000; color: #FFFFFF; ">[user-banned]</span>
                 
             
         </span>
@@ -111,7 +111,7 @@
             
                 
                 
-                    <span class="badge" title="机器人账号" style="background: #77A; color: #FFFFFF; ">机器人</span>
+                    <span class="badge" title="[user-bot-tooltip]" style="background: #77A; color: #FFFFFF; ">[user-bot]</span>
                 
             
         </span>
@@ -124,7 +124,7 @@
             
                 
                 
-                    <span class="badge" title="用户已被封禁" style="background: #000000; color: #FFFFFF; ">封禁</span>
+                    <span class="badge" title="[user-banned-tooltip]" style="background: #000000; color: #FFFFFF; ">[user-banned]</span>
                 
             
         </span>
@@ -234,7 +234,7 @@
             
                 
                 
-                    <span class="badge" title="用户已被封禁" style="background: #000000; color: #FFFFFF; ">封禁</span>
+                    <span class="badge" title="[user-banned-tooltip]" style="background: #000000; color: #FFFFFF; ">[user-banned]</span>
                 
             
         </span>

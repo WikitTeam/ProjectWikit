@@ -47,8 +47,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -87,7 +87,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -165,8 +165,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -241,13 +241,13 @@
                                 </span>
                             </div>
                             <div id="page-info-break"></div>
-                            <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"><div id="page-info">页面版本：12，最后编辑：<span class="odate w-date" data-timestamp="1787637787000" data-format="%Y年%b%e日 %H:%M（%O）" style="display: inline">2026年8月25日 14:03（UTC+08:00）</span></div></div>
+                            <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"><div id="page-info">[page.page-info rev=12 date=<span class="odate w-date" data-timestamp="1787637787000" data-format="[page.date-format-js]" style="display: inline">[page.date-format year=2026 month=8 day=25 hour=14 minute=03 zone=UTC+08:00]</span>]</div></div>
                             <div id="action-area"></div>
                         </div>
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -322,8 +322,8 @@
                         <h2><span>it&#x27;s a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -384,7 +384,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -461,8 +461,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -501,7 +501,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -586,8 +586,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -626,7 +626,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -701,8 +701,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -741,7 +741,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -816,8 +816,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -869,7 +869,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -944,8 +944,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -991,7 +991,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -1066,8 +1066,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -1100,13 +1100,13 @@
                                 </span>
                             </div>
                             <div id="page-info-break"></div>
-                            <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"><div id="page-info">页面版本：0，最后编辑：<span class="odate w-date" data-timestamp="1767575220000" data-format="%Y年%b%e日 %H:%M（%O）" style="display: inline">2026年1月5日 09:07（UTC+08:00）</span></div></div>
+                            <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"><div id="page-info">[page.page-info rev=0 date=<span class="odate w-date" data-timestamp="1767575220000" data-format="[page.date-format-js]" style="display: inline">[page.date-format year=2026 month=1 day=5 hour=09 minute=07 zone=UTC+08:00]</span>]</div></div>
                             <div id="action-area"></div>
                         </div>
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -1181,8 +1181,8 @@
                         <h2><span>a wiki</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -1215,13 +1215,13 @@
                                 </span>
                             </div>
                             <div id="page-info-break"></div>
-                            <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"><div id="page-info">页面版本：3，最后编辑：<span class="odate w-date" data-timestamp="1772296200000" data-format="%Y年%b%e日 %H:%M（%O）" style="display: inline">2026年3月1日 00:30（UTC+08:00）</span></div></div>
+                            <div id="page-options-container" data-config="{&quot;optionsEnabled&quot;: true, &quot;pageId&quot;: &quot;main&quot;}"><div id="page-info">[page.page-info rev=3 date=<span class="odate w-date" data-timestamp="1772296200000" data-format="[page.date-format-js]" style="display: inline">[page.date-format year=2026 month=3 day=1 hour=00 minute=30 zone=UTC+08:00]</span>]</div></div>
                             <div id="action-area"></div>
                         </div>
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -1296,8 +1296,8 @@
                         <h2><span>一个维基站点</span></h2>
                         <div id="search-top-box" class="form-search">
                             <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
-                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="搜索本站">
-                                <input class="button btn" type="submit" value="搜索">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="[page.search-placeholder]">
+                                <input class="button btn" type="submit" value="[page.search-submit]">
                             </form>
                         </div>
                         <div id="top-bar">
@@ -1345,7 +1345,7 @@
                     </div>
                     <div id="footer">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank">ProjectWikit</a></div>
                     <div id="license-area" class="license-area">
-                        除非特别注明，本页内容采用以下授权方式：<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>。
+                        [page.license link=<a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 License</a>]
                     </div>
                     <div id="extrac-div-1"><span></span></div>
                     <div id="extrac-div-2"><span></span></div>
@@ -1373,19 +1373,19 @@
 
 === not_found
 
-    <p id="404-message">您请求的页面 <em>no-such-page</em> 不存在
+    <p id="404-message">[page.not-found page=<em>no-such-page</em>]
 
 === not_found_escaped
 
-    <p id="404-message">您请求的页面 <em>a&amp;b&lt;c&gt;&#x27;d&#x27;</em> 不存在
+    <p id="404-message">[page.not-found page=<em>a&amp;b&lt;c&gt;&#x27;d&#x27;</em>]
 
 === not_found_create
 
     <div id="create-new-page" data-config="{&quot;page_id&quot;: &quot;new-page&quot;, &quot;pathParams&quot;: {&quot;a&quot;: &quot;b&quot;}}"></div>
 
 === forbidden
-<p id="404-message">您没有查看页面 <em>secret:page</em> 的权限。
+<p id="404-message">[page.forbidden page=<em>secret:page</em>]
 
 === forbidden_escaped
-<p id="404-message">您没有查看页面 <em>a&amp;b&lt;c&gt;&#x27;d&#x27;</em> 的权限。
+<p id="404-message">[page.forbidden page=<em>a&amp;b&lt;c&gt;&#x27;d&#x27;</em>]
 

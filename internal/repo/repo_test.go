@@ -31,9 +31,9 @@ func testDB(t *testing.T) *db.DB {
 
 func testUsers(t *testing.T) (*printuser.Renderer, *i18n.Localizer) {
 	t.Helper()
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	loc := bundle.Localizer(i18n.DefaultLanguage)
 	return printuser.New(loc, nil), loc
@@ -108,9 +108,9 @@ func TestRenderAgainstDatabase(t *testing.T) {
 	}
 	t.Cleanup(func() { rend.Close() })
 
-	bundle, err := i18n.Load("")
+	bundle, err := i18n.LoadKeys()
 	if err != nil {
-		t.Fatalf("i18n.Load() err = %v, want nil", err)
+		t.Fatalf("i18n.LoadKeys() err = %v, want nil", err)
 	}
 	cb := callbacks.New(bundle.Localizer("zh-hans"), r)
 	info := renderer.PageInfo{Page: "main", Category: "_default", Domain: "localhost"}

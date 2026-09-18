@@ -138,9 +138,9 @@
                 
             </div>
 === limit-junk
-!error: 处理模块 'TagCloud' 时出错
+!error: [module-failed name=TagCloud]
 === limit-negative
-!error: 处理模块 'TagCloud' 时出错
+!error: [module-failed name=TagCloud]
 === limit-underscore
 <div class="pages-tag-cloud-box">
                 
@@ -256,9 +256,9 @@
                 
             </div>
 === font-size-mixed-units
-!error: 最大和最小字体大小的单位不同：10px 和 200%
+!error: [module-tagcloud-units min=10px max=200%]
 === font-size-junk
-!error: 无效的字体大小：big
+!error: [module-tagcloud-font-size size=big]
 === colors-hex
 <div class="pages-tag-cloud-box">
                 
@@ -344,9 +344,9 @@
                 
             </div>
 === colors-junk
-!error: 无效的颜色：red
+!error: [module-tagcloud-color color=red]
 === colors-bad-hex
-!error: 无效的颜色：#ff00
+!error: [module-tagcloud-color color=#ff00]
 === everything
 <div class="pages-tag-cloud-box">
                 

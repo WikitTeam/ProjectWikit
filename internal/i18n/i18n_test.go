@@ -2,9 +2,12 @@ package i18n
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -140,5 +143,87 @@ func TestBundleLanguages(t *testing.T) {
 
 	if !slices.Equal(got, []string{"en", "zh-hans"}) {
 		t.Errorf("Languages() = %v, want %v", got, []string{"en", "zh-hans"})
+	}
+}
+
+func TestLoadKeysRendersIDAndArgs(t *testing.T) {
+	b, err := LoadKeys()
+	if err != nil {
+		t.Fatalf("LoadKeys() err = %v, want nil", err)
+	}
+	l := b.Localizer(DefaultLanguage)
+	if got, want := l.T("button-copy-clipboard"), "[button-copy-clipboard]"; got != want {
+		t.Errorf("T(%q) = %q, want %q", "button-copy-clipboard", got, want)
+	}
+	if got, want := l.T("module-forum-title-named", "name", "Chat"), "[module-forum-title-named name=Chat]"; got != want {
+		t.Errorf("T(%q, name, Chat) = %q, want %q", "module-forum-title-named", got, want)
+	}
+	if got, want := l.T("no-such-id"), "no-such-id"; got != want {
+		t.Errorf("T(%q) = %q, want %q", "no-such-id", got, want)
+	}
+}
+
+func TestLoadKeysDropsOtherLanguages(t *testing.T) {
+	b, err := LoadKeys()
+	if err != nil {
+		t.Fatalf("LoadKeys() err = %v, want nil", err)
+	}
+	if got := b.Languages(); !slices.Equal(got, []string{DefaultLanguage}) {
+		t.Errorf("Languages() = %v, want %v", got, []string{DefaultLanguage})
+	}
+}
+
+func readEmbeddedCatalogs(t *testing.T) map[string]map[string]string {
+	t.Helper()
+	names, err := fs.Glob(embedded, embeddedDir+"/*"+fileSuffix)
+	if err != nil {
+		t.Fatalf("Glob() err = %v, want nil", err)
+	}
+	out := map[string]map[string]string{}
+	for _, name := range names {
+		raw, err := fs.ReadFile(embedded, name)
+		if err != nil {
+			t.Fatalf("ReadFile(%s) err = %v, want nil", name, err)
+		}
+		var entries map[string]string
+		if err := json.Unmarshal(raw, &entries); err != nil {
+			t.Fatalf("Unmarshal(%s) err = %v, want nil", name, err)
+		}
+		out[Normalize(strings.TrimSuffix(path.Base(name), fileSuffix))] = entries
+	}
+	return out
+}
+
+func placeholderSet(text string) []string {
+	found := placeholder.FindAllString(text, -1)
+	slices.Sort(found)
+	return slices.Compact(found)
+}
+
+func TestEveryCatalogMatchesTheDefault(t *testing.T) {
+	catalogs := readEmbeddedCatalogs(t)
+	base, ok := catalogs[DefaultLanguage]
+	if !ok {
+		t.Fatalf("catalogs[%q] missing, want it embedded", DefaultLanguage)
+	}
+	for lang, catalog := range catalogs {
+		if lang == DefaultLanguage {
+			continue
+		}
+		for id, text := range catalog {
+			want, ok := base[id]
+			if !ok {
+				t.Errorf("%s[%q] exists, want no id the default catalog lacks", lang, id)
+				continue
+			}
+			if got, want := placeholderSet(text), placeholderSet(want); !slices.Equal(got, want) {
+				t.Errorf("placeholders of %s[%q] = %v, want %v", lang, id, got, want)
+			}
+		}
+		for id := range base {
+			if _, ok := catalog[id]; !ok {
+				t.Errorf("%s[%q] missing, want a translation", lang, id)
+			}
+		}
 	}
 }
