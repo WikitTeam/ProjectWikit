@@ -64,7 +64,16 @@ type screen struct {
 	slug  string
 	label string
 	need  string
+	super bool
 	serve func(*Handler, http.ResponseWriter, *http.Request, *i18n.Localizer) error
+}
+
+// Only a superuser's permission set answers yes to everything.
+func (s screen) opensFor(granted perms.Set) bool {
+	if s.super {
+		return granted.All()
+	}
+	return granted.Has(s.need)
 }
 
 var screens []screen
@@ -187,7 +196,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if s.slug != head {
 			continue
 		}
-		if !granted.Has(s.need) {
+		if !s.opensFor(granted) {
 			h.next.ServeHTTP(w, r)
 			return
 		}

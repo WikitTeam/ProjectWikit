@@ -48,7 +48,11 @@ func (h *Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Admin) suspicious(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) {
 	ctx := r.Context()
-	if !h.allowed(w, r, loc, perms.ViewSensitiveInfo) {
+	if !h.allowed(w, r, loc) {
+		return
+	}
+	if user := auth.FromContext(ctx); !user.IsSuperuser || !user.ActiveAt(time.Now()) {
+		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-forbidden")))
 		return
 	}
 	found, err := h.deps.DB.SuspiciousUsers(ctx)

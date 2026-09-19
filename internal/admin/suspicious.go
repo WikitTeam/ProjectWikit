@@ -7,13 +7,12 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
-	"github.com/WikitTeam/ProjectWikit/internal/perms"
 )
 
 const suspiciousSlug = "suspicious"
 
 func init() {
-	register(screen{slug: suspiciousSlug, label: "admin.suspicious", need: perms.ViewSensitiveInfo, serve: (*Handler).suspicious})
+	register(screen{slug: suspiciousSlug, label: "admin.suspicious", super: true, serve: (*Handler).suspicious})
 }
 
 func (h *Handler) suspicious(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) error {

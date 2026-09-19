@@ -66,22 +66,20 @@ func (h *Handler) layout(r *http.Request, loc *i18n.Localizer, title, body strin
 		Active: active == "",
 	}
 
-	labels := make(map[string]string, len(screens))
-	needs := make(map[string]string, len(screens))
+	byslug := make(map[string]screen, len(screens))
 	for _, s := range screens {
-		labels[s.slug] = s.label
-		needs[s.slug] = s.need
+		byslug[s.slug] = s
 	}
 	for _, g := range groups {
 		group := navGroup{Key: g.key, Label: loc.T(g.label), Icon: g.icon}
 		for _, e := range g.entries {
-			label, ok := labels[e.slug]
-			if !ok || !granted.Has(needs[e.slug]) {
+			s, ok := byslug[e.slug]
+			if !ok || !s.opensFor(granted) {
 				continue
 			}
 			item := navItem{
 				Href:   Prefix + e.slug + "/",
-				Label:  loc.T(label),
+				Label:  loc.T(s.label),
 				Icon:   e.icon,
 				Active: e.slug == active,
 			}

@@ -190,8 +190,8 @@ func TestBuiltinRolesAreNamed(t *testing.T) {
 
 func TestEveryScreenNeedsAPermission(t *testing.T) {
 	for _, s := range screens {
-		if s.need == "" {
-			t.Errorf("screen %q needs no permission, want one", s.slug)
+		if s.need == "" && !s.super {
+			t.Errorf("screen %q needs no permission, want one or super", s.slug)
 		}
 	}
 }
