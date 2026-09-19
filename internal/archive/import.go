@@ -27,6 +27,8 @@ type Options struct {
 	Report func(string)
 
 	WithoutAccounts bool
+
+	UsedUsersOnly bool
 }
 
 var ErrNoAccounts = errors.New("the backup names authors but holds no accounts")
@@ -63,7 +65,7 @@ func ImportPages(ctx context.Context, d *db.DB, siteID int64, a *Archive, slug s
 	if err != nil {
 		return out, err
 	}
-	im.users, err = im.importUsers(ctx)
+	im.users, err = im.importUsers(ctx, pages)
 	if err != nil {
 		return out, err
 	}
@@ -153,13 +155,22 @@ func namesAuthors(pages []Page) bool {
 	return false
 }
 
-func (im *importer) importUsers(ctx context.Context) (map[int64]int64, error) {
+func (im *importer) importUsers(ctx context.Context, pages []Page) (map[int64]int64, error) {
 	found, err := im.archive.Users()
 	if err != nil {
 		return nil, err
 	}
+	var used map[int64]bool
+	if im.opts.UsedUsersOnly {
+		if used, err = im.archive.usedUsers(im.slug, pages, im.opts); err != nil {
+			return nil, err
+		}
+	}
 	list := make([]db.ImportUser, 0, len(found))
 	for _, u := range found {
+		if used != nil && !used[u.ID] {
+			continue
+		}
 		list = append(list, db.ImportUser{
 			WikidotID:   u.ID,
 			Username:    u.Username,

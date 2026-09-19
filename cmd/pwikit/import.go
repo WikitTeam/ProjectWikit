@@ -34,6 +34,8 @@ Options:
 	noVotes := flags.Bool("no-votes", false, "leave the ratings behind")
 	noFiles := flags.Bool("no-files", false, "leave the attachments behind")
 	noAccounts := flags.Bool("no-accounts", false, "import even when the backup holds no accounts, leaving every author off")
+	ownUsers := flags.Bool("own-users", false, "read accounts only from the _users inside each site directory, not the shared one beside them")
+	usedUsers := flags.Bool("used-users", false, "create accounts only for the users the imported pages, ratings, attachments and forum name")
 	dataDir := flags.String("data-dir", "", "state directory holding archive/ and receiving the attachments; defaults to the directory holding the executable")
 	loose, err := parseMixed(flags, args)
 	if err != nil {
@@ -59,6 +61,9 @@ Options:
 	found, err := archive.Open(dir)
 	if err != nil {
 		return err
+	}
+	if *ownUsers {
+		found.DropSharedUsers()
 	}
 
 	ctx := context.Background()
@@ -90,6 +95,7 @@ Options:
 		Votes:           !*noVotes,
 		Files:           files,
 		WithoutAccounts: *noAccounts,
+		UsedUsersOnly:   *usedUsers,
 	})
 }
 
@@ -109,7 +115,7 @@ func importArchive(ctx context.Context, conn *db.DB, current *db.Site, found *ar
 	result, err := archive.ImportPages(ctx, conn, current.ID, found, from, opts)
 	if errors.Is(err, archive.ErrNoAccounts) {
 		return fmt.Errorf("%w, so nothing was imported. The accounts are in a _users directory, "+
-			"usually beside the site directory; import the directory holding both, "+
+			"which belongs beside the site directory; put it there, "+
 			"or pass -no-accounts to import without authors", err)
 	}
 	fmt.Printf("%d pages, %d already there, %d revisions, %d parents, %d files, %d accounts\n",

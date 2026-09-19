@@ -131,3 +131,77 @@ func TestOpenRefusesADirectoryWithNoSite(t *testing.T) {
 		t.Errorf("Open(an empty directory) err = %v, want it to name %q", err, filepath.Join(metaDir, siteFile))
 	}
 }
+
+func writeUsers(t *testing.T, dir, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(dir, usersDir), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, usersDir, "1.json"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOpenOfASiteReadsTheSharedUsersBesideIt(t *testing.T) {
+	root := t.TempDir()
+	dir := site(t, root, "my-wiki")
+	writeUsers(t, root, `{"1":{"user_id":1,"username":"shared","fetched_at":10}}`)
+	writeUsers(t, dir, `{"2":{"user_id":2,"username":"own","fetched_at":10}}`)
+
+	found, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open(a site directory) err = %v, want nil", err)
+	}
+	users, err := found.Users()
+	if err != nil {
+		t.Fatalf("Users() err = %v, want nil", err)
+	}
+	if users[1].Username != "shared" {
+		t.Errorf("Users()[1].Username = %q, want %q", users[1].Username, "shared")
+	}
+	if users[2].Username != "own" {
+		t.Errorf("Users()[2].Username = %q, want %q", users[2].Username, "own")
+	}
+}
+
+func TestUsersPrefersTheNewerFetch(t *testing.T) {
+	root := t.TempDir()
+	dir := site(t, root, "my-wiki")
+	writeUsers(t, root, `{"1":{"user_id":1,"username":"old-name","fetched_at":10}}`)
+	writeUsers(t, dir, `{"1":{"user_id":1,"username":"new-name","fetched_at":20}}`)
+
+	found, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open(a site directory) err = %v, want nil", err)
+	}
+	users, err := found.Users()
+	if err != nil {
+		t.Fatalf("Users() err = %v, want nil", err)
+	}
+	if users[1].Username != "new-name" {
+		t.Errorf("Users()[1].Username = %q, want %q", users[1].Username, "new-name")
+	}
+}
+
+func TestDropSharedUsersKeepsTheSiteOwn(t *testing.T) {
+	root := t.TempDir()
+	dir := site(t, root, "my-wiki")
+	writeUsers(t, root, `{"1":{"user_id":1,"username":"shared","fetched_at":10}}`)
+	writeUsers(t, dir, `{"2":{"user_id":2,"username":"own","fetched_at":10}}`)
+
+	found, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open(a site directory) err = %v, want nil", err)
+	}
+	found.DropSharedUsers()
+	users, err := found.Users()
+	if err != nil {
+		t.Fatalf("Users() err = %v, want nil", err)
+	}
+	if _, ok := users[1]; ok {
+		t.Errorf("Users()[1] present, want absent")
+	}
+	if users[2].Username != "own" {
+		t.Errorf("Users()[2].Username = %q, want %q", users[2].Username, "own")
+	}
+}

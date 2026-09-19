@@ -126,8 +126,12 @@ func Open(path string) (*Archive, error) {
 		return nil, fmt.Errorf("%q is a file, and pwikit reads the unpacked backup; unpack it and pass the directory", path)
 	}
 	a := &Archive{sites: map[string]string{}}
+	shared := path
 	if isSite(path) {
 		a.sites[filepath.Base(path)] = path
+		// The shared _users sits beside the site directories, so a run pointed
+		// at one site would otherwise lose every author kept only there.
+		shared = filepath.Dir(path)
 	} else {
 		entries, err := os.ReadDir(path)
 		if err != nil {
@@ -146,11 +150,13 @@ func Open(path string) (*Archive, error) {
 		return nil, fmt.Errorf("no site under %q; a site directory holds %s, and the directory above several of them works too",
 			path, filepath.Join(metaDir, siteFile))
 	}
-	if _, err := os.Stat(filepath.Join(path, usersDir)); err == nil {
-		a.users = append(a.users, filepath.Join(path, usersDir))
+	if info, err := os.Stat(filepath.Join(shared, usersDir)); err == nil && info.IsDir() {
+		a.users = append(a.users, filepath.Join(shared, usersDir))
 	}
 	return a, nil
 }
+
+func (a *Archive) DropSharedUsers() { a.users = nil }
 
 func isSite(dir string) bool {
 	_, err := os.Stat(filepath.Join(dir, metaDir, siteFile))
