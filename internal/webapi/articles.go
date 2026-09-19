@@ -293,7 +293,8 @@ func (h *Articles) resetVotes(r *http.Request, loc *i18n.Localizer, name string)
 		return "", 0, errors.New("webapi: the request carries no site")
 	}
 	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-		return field("error", loc.T("api-csrf-failed")), http.StatusForbidden, nil
+		body, status := csrfRefusal(r, loc)
+		return body, status, nil
 	}
 
 	user := auth.FromContext(ctx)

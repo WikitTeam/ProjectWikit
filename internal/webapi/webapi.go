@@ -109,7 +109,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-			writeJSON(w, http.StatusForbidden, field("error", loc.T("api-csrf-failed")))
+			refuseCSRF(w, r, loc)
 			return
 		}
 	}
@@ -253,6 +253,20 @@ func scalar(value any) (string, bool) {
 		return strconv.FormatBool(v), true
 	}
 	return "", false
+}
+
+// A reader who is signed out holds no token cookie yet, so the check fails
+// before anything can tell them that signing in is what they are missing.
+func csrfRefusal(r *http.Request, loc *i18n.Localizer) (string, int) {
+	if auth.FromContext(r.Context()) == nil {
+		return field("error", loc.T("api-login-required")), http.StatusUnauthorized
+	}
+	return field("error", loc.T("api-csrf-failed")), http.StatusForbidden
+}
+
+func refuseCSRF(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) {
+	body, status := csrfRefusal(r, loc)
+	writeJSON(w, status, body)
 }
 
 func field(key, value string) string {

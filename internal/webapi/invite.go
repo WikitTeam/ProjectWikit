@@ -46,7 +46,7 @@ func (h *Users) invite(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		return
 	}
 	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-csrf-failed")))
+		refuseCSRF(w, r, loc)
 		return
 	}
 	subject, err := repo.NewPerms(ctx, h.deps.DB).Subject(user, time.Now())

@@ -199,7 +199,8 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 		return "", 0, errors.New("webapi: the request carries no site")
 	}
 	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-		return field("error", loc.T("api-csrf-failed")), http.StatusForbidden, nil
+		body, status := csrfRefusal(r, loc)
+		return body, status, nil
 	}
 
 	article, err := h.article(r, name)
@@ -355,7 +356,8 @@ func (h *Articles) removeFile(r *http.Request, loc *i18n.Localizer,
 		return "", 0, errors.New("webapi: the request carries no site")
 	}
 	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-		return field("error", loc.T("api-csrf-failed")), http.StatusForbidden, nil
+		body, status := csrfRefusal(r, loc)
+		return body, status, nil
 	}
 
 	var userID *int64
@@ -390,7 +392,8 @@ func (h *Articles) renameFile(r *http.Request, loc *i18n.Localizer,
 		return "", 0, errors.New("webapi: the request carries no site")
 	}
 	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-		return field("error", loc.T("api-csrf-failed")), http.StatusForbidden, nil
+		body, status := csrfRefusal(r, loc)
+		return body, status, nil
 	}
 
 	raw, err := readBody(r)

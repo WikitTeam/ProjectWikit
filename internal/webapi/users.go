@@ -124,7 +124,7 @@ func (h *Users) block(w http.ResponseWriter, r *http.Request, loc *i18n.Localize
 		return
 	}
 	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
-		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-csrf-failed")))
+		refuseCSRF(w, r, loc)
 		return
 	}
 
