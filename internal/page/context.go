@@ -28,10 +28,10 @@ type Context struct {
 
 	Depth int
 
-	AddCSS        string
-	ComputedStyle string
-	OGDescription string
-	OGImage       string
+	AddCSS         string
+	ComputedStyles []string
+	OGDescription  string
+	OGImage        string
 }
 
 func NewContext(article, sourceArticle *db.Article, pathParams PathParams, user *db.User) *Context {
@@ -62,11 +62,11 @@ func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams PathP
 	return clone
 }
 
-// Merge folds a nested render back. ComputedStyle accumulates; the rest is
+// Merge folds a nested render back. ComputedStyles accumulates; the rest is
 // overwritten, so the innermost render decides the status and the title.
 func (c *Context) Merge(other *Context) {
 	c.Status = other.Status
 	c.RedirectTo = other.RedirectTo
-	c.ComputedStyle += other.ComputedStyle
+	c.ComputedStyles = append(c.ComputedStyles, other.ComputedStyles...)
 	c.Title = other.Title
 }

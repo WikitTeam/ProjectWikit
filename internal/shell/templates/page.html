@@ -36,8 +36,8 @@
 
     <script src="{{esc (.Asset "app.js")}}" type="text/javascript"></script>
 
-    {{if .ComputedStyle}}
-        <style id="computed-style">{{.ComputedStyle}}</style>
+    {{range .ComputedStyles}}
+        <style class="computed-style">{{.}}</style>
     {{end}}
 
     {{if .GoogleTagID}}

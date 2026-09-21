@@ -70,8 +70,8 @@ type Data struct {
 	NoIndex     bool
 	GoogleTagID string
 
-	ThemeURL      string
-	ComputedStyle string
+	ThemeURL       string
+	ComputedStyles []string
 
 	NavTop  string
 	NavSide string

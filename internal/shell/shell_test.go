@@ -49,7 +49,7 @@ type pageSpec struct {
 	NoIndex           bool              `json:"noindex"`
 	GoogleTagID       string            `json:"google_tag_id"`
 	ThemeURL          string            `json:"theme_url"`
-	ComputedStyle     string            `json:"computed_style"`
+	ComputedStyles    []string          `json:"computed_styles"`
 	NavTop            string            `json:"nav_top"`
 	NavSide           string            `json:"nav_side"`
 	Title             string            `json:"title"`
@@ -149,7 +149,7 @@ func corpus() corpusFile {
 				p.Title = "Main page"
 				p.OGTitle = "Main page"
 				p.OGImage = "https://wiki.example/local--files/main/cover.png"
-				p.ComputedStyle = "#page-content .x { color: red }"
+				p.ComputedStyles = []string{"@import url(a.css);", "#page-content .x { color: red }"}
 				p.Breadcrumbs = crumbs
 				p.TagCategories = tags
 				p.RevNumber = 12
@@ -230,7 +230,7 @@ func dataFor(t *testing.T, p *pageSpec) Data {
 		NoIndex:           p.NoIndex,
 		GoogleTagID:       p.GoogleTagID,
 		ThemeURL:          p.ThemeURL,
-		ComputedStyle:     p.ComputedStyle,
+		ComputedStyles:    p.ComputedStyles,
 		NavTop:            p.NavTop,
 		NavSide:           p.NavSide,
 		Title:             p.Title,

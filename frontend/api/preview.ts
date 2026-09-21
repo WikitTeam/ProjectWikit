@@ -11,6 +11,7 @@ export interface PreviewResponse {
   title: string
   content: string
   style: string
+  styles: string[]
 }
 
 export function makePreview(data: PreviewData) {

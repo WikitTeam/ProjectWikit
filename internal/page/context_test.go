@@ -2,6 +2,7 @@ package page
 
 import (
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -52,15 +53,15 @@ func TestCloneWithCarriesStatusRedirectAndTitle(t *testing.T) {
 
 func TestCloneWithLeavesStylesBehind(t *testing.T) {
 	c := NewContext(article("Main Page"), nil, nil, nil)
-	c.ComputedStyle = "a{}"
+	c.ComputedStyles = []string{"a{}"}
 	c.AddCSS = "b{}"
 	c.OGImage = "/i.png"
 	c.OGDescription = "d"
 
 	clone := c.CloneWith(nil, nil, nil, nil)
 
-	if clone.ComputedStyle != "" {
-		t.Errorf("CloneWith(...).ComputedStyle = %q, want %q", clone.ComputedStyle, "")
+	if len(clone.ComputedStyles) != 0 {
+		t.Errorf("CloneWith(...).ComputedStyles = %q, want none", clone.ComputedStyles)
 	}
 	if clone.AddCSS != "" {
 		t.Errorf("CloneWith(...).AddCSS = %q, want %q", clone.AddCSS, "")
@@ -73,16 +74,16 @@ func TestCloneWithLeavesStylesBehind(t *testing.T) {
 	}
 }
 
-func TestMergeAccumulatesComputedStyle(t *testing.T) {
+func TestMergeKeepsEachComputedStyle(t *testing.T) {
 	c := NewContext(nil, nil, nil, nil)
-	c.ComputedStyle = "a{}"
+	c.ComputedStyles = []string{"a{}"}
 	other := NewContext(nil, nil, nil, nil)
-	other.ComputedStyle = "b{}"
+	other.ComputedStyles = []string{"b{}", "c{}"}
 
 	c.Merge(other)
 
-	if c.ComputedStyle != "a{}b{}" {
-		t.Errorf("Merge(...).ComputedStyle = %q, want %q", c.ComputedStyle, "a{}b{}")
+	if want := []string{"a{}", "b{}", "c{}"}; !slices.Equal(c.ComputedStyles, want) {
+		t.Errorf("Merge(...).ComputedStyles = %q, want %q", c.ComputedStyles, want)
 	}
 }
 

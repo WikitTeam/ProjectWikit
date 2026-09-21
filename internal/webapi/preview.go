@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/article"
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
@@ -67,7 +68,7 @@ func (h *Preview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, style, err := h.render(r, loc, current, parsed)
+	body, styles, err := h.render(r, loc, current, parsed)
 	if err != nil {
 		h.deps.log().Error("preview", "page", parsed.PageID, "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
@@ -76,7 +77,8 @@ func (h *Preview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	out, err := wikijson.Marshal(wikijson.Object{
 		{Key: "title", Value: parsed.Title},
 		{Key: "content", Value: body},
-		{Key: "style", Value: style},
+		{Key: "style", Value: strings.Join(styles, "")},
+		{Key: "styles", Value: styles},
 	})
 	if err != nil {
 		h.deps.log().Error("preview", "page", parsed.PageID, "err", err)
@@ -86,19 +88,19 @@ func (h *Preview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site, parsed previewCall) (string, string, error) {
+func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site, parsed previewCall) (string, []string, error) {
 	ctx := r.Context()
 	user := auth.FromContext(ctx)
 	params := page.ParsePathParams(string(parsed.PathParams))
 
 	found, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), parsed.PageID)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
-		return "", "", err
+		return "", nil, err
 	}
 
 	source, err := h.template(ctx, found)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.
@@ -113,16 +115,16 @@ func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site,
 
 	info, err := env.PageInfo(found)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	pc := page.NewContext(found, found, params, user)
 	pc.CSRF, _ = csrf.Token(r)
 
 	html, err := env.HTML(source, info, env.Callbacks(vars, pc), renderer.ModeArticle)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
-	return html.Body, pc.ComputedStyle, nil
+	return html.Body, pc.ComputedStyles, nil
 }
 
 // A page with no row of its own still gets the category template, which is what

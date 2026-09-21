@@ -30,7 +30,9 @@ func renderCSS(env module.Env, params map[string]string, body string) (string, e
 
 	if env.Page != nil {
 		env.Page.AddCSS += source + "\n"
-		env.Page.ComputedStyle += minified
+		if minified != "" {
+			env.Page.ComputedStyles = append(env.Page.ComputedStyles, minified)
+		}
 	}
 
 	return "\n" + ind8, nil

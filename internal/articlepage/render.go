@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -39,7 +40,7 @@ type body struct {
 	title     string
 	rev       int
 	updatedAt time.Time
-	style     string
+	styles    []string
 	redirect  string
 }
 
@@ -50,11 +51,11 @@ func (h *Handler) render(req *request) (*result, error) {
 		return nil, err
 	}
 	req.look = look
-	navTop, topStyle, err := h.nav(req, firstNonEmpty(look.NavTop, "nav:top"))
+	navTop, topStyles, err := h.nav(req, firstNonEmpty(look.NavTop, "nav:top"))
 	if err != nil {
 		return nil, err
 	}
-	navSide, sideStyle, err := h.nav(req, firstNonEmpty(look.NavSide, "nav:side"))
+	navSide, sideStyles, err := h.nav(req, firstNonEmpty(look.NavSide, "nav:side"))
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (h *Handler) render(req *request) (*result, error) {
 	if out.redirect != "" {
 		return &result{Status: http.StatusFound, Location: out.redirect}, nil
 	}
-	out.style = topStyle + sideStyle + out.style
+	out.styles = slices.Concat(topStyles, sideStyles, out.styles)
 
 	data, err := h.shellData(req, out, canonical, navTop, navSide)
 	if err != nil {
@@ -144,7 +145,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 		title:     pc.Title,
 		rev:       rev,
 		updatedAt: req.article.UpdatedAt,
-		style:     pc.ComputedStyle,
+		styles:    pc.ComputedStyles,
 		redirect:  pc.RedirectTo,
 		image:     pc.OGImage,
 	}
@@ -299,7 +300,7 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 		html:     html.Body,
 		status:   status,
 		title:    pc.Title,
-		style:    pc.ComputedStyle,
+		styles:   pc.ComputedStyles,
 		redirect: pc.RedirectTo,
 	}, nil
 }
@@ -317,33 +318,33 @@ func missingName(fullName string) func(string) (string, bool) {
 
 // nav renders one of the two navigation pages. It gets its own callbacks and
 // its own PageInfo, since the page it decorates is a different row.
-func (h *Handler) nav(req *request, name string) (string, string, error) {
+func (h *Handler) nav(req *request, name string) (string, []string, error) {
 	found, err := h.deps.DB.ArticleByName(req.ctx, req.site.ID, name)
 	if errors.Is(err, db.ErrNotFound) {
-		return "", "", nil
+		return "", nil, nil
 	}
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	source, err := h.deps.DB.LatestSource(req.ctx, found.ID)
 	if errors.Is(err, db.ErrNotFound) {
-		return "", "", nil
+		return "", nil, nil
 	}
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	vars := h.vars(req, req.article)
 	info, err := h.pageInfo(req, found)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	pc := h.context(req, found)
 	html, err := h.env(req).HTML(page.PreRender(source, vars), info, h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
-	return html.Body, pc.ComputedStyle, nil
+	return html.Body, pc.ComputedStyles, nil
 }
 
 func (h *Handler) env(req *request) *pagerender.Env {
@@ -482,7 +483,7 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 		NoIndex:           !indexed,
 		GoogleTagID:       h.deps.GoogleTagID,
 		ThemeURL:          theme,
-		ComputedStyle:     out.style,
+		ComputedStyles:    out.styles,
 		NavTop:            navTop,
 		NavSide:           navSide,
 		Title:             out.title,

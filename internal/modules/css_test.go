@@ -59,7 +59,7 @@ func TestRenderCSSMatchesGolden(t *testing.T) {
 			t.Fatalf("renderCSS(%s) err = %v, want nil", c.Name, err)
 		}
 		fmt.Fprintf(&b, "=== %s\nreturned: %q\ncomputed: %q\naddcss: %q\n",
-			c.Name, got, env.Page.ComputedStyle, env.Page.AddCSS)
+			c.Name, got, strings.Join(env.Page.ComputedStyles, ""), env.Page.AddCSS)
 	}
 	compareCSSGolden(t, b.String(), cases)
 }

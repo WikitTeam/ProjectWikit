@@ -19,7 +19,7 @@ interface Props {
   onClose?: () => void
   previewTitleElement?: HTMLElement | (() => HTMLElement)
   previewBodyElement?: HTMLElement | (() => HTMLElement)
-  previewStyleElement?: HTMLElement | (() => HTMLElement)
+  previewStyleElements?: () => HTMLStyleElement[]
 }
 
 function guessTitle(pageId: string) {
@@ -96,7 +96,7 @@ const ArticleEditor: React.FC<Props> = ({
   onClose,
   previewTitleElement,
   previewBodyElement,
-  previewStyleElement,
+  previewStyleElements,
 }) => {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
@@ -111,7 +111,8 @@ const ArticleEditor: React.FC<Props> = ({
   const [previewOriginalTitle, setPreviewOriginalTitle] = useState<string>()
   const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState<string>()
   const [previewOriginalBody, setPreviewOriginalBody] = useState<string>()
-  const [previewOriginalStyle, setPreviewOriginalStyle] = useState<string>()
+  const previewOriginalStyles = useRef<HTMLStyleElement[]>([])
+  const previewStyles = useRef<HTMLStyleElement[]>([])
 
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
@@ -126,7 +127,7 @@ const ArticleEditor: React.FC<Props> = ({
     setPreviewOriginalTitle(getElement(previewTitleElement)?.innerText)
     setPreviewOriginalTitleDisplay(getElement(previewTitleElement)?.style?.display)
     setPreviewOriginalBody(getElement(previewBodyElement)?.innerHTML)
-    setPreviewOriginalStyle(getElement(previewStyleElement)?.innerHTML)
+    previewOriginalStyles.current = previewStyleElements?.() ?? []
 
     window.addEventListener('beforeunload', handleRefresh)
 
@@ -237,6 +238,11 @@ const ArticleEditor: React.FC<Props> = ({
     }
   })
 
+  const dropPreviewStyles = () => {
+    previewStyles.current.forEach(el => el.remove())
+    previewStyles.current = []
+  }
+
   const onPreview = useConstCallback(() => {
     const data = {
       pageId: pageId,
@@ -256,9 +262,15 @@ const ArticleEditor: React.FC<Props> = ({
       if (bodyEl) {
         bodyEl.innerHTML = resp.content
       }
-      const styleEl = getElement(previewStyleElement)
-      if (styleEl) {
-        styleEl.innerHTML = resp.style
+      if (previewStyleElements) {
+        dropPreviewStyles()
+        previewOriginalStyles.current.forEach(el => (el.disabled = true))
+        previewStyles.current = resp.styles.map(css => {
+          const el = document.createElement('style')
+          el.textContent = css
+          document.head.appendChild(el)
+          return el
+        })
       }
     })
   })
@@ -280,10 +292,8 @@ const ArticleEditor: React.FC<Props> = ({
     if (typeof previewOriginalBody === 'string' && bodyEl) {
       bodyEl.innerHTML = previewOriginalBody
     }
-    const styleEl = getElement(previewStyleElement)
-    if (typeof previewOriginalStyle === 'string' && styleEl) {
-      styleEl.innerHTML = previewOriginalStyle
-    }
+    dropPreviewStyles()
+    previewOriginalStyles.current.forEach(el => (el.disabled = false))
     if (onClose) onClose()
   })
 

@@ -149,7 +149,9 @@
     <script src="/-/static/app.js?v=6cd23731" type="text/javascript"></script>
 
     
-        <style id="computed-style">#page-content .x { color: red }</style>
+        <style class="computed-style">@import url(a.css);</style>
+    
+        <style class="computed-style">#page-content .x { color: red }</style>
     
 
     
