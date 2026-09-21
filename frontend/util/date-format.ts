@@ -7,20 +7,21 @@ function padString(paddingValue: string, str: string) {
   return String(paddingValue + str).slice(-paddingValue.length)
 }
 
-export function formatTimeAgo(diffMs: number) {
-  const minutes = Math.floor(diffMs / 1000 / 60)
-  if (minutes < 1) {
-    return t('util.date-format.just-now')
+export function formatDuration(diffMs: number) {
+  const seconds = Math.floor(Math.abs(diffMs) / 1000)
+  if (seconds < 60) {
+    return t('util.date-format.seconds', { seconds })
   }
+  const minutes = Math.floor(seconds / 60)
   if (minutes < 60) {
-    return t('util.date-format.minutes-ago', { minutes })
+    return t('util.date-format.minutes', { minutes })
   }
   const hours = Math.floor(minutes / 60)
   if (hours < 24) {
-    return t('util.date-format.hours-ago', { hours })
+    return t('util.date-format.hours', { hours })
   }
   const days = Math.floor(hours / 24)
-  return t('util.date-format.days-ago', { days })
+  return t('util.date-format.days', { days })
 }
 
 export default function formatDate(date: Date, format: string = '%m.%d.%Y %H:%M') {
@@ -103,6 +104,6 @@ export default function formatDate(date: Date, format: string = '%m.%d.%Y %H:%M'
     .replace(/%P/g, isPM ? 'pm' : 'am')
     .replace(/%S/g, padString('00', date.getSeconds().toString()))
     .replace(/%s/g, String(Math.floor(date.getTime() / 1000)))
-    .replace(/%O/g, formatTimeAgo(new Date().getTime() - date.getTime()))
+    .replace(/%O/g, formatDuration(new Date().getTime() - date.getTime()))
   return s
 }

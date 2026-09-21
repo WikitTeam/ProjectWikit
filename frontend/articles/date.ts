@@ -1,4 +1,4 @@
-import formatDate, { formatTimeAgo } from '../util/date-format'
+import formatDate, { formatDuration } from '../util/date-format'
 import { attachHovertip } from '~util/hovertip'
 
 export function makeDate(node: HTMLElement) {
@@ -32,9 +32,9 @@ export function makeDate(node: HTMLElement) {
     if (modifiers.includes('ago')) {
       const absolute = formatted
       attachHovertip(node, absolute)
-      formatted = formatTimeAgo(new Date().getTime() - date.getTime())
+      formatted = formatDuration(new Date().getTime() - date.getTime())
     } else if (modifiers.includes('agohover')) {
-      attachHovertip(node, () => formatTimeAgo(new Date().getTime() - date.getTime()))
+      attachHovertip(node, () => formatDuration(new Date().getTime() - date.getTime()))
     }
 
     node.textContent = formatted
