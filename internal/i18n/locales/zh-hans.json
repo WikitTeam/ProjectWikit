@@ -811,6 +811,8 @@
   "signup.username": "用户名",
   "signup.username-placeholder": "认领 Wikidot 账号时请填写原用户名",
   "signup.wikidot-detected": "检测到该用户名对应一个待认领的 Wikidot 账号，需要输入验证码",
+  "site.role-admin": "管理员",
+  "site.role-member": "成员",
   "system.back-home": "返回网站首页",
   "table-of-contents": "目录",
   "toc-close": "收起",

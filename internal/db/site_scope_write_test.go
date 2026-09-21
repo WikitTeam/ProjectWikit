@@ -42,7 +42,7 @@ func scratchRole(t *testing.T, d *DB, siteID int64) int64 {
 	t.Helper()
 	var id int64
 	slug := "probe-role-" + strconv.FormatInt(time.Now().UnixNano(), 36)
-	if err := d.pool.QueryRow(context.Background(), qInsertBuiltInRole, siteID, slug, 99).Scan(&id); err != nil {
+	if err := d.pool.QueryRow(context.Background(), qInsertBuiltInRole, siteID, slug, 99, "", false, "hidden").Scan(&id); err != nil {
 		t.Fatalf("insert role err = %v, want nil", err)
 	}
 	return id

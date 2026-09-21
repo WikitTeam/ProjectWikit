@@ -24,6 +24,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
+	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
@@ -619,9 +620,18 @@ func createSite(args []string) error {
 	}
 	defer conn.Close()
 
+	bundle, err := i18n.Load(p.Locales())
+	if err != nil {
+		return err
+	}
+	loc := bundle.Localizer(i18n.DefaultLanguage)
 	id, err := conn.CreateSite(ctx, db.NewSite{
 		Slug: *slug, Title: *title, Headline: *headline,
 		Domain: *domain, MediaDomain: *mediaDomain,
+		RoleNames: map[string]string{
+			"admin":  loc.T("site.role-admin"),
+			"member": loc.T("site.role-member"),
+		},
 	})
 	if err != nil {
 		return err
