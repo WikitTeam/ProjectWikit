@@ -403,6 +403,7 @@
   "page-options.delete": "删除",
   "page-options.discuss": "讨论",
   "page-options.edit": "编辑",
+  "page-options.edit-forbidden": "您没有编辑本页的权限。",
   "page-options.error-dismiss": "关闭",
   "page-options.error-label": "错误:",
   "page-options.favourite": "收藏",

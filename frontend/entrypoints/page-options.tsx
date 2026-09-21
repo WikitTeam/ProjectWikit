@@ -127,6 +127,11 @@ const PageOptions: React.FC<Props> = ({
 
   useEffect(() => {
     ;(window as any)._openNewEditor = (func?: () => void) => {
+      if (!(optionsEnabled ? editable : canCreateHere)) {
+        setError(t('page-options.edit-forbidden'))
+        func?.()
+        return
+      }
       setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 0)
       setOnCancelNewEditor(func)
       if (optionsEnabled) {
