@@ -19,9 +19,11 @@
  */
 
 use crate::parsing::parser::ParserTransactionFlags;
+use crate::tree::AcceptsPartial;
 
 use super::super::prelude::*;
 use super::mapping::get_block_rule_with_name;
+use super::BlockRule;
 
 pub const RULE_BLOCK: Rule = Rule {
     name: "block",
@@ -40,6 +42,35 @@ fn block_regular<'r, 't>(
 
     info!("Trying to process a block");
     parse_block(parser)
+}
+
+// Ah yes, a Wikidot bug, restored on purpose because pages were written against it.
+// A block whose name nothing answers to is dropped along with its body.
+const BLOCK_UNKNOWN: BlockRule = BlockRule {
+    name: "block-unknown",
+    accepts_names: &[],
+    accepts_star: true,
+    accepts_score: true,
+    accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
+    parse_fn: parse_unknown,
+};
+
+fn parse_unknown<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    name: &'t str,
+    _flag_star: bool,
+    _flag_score: bool,
+    in_head: bool,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    info!("Skipping a block no rule answers to (name '{name}')");
+
+    let mut parser_tx = parser.transaction(ParserTransactionFlags::all());
+    parser_tx.get_head_value(&BLOCK_UNKNOWN, in_head, |_, _| Ok(()))?;
+    parser_tx.skip_body(&BLOCK_UNKNOWN, name)?;
+    parser_tx.rollback();
+
+    ok!(true; Elements::None, Vec::new())
 }
 
 // Block parsing implementation
@@ -82,7 +113,7 @@ where
     // Get the block rule for this name
     let block = match get_block_rule_with_name(name) {
         Some(block) => block,
-        None => return Err(parser.make_warn(ParseWarningKind::NoSuchBlock)),
+        None => &BLOCK_UNKNOWN,
     };
 
     // Set block rule for better warnings

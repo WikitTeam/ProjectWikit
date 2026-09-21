@@ -49,11 +49,9 @@ fn parse_fn<'r, 't>(
     let mut parser_tx = parser.transaction(ParserTransactionFlags::all());
 
     // Parse out tag conditions
-    let conditions =
-        parser_tx.get_head_value(&BLOCK_IFTAGS, in_head, |parser, spec| match spec {
-            Some(spec) => Ok(ElementCondition::parse(spec.as_ref())),
-            None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
-        })?;
+    let conditions = parser_tx.get_head_value(&BLOCK_IFTAGS, in_head, |_, spec| {
+        Ok(ElementCondition::parse(spec.unwrap_or("")))
+    })?;
 
     if !no_conditionals && !check_iftags(parser_tx.page_info(), &conditions) {
         debug!("Conditions failed, skipping body");

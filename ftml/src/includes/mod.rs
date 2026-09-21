@@ -196,9 +196,12 @@ fn replace_variables(content: &mut String, variables: &VariableMap) {
         let mtch = capture.get(0).unwrap();
         let name = &capture["name"];
 
-        if let Some(value) = variables.get(name) {
-            matches.push((value, mtch.range()));
-        }
+        let value = match variables.get(name) {
+            Some(value) => value.as_ref(),
+            None => "",
+        };
+
+        matches.push((value, mtch.range()));
     }
 
     // Replace the variables
