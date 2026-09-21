@@ -71,7 +71,7 @@ mod ws_variable;
 pub use self::anchor::RULE_ANCHOR;
 pub use self::block::RULE_BLOCK;
 pub use self::block::RULE_BLOCK_END;
-pub use self::blockquote::RULE_BLOCKQUOTE;
+pub use self::blockquote::{RULE_BLOCKQUOTE, RULE_QUOTE_BEFORE_BLOCK};
 pub use self::bold::RULE_BOLD;
 pub use self::center::RULE_CENTER;
 pub use self::clear_float::RULE_CLEAR_FLOAT;

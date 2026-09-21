@@ -53,6 +53,7 @@ lazy_static! {
             Token::Colon => vec![RULE_DEFINITION_LIST, RULE_TEXT],
             Token::Underscore => vec![RULE_UNDERSCORE_LINE_BREAK, RULE_TEXT],
             Token::Quote => vec![RULE_BLOCKQUOTE, RULE_DOUBLE_ANGLE, RULE_TEXT],
+            Token::QuoteBeforeBlock => vec![RULE_QUOTE_BEFORE_BLOCK, RULE_TEXT],
             Token::Heading => vec![RULE_HEADER, RULE_TEXT],
             Token::Whitespace => vec![RULE_UNDERSCORE_LINE_BREAK, RULE_LIST, RULE_TEXT],
 

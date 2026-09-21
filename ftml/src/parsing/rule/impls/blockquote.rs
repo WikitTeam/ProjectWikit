@@ -27,6 +27,19 @@ pub const RULE_BLOCKQUOTE: Rule = Rule {
     try_consume_fn,
 };
 
+pub const RULE_QUOTE_BEFORE_BLOCK: Rule = Rule {
+    name: "quote-before-block",
+    position: LineRequirement::StartOfLine,
+    try_consume_fn: quote_before_block,
+};
+
+fn quote_before_block<'p, 'r, 't>(
+    parser: &'p mut Parser<'r, 't>,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    parser.step()?;
+    ok!(Elements::None)
+}
+
 fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {

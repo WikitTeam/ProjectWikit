@@ -95,6 +95,7 @@ token = _{
     equals |
     colon |
     underscore |
+    quote_before_block |
     quote |
     right_double_angle |
     heading |
@@ -163,6 +164,7 @@ equals = @{ "=" }
 colon = @{ ":" }
 underscore = @{ "_" }
 quote = @{ ">" ~ !!(space | NEWLINE | quote) }
+quote_before_block = @{ ">"+ ~ &"[[" }
 heading = @{ "+"{1,6} ~ ("*" ~ !"*")? }
 
 // }}}

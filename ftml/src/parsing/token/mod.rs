@@ -85,6 +85,7 @@ pub enum Token {
     Colon,
     Underscore,
     Quote,
+    QuoteBeforeBlock,
     Heading,
 
     //
@@ -232,6 +233,7 @@ impl Token {
             Rule::underscore => Token::Underscore,
             Rule::equals => Token::Equals,
             Rule::quote => Token::Quote,
+            Rule::quote_before_block => Token::QuoteBeforeBlock,
             Rule::heading => Token::Heading,
 
             // Whitespace
