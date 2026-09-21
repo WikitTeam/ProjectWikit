@@ -29,13 +29,17 @@ func Token(r *http.Request) (token string, isNew bool) {
 
 const CookieMaxAge = 60 * 60 * 24 * 365
 
+func SetCookie(w http.ResponseWriter, r *http.Request, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name: CookieName, Value: token, Path: "/",
+		MaxAge: CookieMaxAge, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode,
+	})
+}
+
 func Issue(w http.ResponseWriter, r *http.Request) string {
 	token, isNew := Token(r)
 	if isNew {
-		http.SetCookie(w, &http.Cookie{
-			Name: CookieName, Value: token, Path: "/",
-			MaxAge: CookieMaxAge, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode,
-		})
+		SetCookie(w, r, token)
 	}
 	return token
 }

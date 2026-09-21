@@ -1,9 +1,11 @@
 package csrf
 
 import (
+	"crypto/tls"
 	"errors"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -173,5 +175,32 @@ func TestVerifyLeavesABodyThatIsNotAFormUnread(t *testing.T) {
 	read, _ := io.ReadAll(r.Body)
 	if string(read) != body {
 		t.Errorf("body after Verify = %q, want %q", read, body)
+	}
+}
+
+func TestSetCookieMarksSecureOverTLS(t *testing.T) {
+	for _, over := range []struct {
+		name string
+		tls  *tls.ConnectionState
+		want bool
+	}{
+		{"https", &tls.ConnectionState{}, true},
+		{"http", nil, false},
+	} {
+		t.Run(over.name, func(t *testing.T) {
+			r := requestWithToken("")
+			r.TLS = over.tls
+			w := httptest.NewRecorder()
+
+			SetCookie(w, r, "abcdefghijklmnopqrstuvwxyz012345")
+
+			cookies := w.Result().Cookies()
+			if len(cookies) != 1 {
+				t.Fatalf("SetCookie() wrote %d cookies, want 1", len(cookies))
+			}
+			if got := cookies[0].Secure; got != over.want {
+				t.Errorf("SetCookie() Secure = %t, want %t", got, over.want)
+			}
+		})
 	}
 }

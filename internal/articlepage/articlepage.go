@@ -89,13 +89,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if out.SetCSRF != "" {
-		http.SetCookie(w, &http.Cookie{
-			Name:     csrf.CookieName,
-			Value:    out.SetCSRF,
-			Path:     "/",
-			MaxAge:   csrf.CookieMaxAge,
-			SameSite: http.SameSiteLaxMode,
-		})
+		csrf.SetCookie(w, r, out.SetCSRF)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(out.Status)

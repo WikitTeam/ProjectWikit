@@ -156,6 +156,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 
 func (h *Handler) context(req *request, source *db.Article) *page.Context {
 	pc := page.NewContext(req.article, source, req.params, req.user)
+	pc.CSRF = req.csrf
 	return pc
 }
 
@@ -283,6 +284,7 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 	}
 
 	pc := page.NewContext(asked, template, req.params, req.user)
+	pc.CSRF = req.csrf
 	html, err := h.env(req).HTML(source, info, h.callbacks(req, vars, pc), renderer.ModeArticle)
 	if err != nil {
 		return body{}, err

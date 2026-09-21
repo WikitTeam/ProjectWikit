@@ -1,6 +1,10 @@
 package articlepage
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/WikitTeam/ProjectWikit/internal/db"
+)
 
 func TestUnwrapParagraphs(t *testing.T) {
 	cases := []struct{ in, want string }{
@@ -35,5 +39,14 @@ func TestMissingNameLeavesOtherNames(t *testing.T) {
 		if _, ok := resolve(name); ok {
 			t.Errorf("missingName(...)(%q) = _, true, want false", name)
 		}
+	}
+}
+
+func TestContextCarriesTheCSRFToken(t *testing.T) {
+	h := &Handler{}
+	req := &request{article: &db.Article{Category: "_default", Name: "main"}, csrf: "a-token"}
+
+	if got := h.context(req, req.article).CSRF; got != "a-token" {
+		t.Errorf("context(...).CSRF = %q, want %q", got, "a-token")
 	}
 }
