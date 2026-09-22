@@ -44,7 +44,7 @@ fn block_regular<'r, 't>(
     parse_block(parser)
 }
 
-// Ah yes, a Wikidot bug, restored on purpose because pages were written against it.
+// Here emulates a Wikidot bug for compatibility because pages were written against it.
 // A block whose name nothing answers to is dropped along with its body.
 const BLOCK_UNKNOWN: BlockRule = BlockRule {
     name: "block-unknown",
