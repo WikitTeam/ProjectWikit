@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/article"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/entry"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
@@ -22,6 +23,16 @@ const envContainer = "PWIKIT_CONTAINER"
 
 func inContainer() bool {
 	return os.Getenv(envContainer) != ""
+}
+
+func homeMissing(ctx context.Context, conn *db.DB, host string) bool {
+	current, err := conn.SiteByHosts(ctx, []string{host})
+	if err != nil {
+		return false
+	}
+	name, _ := article.ParsePath("", current.HomePage)
+	_, err = conn.ArticleByName(ctx, current.ID, name)
+	return errors.Is(err, db.ErrNotFound)
 }
 
 func serveHealth(p *paths.Paths, serving entry.Config, conn *db.DB, handler http.Handler, log *slog.Logger) (func(), error) {
@@ -47,6 +58,9 @@ func serveHealth(p *paths.Paths, serving entry.Config, conn *db.DB, handler http
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
 		h.Page = rec.Code
+		if h.Page == http.StatusNotFound && homeMissing(ctx, conn, hosts[0]) {
+			h.Page = http.StatusOK
+		}
 		return h
 	}
 	server := &http.Server{Handler: update.HealthHandler(check), ReadHeaderTimeout: 10 * time.Second}
