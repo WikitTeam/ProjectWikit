@@ -1,4 +1,10 @@
 {{define "dashboard.html"}}
+{{with .Checked}}
+<div class="alert{{if .Error}} alert-error{{else}} alert-success{{end}}">
+  <p>{{esc .Text}}</p>
+  {{if .Detail}}<p><code>{{esc .Detail}}</code></p>{{end}}
+</div>
+{{end}}
 <div class="row-fluid">
 
   <div class="span6">
@@ -21,6 +27,18 @@
               <td>{{t "admin.f-membership-password"}}</td>
               <td>{{if .Site.MembershipPasswordEnabled}}<span class="state on">{{t "admin.on"}}</span>{{else}}<span class="state">{{t "admin.off"}}</span>{{end}}</td>
             </tr>
+            {{if .Version}}
+            <tr>
+              <td>{{t "admin.f-version"}}</td>
+              <td>
+                <span class="stamp">{{esc .Version}}</span>
+                <form method="post" action="{{esc .CheckHref}}" style="display:inline">
+                  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+                  <button type="submit" class="btn btn-mini">{{t "update.check-now"}}</button>
+                </form>
+              </td>
+            </tr>
+            {{end}}
           </tbody>
         </table>
       </div>

@@ -10,12 +10,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
 	"syscall"
 	"text/tabwriter"
+	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/admin"
@@ -102,6 +105,16 @@ func run(args []string) error {
 		usage()
 		return errors.New("missing subcommand")
 	}
+	if instanceCommands[args[0]] {
+		if p, err := paths.New(dataDirArg(args[1:])); err == nil {
+			if _, err := os.Stat(p.Config()); err == nil {
+				handState(p)
+			}
+			if handled, err := asOwner(p.Root()); handled || err != nil {
+				return err
+			}
+		}
+	}
 	switch args[0] {
 	case "serve":
 		return serve(context.Background(), args[1:])
@@ -127,6 +140,8 @@ func run(args []string) error {
 		return importCommand(args[1:])
 	case "reindex":
 		return reindex(args[1:])
+	case "unpack-postgres":
+		return unpackPostgres(args[1:])
 	case "service":
 		return serviceCommand(args[1:])
 	case "path":
@@ -181,6 +196,12 @@ func serve(ctx context.Context, args []string) (err error) {
 	if err != nil {
 		return err
 	}
+	if err := update.CheckInstance(p.Root()); err != nil {
+		return err
+	}
+	if err := configLinkTrusted(p.Config()); err != nil {
+		return err
+	}
 	if err := prepareDataDir(p); err != nil {
 		return err
 	}
@@ -213,6 +234,13 @@ func serve(ctx context.Context, args []string) (err error) {
 	if cfg.Wikidot.Password != "" && config.ReadableByOthers(p.Config()) {
 		log.Warn("pwikit.toml holds the Wikidot password and other accounts on this machine can read it", "path", p.Config())
 	}
+	exposed := ""
+	if exe, err := runningExecutable(); err == nil {
+		exposed = protectInstance(p, update.RecordedExecutable(exe))
+	}
+	if exposed != "" {
+		log.Warn("pwikit runs as root from a place another account can change", "detail", exposed)
+	}
 
 	// Caught this early so a stop during a slow PostgreSQL start still stops PostgreSQL.
 	ctx, stopSignals := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
@@ -224,6 +252,10 @@ func serve(ctx context.Context, args []string) (err error) {
 	}
 	bundledPostgres := ""
 	if dsn == "" {
+		if update.NoExec(p.Root()) {
+			return fmt.Errorf("%s is on a filesystem mounted noexec, so the bundled PostgreSQL cannot run from it. "+
+				"Mount it without noexec, move the pwikit directory, or use a PostgreSQL of your own with -database", p.Root())
+		}
 		bundledPostgres = pgbundle.Version
 		bundled, err := startBundled(ctx, p, log)
 		if err != nil {
@@ -325,6 +357,13 @@ func serve(ctx context.Context, args []string) (err error) {
 	board := &update.Board{
 		DB: conn, Settings: updates, Current: version.String(),
 		BundledPostgres: bundledPostgres, Container: inContainer(),
+		Dir: p.Updates(), LogPath: filepath.Join(p.Logs(), "update.log"), Started: time.Now(),
+		Exposed: exposed, AsRoot: runtime.GOOS == "linux" && os.Geteuid() == 0,
+		Announce: func(ctx context.Context, st db.UpdateState) {
+			if err := announceRelease(ctx, conn, st, time.Now()); err != nil {
+				log.Warn("pwikit could not tell the administrators about a new release", "version", st.LatestVersion, "err", err)
+			}
+		},
 	}
 	stack, err := newPageStack(conn, p, assets, notFound, trust, limits{soft: soft, hard: hard},
 		*o.sidecar, *o.secret, cfg, board, log)
@@ -406,12 +445,14 @@ func serve(ctx context.Context, args []string) (err error) {
 		webapi.FavouritesPath:           favesAPI,
 		webapi.RatingsPath:              ownRowsAPI,
 		webapi.LikedPostsPath:           ownRowsAPI,
+		webapi.MyTicketsPath:            ownRowsAPI,
 		userpage.RatingsPrefix:          reactivePages,
 		userpage.NotificationsPrefix:    reactivePages,
 		userpage.NotificationsSubPrefix: reactivePages,
 		userpage.MessagesPrefix:         reactivePages,
 		userpage.MessagesSubPrefix:      reactivePages,
 		userpage.LikedPostsPrefix:       reactivePages,
+		userpage.MyTicketsPrefix:        reactivePages,
 		webapi.AllArticlesPath:          allArticles,
 		webapi.ArticlesPrefix:           articleAPI,
 		webapi.FilesPrefix:              fileAPI,
@@ -445,14 +486,12 @@ func serve(ctx context.Context, args []string) (err error) {
 	handler := respheader.OriginPolicy(mux)
 	serving := entry.Config{
 		Mode:      mode,
-		webapi.MyTicketsPath:            ownRowsAPI,
 		Plain:     *o.listen,
 		Secure:    *o.tlsListen,
 		CertFile:  *o.tlsCert,
 		KeyFile:   *o.tlsKey,
 		CacheDir:  p.Certs(),
 		Email:     *o.acmeEmail,
-		userpage.MyTicketsPrefix:        reactivePages,
 		Directory: *o.acmeDirectory,
 		Hosts:     hosts,
 		Handler:   handler,
@@ -865,4 +904,26 @@ func announceHTTPS(domain string) {
 	if site.PublicHost(domain) {
 		fmt.Printf("https://%s answers once pwikit serve starts, or restarts if it is already running\n", domain)
 	}
+}
+
+var instanceCommands = map[string]bool{
+	"migrate": true, "createsite": true, "site": true, "admin": true, "user": true,
+	"backup": true, "seed": true, "import": true, "reindex": true,
+}
+
+func dataDirArg(args []string) string {
+	for i, arg := range args {
+		if arg == "--" {
+			break
+		}
+		for _, name := range []string{"-data-dir", "--data-dir"} {
+			if arg == name && i+1 < len(args) {
+				return args[i+1]
+			}
+			if value, ok := strings.CutPrefix(arg, name+"="); ok {
+				return value
+			}
+		}
+	}
+	return ""
 }

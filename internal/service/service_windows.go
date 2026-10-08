@@ -303,3 +303,9 @@ func stateName(state svc.State) string {
 	}
 	return "in an unknown state"
 }
+
+func Lookup(string) (Installed, bool) { return Installed{}, false }
+
+func PointUpdateAt(string, string) (bool, error) { return false, nil }
+
+func PointServiceAt(string, string) (bool, error) { return false, nil }

@@ -4,15 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/pgbundle"
+	"github.com/WikitTeam/ProjectWikit/internal/update"
 )
 
 const stopBundledWithin = 2 * time.Minute
@@ -32,15 +36,41 @@ func prepareDataDir(p *paths.Paths) error {
 	if err := p.EnsureBase(); err != nil {
 		return err
 	}
-	_, err := config.WriteTemplate(p.Config())
-	return err
+	created, err := config.WriteTemplate(p.Config())
+	if err != nil {
+		return err
+	}
+	if created {
+		update.ChownTree(p.Config(), p.Root())
+	}
+	handState(p)
+	return nil
 }
 
-const envDatabasePasswordFile = "PWIKIT_DATABASE_PASSWORD_FILE"
+func handState(p *paths.Paths) {
+	for _, dir := range []string{p.Files(), p.Archive(), p.Backups(), p.Updates()} {
+		if os.Geteuid() == 0 {
+			os.MkdirAll(dir, 0o755)
+		}
+		update.ChownTree(dir, p.Root())
+	}
+}
+
+const (
+	envDatabasePasswordFile = "PWIKIT_DATABASE_PASSWORD_FILE"
+	envDatabasePasswordFD   = "PWIKIT_DATABASE_PASSWORD_FD"
+)
+
+var handedPassword struct {
+	once sync.Once
+	data []byte
+	err  error
+}
 
 func withPasswordFile(dsn string) (string, error) {
 	name := os.Getenv(envDatabasePasswordFile)
-	if name == "" || dsn == "" {
+	fd := os.Getenv(envDatabasePasswordFD)
+	if (name == "" && fd == "" && handedPassword.data == nil) || dsn == "" {
 		return dsn, nil
 	}
 	u, err := url.Parse(dsn)
@@ -50,7 +80,13 @@ func withPasswordFile(dsn string) (string, error) {
 	if _, has := u.User.Password(); has {
 		return dsn, nil
 	}
-	secret, err := os.ReadFile(name)
+	var secret []byte
+	if fd != "" || handedPassword.data != nil {
+		handedPassword.once.Do(func() { handedPassword.data, handedPassword.err = readHanded(envDatabasePasswordFD, fd) })
+		secret, err = handedPassword.data, handedPassword.err
+	} else {
+		secret, err = os.ReadFile(name)
+	}
 	if err != nil {
 		return "", fmt.Errorf("read the database password from %s: %w", name, err)
 	}
@@ -110,4 +146,22 @@ func startBundled(ctx context.Context, p *paths.Paths, log *slog.Logger) (*pgbun
 		return nil, noDatabase(err)
 	}
 	return server, nil
+}
+
+func readHanded(env, raw string) ([]byte, error) {
+	os.Unsetenv(env)
+	n, err := strconv.Atoi(raw)
+	if err != nil {
+		return nil, err
+	}
+	f := os.NewFile(uintptr(n), env)
+	if f == nil {
+		return nil, errors.New("not an open descriptor")
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if data == nil {
+		data = []byte{}
+	}
+	return data, err
 }

@@ -85,10 +85,11 @@ func (h *Handler) store(r *http.Request, field string, rule uploadRule) (string,
 	if err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+	jail := paths.In(h.deps.Files)
+	if err := jail.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 		return "", err
 	}
-	dst, err := os.OpenFile(full, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	dst, err := jail.OpenFile(full, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 	if err != nil {
 		return "", err
 	}

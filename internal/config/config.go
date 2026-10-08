@@ -4,11 +4,14 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 )
@@ -76,15 +79,46 @@ const (
 	EngineConsole = "console"
 )
 
+const FDEnv = "PWIKIT_CONFIG_FD"
+
+var piped struct {
+	once sync.Once
+	data []byte
+	err  error
+}
+
 func Load(path string) (File, error) {
 	var f File
-	meta, err := toml.DecodeFile(path, &f)
-	if errors.Is(err, fs.ErrNotExist) {
-		return File{}, nil
+	var meta toml.MetaData
+	var err error
+	if raw := os.Getenv(FDEnv); raw != "" || piped.data != nil {
+		piped.once.Do(func() { piped.data, piped.err = readInherited(raw) })
+		if piped.err != nil {
+			return File{}, fmt.Errorf("read %s from descriptor %s: %w", path, raw, piped.err)
+		}
+		meta, err = toml.Decode(string(piped.data), &f)
+	} else {
+		meta, err = toml.DecodeFile(path, &f)
+		if errors.Is(err, fs.ErrNotExist) {
+			return File{}, nil
+		}
 	}
 	if err != nil {
 		return File{}, fmt.Errorf("read %s: %w", path, err)
 	}
+	return checked(f, meta, path)
+}
+
+func Parse(data []byte, path string) (File, error) {
+	var f File
+	meta, err := toml.Decode(string(data), &f)
+	if err != nil {
+		return File{}, fmt.Errorf("read %s: %w", path, err)
+	}
+	return checked(f, meta, path)
+}
+
+func checked(f File, meta toml.MetaData, path string) (File, error) {
 	if unknown := meta.Undecoded(); len(unknown) > 0 {
 		keys := make([]string, len(unknown))
 		for i, key := range unknown {
@@ -196,3 +230,21 @@ const Template = `# Settings for pwikit. A line starting with # is an example an
 # message_body = """
 # """
 `
+
+func readInherited(raw string) ([]byte, error) {
+	os.Unsetenv(FDEnv)
+	fd, err := strconv.Atoi(raw)
+	if err != nil {
+		return nil, err
+	}
+	f := os.NewFile(uintptr(fd), "pwikit.toml")
+	if f == nil {
+		return nil, errors.New("not an open descriptor")
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if data == nil {
+		data = []byte{}
+	}
+	return data, err
+}

@@ -62,7 +62,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, err := os.Open(full)
+	f, err := paths.In(h.root).Open(full)
 	if err != nil {
 		notFound(w)
 		return

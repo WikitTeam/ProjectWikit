@@ -46,12 +46,19 @@ func Install(s Spec) error {
 		return err
 	}
 	s.User = u.Username
-	if err := checkAccess(s.Root, u); err != nil {
-		return err
-	}
 	path := unitPath(s.Name)
 	if _, err := os.Stat(path); err == nil {
-		return fmt.Errorf("a service named %s is already installed. Remove it with pwikit service uninstall, or pick another -name", s.Name)
+		in, _ := Lookup(s.Name)
+		if in.DataDir != s.Root {
+			return fmt.Errorf("a service named %s is already installed. Remove it with pwikit service uninstall, or pick another -name", s.Name)
+		}
+		if err := runTool("systemctl", "stop", s.Name+".service"); err != nil {
+			return err
+		}
+	}
+	handState(s.State, u)
+	if err := checkAccess(s.Root, u); err != nil {
+		return err
 	}
 	s.Opened = openPorts(s.Ports)
 	if err := os.WriteFile(path, []byte(s.Systemd()), 0o644); err != nil {
@@ -140,4 +147,44 @@ func Status(name string) error {
 		return nil
 	}
 	return err
+}
+
+func Lookup(name string) (Installed, bool) {
+	unit, err := os.ReadFile(unitPath(name))
+	if err != nil {
+		return Installed{}, false
+	}
+	args := systemdArgs(string(unit))
+	in := Installed{Executable: systemdProgram(string(unit)), DataDir: dataDirArg(args), ServeArgs: serveExtra(args)}
+	in.User, _ = systemdValue(string(unit), "User")
+	if update, err := os.ReadFile(filepath.Join(unitDir, UpdateName(name)+".service")); err == nil {
+		in.UpdateExecutable = systemdProgram(string(update))
+	}
+	return in, true
+}
+
+func PointUpdateAt(name, exe string) (bool, error) {
+	return pointUnitAt(filepath.Join(unitDir, UpdateName(name)+".service"), exe)
+}
+
+func PointServiceAt(name, exe string) (bool, error) {
+	return pointUnitAt(unitPath(name), exe)
+}
+
+func pointUnitAt(path, exe string) (bool, error) {
+	unit, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	next, changed := pointSystemdAt(string(unit), exe)
+	if !changed {
+		return false, nil
+	}
+	if err := os.WriteFile(path, []byte(next), 0o644); err != nil {
+		return false, err
+	}
+	return true, exec.Command("systemctl", "daemon-reload").Run()
 }

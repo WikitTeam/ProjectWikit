@@ -288,3 +288,100 @@ func TestManualRollbackPutsBackTheRelease(t *testing.T) {
 		t.Errorf("executable after Rollback() = %q, want the old program", got)
 	}
 }
+
+func TestApplyInstallsRootsOwnCopy(t *testing.T) {
+	f := newFakeInstance(t)
+	server, target := releaseServer(t)
+	f.preflight = Preflight{Version: "v1.1.0"}
+	a := f.applier(server.URL)
+	a.Private = t.TempDir()
+	a.RootCopy = filepath.Join(a.Private, PrivateBin, ExecutableName(runtime.GOOS))
+	var tried string
+	a.Run = func(ctx context.Context, exe string, args ...string) ([]byte, error) {
+		if strings.Join(args[:2], " ") == "update preflight" {
+			tried = exe
+			os.WriteFile(exe, []byte("evil program"), 0o755)
+		}
+		return f.run(ctx, exe, args...)
+	}
+
+	if out := a.Apply(context.Background(), target); out.Err != nil {
+		t.Fatalf("Apply() err = %v, want nil", out.Err)
+	}
+	if strings.HasPrefix(tried, a.Private) {
+		t.Errorf("preflight ran %s, want a copy outside %s", tried, a.Private)
+	}
+	if got := readFile(t, f.exe); got != "new program" {
+		t.Errorf("executable after Apply() = %q, want the new program", got)
+	}
+	if got := readFile(t, a.RootCopy); got != "new program" {
+		t.Errorf("update task copy after Apply() = %q, want the new program", got)
+	}
+	if _, err := os.Stat(OldExecutable(f.exe)); !os.IsNotExist(err) {
+		t.Errorf("Stat(%s) err = %v, want not exist", OldExecutable(f.exe), err)
+	}
+}
+
+func TestRollbackPutsBackRootsOwnCopy(t *testing.T) {
+	f := newFakeInstance(t)
+	server, target := releaseServer(t)
+	f.preflight = Preflight{Version: "v1.1.0"}
+	a := f.applier(server.URL)
+	a.Private = t.TempDir()
+	a.RootCopy = filepath.Join(a.Private, PrivateBin, ExecutableName(runtime.GOOS))
+	if out := a.Apply(context.Background(), target); out.Err != nil {
+		t.Fatalf("Apply() err = %v, want nil", out.Err)
+	}
+	must(t, os.WriteFile(filepath.Join(RollbackDir(f.root), ExecutableName(runtime.GOOS)), []byte("evil program"), 0o755))
+
+	a.Current = "v1.1.0"
+	if _, err := a.Rollback(context.Background()); err != nil {
+		t.Fatalf("Rollback() err = %v, want nil", err)
+	}
+	if got := readFile(t, f.exe); got != "old program" {
+		t.Errorf("executable after Rollback() = %q, want the old program", got)
+	}
+	if got := readFile(t, a.RootCopy); got != "old program" {
+		t.Errorf("update task copy after Rollback() = %q, want the old program", got)
+	}
+}
+
+func TestRollbackRefusesWithoutRootsCopy(t *testing.T) {
+	f := newFakeInstance(t)
+	server, target := releaseServer(t)
+	f.preflight = Preflight{Version: "v1.1.0"}
+	a := f.applier(server.URL)
+	if out := a.Apply(context.Background(), target); out.Err != nil {
+		t.Fatalf("Apply() err = %v, want nil", out.Err)
+	}
+	a.Private = t.TempDir()
+	a.Current = "v1.1.0"
+	if _, err := a.Rollback(context.Background()); err == nil {
+		t.Error("Rollback() err = nil, want an error")
+	}
+	if got := readFile(t, f.exe); got != "new program" {
+		t.Errorf("executable after Rollback() = %q, want the new program", got)
+	}
+	if f.stopped {
+		t.Error("service after a refused Rollback() stopped = true, want it running")
+	}
+}
+
+func TestReplaceFromAnotherDirectory(t *testing.T) {
+	current := filepath.Join(t.TempDir(), "pwikit")
+	next := filepath.Join(t.TempDir(), "pwikit")
+	must(t, os.WriteFile(current, []byte("old"), 0o755))
+	must(t, os.WriteFile(next, []byte("new"), 0o700))
+	if err := Replace(current, next); err != nil {
+		t.Fatalf("Replace() err = %v, want nil", err)
+	}
+	if got := readFile(t, current); got != "new" {
+		t.Errorf("Replace() left %q, want %q", got, "new")
+	}
+	if got := readFile(t, OldExecutable(current)); got != "old" {
+		t.Errorf("Replace() kept %q, want %q", got, "old")
+	}
+	if got := readFile(t, next); got != "new" {
+		t.Errorf("Replace() source = %q, want it untouched", got)
+	}
+}

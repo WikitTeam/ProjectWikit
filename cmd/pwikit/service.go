@@ -10,7 +10,10 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/pgbundle"
 	"github.com/WikitTeam/ProjectWikit/internal/service"
+	"github.com/WikitTeam/ProjectWikit/internal/shellpath"
+	"github.com/WikitTeam/ProjectWikit/internal/update"
 )
 
 func serviceUsage() {
@@ -67,8 +70,14 @@ func serviceCommand(args []string) error {
 
 	switch sub {
 	case "uninstall":
+		installed, _ := service.Lookup(*name)
 		if err := service.Uninstall(*name); err != nil {
 			return err
+		}
+		forgetInstance(installed.DataDir)
+		if p, err := paths.New(*dataDir); err == nil {
+			update.RemoveCheckRun(p.Updates())
+			forgetInstance(p.Root())
 		}
 		if !*noPath {
 			if exe, err := runnableExecutable(); err == nil {
@@ -96,13 +105,24 @@ func serviceCommand(args []string) error {
 		fmt.Print(text)
 		return nil
 	}
+	if err := prepareInstall(&spec); err != nil {
+		return err
+	}
 	if err := service.Install(spec); err != nil {
 		return err
 	}
 	fmt.Printf("installed %s; it starts now and whenever the machine boots\n", spec.Name)
 	fmt.Println(afterInstall(spec))
 	if !*noPath {
-		servicePath(spec.Executable, true)
+		if spec.RunExecutable != "" {
+			shellpath.Retarget(spec.Executable, spec.RunExecutable)
+			servicePath(spec.RunExecutable, true)
+		} else if spec.UpdateExecutable != "" {
+			shellpath.Retarget(spec.Executable, spec.UpdateExecutable)
+			servicePath(spec.UpdateExecutable, true)
+		} else {
+			servicePath(spec.Executable, true)
+		}
 	}
 	return nil
 }
@@ -123,8 +143,19 @@ func serviceSpec(name, account, dataDir string, extra []string) (service.Spec, e
 		exe = resolved
 	}
 
+	if len(extra) == 0 {
+		if in, ok := service.Lookup(name); ok && in.DataDir == p.Root() {
+			extra = in.ServeArgs
+		}
+	}
+	if account == "" && runtime.GOOS == "linux" && os.Geteuid() == 0 && os.Getenv("SUDO_USER") == "" {
+		account = pgbundle.SystemAccountName
+	}
+
 	args := []string{"serve", "-data-dir", p.Root()}
-	spec := service.Spec{Name: name, Executable: exe, Root: p.Root(), User: account}
+	spec := service.Spec{Name: name, Executable: exe, Root: p.Root(), User: account,
+		State: []string{p.Config(), p.Secrets(), p.Logs(), p.Files(), p.Archive(), p.Backups(), p.Updates(),
+			p.Postgres(), filepath.Join(p.Root(), "postgres.lock")}}
 	if !inContainer() {
 		spec.UpdateArgs = append([]string{"update", "-auto", "-service", name, "-data-dir", p.Root(), "--"}, extra...)
 	}

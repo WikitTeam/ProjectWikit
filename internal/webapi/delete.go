@@ -3,13 +3,13 @@ package webapi
 import (
 	"errors"
 	"net/http"
-	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -61,7 +61,7 @@ func (h *Articles) dropMedia(mediaName string) {
 		return
 	}
 	dir := filepath.Join(h.deps.Files, "media", mediaName)
-	if err := os.RemoveAll(dir); err != nil {
+	if err := paths.In(h.deps.Files).RemoveAll(dir); err != nil {
 		h.deps.log().Error("remove article media", "dir", dir, "err", err)
 	}
 }

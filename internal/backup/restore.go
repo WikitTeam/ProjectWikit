@@ -241,7 +241,15 @@ func catchUp(ctx context.Context, dsn string, m Manifest) ([]string, error) {
 // The files land beside the real directory and only swap in once every one of
 // them is written, so an interrupted restore leaves the old tree alone.
 func restoreFiles(archive, root string, m Manifest, out *RestoreResult) error {
-	staging := root + ".restoring"
+	side := filepath.Dir(root)
+	inPlace := !canCreateIn(side)
+	if inPlace {
+		side = filepath.Join(side, "backups")
+		if !canCreateIn(side) {
+			return fmt.Errorf("neither %s nor %s can take the restored files", filepath.Dir(root), side)
+		}
+	}
+	staging := filepath.Join(side, filepath.Base(root)+".restoring")
 	if err := os.RemoveAll(staging); err != nil {
 		return err
 	}
@@ -297,9 +305,20 @@ func restoreFiles(archive, root string, m Manifest, out *RestoreResult) error {
 		out.FilesPut++
 	}
 
-	retired := root + ".replaced"
+	retired := filepath.Join(side, filepath.Base(root)+".replaced")
 	if err := os.RemoveAll(retired); err != nil {
 		return err
+	}
+	if inPlace {
+		if err := moveEntries(root, retired); err != nil {
+			return err
+		}
+		out.ReplacedDir = retired
+		if err := moveEntries(staging, root); err != nil {
+			return err
+		}
+		out.FilesMoved = true
+		return os.RemoveAll(staging)
 	}
 	if _, err := os.Stat(root); err == nil {
 		if err := os.Rename(root, retired); err != nil {
@@ -320,4 +339,33 @@ func safeJoin(root, rel string) (string, error) {
 		return "", fmt.Errorf("the archive names %q, which points outside the files directory", rel)
 	}
 	return filepath.Join(root, clean), nil
+}
+
+func canCreateIn(dir string) bool {
+	probe, err := os.CreateTemp(dir, ".pwikit-probe-*")
+	if err != nil {
+		return false
+	}
+	probe.Close()
+	os.Remove(probe.Name())
+	return true
+}
+
+func moveEntries(from, to string) error {
+	if err := os.MkdirAll(to, 0o755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(from)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if err := os.Rename(filepath.Join(from, e.Name()), filepath.Join(to, e.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -77,6 +77,9 @@ type Applier struct {
 	Current    string
 	Database   []string
 
+	Private  string
+	RootCopy string
+
 	Offline bool
 
 	Source      Source
@@ -90,6 +93,15 @@ type Applier struct {
 
 func (a *Applier) dir(parts ...string) string {
 	return filepath.Join(append([]string{a.Root, "update"}, parts...)...)
+}
+
+func (a *Applier) handOver(path string) error {
+	err := ChownTree(path, a.Root)
+	if errors.Is(err, ErrCannotHandOver) {
+		a.logf("%v; leaving the owners as they are", err)
+		return nil
+	}
+	return err
 }
 
 func (a *Applier) logf(format string, args ...any) {
@@ -120,20 +132,37 @@ func (a *Applier) Apply(ctx context.Context, t Target) Outcome {
 	if err := os.MkdirAll(staging, 0o755); err != nil {
 		return fail(err)
 	}
-	pkg := filepath.Join(staging, t.File)
+	fetched := staging
+	if a.Private != "" {
+		fetched = filepath.Join(a.Private, PrivateStaging)
+		if err := os.RemoveAll(fetched); err != nil {
+			return fail(err)
+		}
+		if err := os.MkdirAll(fetched, 0o700); err != nil {
+			return fail(err)
+		}
+	}
+	pkg := filepath.Join(fetched, t.File)
 	a.logf("downloading %s", t.File)
 	if err := a.Source.Download(ctx, t.Version, t.File, pkg, t.SHA256); err != nil {
 		return fail(err)
 	}
-	next := filepath.Join(staging, ExecutableName(runtime.GOOS))
+	next := filepath.Join(fetched, ExecutableName(runtime.GOOS))
 	if err := ExtractExecutable(pkg, next, runtime.GOOS); err != nil {
 		return fail(err)
 	}
-	if err := ChownTree(a.dir(), a.Root); err != nil {
+	checked := next
+	if a.Private != "" {
+		checked = filepath.Join(staging, ExecutableName(runtime.GOOS))
+		if err := CopyFile(next, checked); err != nil {
+			return fail(err)
+		}
+	}
+	if err := a.handOver(a.dir()); err != nil {
 		return fail(err)
 	}
 
-	pre, err := a.preflight(ctx, next)
+	pre, err := a.preflight(ctx, checked)
 	if err != nil {
 		return fail(err)
 	}
@@ -170,6 +199,15 @@ func (a *Applier) Apply(ctx context.Context, t Target) Outcome {
 	if err := CopyFile(a.Executable, filepath.Join(point, ExecutableName(runtime.GOOS))); err != nil {
 		return fail(err)
 	}
+	if a.Private != "" {
+		kept := filepath.Join(a.Private, PrivateRollback)
+		if err := os.MkdirAll(kept, 0o700); err != nil {
+			return fail(err)
+		}
+		if err := CopyFile(a.Executable, filepath.Join(kept, ExecutableName(runtime.GOOS))); err != nil {
+			return fail(err)
+		}
+	}
 	if pre.PostgresMoves {
 		a.logf("backing up the database before PostgreSQL moves to version %s", PostgresMajor(pre.Postgres))
 		if _, err := a.run(ctx, a.Executable, append([]string{"backup", "create", "-output", filepath.Join(point, postgresBackup)}, a.base()...)...); err != nil {
@@ -179,7 +217,7 @@ func (a *Applier) Apply(ctx context.Context, t Target) Outcome {
 	if err := writeRollback(point, RollbackPoint{From: a.Current, To: t.Version, Kind: kind, CreatedAt: time.Now().UTC()}); err != nil {
 		return fail(err)
 	}
-	if err := ChownTree(a.dir(), a.Root); err != nil {
+	if err := a.handOver(a.dir()); err != nil {
 		return fail(err)
 	}
 
@@ -204,8 +242,11 @@ func (a *Applier) Apply(ctx context.Context, t Target) Outcome {
 		}
 		return out
 	}
+	if cause == nil {
+		cause = a.refreshRootCopy(next)
+	}
 	if cause == nil && a.Offline {
-		os.RemoveAll(staging)
+		a.clearStaging(staging)
 		a.logf("installed %s; it runs once pwikit is started again", t.Version)
 		return out
 	}
@@ -219,7 +260,7 @@ func (a *Applier) Apply(ctx context.Context, t Target) Outcome {
 		}
 	}
 	if cause == nil {
-		os.RemoveAll(staging)
+		a.clearStaging(staging)
 		a.logf("updated from %s to %s", a.Current, t.Version)
 		return out
 	}
@@ -264,17 +305,15 @@ func (a *Applier) swap(ctx context.Context, kind string, pre Preflight, point, n
 			return false, fmt.Errorf("back up the database: %w", err)
 		}
 	}
-	if err := ChownTree(a.dir(), a.Root); err != nil {
+	if err := a.handOver(a.dir()); err != nil {
 		undo()
 		return false, err
 	}
-	if err := Replace(a.Executable, next, a.dir(stagingDir, "replaced-"+ExecutableName(runtime.GOOS))); err != nil {
+	if err := Replace(a.Executable, next); err != nil {
 		undo()
 		return false, err
 	}
-	if err := ChownTree(a.Executable, a.Root); err != nil {
-		return true, err
-	}
+	os.Remove(OldExecutable(a.Executable))
 	if pre.PostgresMoves {
 		a.logf("restoring the database into PostgreSQL %s", PostgresMajor(pre.Postgres))
 		args := append([]string{"backup", "restore", filepath.Join(point, postgresBackup), "-force", "-no-safety-backup"}, a.base()...)
@@ -290,6 +329,9 @@ func (a *Applier) Rollback(ctx context.Context) (RollbackPoint, error) {
 	p, err := ReadRollback(point)
 	if err != nil {
 		return p, err
+	}
+	if _, err := os.Stat(a.rollbackProgram(point)); err != nil {
+		return p, fmt.Errorf("the rollback point holds no program: %w", err)
 	}
 	if err := a.Machine.StopService(ctx); err != nil {
 		return p, fmt.Errorf("stop the service: %w", err)
@@ -324,7 +366,7 @@ func (a *Applier) restore(ctx context.Context, p RollbackPoint, point string) er
 }
 
 func (a *Applier) putBack(ctx context.Context, p RollbackPoint, point string) error {
-	old := filepath.Join(point, ExecutableName(runtime.GOOS))
+	old := a.rollbackProgram(point)
 	if _, err := os.Stat(old); err != nil {
 		return fmt.Errorf("the rollback point holds no program: %w", err)
 	}
@@ -347,18 +389,19 @@ func (a *Applier) putBack(ctx context.Context, p RollbackPoint, point string) er
 			return fmt.Errorf("put pgdata back: %w", err)
 		}
 	}
-	running := filepath.Join(point, "run-"+ExecutableName(runtime.GOOS))
-	if err := CopyFile(old, running); err != nil {
+	if err := Replace(a.Executable, old); err != nil {
 		return err
 	}
-	if err := Replace(a.Executable, running, filepath.Join(failed, ExecutableName(runtime.GOOS))); err != nil {
+	CopyFile(OldExecutable(a.Executable), filepath.Join(failed, ExecutableName(runtime.GOOS)))
+	os.Remove(OldExecutable(a.Executable))
+	if err := a.refreshRootCopy(old); err != nil {
 		return err
 	}
-	for _, path := range []string{a.Executable, a.PGData, a.dir()} {
+	for _, path := range []string{a.PGData, a.dir()} {
 		if _, err := os.Stat(path); err != nil {
 			continue
 		}
-		if err := ChownTree(path, a.Root); err != nil {
+		if err := a.handOver(path); err != nil {
 			return err
 		}
 	}
@@ -369,6 +412,37 @@ func (a *Applier) putBack(ctx context.Context, p RollbackPoint, point string) er
 		}
 	}
 	return nil
+}
+
+func (a *Applier) rollbackProgram(point string) string {
+	if a.Private != "" {
+		return filepath.Join(a.Private, PrivateRollback, ExecutableName(runtime.GOOS))
+	}
+	return filepath.Join(point, ExecutableName(runtime.GOOS))
+}
+
+func (a *Applier) refreshRootCopy(from string) error {
+	if a.RootCopy == "" {
+		return nil
+	}
+	err := os.MkdirAll(filepath.Dir(a.RootCopy), 0o755)
+	if err == nil {
+		err = CopyFile(from, a.RootCopy)
+	}
+	if err == nil {
+		err = os.Chmod(a.RootCopy, 0o755)
+	}
+	if err != nil {
+		return fmt.Errorf("refresh the copy of pwikit root runs: %w", err)
+	}
+	return nil
+}
+
+func (a *Applier) clearStaging(staging string) {
+	os.RemoveAll(staging)
+	if a.Private != "" {
+		os.RemoveAll(filepath.Join(a.Private, PrivateStaging))
+	}
 }
 
 func (a *Applier) preflight(ctx context.Context, next string) (Preflight, error) {

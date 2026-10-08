@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -88,7 +87,7 @@ func (h *ThemeFiles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		themeMissing(w)
 		return
 	}
-	body, err := os.ReadFile(full)
+	body, err := paths.In(h.dir).ReadFile(full)
 	if err != nil {
 		themeMissing(w)
 		return

@@ -23,7 +23,11 @@ type Spec struct {
 	CrashFile  string
 	Args       []string
 
-	UpdateArgs []string
+	UpdateArgs       []string
+	UpdateExecutable string
+	RunExecutable    string
+
+	State []string
 
 	Ports  []int
 	Opened Firewall
@@ -102,7 +106,14 @@ func (s Spec) Validate() error {
 }
 
 func (s Spec) CommandLine() []string {
-	return append([]string{s.Executable}, s.Args...)
+	return append([]string{s.runExecutable()}, s.Args...)
+}
+
+func (s Spec) runExecutable() string {
+	if s.RunExecutable != "" {
+		return s.RunExecutable
+	}
+	return s.Executable
 }
 
 func (s Spec) Systemd() string {
@@ -138,9 +149,16 @@ func (s Spec) Systemd() string {
 	return b.String()
 }
 
+func (s Spec) updateExecutable() string {
+	if s.UpdateExecutable != "" {
+		return s.UpdateExecutable
+	}
+	return s.Executable
+}
+
 func (s Spec) SystemdUpdate() (service, timer string) {
 	quoted := make([]string, 0, len(s.UpdateArgs)+1)
-	for _, arg := range append([]string{s.Executable}, s.UpdateArgs...) {
+	for _, arg := range append([]string{s.updateExecutable()}, s.UpdateArgs...) {
 		quoted = append(quoted, systemdQuote(arg))
 	}
 	var b strings.Builder
@@ -175,7 +193,7 @@ func (s Spec) LaunchdUpdate() string {
 	b.WriteString(`<plist version="1.0">` + "\n<dict>\n")
 	plistString(&b, "Label", UpdateName(s.Name))
 	b.WriteString("\t<key>ProgramArguments</key>\n\t<array>\n")
-	for _, arg := range append([]string{s.Executable}, s.UpdateArgs...) {
+	for _, arg := range append([]string{s.updateExecutable()}, s.UpdateArgs...) {
 		b.WriteString("\t\t<string>" + xmlText(arg) + "</string>\n")
 	}
 	b.WriteString("\t</array>\n")

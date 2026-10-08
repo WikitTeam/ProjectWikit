@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-const EnvDataDir = "PWIKIT_DATA_DIR"
+const (
+	EnvDataDir  = "PWIKIT_DATA_DIR"
+	DataDirFile = "pwikit.data-dir"
+)
 
 type Source string
 
@@ -59,6 +62,9 @@ func executableDir() (string, Source, error) {
 	}
 
 	dir := filepath.Dir(exe)
+	if root, ok := recordedRoot(dir); ok {
+		return root, SourceExecutable, nil
+	}
 	if isGoRunTemp(dir) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -132,4 +138,13 @@ func Resolve(base, rel string) (string, error) {
 		return "", fmt.Errorf("%w: %q", ErrEscapes, rel)
 	}
 	return joined, nil
+}
+
+func recordedRoot(dir string) (string, bool) {
+	recorded, err := os.ReadFile(filepath.Join(dir, DataDirFile))
+	if err != nil {
+		return "", false
+	}
+	root := strings.TrimSpace(string(recorded))
+	return root, filepath.IsAbs(root)
 }

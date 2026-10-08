@@ -1,8 +1,6 @@
 package roles
 
 import (
-	"os"
-
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 )
 
@@ -14,7 +12,7 @@ func FileIcons(root string) IconLoader {
 		if err != nil {
 			return "", err
 		}
-		data, err := os.ReadFile(path)
+		data, err := paths.In(root).ReadFile(path)
 		if err != nil {
 			return "", err
 		}

@@ -23,6 +23,12 @@ type Board struct {
 	Current         string
 	BundledPostgres string
 	Container       bool
+	Dir             string
+	LogPath         string
+	Started         time.Time
+	Exposed         string
+	AsRoot          bool
+	Announce        func(context.Context, db.UpdateState)
 
 	mu     sync.Mutex
 	state  db.UpdateState
@@ -48,6 +54,37 @@ func (b *Board) Facts(now time.Time) Facts {
 
 func (b *Board) Notices(ctx context.Context) []Notice {
 	return Notices(b.State(ctx), b.Settings, b.Facts(time.Now()))
+}
+
+func (b *Board) Problem(ctx context.Context) (CheckProblem, bool) {
+	run, seen := ReadCheckRun(b.Dir)
+	return Problem(run, seen, b.State(ctx), b.Settings, time.Now(), b.Started)
+}
+
+const checkWithin = 30 * time.Second
+
+func (b *Board) CheckNow(ctx context.Context) (db.UpdateState, error) {
+	fetchCtx, cancel := context.WithTimeout(ctx, checkWithin)
+	m, fetchErr := NewSource(b.Settings.Mirror).Latest(fetchCtx)
+	cancel()
+	fetch := func() (Manifest, error) { return m, fetchErr }
+
+	var previous string
+	var fresh db.UpdateState
+	err := b.change(ctx, func(st *db.UpdateState) {
+		previous = st.LatestVersion
+		now := time.Now()
+		RecordCheck(st, now, fetch)
+		Tick(st, b.Settings, b.Facts(now), fetch)
+		fresh = *st
+	})
+	if err != nil {
+		return fresh, err
+	}
+	if b.Announce != nil && NewlyFound(previous, fresh, b.Current) {
+		b.Announce(ctx, fresh)
+	}
+	return fresh, nil
 }
 
 func (b *Board) change(ctx context.Context, edit func(*db.UpdateState)) error {

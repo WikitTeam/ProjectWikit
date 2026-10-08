@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,6 +18,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
+	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -251,7 +251,7 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 		At:        at,
 	})
 	if err != nil {
-		_ = os.Remove(stored)
+		_ = paths.In(h.deps.Files).Remove(stored)
 		return "", 0, err
 	}
 	meta, err := json.Marshal(map[string]any{"name": fileName, "id": id})
@@ -276,10 +276,11 @@ func (h *Articles) store(r *http.Request, stored string) (size int64, over bool,
 	if err != nil {
 		return 0, false, err
 	}
-	if err := os.MkdirAll(filepath.Dir(stored), 0o755); err != nil {
+	jail := paths.In(h.deps.Files)
+	if err := jail.MkdirAll(filepath.Dir(stored), 0o755); err != nil {
 		return 0, false, err
 	}
-	out, err := os.Create(stored)
+	out, err := jail.Create(stored)
 	if err != nil {
 		return 0, false, err
 	}
@@ -291,13 +292,13 @@ func (h *Articles) store(r *http.Request, stored string) (size int64, over bool,
 		size += int64(n)
 		if overLimit(h.deps.SoftLimit, live+size) || overLimit(h.deps.HardLimit, total+size) {
 			out.Close()
-			_ = os.Remove(stored)
+			_ = paths.In(h.deps.Files).Remove(stored)
 			return 0, true, nil
 		}
 		if n > 0 {
 			if _, err := out.Write(buf[:n]); err != nil {
 				out.Close()
-				_ = os.Remove(stored)
+				_ = paths.In(h.deps.Files).Remove(stored)
 				return 0, false, err
 			}
 		}
@@ -306,7 +307,7 @@ func (h *Articles) store(r *http.Request, stored string) (size int64, over bool,
 		}
 		if readErr != nil {
 			out.Close()
-			_ = os.Remove(stored)
+			_ = paths.In(h.deps.Files).Remove(stored)
 			return 0, false, readErr
 		}
 	}

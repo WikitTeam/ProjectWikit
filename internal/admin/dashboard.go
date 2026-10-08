@@ -7,7 +7,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/changelog"
+	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
@@ -77,6 +79,12 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		}
 		data["Actions"] = actions
 		data["ActionsHref"] = Prefix + adminLogSlug + "/"
+	}
+	if user := auth.FromContext(ctx); h.deps.Updates != nil && user != nil && user.IsSuperuser {
+		data["Version"] = h.deps.Updates.Current
+		data["CheckHref"] = Prefix + updateSlug + "/check"
+		data["CSRF"] = csrf.Issue(w, r)
+		data["Checked"] = h.checkResult(r, loc)
 	}
 	return h.page(w, r, loc, loc.T("admin.dashboard"), "dashboard.html", data)
 }

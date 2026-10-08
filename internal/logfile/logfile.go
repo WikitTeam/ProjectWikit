@@ -59,7 +59,7 @@ func (w *Writer) Close() error {
 }
 
 func (w *Writer) open() error {
-	f, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	f, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|noFollow, 0o600)
 	if err != nil {
 		return fmt.Errorf("open log file: %w", err)
 	}

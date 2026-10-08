@@ -55,6 +55,7 @@ func Install(s Spec) error {
 	if err := checkAccess(s.Root, u); err != nil {
 		return err
 	}
+	handState(s.State, u)
 	path, err := plistPath(s.Name)
 	if err != nil {
 		return err
@@ -82,7 +83,7 @@ func Install(s Spec) error {
 	if err := os.WriteFile(path, []byte(s.Launchd(asDaemon())), 0o644); err != nil {
 		return fmt.Errorf("write %s: %w", path, err)
 	}
-	allowProgram(s.Executable)
+	allowProgram(s.runExecutable())
 	if err := runTool("launchctl", "bootstrap", domain(), path); err != nil {
 		os.Remove(path)
 		if !asDaemon() {
@@ -165,4 +166,50 @@ func elsewhere() string {
 		return ". One installed without sudo is only visible without sudo"
 	}
 	return ". One installed with sudo is only visible with sudo"
+}
+
+func Lookup(name string) (Installed, bool) {
+	path, err := plistPath(name)
+	if err != nil {
+		return Installed{}, false
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return Installed{}, false
+	}
+	args := plistArgs(string(raw))
+	in := Installed{Executable: plistFirst(string(raw)), User: plistUserName(string(raw)), DataDir: dataDirArg(args), ServeArgs: serveExtra(args)}
+	if updatePath, err := plistPath(UpdateName(name)); err == nil {
+		if update, err := os.ReadFile(updatePath); err == nil {
+			in.UpdateExecutable = plistFirst(string(update))
+		}
+	}
+	return in, true
+}
+
+func PointUpdateAt(name, exe string) (bool, error) {
+	return pointPlistFileAt(UpdateName(name), exe)
+}
+
+func PointServiceAt(name, exe string) (bool, error) {
+	return pointPlistFileAt(name, exe)
+}
+
+func pointPlistFileAt(label, exe string) (bool, error) {
+	path, err := plistPath(label)
+	if err != nil {
+		return false, err
+	}
+	raw, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	next, changed := pointPlistAt(string(raw), exe)
+	if !changed {
+		return false, nil
+	}
+	return true, os.WriteFile(path, []byte(next), 0o644)
 }

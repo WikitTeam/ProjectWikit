@@ -224,23 +224,7 @@ func Tick(st *db.UpdateState, s Settings, f Facts, fetch func() (Manifest, error
 		return ""
 	}
 	if s.Check && (st.NextCheckAt == nil || !now.Before(*st.NextCheckAt)) {
-		checked := now
-		st.CheckedAt = &checked
-		if m, err := fetch(); err != nil {
-			st.CheckError = err.Error()
-		} else {
-			st.CheckError = ""
-			st.LatestVersion = m.Version
-			st.LatestPostgres = m.Postgres
-			st.LatestNotes = m.Notes
-			if published := m.Published(); !published.IsZero() {
-				st.LatestPublishedAt = &published
-			} else {
-				st.LatestPublishedAt = nil
-			}
-		}
-		next := now.Add(CheckEvery)
-		st.NextCheckAt = &next
+		RecordCheck(st, now, fetch)
 	}
 	if st.ScheduledVersion == "" || st.ScheduledAt == nil {
 		if version, _ := Eligible(*st, s, f); version != "" {
@@ -262,6 +246,26 @@ func Tick(st *db.UpdateState, s Settings, f Facts, fetch func() (Manifest, error
 		return ""
 	}
 	return version
+}
+
+func RecordCheck(st *db.UpdateState, now time.Time, fetch func() (Manifest, error)) {
+	checked := now
+	st.CheckedAt = &checked
+	if m, err := fetch(); err != nil {
+		st.CheckError = err.Error()
+	} else {
+		st.CheckError = ""
+		st.LatestVersion = m.Version
+		st.LatestPostgres = m.Postgres
+		st.LatestNotes = m.Notes
+		if published := m.Published(); !published.IsZero() {
+			st.LatestPublishedAt = &published
+		} else {
+			st.LatestPublishedAt = nil
+		}
+	}
+	next := now.Add(CheckEvery)
+	st.NextCheckAt = &next
 }
 
 func clearSchedule(st *db.UpdateState) {

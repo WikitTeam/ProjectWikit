@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/pgbundle"
 	"github.com/WikitTeam/ProjectWikit/internal/service"
+	"github.com/WikitTeam/ProjectWikit/internal/shellpath"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/update"
 	"github.com/WikitTeam/ProjectWikit/internal/version"
@@ -138,9 +140,6 @@ func updateCommand(args []string) error {
 		}
 		return editUpdateState(p, sub, serveArgs)
 	case "mirror":
-		if handled, err := asOwner(p.Root()); handled || err != nil {
-			return err
-		}
 		return updateMirror(p, f.fs.Args())
 	case "tick":
 		return tickUpdate(p, serveArgs)
@@ -202,8 +201,11 @@ type updateLog struct {
 
 func openUpdateLog(p *paths.Paths) *updateLog {
 	l := &updateLog{out: os.Stdout}
+	if info, err := os.Lstat(p.Logs()); err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return l
+	}
 	if err := os.MkdirAll(p.Logs(), 0o755); err == nil {
-		if f, err := os.OpenFile(filepath.Join(p.Logs(), "update.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644); err == nil {
+		if f, err := os.OpenFile(filepath.Join(p.Logs(), "update.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY|update.NoFollow, 0o644); err == nil {
 			l.file = f
 			l.out = io.MultiWriter(os.Stdout, f)
 		}
@@ -233,6 +235,115 @@ func runningExecutable() (string, error) {
 	return exe, nil
 }
 
+func instanceExecutable(name string) (string, error) {
+	if in, ok := service.Lookup(name); ok && in.Executable != "" {
+		return update.RecordedExecutable(in.Executable), nil
+	}
+	running, err := runningExecutable()
+	if err != nil {
+		return "", err
+	}
+	return update.RecordedExecutable(running), nil
+}
+
+func rootCopyFor(private, name string) string {
+	if private == "" {
+		return ""
+	}
+	bin := filepath.Join(private, update.PrivateBin, update.ExecutableName(runtime.GOOS))
+	in, ok := service.Lookup(name)
+	if !ok || (in.UpdateExecutable == "" && in.Executable != bin) {
+		return ""
+	}
+	return bin
+}
+
+func secureUpdateTask(p *paths.Paths, name string, l *updateLog) string {
+	if os.Geteuid() != 0 {
+		return ""
+	}
+	in, ok := service.Lookup(name)
+	if !ok || in.UpdateExecutable == "" {
+		return ""
+	}
+	private, err := update.PrivateDir(p.Root())
+	if err != nil {
+		l.logf("%v", err)
+		return ""
+	}
+	bin := filepath.Join(private, update.PrivateBin, update.ExecutableName(runtime.GOOS))
+	if in.UpdateExecutable == bin {
+		return bin
+	}
+	running, err := runningExecutable()
+	if err != nil {
+		return ""
+	}
+	if err := os.MkdirAll(filepath.Dir(bin), 0o755); err != nil {
+		l.logf("could not keep root's copy of pwikit: %v", err)
+		return ""
+	}
+	if err := update.CopyFile(running, bin); err != nil {
+		l.logf("could not keep root's copy of pwikit: %v", err)
+		return ""
+	}
+	os.Chmod(bin, 0o755)
+	if _, err := service.PointUpdateAt(name, bin); err != nil {
+		l.logf("could not point the update task at %s: %v", bin, err)
+		return ""
+	}
+	l.logf("the update task now runs %s, which only root can change", bin)
+	return bin
+}
+
+func secureRootService(p *paths.Paths, name string, l *updateLog) {
+	if os.Geteuid() != 0 || !runsAsRoot(name) {
+		return
+	}
+	in, ok := service.Lookup(name)
+	if !ok || in.DataDir == "" {
+		return
+	}
+	private, err := update.PrivateDir(p.Root())
+	if err != nil || private == "" {
+		if err != nil {
+			l.logf("%v", err)
+		}
+		return
+	}
+	bin := filepath.Join(private, update.PrivateBin, update.ExecutableName(runtime.GOOS))
+	exe := update.RecordedExecutable(in.Executable)
+	if _, recorded := update.ReadInstance(private); !recorded {
+		if err := update.RecordInstance(private, p.Root(), exe); err != nil {
+			l.logf("could not record where pwikit is installed: %v", err)
+			return
+		}
+	}
+	if _, err := os.Stat(bin); err != nil {
+		if err := update.CopyFile(exe, bin); err != nil {
+			l.logf("could not keep root's copy of pwikit: %v", err)
+			return
+		}
+		os.Chmod(bin, 0o755)
+	}
+	changed, err := service.PointServiceAt(name, bin)
+	if err != nil {
+		l.logf("could not point the service at %s: %v", bin, err)
+		return
+	}
+	if changed {
+		l.logf("the service now runs %s, which only root can change, from its next start", bin)
+	}
+	if moved, err := shellpath.Retarget(exe, bin); err == nil && moved {
+		l.logf("the pwikit command on the PATH now runs %s", bin)
+	}
+}
+
+func runsAsRoot(name string) bool {
+	in, ok := service.Lookup(name)
+	return ok && (in.User == "" || in.User == "root")
+}
+
 func autoUpdate(p *paths.Paths, name string, serveArgs []string) error {
 	running, err := service.Running(name)
 	if err != nil {
@@ -241,15 +352,38 @@ func autoUpdate(p *paths.Paths, name string, serveArgs []string) error {
 	if !running {
 		return nil
 	}
-	exe, err := runningExecutable()
+	exe, err := instanceExecutable(name)
 	if err != nil {
 		return err
 	}
-	out, err := runOwner(context.Background(), p.Root(), exe, append([]string{"update", "tick", "-data-dir", p.Root(), "--"}, serveArgs...)...)
+	if os.Geteuid() == 0 {
+		if err := update.CheckInstance(p.Root()); err != nil {
+			l := openUpdateLog(p)
+			l.logf("%v", err)
+			l.close(p)
+			noteCheckRun(p, err.Error())
+			return err
+		}
+		l := openUpdateLog(p)
+		if runsAsRoot(name) {
+			if exposed := protectInstance(p, exe); exposed != "" {
+				l.logf("%s", exposed)
+			}
+		}
+		secureUpdateTask(p, name, l)
+		secureRootService(p, name, l)
+		l.close(p)
+	}
+	self, err := runningExecutable()
+	if err != nil {
+		return err
+	}
+	out, err := runOwner(context.Background(), p.Root(), self, append([]string{"update", "tick", "-data-dir", p.Root(), "--"}, serveArgs...)...)
 	if err != nil {
 		l := openUpdateLog(p)
 		defer l.close(p)
 		l.logf("the scheduled check failed: %v: %s", err, strings.TrimSpace(string(out)))
+		noteCheckRun(p, tickFailure(err, out))
 		return err
 	}
 	var tick struct {
@@ -257,15 +391,72 @@ func autoUpdate(p *paths.Paths, name string, serveArgs []string) error {
 		ByHand bool   `json:"by_hand"`
 	}
 	if err := json.Unmarshal(lastJSONLine(out), &tick); err != nil {
+		noteCheckRun(p, err.Error())
 		return fmt.Errorf("read the scheduled check: %w", err)
 	}
+	noteCheckRun(p, "")
 	if tick.Apply == "" {
 		return nil
 	}
-	return installRelease(p, name, serveArgs, tick.Apply, "", true, tick.ByHand)
+	if err := installRelease(p, name, serveArgs, tick.Apply, "", "", true, tick.ByHand); err != nil {
+		noteInstallFailure(p, tick.Apply, err)
+		return err
+	}
+	return nil
+}
+
+func noteCheckRun(p *paths.Paths, failure string) {
+	writeCheckRun(p, update.CheckRun{At: time.Now().UTC(), Error: failure})
+}
+
+func noteInstallFailure(p *paths.Paths, version string, err error) {
+	run, ok := update.ReadCheckRun(p.Updates())
+	if !ok {
+		run.At = time.Now().UTC()
+	}
+	text := err.Error()
+	if len(text) > installFailureMax {
+		text = text[:installFailureMax]
+	}
+	run.InstallVersion, run.InstallError = version, text
+	writeCheckRun(p, run)
+}
+
+func writeCheckRun(p *paths.Paths, run update.CheckRun) {
+	if err := update.WriteCheckRun(p.Updates(), run); err != nil {
+		return
+	}
+	update.ChownTree(p.Updates(), p.Root())
+}
+
+const (
+	tickFailureMax    = 300
+	installFailureMax = 600
+)
+
+func tickFailure(err error, out []byte) string {
+	text := strings.TrimSpace(string(out))
+	if i := strings.LastIndexByte(text, '\n'); i >= 0 {
+		text = strings.TrimSpace(text[i+1:])
+	}
+	if text == "" {
+		text = err.Error()
+	}
+	if len(text) > tickFailureMax {
+		text = text[:tickFailureMax]
+	}
+	return text
 }
 
 func manualUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
+	if err := update.CheckInstance(p.Root()); err != nil {
+		return err
+	}
+	if exe, err := instanceExecutable(*f.name); err == nil {
+		if err := updatable(p, exe); err != nil {
+			return err
+		}
+	}
 	in, err := loadInstance(p, serveArgs, *f.mirror)
 	if err != nil {
 		return err
@@ -289,10 +480,10 @@ func manualUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 	if *f.to != "" && !update.Newer(target, version.String()) {
 		pin = target
 	}
-	return installRelease(p, *f.name, serveArgs, target, pin, false, true)
+	return installRelease(p, *f.name, serveArgs, target, pin, *f.mirror, false, true)
 }
 
-func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin string, auto, allowPostgresMove bool) error {
+func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin, given string, auto, allowPostgresMove bool) error {
 	l := openUpdateLog(p)
 	defer l.close(p)
 	unlock, err := update.Lock(p.Updates())
@@ -300,12 +491,13 @@ func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin
 		return err
 	}
 	defer unlock()
+	handState(p)
 
 	in, err := loadInstance(p, serveArgs, "")
 	if err != nil {
 		return err
 	}
-	exe, err := runningExecutable()
+	exe, err := instanceExecutable(name)
 	if err != nil {
 		return err
 	}
@@ -316,11 +508,34 @@ func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin
 	if !running && serveAlive(p) {
 		return errors.New("pwikit serve is running in the foreground; stop it first, or update an instance installed with pwikit service install")
 	}
+	if err := updatable(p, exe); err != nil {
+		return err
+	}
+	private, err := update.PrivateDir(p.Root())
+	if err != nil {
+		return err
+	}
+	rootCopy := rootCopyFor(private, name)
 
 	ctx := context.Background()
-	src := update.NewSource(in.settings.Mirror)
+	mirror, ignored, why := given, "", ""
+	if mirror == "" {
+		mirror = in.settings.Mirror
+		if mirror != "" && os.Geteuid() == 0 && !pinnedMirror(p, mirror) {
+			if why = settingsFileOpenTo(p.Config()); why != "" {
+				ignored, mirror = mirror, ""
+				l.logf("not using the mirror %s from %s because %s, so releases come from GitHub. To update through the mirror, run: sudo pwikit update -mirror %s",
+					ignored, p.Config(), why, ignored)
+			}
+		}
+	}
+	src := update.NewSource(mirror)
 	src.Log = func(line string) { l.logf("%s", line) }
 	sums, err := src.Checksums(ctx, target)
+	if err != nil && ignored != "" {
+		return fmt.Errorf("read the checksums of %s from GitHub: %w. The mirror %s in pwikit.toml was not used because %s. To update through it, run: sudo pwikit update -mirror %s",
+			target, err, ignored, why, ignored)
+	}
 	if err != nil {
 		return fmt.Errorf("read the checksums of %s: %w", target, err)
 	}
@@ -338,8 +553,10 @@ func installRelease(p *paths.Paths, name string, serveArgs []string, target, pin
 		Bundled:    in.bundledPostgres() != "",
 		Current:    version.String(),
 		Database:   in.databaseArgs(),
+		Private:    private,
+		RootCopy:   rootCopy,
 		Source:     src,
-		Machine:    serviceMachine{name: name, stopped: !running},
+		Machine:    serviceMachine{name: name, root: p.Root(), stopped: !running},
 		Run: func(ctx context.Context, exe string, args ...string) ([]byte, error) {
 			out, err := runOwner(ctx, p.Root(), exe, args...)
 			if len(out) > 0 {
@@ -421,7 +638,7 @@ func rollbackUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 	if err != nil {
 		return err
 	}
-	exe, err := runningExecutable()
+	exe, err := instanceExecutable(*f.name)
 	if err != nil {
 		return err
 	}
@@ -429,10 +646,18 @@ func rollbackUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 	if !running && serveAlive(p) {
 		return errors.New("pwikit serve is running in the foreground; stop it first")
 	}
+	if err := updatable(p, exe); err != nil {
+		return err
+	}
+	private, err := update.PrivateDir(p.Root())
+	if err != nil {
+		return err
+	}
+	rootCopy := rootCopyFor(private, *f.name)
 	applier := &update.Applier{
-		Root: p.Root(), PGData: p.PGData(), Executable: exe,
+		Root: p.Root(), PGData: p.PGData(), Executable: exe, Private: private, RootCopy: rootCopy,
 		Bundled: in.bundledPostgres() != "", Current: version.String(), Database: in.databaseArgs(),
-		Machine: serviceMachine{name: *f.name, stopped: !running},
+		Machine: serviceMachine{name: *f.name, root: p.Root(), stopped: !running},
 		Run: func(ctx context.Context, exe string, args ...string) ([]byte, error) {
 			return runOwner(ctx, p.Root(), exe, args...)
 		},
@@ -495,14 +720,22 @@ func updateMirror(p *paths.Paths, args []string) error {
 		return nil
 	}
 	mirror := strings.TrimSuffix(strings.TrimSpace(args[0]), "/")
+	_, statErr := os.Stat(p.Config())
 	if err := config.SetUpdateMirror(p.Config(), mirror); err != nil {
 		return err
+	}
+	if errors.Is(statErr, fs.ErrNotExist) {
+		update.ChownTree(p.Config(), p.Root())
 	}
 	if mirror == "" {
 		fmt.Printf("cleared the mirror in %s\n", p.Config())
 		return nil
 	}
 	fmt.Printf("set the mirror in %s to %s\n", p.Config(), mirror)
+	if why := settingsFileOpenTo(p.Config()); why != "" && !pinnedMirror(p, mirror) {
+		fmt.Printf("automatic updates run as root and will not use it, because %s.\n"+
+			"To update through the mirror, run: sudo pwikit update -mirror %s\n", why, mirror)
+	}
 	return nil
 }
 
@@ -758,6 +991,7 @@ func openInstanceDB(ctx context.Context, p *paths.Paths, in instanceSettings) (*
 
 type serviceMachine struct {
 	name    string
+	root    string
 	stopped bool
 }
 
@@ -772,6 +1006,7 @@ func (m serviceMachine) StartService(context.Context) error {
 	if m.stopped {
 		return nil
 	}
+	prepareStart(m.root)
 	return service.Start(m.name)
 }
 
@@ -843,6 +1078,17 @@ func lastJSONLine(out []byte) []byte {
 		if line := strings.TrimSpace(lines[i]); strings.HasPrefix(line, "{") {
 			return []byte(line)
 		}
+	}
+	return nil
+}
+
+func updatable(p *paths.Paths, exe string) error {
+	if update.NoExec(p.Root()) {
+		return fmt.Errorf("%s is on a filesystem mounted noexec, where the new release cannot be tried before it is installed. "+
+			"Mount it without noexec, or move the pwikit directory", p.Root())
+	}
+	if os.Geteuid() != 0 && !update.Writable(filepath.Dir(exe)) {
+		return fmt.Errorf("this account cannot replace %s; run the update with sudo", exe)
 	}
 	return nil
 }

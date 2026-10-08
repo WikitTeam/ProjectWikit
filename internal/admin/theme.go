@@ -3,7 +3,6 @@ package admin
 import (
 	"errors"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
@@ -147,16 +147,17 @@ func (h *Handler) writeThemeCSS(siteSlug string, row db.ThemeRow) error {
 	if row.Mode != db.ThemeInline || row.Slug == "" {
 		return nil
 	}
+	jail := paths.In(h.deps.Files)
 	dir := filepath.Join(h.deps.Files, "theme", siteSlug)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := jail.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 	target := filepath.Join(dir, row.Slug+".css")
 	tmp := target + ".tmp"
-	if err := os.WriteFile(tmp, []byte(row.CSS), 0o644); err != nil {
+	if err := jail.WriteFile(tmp, []byte(row.CSS), 0o644); err != nil {
 		return err
 	}
-	return os.Rename(tmp, target)
+	return jail.Rename(tmp, target)
 }
 
 func notFound(w http.ResponseWriter) {

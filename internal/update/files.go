@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+const (
+	PrivateStaging  = "staging"
+	PrivateRollback = "rollback"
+	PrivateBin      = "bin"
+)
+
 func CopyTree(src, dst string) error {
 	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -93,12 +99,24 @@ func TreeSize(dir string) (int64, error) {
 
 // Windows refuses to overwrite a running program but lets it be renamed, and
 // the updater is itself that program.
-func Replace(current, next, keep string) error {
+func Replace(current, next string) error {
+	keep := OldExecutable(current)
+	fresh := current + ".new"
 	os.Remove(keep)
+	if err := CopyFile(next, fresh); err != nil {
+		os.Remove(fresh)
+		return fmt.Errorf("copy %s beside %s: %w", next, current, err)
+	}
+	if err := os.Chmod(fresh, 0o755); err != nil {
+		os.Remove(fresh)
+		return err
+	}
 	if err := os.Rename(current, keep); err != nil {
+		os.Remove(fresh)
 		return fmt.Errorf("move %s aside: %w", current, err)
 	}
-	if err := os.Rename(next, current); err != nil {
+	if err := os.Rename(fresh, current); err != nil {
+		os.Remove(fresh)
 		if restoreErr := os.Rename(keep, current); restoreErr != nil {
 			return fmt.Errorf("put %s in place: %w; and the old one could not be put back: %v", next, err, restoreErr)
 		}
@@ -106,6 +124,8 @@ func Replace(current, next, keep string) error {
 	}
 	return nil
 }
+
+func OldExecutable(current string) string { return current + ".old" }
 
 const lockName = "update.lock"
 

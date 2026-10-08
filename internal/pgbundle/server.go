@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -72,6 +73,10 @@ func Start(ctx context.Context, cfg Config, owner Owner) (_ *Server, err error) 
 	}
 	lock, err := TryLock(filepath.Join(cfg.Root, lockFile), owner)
 	if err != nil {
+		return nil, heldDespite(err, cfg.Data)
+	}
+	if err := own(as, filepath.Join(cfg.Root, lockFile)); err != nil {
+		lock.Release()
 		return nil, err
 	}
 	s := &Server{cfg: cfg, layout: cfg.layout(), as: as, lock: lock, exited: make(chan struct{})}
@@ -89,6 +94,9 @@ func Start(ctx context.Context, cfg Config, owner Owner) (_ *Server, err error) 
 		return nil, err
 	} else if unpacked {
 		log.Info("pwikit unpacked its PostgreSQL", "version", Version, "dir", cfg.Postgres)
+	}
+	if err := handOver(s.as, cfg.Postgres); err != nil {
+		return nil, err
 	}
 	if err := s.layout.Locate(runtime.GOOS); err != nil {
 		if !Embedded() {
@@ -220,7 +228,10 @@ func (s *Server) ExitError() error {
 }
 
 func (s *Server) binaryMajor(ctx context.Context) (int, error) {
-	out, err := exec.CommandContext(ctx, s.layout.Binary(runtime.GOOS, "postgres"), "--version").Output()
+	cmd := exec.CommandContext(ctx, s.layout.Binary(runtime.GOOS, "postgres"), "--version")
+	detach(cmd)
+	runAs(cmd, s.as, s.cfg.Root)
+	out, err := cmd.Output()
 	if err != nil {
 		return 0, fmt.Errorf("run %s --version: %w", s.layout.Binary(runtime.GOOS, "postgres"), err)
 	}
@@ -388,6 +399,15 @@ func (s *Server) clearLeftover(ctx context.Context) error {
 type postmaster struct {
 	pid    int
 	status string
+}
+
+func heldDespite(err error, data string) error {
+	if errors.Is(err, fs.ErrPermission) {
+		if st, ok := readPostmaster(data); ok && st.status == "ready" {
+			return &HeldError{Owner: OwnerServe}
+		}
+	}
+	return err
 }
 
 func readPostmaster(data string) (postmaster, bool) {

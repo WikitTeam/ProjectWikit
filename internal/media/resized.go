@@ -82,7 +82,8 @@ func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string,
 	if err != nil {
 		return nil, err
 	}
-	if body, err := os.ReadFile(cache); err == nil {
+	jail := paths.In(h.root)
+	if body, err := jail.ReadFile(cache); err == nil {
 		return body, nil
 	}
 
@@ -90,7 +91,7 @@ func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string,
 	if err != nil {
 		return nil, err
 	}
-	src, err := os.Open(original)
+	src, err := jail.Open(original)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +104,8 @@ func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string,
 
 	// A cache that cannot be written still answers the request, because the
 	// scaled copy is derived and losing it costs only the work to redo it.
-	if err := os.MkdirAll(filepath.Dir(cache), 0o755); err == nil {
-		_ = os.WriteFile(cache, body, 0o644)
+	if err := jail.MkdirAll(filepath.Dir(cache), 0o755); err == nil {
+		_ = jail.WriteFile(cache, body, 0o644)
 	}
 	return body, nil
 }

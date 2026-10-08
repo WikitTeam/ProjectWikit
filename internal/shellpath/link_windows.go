@@ -178,3 +178,5 @@ func Status(exe, dir string) ([]Place, error) {
 	}
 	return out, nil
 }
+
+func Retarget(string, string) (bool, error) { return false, nil }

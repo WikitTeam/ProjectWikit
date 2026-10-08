@@ -31,6 +31,8 @@ const (
 
 	windowsRole = "pwikit"
 
+	SystemAccountName = "pwikit"
+
 	identMap = "pwikit"
 )
 

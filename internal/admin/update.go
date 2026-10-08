@@ -14,6 +14,13 @@ import (
 
 const updateSlug = "update"
 
+const (
+	checkParam  = "update-check"
+	checkNewest = "newest"
+	checkFound  = "found"
+	checkFailed = "failed"
+)
+
 type updateNotice struct {
 	Error    bool
 	Text     string
@@ -31,6 +38,20 @@ func (h *Handler) updateNotices(w http.ResponseWriter, r *http.Request, loc *i18
 	user := auth.FromContext(r.Context())
 	super := user != nil && user.IsSuperuser
 	var out []updateNotice
+	if h.deps.Updates.AsRoot && super {
+		out = append(out, updateNotice{Error: true, Text: loc.T("update.notice-as-root")})
+	}
+	if exposed := h.deps.Updates.Exposed; exposed != "" && super {
+		out = append(out, updateNotice{Error: true, Text: loc.T("update.notice-exposed"), Detail: exposed})
+	}
+	if problem, ok := h.deps.Updates.Problem(r.Context()); ok && super {
+		out = append(out, updateNotice{
+			Error: true,
+			Text: loc.T("update.notice-check-"+problem.Kind, "log", escape.HTML(h.deps.Updates.LogPath),
+				"version", escape.HTML(problem.Version)),
+			Detail: problem.Error,
+		})
+	}
 	for _, n := range h.deps.Updates.Notices(r.Context()) {
 		v := updateNotice{Notes: n.Notes}
 		switch n.Kind {
@@ -100,6 +121,8 @@ func (h *Handler) updateAction(w http.ResponseWriter, r *http.Request, action st
 		err = h.deps.Updates.Skip(r.Context())
 	case "now":
 		err = h.deps.Updates.StartNow(r.Context())
+	case "check":
+		return h.checkForUpdate(w, r)
 	default:
 		h.next.ServeHTTP(w, r)
 		return nil
@@ -109,5 +132,38 @@ func (h *Handler) updateAction(w http.ResponseWriter, r *http.Request, action st
 	}
 	h.note(r, db.AdminChanged, updateSlug, action, "")
 	seeOther(w, Prefix, http.StatusSeeOther)
+	return nil
+}
+
+type checkResult struct {
+	Error  bool
+	Text   string
+	Detail string
+}
+
+func (h *Handler) checkResult(r *http.Request, loc *i18n.Localizer) *checkResult {
+	switch r.URL.Query().Get(checkParam) {
+	case checkNewest:
+		return &checkResult{Text: loc.T("update.check-newest", "version", h.deps.Updates.Current)}
+	case checkFailed:
+		return &checkResult{Error: true, Text: loc.T("update.check-failed"), Detail: h.deps.Updates.State(r.Context()).CheckError}
+	}
+	return nil
+}
+
+func (h *Handler) checkForUpdate(w http.ResponseWriter, r *http.Request) error {
+	st, err := h.deps.Updates.CheckNow(r.Context())
+	if err != nil {
+		return err
+	}
+	h.note(r, db.AdminChanged, updateSlug, "check", "")
+	result := checkNewest
+	switch {
+	case st.CheckError != "":
+		result = checkFailed
+	case update.Newer(st.LatestVersion, h.deps.Updates.Current):
+		result = checkFound
+	}
+	seeOther(w, Prefix+"?"+checkParam+"="+result, http.StatusSeeOther)
 	return nil
 }

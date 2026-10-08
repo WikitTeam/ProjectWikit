@@ -5,6 +5,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"os/user"
@@ -56,7 +57,7 @@ func checkAccess(root string, u *user.User) error {
 		if err != nil {
 			return err
 		}
-		if st, ok := info.Sys().(*syscall.Stat_t); ok && int(st.Uid) != uid {
+		if st, ok := info.Sys().(*syscall.Stat_t); ok && int(st.Uid) != uid && !(dir == root && st.Uid == 0) {
 			return fmt.Errorf("%s belongs to another account than %s, and PostgreSQL only opens data its own account owns.\n"+
 				"  Hand the directory over with: sudo chown -R %s: %s", dir, u.Username, u.Username, root)
 		}
@@ -96,4 +97,24 @@ func needRoot(action string) error {
 		return nil
 	}
 	return fmt.Errorf("%s a service needs root. Run the same command again with sudo in front", action)
+}
+
+func handState(paths []string, u *user.User) {
+	uid, _ := strconv.Atoi(u.Uid)
+	gid, _ := strconv.Atoi(u.Gid)
+	if uid == 0 || os.Geteuid() != 0 {
+		return
+	}
+	for _, path := range paths {
+		filepath.WalkDir(path, func(p string, _ fs.DirEntry, err error) error {
+			if err == nil {
+				os.Lchown(p, uid, gid)
+			}
+			return nil
+		})
+	}
+}
+
+func ServiceUser(given string) (*user.User, error) {
+	return serviceUser(given)
 }

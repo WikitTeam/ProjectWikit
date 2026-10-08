@@ -135,13 +135,29 @@ func postgresAccount(cfg Config) (*account, error) {
 			"  Start pwikit from an ordinary account, or install it as a service with\n" +
 			"  sudo pwikit service install, which runs it as the account you used sudo from")
 	}
-	for _, dir := range []string{cfg.Data, cfg.Root} {
+	dirs := []string{cfg.Data, cfg.Root}
+	for _, name := range []string{"update", "logs", "files", "archive", "backups"} {
+		dirs = append(dirs, filepath.Join(cfg.Root, name))
+	}
+	for _, dir := range dirs {
 		if a := ownerOf(dir); a != nil {
 			return a, nil
 		}
+		if uid, ok := nameless(dir); ok {
+			return nil, fmt.Errorf("%s belongs to uid %d, which has no account on this machine, and PostgreSQL needs one to run as.\n"+
+				"  Create an account with that uid, or hand the directory to an existing account with chown -R", dir, uid)
+		}
 	}
+	u, err := SystemAccount(cfg.Root)
+	if err != nil {
+		return nil, err
+	}
+	return accountOf(u)
+}
+
+func SystemAccount(home string) (*user.User, error) {
 	if _, err := user.Lookup(systemAccount); err != nil {
-		if err := createAccount(systemAccount, cfg.Root); err != nil {
+		if err := createAccount(systemAccount, home); err != nil {
 			return nil, err
 		}
 	}
@@ -149,7 +165,7 @@ func postgresAccount(cfg Config) (*account, error) {
 	if err != nil {
 		return nil, fmt.Errorf("look up the account %s: %w", systemAccount, err)
 	}
-	return accountOf(u)
+	return u, nil
 }
 
 func peerRole(cfg Config) (string, error) {
@@ -314,4 +330,18 @@ func privateDir(dir string, a *account) error {
 		return os.Chmod(dir, 0o700)
 	}
 	return nil
+}
+
+func nameless(dir string) (uint32, bool) {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return 0, false
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || st.Uid == 0 {
+		return 0, false
+	}
+	_, err = user.LookupId(strconv.FormatUint(uint64(st.Uid), 10))
+	var unknown user.UnknownUserIdError
+	return st.Uid, errors.As(err, &unknown)
 }

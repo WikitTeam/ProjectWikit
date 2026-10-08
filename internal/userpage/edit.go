@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,6 +18,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
+	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
@@ -175,10 +175,11 @@ func (h *EditHandler) avatar(r *http.Request, loc *i18n.Localizer, viewer *db.Us
 	stored := avatarDirectory + "/" + strconv.FormatInt(viewer.ID, 10) + "-" + hex.EncodeToString(tag) + ext
 
 	full := filepath.Join(h.deps.Files, filepath.FromSlash(stored))
-	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+	jail := paths.In(h.deps.Files)
+	if err := jail.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 		return nil, "", err
 	}
-	if err := os.WriteFile(full, data, 0o644); err != nil {
+	if err := jail.WriteFile(full, data, 0o644); err != nil {
 		return nil, "", err
 	}
 	return &stored, "", nil

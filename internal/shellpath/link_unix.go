@@ -130,3 +130,19 @@ func Status(exe, dir string) ([]Place, error) {
 	}
 	return out, nil
 }
+
+func Retarget(from, to string) (bool, error) {
+	changed := false
+	for _, candidate := range candidates("") {
+		link := filepath.Join(candidate, command)
+		e := inspect(link)
+		if !e.link || !sameFile(e.target, from) {
+			continue
+		}
+		if err := replaceLink(link, to); err != nil {
+			return changed, err
+		}
+		changed = true
+	}
+	return changed, nil
+}
