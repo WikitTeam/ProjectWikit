@@ -33,7 +33,7 @@ func TestForumURLsNormalizeTheName(t *testing.T) {
 func TestRenderDateWithoutASiteIsUTC(t *testing.T) {
 	at := time.Date(2023, 9, 10, 11, 12, 13, 0, time.FixedZone("east", 8*3600))
 	want := `<span class="odate w-date" style="display: inline" data-timestamp="1694315533000" ` +
-		`data-format="%Y.%m.%d %H:%M">2023.09.10 03:12 (UTC)</span>`
+		`data-format="%Y.%m.%d %H:%M" data-ago-tip>2023.09.10 03:12 (UTC)</span>`
 	if got := renderDate(forumEnv(t), at); got != want {
 		t.Errorf("renderDate(%s) = %q, want %q", at, got, want)
 	}

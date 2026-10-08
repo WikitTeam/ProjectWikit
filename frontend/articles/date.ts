@@ -1,5 +1,6 @@
 import formatDate, { formatDuration } from '../util/date-format'
 import { attachHovertip } from '~util/hovertip'
+import { attachAgoHovertip } from '~util/ago-hovertip'
 
 export function makeDate(node: HTMLElement) {
   // hack: mark node as already processed because it was
@@ -35,6 +36,8 @@ export function makeDate(node: HTMLElement) {
       formatted = formatDuration(new Date().getTime() - date.getTime())
     } else if (modifiers.includes('agohover')) {
       attachHovertip(node, () => formatDuration(new Date().getTime() - date.getTime()))
+    } else if (node.dataset.agoTip !== undefined) {
+      attachAgoHovertip(node, date)
     }
 
     node.textContent = formatted

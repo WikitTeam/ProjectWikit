@@ -41,7 +41,7 @@ func forumPostURL(threadID int64, threadName string, postID int64) string {
 func renderDate(env module.Env, at time.Time) string {
 	return `<span class="odate w-date" style="display: inline" data-timestamp="` +
 		strconv.FormatInt(at.UnixMilli(), 10) + `" data-format="` +
-		escape.HTML(env.Text("module-date-format-js")) + `">` +
+		escape.HTML(env.Text("module-date-format-js")) + `" data-ago-tip>` +
 		escape.HTML(serverDate(env, at)) + `</span>`
 }
 

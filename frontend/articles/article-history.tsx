@@ -6,8 +6,8 @@ import { sprintf } from 'sprintf-js'
 import styled from 'styled-components'
 import { ArticleLogEntry, fetchArticleLog, fetchArticleVersion } from '../api/articles'
 import useConstCallback from '../util/const-callback'
-import formatDate, { formatDuration } from '../util/date-format'
-import { attachHovertip } from '~util/hovertip'
+import formatDate from '../util/date-format'
+import { attachAgoHovertip } from '~util/ago-hovertip'
 import Loader from '../util/loader'
 import Pagination from '../util/pagination'
 import UserView from '../util/user-view'
@@ -271,9 +271,8 @@ const HistoryDate: React.FC<{ value: string }> = ({ value }) => {
   const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    const date = new Date(value)
     if (ref.current) {
-      attachHovertip(ref.current, () => t('articles.history.date-ago', { duration: formatDuration(Date.now() - date.getTime()) }))
+      attachAgoHovertip(ref.current, new Date(value))
     }
   }, [value])
 
