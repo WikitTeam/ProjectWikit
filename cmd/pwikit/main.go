@@ -445,12 +445,14 @@ func serve(ctx context.Context, args []string) (err error) {
 	handler := respheader.OriginPolicy(mux)
 	serving := entry.Config{
 		Mode:      mode,
+		webapi.MyTicketsPath:            ownRowsAPI,
 		Plain:     *o.listen,
 		Secure:    *o.tlsListen,
 		CertFile:  *o.tlsCert,
 		KeyFile:   *o.tlsKey,
 		CacheDir:  p.Certs(),
 		Email:     *o.acmeEmail,
+		userpage.MyTicketsPrefix:        reactivePages,
 		Directory: *o.acmeDirectory,
 		Hosts:     hosts,
 		Handler:   handler,

@@ -37,7 +37,8 @@
         </div>
       </div>
       {{end}}
-      {{template "row_area" dict "n" "admin_notes" "k" "admin.f-admin-notes" "v" .Ticket.AdminNotes}}
+      {{template "row_area" dict "n" "reply" "k" "admin.f-reply" "v" .Ticket.Reply "h" "admin.h-reply"}}
+      {{template "row_area" dict "n" "admin_notes" "k" "admin.f-admin-notes" "v" .Ticket.AdminNotes "h" "admin.h-admin-notes"}}
       {{if .Ticket.ReviewedBy}}{{template "row_static" dict "k" "admin.f-reviewed-by" "v" .Ticket.ReviewedBy}}{{end}}
       {{template "save_row" dict "back" .Back}}
     </div>

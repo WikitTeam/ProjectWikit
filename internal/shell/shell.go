@@ -495,6 +495,7 @@ func (r *Renderer) personalNav(profileURL, here string) []ProfileTab {
 		{"favourites", "/-/favourites"},
 		{"ratings", "/-/ratings"},
 		{"liked-posts", "/-/liked-posts"},
+		{"my-tickets", "/-/my-tickets"},
 	}
 	out := make([]ProfileTab, len(links))
 	for i, l := range links {

@@ -96,6 +96,15 @@ interface NotificationNewTicket extends BaseNotification {
   sender_name: string
 }
 
+interface NotificationTicketResult extends BaseNotification {
+  type: 'ticket_result'
+  kind: 'ticket' | 'membershipapply' | 'report'
+  ticket_id: number
+  subject: string
+  status: string
+  reply: string
+}
+
 export type Notification =
   | NotificationNewPostReply
   | NotificationNewThreadPost
@@ -106,6 +115,7 @@ export type Notification =
   | NotificationPostLike
   | NotificationReleaseAvailable
   | NotificationNewTicket
+  | NotificationTicketResult
 
 export interface NotificationsResponse {
   cursor: number
@@ -130,7 +140,7 @@ const KIND_QUERY: Record<NotificationKind, string> = {
   post_like: 'post_like',
   replies: 'new_post_reply,new_thread_post',
   direct_message: 'direct_message',
-  new_ticket: 'new_ticket',
+  new_ticket: 'new_ticket,ticket_result',
 }
 
 export async function getNotifications(

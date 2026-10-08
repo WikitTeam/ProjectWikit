@@ -125,7 +125,7 @@ VALUES ('probe', '[]', $1, '', now(), $2) RETURNING id`, ReportPending, site).Sc
 		d.pool.Exec(context.Background(), `DELETE FROM web_userreport WHERE id = $1`, id)
 	})
 
-	if err := d.ReviewReport(ctx, site, id, ReportReviewed, "handled", userID, time.Now().UTC()); err != nil {
+	if err := d.ReviewReport(ctx, site, id, ReportReviewed, "handled", "", userID, time.Now().UTC()); err != nil {
 		t.Fatalf("ReviewReport() err = %v, want nil", err)
 	}
 	got, err := d.AdminReport(ctx, site, id)

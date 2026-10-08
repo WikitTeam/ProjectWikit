@@ -25,11 +25,13 @@ type ReportRow struct {
 	CreatedAt  time.Time
 	ReviewedAt *time.Time
 	ReviewedBy string
+	ReporterID *int64
+	Reply      string
 }
 
 const reportColumns = `r.id, coalesce(rep.username, ''), coalesce(tgt.username, ''),
 	r.reason, r.reported_messages::text, r.status, r.admin_notes, r.created_at,
-	r.reviewed_at, coalesce(rev.username, '')`
+	r.reviewed_at, coalesce(rev.username, ''), r.reporter_id, r.reply`
 
 const reportJoins = `
 FROM web_userreport r
@@ -48,7 +50,7 @@ SELECT count(*) FROM web_userreport r WHERE ($1 = '' OR r.status = $1) AND r.sit
 
 func scanReport(row pgx.Row, r *ReportRow) error {
 	return row.Scan(&r.ID, &r.Reporter, &r.Reported, &r.Reason, &r.Messages,
-		&r.Status, &r.AdminNotes, &r.CreatedAt, &r.ReviewedAt, &r.ReviewedBy)
+		&r.Status, &r.AdminNotes, &r.CreatedAt, &r.ReviewedAt, &r.ReviewedBy, &r.ReporterID, &r.Reply)
 }
 
 func (d *DB) AdminReports(ctx context.Context, siteID int64, status string, limit, offset int) ([]ReportRow, int, error) {
@@ -88,16 +90,16 @@ func (d *DB) AdminReport(ctx context.Context, siteID, id int64) (ReportRow, erro
 }
 
 var qReviewReport = register("ReviewReport", `
-UPDATE web_userreport SET status = $2, admin_notes = $3, reviewed_at = $4, reviewed_by_id = $5
+UPDATE web_userreport SET status = $2, admin_notes = $3, reviewed_at = $4, reviewed_by_id = $5, reply = $7
 WHERE id = $1 AND site_id = $6`)
 
-func (d *DB) ReviewReport(ctx context.Context, siteID, id int64, status, notes string, by int64, at time.Time) error {
+func (d *DB) ReviewReport(ctx context.Context, siteID, id int64, status, notes, reply string, by int64, at time.Time) error {
 	var reviewedAt *time.Time
 	var reviewer *int64
 	if status != ReportPending {
 		reviewedAt, reviewer = &at, &by
 	}
-	if _, err := d.pool.Exec(ctx, qReviewReport, id, status, notes, reviewedAt, reviewer, siteID); err != nil {
+	if _, err := d.pool.Exec(ctx, qReviewReport, id, status, notes, reviewedAt, reviewer, siteID, reply); err != nil {
 		return fmt.Errorf("review report %d: %w", id, err)
 	}
 	return nil

@@ -22,6 +22,7 @@ const (
 	FavouritesPrefix = "/-/favourites"
 	RatingsPrefix    = "/-/ratings"
 	LikedPostsPrefix = "/-/liked-posts"
+	MyTicketsPrefix  = "/-/my-tickets"
 
 	NotificationsPrefix = "/-/notifications"
 	MessagesPrefix      = "/-/messages"
@@ -34,6 +35,7 @@ var reactivePaths = []string{
 	FavouritesPrefix,
 	RatingsPrefix,
 	LikedPostsPrefix,
+	MyTicketsPrefix,
 	NotificationsPrefix,
 	NotificationsPrefix + "/all",
 	NotificationsPrefix + "/unread",
@@ -125,6 +127,13 @@ func (h *ReactiveHandler) config(r *http.Request, viewer *db.User) (string, erro
 	reviews, err := repo.ReviewsTickets(ctx, h.deps.DB, viewer, time.Now())
 	if err != nil {
 		return "", err
+	}
+	if !reviews {
+		submitted, err := h.deps.DB.OwnTicketCount(ctx, viewer.ID)
+		if err != nil {
+			return "", err
+		}
+		reviews = submitted > 0
 	}
 	out := wikijson.Object{{Key: "user", Value: user.Object()}, {Key: "reviewsTickets", Value: reviews}}
 	if current := site.FromContext(ctx); current != nil {

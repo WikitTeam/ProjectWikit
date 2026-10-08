@@ -31,6 +31,7 @@ var notificationKinds = []string{
 	db.NotifyPostLike,
 	db.NotifyReleaseAvailable,
 	db.NotifyNewTicket,
+	db.NotifyTicketResult,
 }
 
 type Notifications struct {

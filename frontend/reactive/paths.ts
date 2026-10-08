@@ -6,4 +6,5 @@ export const Paths = {
   favourites: '/favourites',
   ratings: '/ratings',
   likedPosts: '/liked-posts',
+  myTickets: '/my-tickets',
 }

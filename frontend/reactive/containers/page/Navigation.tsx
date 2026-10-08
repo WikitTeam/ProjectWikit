@@ -15,6 +15,7 @@ const Navigation: React.FC = () => {
       <Styled.Link to={Paths.favourites}>{t('page.navigation.favourites')}</Styled.Link>
       <Styled.Link to={Paths.ratings}>{t('page.navigation.ratings')}</Styled.Link>
       <Styled.Link to={Paths.likedPosts}>{t('page.navigation.liked-posts')}</Styled.Link>
+      <Styled.Link to={Paths.myTickets}>{t('page.navigation.my-tickets')}</Styled.Link>
     </Styled.Container>
   )
 }

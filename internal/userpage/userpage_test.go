@@ -132,6 +132,7 @@ func TestAnswers(t *testing.T) {
 		{"/-/favourites", true},
 		{"/-/ratings", true},
 		{"/-/liked-posts", true},
+		{"/-/my-tickets", true},
 		{"/-/notifications", true},
 		{"/-/notifications/all", true},
 		{"/-/notifications/unread", true},

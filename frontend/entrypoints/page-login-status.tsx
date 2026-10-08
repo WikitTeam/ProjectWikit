@@ -104,6 +104,9 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
                 <a href={`/-/liked-posts`}>{t('page-login-status.liked-posts')}</a>
               </li>
               <li>
+                <a href={`/-/my-tickets`}>{t('page-login-status.my-tickets')}</a>
+              </li>
+              <li>
                 <a href={`/-/profile/edit`}>{t('page-login-status.settings')}</a>
               </li>
               <li>

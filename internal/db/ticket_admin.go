@@ -28,10 +28,13 @@ type TicketRow struct {
 	ReviewedAt *time.Time
 	ReviewedBy string
 	GrantedID  *int64
+	AuthorID   *int64
+	Reply      string
 }
 
 const ticketColumns = `t.id, t.kind, coalesce(a.username, ''), t.subject, t.body, t.source_page,
-	t.status, t.admin_notes, t.created_at, t.reviewed_at, coalesce(rev.username, ''), t.granted_role_id`
+	t.status, t.admin_notes, t.created_at, t.reviewed_at, coalesce(rev.username, ''), t.granted_role_id,
+	t.author_id, t.reply`
 
 const ticketJoins = `
 FROM web_userticket t
@@ -49,7 +52,8 @@ SELECT count(*) FROM web_userticket t WHERE t.kind = $1 AND ($2 = '' OR t.status
 
 func scanTicket(row pgx.Row, t *TicketRow) error {
 	return row.Scan(&t.ID, &t.Kind, &t.Author, &t.Subject, &t.Body, &t.SourcePage,
-		&t.Status, &t.AdminNotes, &t.CreatedAt, &t.ReviewedAt, &t.ReviewedBy, &t.GrantedID)
+		&t.Status, &t.AdminNotes, &t.CreatedAt, &t.ReviewedAt, &t.ReviewedBy, &t.GrantedID,
+		&t.AuthorID, &t.Reply)
 }
 
 func (d *DB) AdminTickets(ctx context.Context, siteID int64, kind, status string, limit, offset int) ([]TicketRow, int, error) {
@@ -89,7 +93,7 @@ func (d *DB) AdminTicket(ctx context.Context, siteID, id int64) (TicketRow, erro
 }
 
 var qReviewTicket = register("ReviewTicket", `
-UPDATE web_userticket SET status=$2, admin_notes=$3, reviewed_at=$4, reviewed_by_id=$5, granted_role_id=$6
+UPDATE web_userticket SET status=$2, admin_notes=$3, reviewed_at=$4, reviewed_by_id=$5, granted_role_id=$6, reply=$8
 WHERE id=$1 AND site_id=$7`)
 
 var qGrantTicketRole = register("GrantTicketRole", `
@@ -99,7 +103,7 @@ WHERE t.id = $1 AND t.author_id IS NOT NULL
   AND EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3)
 ON CONFLICT DO NOTHING`)
 
-func (d *DB) ReviewTicket(ctx context.Context, siteID, id int64, status, notes string, by int64, role *int64, at time.Time) error {
+func (d *DB) ReviewTicket(ctx context.Context, siteID, id int64, status, notes, reply string, by int64, role *int64, at time.Time) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin reviewing ticket %d: %w", id, err)
@@ -111,7 +115,7 @@ func (d *DB) ReviewTicket(ctx context.Context, siteID, id int64, status, notes s
 	if status != TicketPending {
 		reviewedAt, reviewer = &at, &by
 	}
-	if _, err := tx.Exec(ctx, qReviewTicket, id, status, notes, reviewedAt, reviewer, role, siteID); err != nil {
+	if _, err := tx.Exec(ctx, qReviewTicket, id, status, notes, reviewedAt, reviewer, role, siteID, reply); err != nil {
 		return fmt.Errorf("review ticket %d: %w", id, err)
 	}
 	if status == TicketApproved && role != nil {

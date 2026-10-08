@@ -15,6 +15,7 @@ import (
 const (
 	RatingsPath    = "/pw-api/ratings"
 	LikedPostsPath = "/pw-api/liked-posts"
+	MyTicketsPath  = "/pw-api/my-tickets"
 )
 
 const ownRowsPerPage = 20
@@ -31,7 +32,7 @@ func NewOwnRows(d Deps, next http.Handler) *OwnRows {
 }
 
 func (h *OwnRows) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet || (r.URL.Path != RatingsPath && r.URL.Path != LikedPostsPath) {
+	if r.Method != http.MethodGet || (r.URL.Path != RatingsPath && r.URL.Path != LikedPostsPath && r.URL.Path != MyTicketsPath) {
 		h.next.ServeHTTP(w, r)
 		return
 	}
@@ -43,6 +44,10 @@ func (h *OwnRows) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == RatingsPath {
 		h.ratings(w, r, loc, user)
+		return
+	}
+	if r.URL.Path == MyTicketsPath {
+		h.tickets(w, r, loc, user)
 		return
 	}
 	h.likedPosts(w, r, loc, user)
@@ -129,6 +134,50 @@ func (h *OwnRows) likedPosts(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		})
 	}
 	h.writePage(w, loc, page, pages, total, "posts", rendered)
+}
+
+func (h *OwnRows) tickets(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, user *db.User) {
+	ctx := r.Context()
+	total, err := h.deps.DB.OwnTicketCount(ctx, user.ID)
+	if err != nil {
+		h.deps.log().Error("count own tickets", "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+	page, pages := pageOf(r, total)
+
+	found, err := h.deps.DB.OwnTickets(ctx, user.ID, (page-1)*ownRowsPerPage, ownRowsPerPage)
+	if err != nil {
+		h.deps.log().Error("list own tickets", "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+	sites, err := loadSiteLinks(ctx, h.deps.DB)
+	if err != nil {
+		h.deps.log().Error("list sites", "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+
+	rendered := make(wikijson.Array, 0, len(found))
+	for _, one := range found {
+		reviewedAt := any(nil)
+		if one.ReviewedAt != nil {
+			reviewedAt = isoTime(*one.ReviewedAt)
+		}
+		rendered = append(rendered, wikijson.Object{
+			{Key: "kind", Value: one.Kind},
+			{Key: "id", Value: one.ID},
+			{Key: "site", Value: sites.title(one.SiteID)},
+			{Key: "url", Value: sites.href(one.SiteID, "/")},
+			{Key: "subject", Value: one.Subject},
+			{Key: "status", Value: one.Status},
+			{Key: "reply", Value: one.Reply},
+			{Key: "createdAt", Value: isoTime(one.CreatedAt)},
+			{Key: "reviewedAt", Value: reviewedAt},
+		})
+	}
+	h.writePage(w, loc, page, pages, total, "tickets", rendered)
 }
 
 func (h *OwnRows) writePage(w http.ResponseWriter, loc *i18n.Localizer, page, pages, total int, key string, rows wikijson.Array) {

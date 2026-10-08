@@ -123,6 +123,21 @@ const Notification: React.FC<Props> = ({ notification }) => {
           </Styled.PostName>
         </>
       )
+    } else if (notification.type === 'ticket_result') {
+      return (
+        <>
+          <Styled.TypeName>
+            {t(`notifications.item.result-${notification.kind}`, {
+              subject: notification.subject,
+              status: t(`own-tickets.status-${notification.status}`),
+            })}
+          </Styled.TypeName>
+          {notification.reply && <Styled.PostContent>{notification.reply}</Styled.PostContent>}
+          <Styled.PostName>
+            <a href="/-/my-tickets">{t('notifications.item.view-own-tickets')}</a>
+          </Styled.PostName>
+        </>
+      )
     } else if (notification.type === 'direct_message') {
       return (
         <>

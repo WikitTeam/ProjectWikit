@@ -128,3 +128,32 @@ export const Badge = styled.span<{ positive: boolean }>`
   border: 1px solid ${({ theme }) => theme.windowStrong};
   color: ${({ positive, theme }) => (positive ? theme.foreground : theme.uiForeground)};
 `
+
+export const Ticket = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.windowPadding};
+`
+
+export const TicketHead = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 15px;
+  color: ${({ theme }) => theme.foreground};
+`
+
+export const TicketKind = styled.span`
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  color: ${({ theme }) => theme.uiForeground};
+`
+
+export const TicketReply = styled.div`
+  white-space: pre-wrap;
+  font-size: 14px;
+  color: ${({ theme }) => theme.uiForeground};
+`

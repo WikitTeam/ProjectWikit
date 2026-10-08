@@ -161,10 +161,12 @@ func (h *Handler) saveReport(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		notFound(w)
 		return nil
 	}
-	if _, err := h.deps.DB.AdminReport(ctx, siteID(ctx), id); errors.Is(err, db.ErrNotFound) {
+	stored, err := h.deps.DB.AdminReport(ctx, siteID(ctx), id)
+	if errors.Is(err, db.ErrNotFound) {
 		notFound(w)
 		return nil
-	} else if err != nil {
+	}
+	if err != nil {
 		return err
 	}
 
@@ -177,10 +179,14 @@ func (h *Handler) saveReport(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return nil
 	}
-	err = h.deps.DB.ReviewReport(ctx, siteID(ctx), id, status, r.PostFormValue("admin_notes"), mine.ID, time.Now())
+	reply := strings.TrimSpace(r.PostFormValue("reply"))
+	err = h.deps.DB.ReviewReport(ctx, siteID(ctx), id, status, r.PostFormValue("admin_notes"), reply, mine.ID, time.Now())
 	if err != nil {
 		return err
 	}
+	h.tellSubmitter(ctx, stored.ReporterID, mine.ID,
+		handled{kind: db.ReportKind, id: id, subject: stored.Reported, status: stored.Status, reply: stored.Reply},
+		handled{kind: db.ReportKind, id: id, subject: stored.Reported, status: status, reply: reply}, db.ReportPending)
 	h.noteID(r, db.AdminChanged, reportSlug, id, status)
 	redirect(w, Prefix+reportSlug+"/")
 	return nil

@@ -32,6 +32,29 @@ export interface LikedPostListing {
   posts: Array<LikedPostEntry>
 }
 
+export interface TicketEntry {
+  kind: 'ticket' | 'membershipapply' | 'report'
+  id: number
+  site: string
+  url: string
+  subject: string
+  status: string
+  reply: string
+  createdAt: string
+  reviewedAt: string | null
+}
+
+export interface TicketListing {
+  page: number
+  pages: number
+  total: number
+  tickets: Array<TicketEntry>
+}
+
+export async function getOwnTickets(page: number) {
+  return await wFetch<TicketListing>(`/pw-api/my-tickets?page=${page}`)
+}
+
 export async function getOwnRatings(page: number) {
   return await wFetch<RatingListing>(`/pw-api/ratings?page=${page}`)
 }

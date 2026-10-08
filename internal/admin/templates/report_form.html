@@ -26,7 +26,8 @@
           </select>
         </div>
       </div>
-      {{template "row_area" dict "n" "admin_notes" "k" "admin.f-admin-notes" "v" .Report.AdminNotes}}
+      {{template "row_area" dict "n" "reply" "k" "admin.f-reply" "v" .Report.Reply "h" "admin.h-reply"}}
+      {{template "row_area" dict "n" "admin_notes" "k" "admin.f-admin-notes" "v" .Report.AdminNotes "h" "admin.h-admin-notes"}}
       {{if .Report.ReviewedBy}}{{template "row_static" dict "k" "admin.f-reviewed-by" "v" .Report.ReviewedBy}}{{end}}
       {{template "save_row" dict "back" .Back}}
     </div>
