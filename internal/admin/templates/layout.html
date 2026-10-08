@@ -38,11 +38,11 @@
 
           {{range .Groups}}
           <div class="menu-box second-level" id="second-{{esc .Key}}" data-level="{{esc .Key}}"{{if not .Open}} hidden{{end}}>
+            <div class="group-head">
+              <a class="back" href="{{esc $.Here}}?g=" data-back><i class="fas fa-chevron-left"></i>{{$.T "admin.back"}}</a>
+              <span class="group-name"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}</span>
+            </div>
             <ul class="nav nav-tabs nav-stacked">
-              <li><a class="back" href="{{esc $.Here}}?g=" data-back><i class="fas fa-chevron-left"></i>{{$.T "admin.back"}}</a></li>
-            </ul>
-            <ul class="nav nav-tabs nav-stacked">
-              <li class="group-name"><a href="{{esc $.Here}}?g={{esc .Key}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}</a></li>
               {{range .Items}}
               <li{{if .Active}} class="selected"{{end}}>
                 <a href="{{esc .Href}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}</a>

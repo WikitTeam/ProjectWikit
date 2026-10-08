@@ -58,16 +58,23 @@ body.admin { padding-top: 66px; }
   font-family: var(--font-mono); color: var(--rule); font-size: 14px;
 }
 .admin-shell .menu-box .first-button:hover::after { color: var(--muted); }
-.admin-shell .menu-box .back {
-  font-family: var(--font-mono); font-size: 11px;
-  letter-spacing: 0.06em; text-transform: uppercase;
+.admin-shell .menu-box .group-head {
+  display: flex; align-items: center;
+  padding: 6px 12px 10px; margin-bottom: 4px;
+  border-bottom: 1px solid var(--rule);
 }
-.admin-shell .menu-box .group-name > a {
-  color: var(--muted); font-size: 11px; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  cursor: default; padding-bottom: 4px;
+.admin-shell .menu-box .group-head .back {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 12px 2px 0; margin-right: 12px;
+  border-right: 1px solid var(--rule);
+  color: var(--muted); font-size: 14px; text-decoration: none;
 }
-.admin-shell .menu-box .group-name > a:hover { background: transparent; color: var(--muted); }
+.admin-shell .menu-box .group-head .back:hover { color: var(--ink); }
+.admin-shell .menu-box .group-head .group-name {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--ink); font-size: 14px; font-weight: 500;
+}
+.admin-shell .menu-box .group-head i { font-size: 12px; width: 14px; text-align: center; }
 .admin-shell .menu-box .count {
   margin-left: auto; font-family: var(--font-mono); font-size: 10px;
   padding: 1px 6px; border: 1px solid var(--rule); border-radius: 999px;
