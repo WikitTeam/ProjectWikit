@@ -345,3 +345,32 @@ func nameless(dir string) (uint32, bool) {
 	var unknown user.UnknownUserIdError
 	return st.Uid, errors.As(err, &unknown)
 }
+
+func sameOwner(path, like string) error {
+	if os.Geteuid() != 0 {
+		return nil
+	}
+	info, err := os.Stat(like)
+	if err != nil {
+		return err
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return nil
+	}
+	return os.Lchown(path, int(st.Uid), int(st.Gid))
+}
+
+func RememberRole(data string) error {
+	if RecordedRole(data) != "" {
+		return nil
+	}
+	if _, err := os.Stat(filepath.Join(data, versionFile)); err != nil {
+		return nil
+	}
+	a := ownerOf(data)
+	if a == nil {
+		return nil
+	}
+	return writeRole(data, a.name)
+}

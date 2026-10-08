@@ -21,6 +21,7 @@ import (
 const (
 	passwordFile = "postgres-password"
 	overrideFile = "pwikit.conf"
+	roleFile     = "pwikit.role"
 	versionFile  = "PG_VERSION"
 
 	defaultPort = 5432

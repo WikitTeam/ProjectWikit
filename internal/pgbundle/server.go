@@ -133,6 +133,11 @@ func Start(ctx context.Context, cfg Config, owner Owner) (_ *Server, err error) 
 			return nil, err
 		}
 	}
+	if s.as != nil {
+		if err := RememberRole(cfg.Data); err != nil {
+			return nil, err
+		}
+	}
 	if err := handOver(s.as, cfg.Data); err != nil {
 		return nil, err
 	}
@@ -187,7 +192,11 @@ func Attach(ctx context.Context, cfg Config) (string, error) {
 		}
 		password = strings.TrimSpace(string(raw))
 	}
-	return PlanFor(goos, cfg.layout(), port, RoleFor(goos, account), password).DSN(Database), nil
+	role := RoleFor(goos, account)
+	if recorded := RecordedRole(cfg.Data); recorded != "" && goos != "windows" {
+		role = recorded
+	}
+	return PlanFor(goos, cfg.layout(), port, role, password).DSN(Database), nil
 }
 
 func (s *Server) DSN() string {
@@ -265,10 +274,16 @@ func (s *Server) makePlan(fresh bool) (Plan, error) {
 	if s.as != nil {
 		role = s.as.name
 	}
+	runs := role
+	if recorded := RecordedRole(s.cfg.Data); !fresh && recorded != "" {
+		role = recorded
+	}
 	p := PlanFor(goos, s.layout, port, role, password)
 	p.Logs = s.cfg.Logs
 	if s.as != nil {
 		p.Peers = []string{"root", s.as.name}
+	} else if goos != "windows" && runs != role {
+		p.Peers = []string{runs}
 	}
 	return p, nil
 }
@@ -286,33 +301,47 @@ func (s *Server) initdb(ctx context.Context) error {
 	if err := emptyOrMissing(data); err != nil {
 		return err
 	}
-	staging := data + ".initdb"
-	if err := os.RemoveAll(staging); err != nil {
-		return fmt.Errorf("clear %s: %w", staging, err)
-	}
-	if s.as != nil {
-		if err := privateDir(staging, s.as); err != nil {
-			return err
-		}
+	if err := privateDir(data, s.as); err != nil {
+		return err
 	}
 
-	args := []string{"-D", staging, "-U", s.plan.User, "-E", "UTF8", "--locale=C"}
+	args := []string{"-D", data, "-U", s.plan.User, "-E", "UTF8", "--locale=C"}
 	if s.plan.Socket != "" {
 		args = append(args, "--auth-local=peer", "--auth-host=reject")
 	} else {
 		args = append(args, "--auth=scram-sha-256", "--pwfile="+filepath.Join(s.cfg.Secrets, passwordFile))
 	}
 	if err := s.tool(ctx, "initdb", args...); err != nil {
-		os.RemoveAll(staging)
+		emptyDir(data)
 		return err
 	}
-	if err := os.Remove(data); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("replace the empty %s: %w", data, err)
+	return writeRole(data, s.plan.User)
+}
+
+func emptyDir(dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
 	}
-	if err := os.Rename(staging, data); err != nil {
-		return fmt.Errorf("move the new data directory into %s: %w", data, err)
+	for _, e := range entries {
+		os.RemoveAll(filepath.Join(dir, e.Name()))
 	}
-	return nil
+}
+
+func RecordedRole(data string) string {
+	raw, err := os.ReadFile(filepath.Join(data, roleFile))
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(raw))
+}
+
+func writeRole(data, role string) error {
+	name := filepath.Join(data, roleFile)
+	if err := os.WriteFile(name, []byte(role+"\n"), 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	return sameOwner(name, data)
 }
 
 // Never a pipe. PostgreSQL inherits it and the pipe never reaches end of file.

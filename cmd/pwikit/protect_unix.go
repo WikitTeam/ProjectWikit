@@ -321,6 +321,9 @@ func dedicate(spec *service.Spec) error {
 	uid, _ := strconv.Atoi(u.Uid)
 	gid, _ := strconv.Atoi(u.Gid)
 	root := spec.Root
+	if err := pgbundle.RememberRole(filepath.Join(root, "pgdata")); err != nil {
+		return err
+	}
 	for _, name := range []string{"files", "archive", "backups", "logs", "update", "secrets", "pgdata"} {
 		dir := filepath.Join(root, name)
 		if _, err := os.Lstat(dir); err == nil {

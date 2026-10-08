@@ -155,3 +155,7 @@ func processImage(pid int) (bool, string) {
 	}
 	return true, windows.UTF16ToString(buf[:size])
 }
+
+func sameOwner(string, string) error { return nil }
+
+func RememberRole(string) error { return nil }
