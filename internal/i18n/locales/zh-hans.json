@@ -413,6 +413,7 @@
   "admin.theme-no-url": "选择外部链接时必须填写链接地址",
   "admin.theme-none": "无主题",
   "admin.theme-settings": "主题设置",
+  "admin.theme-slug-taken": "该标识名已被其他主题使用",
   "admin.themes": "主题",
   "admin.ticket-content": "工单内容",
   "admin.ticket-status-approved": "已通过",

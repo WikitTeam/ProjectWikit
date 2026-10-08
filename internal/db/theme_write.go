@@ -7,7 +7,15 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
+
+var ErrThemeSlugTaken = errors.New("db: theme slug already in use")
+
+func themeSlugTaken(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}
 
 type ThemeRow struct {
 	ID          int64
@@ -71,12 +79,19 @@ func (d *DB) SaveTheme(ctx context.Context, siteID int64, t ThemeRow) (int64, er
 	if t.ID == 0 {
 		var id int64
 		err := d.pool.QueryRow(ctx, qInsertTheme, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at, siteID).Scan(&id)
+		if themeSlugTaken(err) {
+			return 0, ErrThemeSlugTaken
+		}
 		if err != nil {
 			return 0, fmt.Errorf("create theme %q: %w", t.Slug, err)
 		}
 		return id, nil
 	}
-	if _, err := d.pool.Exec(ctx, qUpdateTheme, t.ID, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at, siteID); err != nil {
+	_, err := d.pool.Exec(ctx, qUpdateTheme, t.ID, t.Name, t.Slug, t.Mode, t.CSS, t.ExternalURL, at, siteID)
+	if themeSlugTaken(err) {
+		return 0, ErrThemeSlugTaken
+	}
+	if err != nil {
 		return 0, fmt.Errorf("update theme %d: %w", t.ID, err)
 	}
 	return t.ID, nil

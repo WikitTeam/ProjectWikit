@@ -117,6 +117,9 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 		did = db.AdminCreated
 	}
 	id, err := h.deps.DB.SaveTheme(r.Context(), siteID(r.Context()), row)
+	if errors.Is(err, db.ErrThemeSlugTaken) {
+		return h.themeForm(w, r, loc, rest, loc.T("admin.theme-slug-taken"))
+	}
 	if err != nil {
 		return err
 	}
