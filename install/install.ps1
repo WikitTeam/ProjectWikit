@@ -129,7 +129,7 @@ try {
     Write-Host 'Next, create the site from that directory:'
     Write-Host "  cd $Dir"
     Write-Host '  .\pwikit.exe createsite -slug main -title "My Wiki" -headline "A wiki" -domain wiki.example.org -media-domain files.example.org'
-    Write-Host 'Then follow the quick start: https://github.com/WikitTeam/ProjectWikit/blob/main/docs/en/quickstart.md'
+    Write-Host 'Then follow the quick start: https://github.com/WikitTeam/ProjectWikit/blob/main/quickstart.md'
 } finally {
     Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 }

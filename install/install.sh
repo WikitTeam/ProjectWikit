@@ -192,4 +192,4 @@ if [ -n "$owner" ]; then
 else
   say "  ./pwikit createsite -slug main -title \"My Wiki\" -headline \"A wiki\" -domain wiki.example.org -media-domain files.example.org"
 fi
-say "Then follow the quick start: https://github.com/WikitTeam/ProjectWikit/blob/main/docs/en/quickstart.md"
+say "Then follow the quick start: https://github.com/WikitTeam/ProjectWikit/blob/main/quickstart.md"
