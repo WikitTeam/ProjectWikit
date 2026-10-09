@@ -148,7 +148,10 @@ func (h *ReactiveHandler) config(r *http.Request, viewer *db.User) (string, erro
 	}
 	out := wikijson.Object{{Key: "user", Value: user.Object()}, {Key: "reviewsTickets", Value: reviews}}
 	if current := site.FromContext(ctx); current != nil {
-		out = append(out, wikijson.Field{Key: "site", Value: wikijson.Object{{Key: "title", Value: current.Title}}})
+		out = append(out, wikijson.Field{Key: "site", Value: wikijson.Object{
+			{Key: "title", Value: current.Title},
+			{Key: "systemIcon", Value: authIcon(current)},
+		}})
 	}
 	return wikijson.Marshal(out)
 }

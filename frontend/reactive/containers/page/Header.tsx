@@ -1,5 +1,6 @@
 import { t } from '~util/i18n'
 import React from 'react'
+import { useConfigContext } from '~reactive/config'
 import * as Styled from './Header.styles'
 
 interface Props {
@@ -7,10 +8,11 @@ interface Props {
 }
 
 const Header: React.FC<Props> = ({ crumb }) => {
+  const { site } = useConfigContext()
   return (
     <Styled.Container>
       <Styled.Brand href="/">
-        <Styled.BrandLogo src="/-/static/images/wikitHana.png" alt="ProjectWikit" />
+        <Styled.BrandLogo src={site?.systemIcon || '/-/static/images/wikitHana.png'} alt="ProjectWikit" />
         <Styled.Wordmark>ProjectWikit</Styled.Wordmark>
       </Styled.Brand>
       <Styled.Divider />
