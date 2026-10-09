@@ -10,7 +10,7 @@ import { Paths } from '~reactive/paths'
 import useConstCallback from '../../../util/const-callback'
 import * as Styled from './Notifications.styles'
 
-const KINDS: NotificationKind[] = ['all', 'post_like', 'replies', 'direct_message', 'new_ticket']
+const KINDS: NotificationKind[] = ['all', 'direct_message', 'post_like', 'replies', 'new_ticket']
 
 const Notifications: React.FC = () => {
   const [forceUpdate, setForceUpdate] = useState<boolean>(false)
@@ -56,6 +56,7 @@ const Notifications: React.FC = () => {
         </Styled.RadioLabel>
       </Styled.FilterContainer>
       <Styled.FilterContainer>
+        <Styled.FilterLabel>{t('notifications.kind-label')}</Styled.FilterLabel>
         {kinds.map(one => (
           <Styled.RadioLabel checked={kind === one} key={one}>
             <Styled.RadioInput type="radio" name="kind" checked={kind === one} onChange={() => onKind(one)} />
