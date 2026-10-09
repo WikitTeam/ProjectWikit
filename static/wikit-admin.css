@@ -364,3 +364,130 @@ body.admin .system-content .content textarea:focus-visible {
 }
 
 .admin-shell .changes-list .rev { color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
+
+.wikit-scope.admin-shell {
+  --ink: #1b1f24;
+  --muted: #4a5260;
+  --rule: #c3cad3;
+  --well: #eef2f6;
+  --ledger: #1d2b3a;
+  --signal: #1f5bd8;
+  --quiet: #8a94a3;
+  --font-mono: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.admin-shell #admin-header .navbar-inner { background: var(--ledger); border-bottom: none; }
+.admin-shell #admin-header .brand { color: #fff; font-weight: 600; border-right-color: rgba(255, 255, 255, .28); }
+.admin-shell #admin-header .title a { color: #fff; font-weight: 500; }
+.admin-shell #admin-header .title .admin-panel { color: #c9d3de; font-size: 12px; letter-spacing: 0; }
+.admin-shell #admin-header .stamp { color: #dce3eb; font-size: 13px; }
+body.admin .system-content .content #admin-header .btn { color: #fff; border-color: rgba(255, 255, 255, .45); background: transparent; }
+body.admin .system-content .content #admin-header .btn:hover { border-color: #fff; background: rgba(255, 255, 255, .08); }
+
+.admin-shell #site-manager-menu { background: var(--well); border-right-color: var(--rule); }
+.admin-shell .menu-box { padding: 0 14px 0 10px; }
+.admin-shell .menu-box .nav-stacked > li > a { color: #2a313b; font-weight: 500; border-left-width: 3px; }
+.admin-shell .menu-box .nav-stacked > li > a > i { color: var(--muted); }
+.admin-shell .menu-box .nav-stacked > li > a:hover { color: var(--ink); background: #e1e7ee; }
+.admin-shell .menu-box .nav-stacked > li.selected > a {
+  background: #fff; color: var(--ledger); font-weight: 600; border-left-color: var(--signal);
+}
+.admin-shell .menu-box .nav-stacked > li.selected > a > i { color: var(--signal); }
+.admin-shell .menu-box .first-button::after { color: var(--quiet); }
+.admin-shell .menu-box .first-button:hover::after { color: var(--ink); }
+.admin-shell .menu-box .group-head { border-bottom-color: var(--rule); }
+.admin-shell .menu-box .group-head .back { color: var(--signal); font-weight: 500; border-right-color: var(--rule); }
+.admin-shell .menu-box .group-head .back:hover { color: var(--ledger); text-decoration: underline; text-underline-offset: 3px; }
+.admin-shell .menu-box .group-head .group-name { color: var(--ink); font-weight: 600; }
+.admin-shell .menu-box .count { font-size: 12px; border-color: var(--quiet); color: var(--muted); }
+
+.admin-shell .page-header h1 { font-weight: 600; font-size: 30px; }
+.admin-shell .widget-title { border-bottom: 2px solid var(--ledger); }
+.admin-shell .widget-title > i { color: var(--ledger); font-size: 13px; }
+.admin-shell .widget-title h5 { font-size: 15px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.admin-shell .widget-title .pull-right { font-size: 13px; }
+.admin-shell .widget-title .link { color: var(--signal); font-weight: 500; }
+.admin-shell .widget-title .link:hover { color: var(--ledger); }
+.admin-shell .widget-content .table a,
+.admin-shell .changes-list .title,
+.admin-shell .printuser a { color: var(--signal); }
+.admin-shell .widget-content .table a:hover,
+.admin-shell .changes-list .title:hover,
+.admin-shell .printuser a:hover { color: var(--ledger); }
+
+.admin-shell .table th {
+  font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0;
+  color: var(--muted); background: var(--well); border-bottom: 1px solid var(--quiet);
+}
+.admin-shell .table th:first-child { padding-left: 12px; }
+.admin-shell .table td { border-bottom-color: var(--rule); }
+.admin-shell .table-hover tbody tr:hover { background: #f5f8fb; }
+.admin-shell .table .num { font-size: 14px; }
+.admin-shell .changes-list td.date { font-size: 12px; }
+.admin-shell .changes-list .comment,
+.admin-shell .stamp { font-size: 12px; }
+
+.admin-shell .state { font-size: 12px; letter-spacing: 0; text-transform: none; border-color: var(--quiet); color: var(--muted); }
+.admin-shell .state.on { border-color: var(--ledger); color: var(--ledger); }
+.admin-shell .state.strong { background: var(--ledger); border-color: var(--ledger); color: #fff; }
+
+body.admin .system-content .content .btn {
+  font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  background: #fff; border-color: var(--quiet); color: var(--ink);
+}
+body.admin .system-content .content .btn:hover { border-color: var(--ledger); background: var(--well); color: var(--ledger); }
+body.admin .system-content .content .btn-primary { background: var(--ledger); border-color: var(--ledger); color: #fff; font-weight: 600; }
+body.admin .system-content .content .btn-primary:hover { background: #0f1a26; border-color: #0f1a26; color: #fff; }
+body.admin .system-content .content .btn-danger { background: #fff; color: var(--danger); border-color: var(--danger); }
+body.admin .system-content .content .btn-danger:hover { background: var(--danger); color: #fff; }
+body.admin .system-content .content .btn-mini { font-size: 12px; }
+
+.admin-shell .nav-pills > li > a { color: var(--muted); font-weight: 500; font-size: 14px; border-bottom-width: 3px; }
+.admin-shell .nav-pills > li > a:hover { color: var(--ink); background: var(--well); }
+.admin-shell .nav-pills > li.active > a { color: var(--ledger); border-bottom-color: var(--signal); font-weight: 600; }
+.admin-shell .pagination li > a, .admin-shell .pagination li > span { font-size: 13px; color: var(--ink); border-color: var(--quiet); }
+.admin-shell .pagination li > a:hover { color: var(--signal); border-color: var(--signal); }
+.admin-shell .pagination li.active > span { background: var(--ledger); border-color: var(--ledger); color: #fff; }
+
+.admin-shell .control-group { border-bottom-color: var(--rule); }
+.admin-shell .control-group:first-child { border-top-color: var(--rule); }
+body.admin .system-content .content .control-label {
+  font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--ink);
+}
+.admin-shell .hint { font-size: 13px; color: var(--muted); }
+body.admin .system-content .content input[type=text],
+body.admin .system-content .content input[type=email],
+body.admin .system-content .content input[type=password],
+body.admin .system-content .content input[type=number],
+body.admin .system-content .content input[type=datetime-local],
+body.admin .system-content .content select,
+body.admin .system-content .content textarea { border-color: var(--quiet); }
+body.admin .system-content .content input[type=text]:focus,
+body.admin .system-content .content input[type=email]:focus,
+body.admin .system-content .content input[type=password]:focus,
+body.admin .system-content .content input[type=number]:focus,
+body.admin .system-content .content input[type=datetime-local]:focus,
+body.admin .system-content .content select:focus,
+body.admin .system-content .content textarea:focus { border-color: var(--signal); box-shadow: 0 0 0 3px rgba(31, 91, 216, .18); }
+body.admin .system-content .content textarea { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+body.admin .system-content .content input[type=radio],
+body.admin .system-content .content input[type=checkbox] { accent-color: var(--signal); }
+.admin-shell .perm-matrix .perm-group td {
+  font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; border-bottom: 2px solid var(--ledger);
+}
+.admin-shell .alert { border-color: var(--quiet); background: #f7f9fb; }
+.admin-shell .alert-error { background: #fdf2f1; }
+.admin-shell a:focus-visible,
+body.admin .system-content .content .btn:focus-visible,
+body.admin .system-content .content input:focus-visible,
+body.admin .system-content .content select:focus-visible,
+body.admin .system-content .content textarea:focus-visible { outline-color: var(--signal); }
+
+@media (max-width: 900px) {
+  .admin-shell #site-manager-menu { padding-top: 14px; padding-bottom: 14px; }
+}
+.admin-shell .pre,
+.admin-shell .alert code,
+.admin-shell .hint code,
+.admin-shell .perm-matrix .perm-code,
+body.admin .system-content .content .link-out { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }

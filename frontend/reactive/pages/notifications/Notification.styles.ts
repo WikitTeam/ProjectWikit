@@ -22,10 +22,11 @@ export const Container = styled.div<{ unread?: boolean }>`
 `
 
 export const TypeMark = styled.div<{ unread?: boolean }>`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   padding-left: 4px;
 
   &::before {
@@ -94,10 +95,10 @@ export const PostName = styled.div`
   font-size: 13px;
 
   a {
-    color: ${({ theme }) => theme.foreground};
+    color: ${({ theme }) => theme.accent};
     text-decoration: underline;
     text-underline-offset: 3px;
-    &:hover { color: ${({ theme }) => theme.foreground}; }
+    &:hover { color: ${({ theme }) => theme.primary}; }
   }
 `
 
@@ -124,8 +125,9 @@ export const RevisionFlags = styled(RevisionField)`
   color: ${({ theme }) => theme.uiForeground};
 `
 export const RevisionNumber = styled(RevisionField)`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
 `
 export const RevisionUser = styled(RevisionField)``
@@ -142,8 +144,9 @@ export const RevisionCommentCaption = styled.span`
 `
 
 export const NotificationDate = styled.div`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
   text-align: right;
   padding-right: 4px;

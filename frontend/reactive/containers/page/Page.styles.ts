@@ -19,6 +19,19 @@ export const RootStyles = createGlobalStyle`
     min-height: 100vh;
   }
 
+  :where(#reactive-root) a:not([class]) {
+    color: ${({ theme }) => theme.accent};
+  }
+
+  :where(#reactive-root) a:not([class]):hover {
+    color: ${({ theme }) => theme.primary};
+  }
+
+  #reactive-root :focus-visible {
+    outline: 2px solid ${({ theme }) => theme.accent};
+    outline-offset: 2px;
+  }
+
   ::selection {
     background: ${({ theme }) => theme.uiSelection};
     color: ${({ theme }) => theme.uiSelectionForeground};
@@ -38,8 +51,13 @@ export const MainContainer = styled.div`
   max-width: 900px;
   margin: 0 auto;
   padding: 32px 24px 96px;
+  background: ${({ theme }) => theme.uiBackground};
+  border-left: 1px solid ${({ theme }) => theme.uiBorder};
+  border-right: 1px solid ${({ theme }) => theme.uiBorder};
 
   @media (max-width: 700px) {
     padding: 20px 16px 20px;
+    border-left: none;
+    border-right: none;
   }
 `

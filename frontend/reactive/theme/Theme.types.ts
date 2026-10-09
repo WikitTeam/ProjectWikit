@@ -15,4 +15,9 @@ export interface ReactTheme {
   uiSelectionForeground: string
   uiBorder: string
   higlightBackground: string
+  bar: string
+  barForeground: string
+  barMuted: string
+  accent: string
+  quiet: string
 }

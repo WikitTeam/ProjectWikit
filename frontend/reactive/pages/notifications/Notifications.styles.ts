@@ -18,10 +18,11 @@ export const SectionHead = styled.div`
 `
 
 export const Kicker = styled.div`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   line-height: 1.4;
 
   b {
@@ -48,10 +49,16 @@ export const FilterContainer = styled.div`
   display: flex;
   gap: 4px;
   margin-bottom: 12px;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+`
+
+export const FilterLabel = styled.span`
+  padding: 6px 4px 6px 0;
+  color: ${({ theme }) => theme.uiForeground};
 `
 
 export const RadioLabel = styled.label<{ checked: boolean }>`
@@ -64,13 +71,15 @@ export const RadioLabel = styled.label<{ checked: boolean }>`
   ${({ checked, theme }) =>
     checked &&
     css`
-      color: ${theme.foreground};
-      border-color: ${theme.windowStrong};
-      background: ${theme.windowPadding};
+      color: ${theme.primaryForeground};
+      border-color: ${theme.primary};
+      background: ${theme.primary};
+      font-weight: 600;
     `};
 
   &:hover {
-    color: ${({ theme }) => theme.foreground};
+    color: ${({ checked, theme }) => (checked ? theme.primaryForeground : theme.foreground)};
+    border-color: ${({ checked, theme }) => (checked ? theme.primary : theme.quiet)};
   }
 `
 
@@ -100,10 +109,11 @@ export const Toolbar = styled.div`
   gap: 12px;
   margin: 8px 0 12px;
   flex-wrap: wrap;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
   color: ${({ theme }) => theme.uiForeground};
 `
 

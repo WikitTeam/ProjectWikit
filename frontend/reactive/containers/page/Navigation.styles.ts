@@ -18,7 +18,8 @@ const linkStyle = css`
   text-decoration: none;
   color: ${({ theme }) => theme.uiForeground};
   font-size: 14px;
-  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
   margin-bottom: -1px;
   display: flex;
   align-items: center;
@@ -29,12 +30,19 @@ const linkStyle = css`
 
   &:hover {
     color: ${({ theme }) => theme.foreground};
+    background: ${({ theme }) => theme.higlightBackground};
   }
 
   &.active, &.active:hover {
-    color: ${({ theme }) => theme.foreground};
-    border-bottom-color: ${({ theme }) => theme.foreground};
-    font-weight: 500;
+    color: ${({ theme }) => theme.primary};
+    border-bottom-color: ${({ theme }) => theme.accent};
+    font-weight: 600;
+    background: transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.accent};
+    outline-offset: -2px;
   }
 `
 

@@ -1,22 +1,27 @@
 import { ReactTheme } from './Theme.types'
 
 export const SYSTEM_THEME: ReactTheme = {
-  primary: '#0b0b0d',
+  primary: '#1d2b3a',
   primaryForeground: '#ffffff',
   pagePadding: '#ffffff',
   windowPadding: '#ffffff',
-  windowStrong: '#e7e7e9',
-  windowBackground: '#ffffff',
-  foreground: '#0b0b0d',
-  headingStart: '#0b0b0d',
-  headingEnd: '#0b0b0d',
+  windowStrong: '#c3cad3',
+  windowBackground: '#f3f5f8',
+  foreground: '#1b1f24',
+  headingStart: '#1b1f24',
+  headingEnd: '#1b1f24',
   uiBackground: '#ffffff',
-  uiForeground: '#6b6b70',
-  uiSelection: '#0b0b0d',
-  uiSelectionHighlight: '#1a1a1c',
+  uiForeground: '#4a5260',
+  uiSelection: '#1d2b3a',
+  uiSelectionHighlight: '#0f1a26',
   uiSelectionForeground: '#ffffff',
-  uiBorder: '#e7e7e9',
-  higlightBackground: '#f6f6f7',
+  uiBorder: '#c3cad3',
+  higlightBackground: '#eef2f6',
+  bar: '#1d2b3a',
+  barForeground: '#ffffff',
+  barMuted: '#c9d3de',
+  accent: '#1f5bd8',
+  quiet: '#8a94a3',
 }
 
 export const MOBILE_SIZE = 768

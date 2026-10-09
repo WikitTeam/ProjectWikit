@@ -1,12 +1,11 @@
 import styled from 'styled-components'
 
 export const Container = styled.div`
-  border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
   padding: 14px 24px;
   display: flex;
   align-items: center;
   gap: 14px;
-  background: ${({ theme }) => theme.windowPadding};
+  background: ${({ theme }) => theme.bar};
 `
 
 export const Brand = styled.a`
@@ -14,7 +13,7 @@ export const Brand = styled.a`
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: ${({ theme }) => theme.foreground};
+  color: ${({ theme }) => theme.barForeground};
 
   &:hover { text-decoration: none; }
 `
@@ -25,7 +24,7 @@ export const BrandLogo = styled.img`
 `
 
 export const Wordmark = styled.span`
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
   font-size: 15px;
 `
@@ -33,21 +32,22 @@ export const Wordmark = styled.span`
 export const Divider = styled.span`
   width: 1px;
   height: 18px;
-  background: ${({ theme }) => theme.windowStrong};
+  background: rgba(255, 255, 255, 0.28);
 `
 
 export const Path = styled.span`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 12px;
-  color: ${({ theme }) => theme.uiForeground};
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: ${({ theme }) => theme.barMuted};
 
   b {
-    color: ${({ theme }) => theme.foreground};
-    font-weight: 500;
+    color: ${({ theme }) => theme.barForeground};
+    font-weight: 600;
   }
 
   .sep {
-    color: ${({ theme }) => theme.windowStrong};
+    color: #7c8a9c;
     margin: 0 6px;
   }
 
@@ -62,11 +62,11 @@ export const Spacer = styled.div`
 
 export const GoHome = styled.a`
   font-size: 13px;
-  color: ${({ theme }) => theme.uiForeground};
+  color: #dce3eb;
   text-decoration: none;
 
   &:hover {
-    color: ${({ theme }) => theme.foreground};
+    color: ${({ theme }) => theme.barForeground};
     text-decoration: underline;
     text-underline-offset: 3px;
   }

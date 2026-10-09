@@ -591,8 +591,118 @@ body.wikit-page .system-content .content form label.label {
   .wikit-scope .dl { grid-template-columns: 1fr; gap: 0; }
   .wikit-scope .dl dt { padding-bottom: 2px; border-top: 1px solid var(--rule); }
   .wikit-scope .dl dd { padding-top: 2px; padding-bottom: 14px; border-top: none; }
+  .wikit-scope .dl > dt:nth-last-child(2) { border-bottom: none; }
   .wikit-scope .app-header .path { display: none; }
   .wikit-scope .feed li { grid-template-columns: 1fr; }
   .wikit-scope .feed .when { grid-row: 3; }
 }
 
+
+.wikit-scope .app-shell {
+  --ink: #1b1f24;
+  --muted: #4a5260;
+  --rule: #c3cad3;
+  --well: #eef2f6;
+  --ledger: #1d2b3a;
+  --signal: #1f5bd8;
+  --quiet: #8a94a3;
+  --font-mono: var(--font-sans);
+  background: #f3f5f8;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.wikit-scope .app-shell :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.wikit-scope .app-shell .app-header { background: var(--ledger); border-bottom: none; color: #fff; }
+.wikit-scope .app-shell .app-header .brand { color: #fff; }
+.wikit-scope .app-shell .app-header .brand .wordmark { font-weight: 600; }
+.wikit-scope .app-shell .app-header .divider { background: rgba(255, 255, 255, .28); }
+.wikit-scope .app-shell .app-header .path { font-size: 13px; color: #c9d3de; }
+.wikit-scope .app-shell .app-header .path b { color: #fff; font-weight: 600; }
+.wikit-scope .app-shell .app-header .path .sep { color: #7c8a9c; }
+.wikit-scope .app-shell .app-header .go-home { color: #dce3eb; }
+.wikit-scope .app-shell .app-header .go-home:hover { color: #fff; }
+
+.wikit-scope .app-shell .app-nav { background: #fff; border-bottom: 1px solid var(--rule); }
+.wikit-scope .app-shell .app-nav a { color: var(--muted); font-weight: 500; border-bottom-width: 3px; }
+.wikit-scope .app-shell .app-nav a:hover { color: var(--ink); background: var(--well); }
+.wikit-scope .app-shell .app-nav a.active { color: var(--ledger); border-bottom-color: var(--signal); font-weight: 600; background: transparent; }
+.wikit-scope .app-shell .app-nav a .count { font-size: 12px; color: var(--muted); border-color: var(--quiet); }
+.wikit-scope .app-shell .app-nav a.active .count { background: var(--signal); border-color: var(--signal); color: #fff; }
+
+.wikit-scope .app-shell .app-main {
+  background: #fff;
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+}
+.wikit-scope .app-shell .h1 { font-weight: 600; font-size: 30px; }
+.wikit-scope .app-shell .h2 { font-weight: 600; }
+.wikit-scope .app-shell .kicker-crumb { font-size: 13px; color: var(--muted); }
+.wikit-scope .app-shell .kicker-crumb b { font-weight: 600; }
+.wikit-scope .app-shell .kicker-crumb .sep { color: var(--quiet); }
+.wikit-scope .app-shell .meta { font-size: 13px; color: var(--muted); }
+.wikit-scope .app-shell .label,
+.wikit-scope .app-shell .dl dt {
+  font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted);
+}
+.wikit-scope .app-shell .dl > dt:first-child,
+.wikit-scope .app-shell .dl > dt:first-child + dd { border-top: none; }
+.wikit-scope .app-shell .dl dd a,
+.wikit-scope .app-shell .feed .what,
+.wikit-scope .app-shell .link-muted { color: var(--signal); }
+.wikit-scope .app-shell .dl dd a:hover,
+.wikit-scope .app-shell .feed .what:hover,
+.wikit-scope .app-shell .link-muted:hover { color: var(--ledger); text-decoration: underline; text-underline-offset: 3px; }
+
+.wikit-scope .app-shell .profile-head .avatar-big,
+.wikit-scope .app-shell .avatar-row .avatar-now { border-color: var(--rule); }
+.wikit-scope .app-shell .profile-head .id .name { font-weight: 600; }
+.wikit-scope .app-shell .profile-tabs { border-bottom-color: var(--rule); }
+.wikit-scope .app-shell .profile-tabs a { color: var(--muted); font-weight: 500; border-bottom-width: 3px; }
+.wikit-scope .app-shell .profile-tabs a:hover { color: var(--ink); background: var(--well); }
+.wikit-scope .app-shell .profile-tabs a.active { color: var(--ledger); border-bottom-color: var(--signal); font-weight: 600; }
+
+.wikit-scope .app-shell .feed li { border-color: var(--rule); background: #fff; }
+.wikit-scope .app-shell .feed li:hover { border-color: var(--quiet); }
+.wikit-scope .app-shell .feed .when,
+.wikit-scope .app-shell .feed .flags,
+.wikit-scope .app-shell .feed .rev { font-size: 13px; color: var(--muted); }
+.wikit-scope .app-shell .feed .from { font-size: 13px; }
+.wikit-scope .app-shell .profile-section .empty { background: var(--well); border-color: var(--rule); color: var(--muted); }
+.wikit-scope .app-shell .profile-section .pager { font-size: 13px; }
+.wikit-scope .app-shell .profile-section .pager a { color: var(--ink); border-color: var(--quiet); }
+.wikit-scope .app-shell .profile-section .pager a:hover { color: var(--signal); border-color: var(--signal); }
+.wikit-scope .app-shell .profile-section .pager .current { background: var(--ledger); border-color: var(--ledger); }
+
+.wikit-scope .app-shell .form-block { border-color: var(--quiet); }
+.wikit-scope .app-shell .form-row + .form-row { border-top-color: var(--rule); }
+.wikit-scope .app-shell .form-row:focus-within { background: #f0f5ff; box-shadow: inset 3px 0 0 var(--signal); }
+
+.wikit-scope .app-shell .btn-primary,
+body.wikit-page .system-content .content .app-shell .btn-primary {
+  background: var(--ledger); border-color: var(--ledger); color: #fff;
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  letter-spacing: 0; text-transform: none;
+}
+.wikit-scope .app-shell .btn-primary:hover,
+body.wikit-page .system-content .content .app-shell .btn-primary:hover { background: #0f1a26; color: #fff; }
+.wikit-scope .app-shell .btn-ghost,
+body.wikit-page .system-content .content .app-shell .btn-ghost {
+  background: #fff; border-color: var(--quiet); color: var(--ink);
+  font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+  letter-spacing: 0; text-transform: none;
+}
+.wikit-scope .app-shell .btn-ghost:hover,
+body.wikit-page .system-content .content .app-shell .btn-ghost:hover { border-color: var(--ledger); background: var(--well); color: var(--ledger); }
+.wikit-scope .app-shell .btn-link { color: var(--signal); }
+
+@media (max-width: 720px) {
+  .wikit-scope .app-shell .app-main { border-left: none; border-right: none; }
+}
+body.wikit-page .system-content .content .app-shell form label.label { font-size: 13px; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  .wikit-scope .app-shell .form-row,
+  .wikit-scope .app-shell .btn-primary { transition: none; }
+}
+.wikit-scope .app-shell .form-row .hint,
+body.wikit-page .system-content .content .app-shell form label.label .hint { font-weight: 400; color: var(--muted); }

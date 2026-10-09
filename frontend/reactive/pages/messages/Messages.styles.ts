@@ -8,10 +8,11 @@ export const SectionHead = styled.div`
 `
 
 export const Kicker = styled.div`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   line-height: 1.4;
 
   b { color: ${({ theme }) => theme.foreground}; font-weight: 500; }
@@ -107,10 +108,11 @@ export const SearchButton = styled.button`
   color: ${({ theme }) => theme.uiSelectionForeground};
   border: 1px solid ${({ theme }) => theme.uiSelection};
   border-radius: 2px;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
   white-space: nowrap;
 
@@ -163,6 +165,37 @@ export const ConversationItem = styled.a<{ active: boolean; unread: boolean }>`
   }
 `
 
+export const ConversationToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.foreground};
+  border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
+`
+
+export const ConversationToolbarLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+`
+
+export const ConversationSelectRow = styled.div`
+  display: flex;
+  align-items: stretch;
+
+  > input {
+    margin: 0 0 0 14px;
+  }
+
+  > a {
+    flex: 1;
+    min-width: 0;
+  }
+`
+
 export const ConversationDot = styled.span<{ unread: boolean }>`
   display: none;
 `
@@ -203,14 +236,16 @@ export const ConversationMeta = styled.div`
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
 `
 
 export const UnreadBadge = styled.span`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 10px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
   padding: 1px 6px;
   background: ${({ theme }) => theme.uiSelection};
   color: ${({ theme }) => theme.uiSelectionForeground};
@@ -349,7 +384,8 @@ export const MessageBubble = styled.div<{ mine: boolean }>`
 `
 
 export const MessageMeta = styled.div<{ mine: boolean }>`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
   font-size: 10.5px;
   color: ${({ theme }) => theme.uiForeground};
   padding: 2px 4px 0;
@@ -386,10 +422,11 @@ export const SendButton = styled.button`
   background: ${({ theme }) => theme.uiSelection};
   color: ${({ theme }) => theme.uiSelectionForeground};
   cursor: pointer;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
 
   &:disabled {
     background: ${({ theme }) => theme.uiForeground};

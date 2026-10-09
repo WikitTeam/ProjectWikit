@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 export const SectionHead = styled.div`
@@ -8,10 +9,11 @@ export const SectionHead = styled.div`
 `
 
 export const Kicker = styled.div`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   line-height: 1.4;
 
   b {
@@ -35,10 +37,11 @@ export const H1 = styled.h1`
 `
 
 export const Count = styled.div`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
   color: ${({ theme }) => theme.uiForeground};
   margin-bottom: 12px;
 `
@@ -67,15 +70,17 @@ export const Title = styled.a`
 `
 
 export const Name = styled.span`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
 `
 
 export const Added = styled.span`
   margin-left: auto;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
 `
 
@@ -94,8 +99,9 @@ export const Pager = styled.div`
   display: flex;
   gap: 4px;
   margin-top: 16px;
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
 `
 
 export const PagerStep = styled.button<{ current?: boolean }>`
@@ -121,8 +127,9 @@ export const PagerDots = styled.span`
 `
 
 export const Badge = styled.span<{ positive: boolean }>`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   padding: 2px 6px;
   border-radius: 2px;
   border: 1px solid ${({ theme }) => theme.windowStrong};
@@ -147,8 +154,9 @@ export const TicketHead = styled.div`
 `
 
 export const TicketKind = styled.span`
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
   color: ${({ theme }) => theme.uiForeground};
 `
 
@@ -156,4 +164,19 @@ export const TicketReply = styled.div`
   white-space: pre-wrap;
   font-size: 14px;
   color: ${({ theme }) => theme.uiForeground};
+`
+
+export const TicketTitle = styled(Link)`
+  color: ${({ theme }) => theme.accent};
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.accent};
+    outline-offset: 2px;
+  }
 `
