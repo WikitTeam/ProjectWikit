@@ -565,6 +565,7 @@
   "util.wikidot-message.to-editor": "向下到编辑器",
   "util.wikidot-message.to-revisions": "向下到版本列表",
   "util.wikidot-message.unsaved-note": "如果现在关闭此页面，更改将不会保存。",
+  "util.wikidot-modal.confirm-cancel": "取消",
   "util.wikidot-modal.error-dismiss": "关闭",
   "util.wikidot-modal.error-label": "错误：",
   "util.wikidot-modal.revert-cancel": "取消",
@@ -572,4 +573,3 @@
   "util.wikidot-modal.revert-confirm-button": "是，恢复",
   "util.wikidot-modal.revert-title": "恢复页面版本？"
 }
-  "util.wikidot-modal.confirm-cancel": "取消",
