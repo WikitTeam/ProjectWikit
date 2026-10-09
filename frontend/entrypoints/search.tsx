@@ -6,6 +6,7 @@ import { highlightWords } from '~util/highlight-words'
 import useConstCallback from '../util/const-callback'
 import Loader from '~util/loader'
 import formatDate from '../util/date-format'
+import SearchSuggestInput from './search-suggest'
 
 interface Props {
   placeholder?: string
@@ -135,9 +136,9 @@ const SearchModule: React.FC<Props> = ({
       </div>
 
       <div className="w-search-filters">
-        <input className="w-search-filter" type="text" value={author} placeholder={t('search.author-placeholder')} onChange={e => setAuthor(e.target.value)} />
-        <input className="w-search-filter" type="text" value={tags} placeholder={t('search.tags-placeholder')} onChange={e => setTags(e.target.value)} />
-        <input className="w-search-filter" type="text" value={category} placeholder={t('search.category-placeholder')} onChange={e => setCategory(e.target.value)} />
+        <SearchSuggestInput field="author" value={author} placeholder={t('search.author-placeholder')} onChange={setAuthor} />
+        <SearchSuggestInput field="tags" value={tags} placeholder={t('search.tags-placeholder')} onChange={setTags} />
+        <SearchSuggestInput field="category" value={category} placeholder={t('search.category-placeholder')} onChange={setCategory} />
         <div className="w-search-dates">
           <input className="w-search-filter w-search-date" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           <span className="w-search-date-sep">–</span>

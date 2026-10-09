@@ -385,6 +385,18 @@ func (m moduleData) ArticleCategories(hidden []string) ([]string, error) {
 	return m.repo.db.ArticleCategories(m.repo.ctx, m.repo.siteID(), hidden)
 }
 
+func (m moduleData) SuggestTags(typed string, limit int) ([]db.Suggestion, error) {
+	return m.repo.db.SuggestTags(m.repo.ctx, m.repo.siteID(), typed, limit)
+}
+
+func (m moduleData) SuggestCategories(hidden []string, typed string, limit int) ([]db.Suggestion, error) {
+	return m.repo.db.SuggestCategories(m.repo.ctx, m.repo.siteID(), hidden, typed, limit)
+}
+
+func (m moduleData) SuggestAuthors(typed string, limit int) ([]db.Suggestion, error) {
+	return m.repo.db.SuggestAuthors(m.repo.ctx, m.repo.siteID(), typed, limit)
+}
+
 func (m moduleData) UserIDsByName(name string, partial bool) ([]int64, error) {
 	return m.repo.db.UserIDsByName(m.repo.ctx, name, partial)
 }

@@ -16,7 +16,10 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
-func init() { module.RegisterAPI("search", "search", searchAPI) }
+func init() {
+	module.RegisterAPI("search", "search", searchAPI)
+	module.RegisterAPI("search", "suggest", suggestAPI)
+}
 
 const (
 	searchLimit = 20
@@ -26,6 +29,8 @@ const (
 	searchExcerptPad = 20
 	searchExcerptLen = 160
 	searchDateLayout = "2006-01-02"
+
+	suggestLimit = 10
 )
 
 var searchSpaces = regexp.MustCompile(`\s+`)
@@ -360,4 +365,30 @@ func searchTime(at time.Time) any {
 		return nil
 	}
 	return at.UTC().Format("2006-01-02T15:04:05.999999-07:00")
+}
+
+func suggestAPI(env module.Env, params map[string]string) (wikijson.Object, error) {
+	typed := strings.TrimSpace(params["q"])
+	var found []db.Suggestion
+	var err error
+	switch params["field"] {
+	case "tags":
+		typed = strings.TrimPrefix(typed, "-")
+		found, err = env.Data.SuggestTags(typed, suggestLimit)
+	case "category":
+		var hidden []string
+		if hidden, err = env.Data.HiddenCategories(env.User); err == nil {
+			found, err = env.Data.SuggestCategories(hidden, typed, suggestLimit)
+		}
+	case "author":
+		found, err = env.Data.SuggestAuthors(typed, suggestLimit)
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := make(wikijson.Array, 0, len(found))
+	for _, s := range found {
+		out = append(out, wikijson.Object{{Key: "value", Value: s.Value}, {Key: "label", Value: s.Label}})
+	}
+	return wikijson.Object{{Key: "items", Value: out}}, nil
 }

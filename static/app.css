@@ -253,6 +253,47 @@
   outline: none;
 }
 
+.w-search-field {
+  position: relative;
+  flex: 1 1 140px;
+  min-width: 0;
+  display: flex;
+}
+
+.w-search-field .w-search-filter {
+  width: 100%;
+}
+
+.w-search-suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 2px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--s-bg);
+  border: 1px solid var(--s-border-strong);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+.w-search-suggest li {
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--s-ink);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.w-search-suggest li.active {
+  background: var(--s-sunken);
+  box-shadow: inset 3px 0 0 var(--s-accent);
+}
+
 .w-search-filter:focus {
   border-color: var(--s-accent);
   background: var(--s-bg);

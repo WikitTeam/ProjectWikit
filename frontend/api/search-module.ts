@@ -32,3 +32,15 @@ export interface SearchModuleResponse {
 export async function searchModule(params: SearchModuleParams) {
   return await callModule<SearchModuleResponse>({ module: 'search', method: 'search', params })
 }
+
+export type SuggestField = 'author' | 'tags' | 'category'
+
+export interface SuggestItem {
+  value: string
+  label: string
+}
+
+export async function suggestSearch(field: SuggestField, q: string) {
+  const resp = await callModule<{ items: SuggestItem[] }>({ module: 'search', method: 'suggest', params: { field, q } })
+  return resp.items
+}

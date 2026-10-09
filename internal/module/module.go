@@ -69,6 +69,9 @@ type Data interface {
 	SiteChanges(f db.SiteChangeFilter, offset, limit int) ([]db.SiteChange, error)
 	SiteChangeCount(f db.SiteChangeFilter) (int, error)
 	ArticleCategories(hidden []string) ([]string, error)
+	SuggestTags(typed string, limit int) ([]db.Suggestion, error)
+	SuggestCategories(hidden []string, typed string, limit int) ([]db.Suggestion, error)
+	SuggestAuthors(typed string, limit int) ([]db.Suggestion, error)
 	UserIDsByName(name string, partial bool) ([]int64, error)
 	UsersByIDs(ids []int64) ([]db.User, error)
 
