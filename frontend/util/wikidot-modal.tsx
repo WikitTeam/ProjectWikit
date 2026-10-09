@@ -1,10 +1,10 @@
-import Trans from '~util/trans'
-import { t } from '~util/i18n'
 import React, { useEffect, useState } from 'react'
 import * as ReactDOM from 'react-dom'
 import styled from 'styled-components'
 import { v4 as uuid4 } from 'uuid'
+import { t } from '~util/i18n'
 import { renderTo, unmountFromRoot } from '~util/react-render-into'
+import Trans from '~util/trans'
 import { ArticleLogEntry, revertArticleRevision } from '../api/articles'
 import useConstCallback from './const-callback'
 
@@ -212,6 +212,35 @@ export function showRevertModal(pageId: string, entry: ArticleLogEntry) {
       <p>
         <Trans id="util.wikidot-modal.revert-confirm" children={{ revision: <strong>#{entry.revNumber}</strong> }} />
       </p>
+    </WikidotModal>
+  )
+
+  uuid = addUnmanagedModal(modal)
+}
+
+export function showConfirmModal(text: string, confirmTitle: string, onConfirm: () => void) {
+  let uuid: string | null = null
+
+  const onClose = () => {
+    if (!uuid) {
+      return
+    }
+    removeUnmanagedModal(uuid)
+  }
+
+  const onAccept = () => {
+    onClose()
+    onConfirm()
+  }
+
+  const modal = (
+    <WikidotModal
+      buttons={[
+        { title: t('util.wikidot-modal.confirm-cancel'), onClick: onClose },
+        { title: confirmTitle, onClick: onAccept, type: 'danger' },
+      ]}
+    >
+      <p>{text}</p>
     </WikidotModal>
   )
 

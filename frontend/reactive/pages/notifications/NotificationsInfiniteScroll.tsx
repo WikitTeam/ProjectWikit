@@ -1,10 +1,11 @@
-import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from 'styled-components'
-import { clearAllNotifications, clearNotifications, getNotifications, NotificationKind, Notification as INotification } from '~api/notifications'
+import { clearAllNotifications, clearNotifications, getNotifications, Notification as INotification, NotificationKind } from '~api/notifications'
 import useConstCallback from '~util/const-callback'
+import { t } from '~util/i18n'
 import Loader from '~util/loader'
+import { showConfirmModal } from '~util/wikidot-modal'
 import Notification from './Notification'
 import * as Styled from './Notifications.styles'
 
@@ -140,10 +141,24 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, k
             {t('notifications.select-all')}
           </Styled.ToolbarLabel>
           <span>{t('notifications.selected-count', { count: selected.size })}</span>
-          <Styled.ToolbarAction danger disabled={selected.size === 0 || clearing} onClick={clearSelected}>
+          <Styled.ToolbarAction
+            danger
+            disabled={selected.size === 0 || clearing}
+            onClick={() =>
+              showConfirmModal(
+                t('notifications.clear-selected-confirm', { count: selected.size }),
+                t('notifications.clear-confirm-button'),
+                clearSelected,
+              )
+            }
+          >
             {t('notifications.clear-selected')}
           </Styled.ToolbarAction>
-          <Styled.ToolbarAction danger disabled={clearing} onClick={clearEverything}>
+          <Styled.ToolbarAction
+            danger
+            disabled={clearing}
+            onClick={() => showConfirmModal(t('notifications.clear-all-confirm'), t('notifications.clear-confirm-button'), clearEverything)}
+          >
             {t('notifications.clear-all')}
           </Styled.ToolbarAction>
         </Styled.Toolbar>

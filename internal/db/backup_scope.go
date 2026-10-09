@@ -146,6 +146,7 @@ var rules = map[string]rule{
 
 	"web_directmessage":                         {left, "", "private mail belongs to the two people, not to a site"},
 	"web_directmessageblock":                    {left, "", "a block follows the person across every site"},
+	"pwikit_message_clear":                      {left, "", "what someone hid from their own inbox follows them across every site"},
 	"web_usernotification":                      {left, "", "a notice can point at a page on a site that is staying"},
 	"web_usernotificationmapping":               {left, "", "it hangs off a notice that is staying"},
 	"pwikit_user_address":                       {left, "", "sign-in addresses are what the operator watches, not site content"},

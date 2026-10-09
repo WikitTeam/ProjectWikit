@@ -53,9 +53,7 @@ export async function getConversation(
     mark_read: String(markRead),
   })
   if (after >= 0) params.set('after', String(after))
-  return await wFetch<ConversationResponse>(
-    `/pw-api/messages/with/${partnerId}?${params.toString()}`,
-  )
+  return await wFetch<ConversationResponse>(`/pw-api/messages/with/${partnerId}?${params.toString()}`)
 }
 
 export async function sendMessage(recipientId: number, body: string): Promise<DirectMessage> {
@@ -78,14 +76,18 @@ export async function unblockUser(userId: number): Promise<{ status: string; blo
   return await wFetch(`/pw-api/users/${userId}/block`, { method: 'DELETE', sendJson: true, body: {} })
 }
 
-export async function reportMessages(
-  reportedId: number,
-  messageIds: number[],
-  reason: string,
-): Promise<{ status: string; report_id: number }> {
+export async function reportMessages(reportedId: number, messageIds: number[], reason: string): Promise<{ status: string; report_id: number }> {
   return await wFetch('/pw-api/messages/report', {
     method: 'POST',
     sendJson: true,
     body: { reported_id: reportedId, message_ids: messageIds, reason },
+  })
+}
+
+export async function clearConversations(partnerIds: number[]): Promise<{ cleared: number[] }> {
+  return await wFetch<{ cleared: number[] }>('/pw-api/messages/clear', {
+    method: 'POST',
+    sendJson: true,
+    body: { partner_ids: partnerIds },
   })
 }

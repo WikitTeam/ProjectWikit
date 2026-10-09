@@ -201,3 +201,78 @@ func TestCreateReport(t *testing.T) {
 		t.Errorf("ReportsSince() = %d, want 1", count)
 	}
 }
+
+func TestClearConversationsHidesOnlyTheClearersSide(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	me := scratchUser(t, d, "probe-dm-clear-a")
+	partner := scratchUser(t, d, "probe-dm-clear-b")
+	now := time.Now().UTC()
+	if _, err := d.SendDirectMessage(ctx, partner, me, "old", now); err != nil {
+		t.Fatalf("SendDirectMessage() err = %v, want nil", err)
+	}
+
+	cleared, err := d.ClearConversations(ctx, me, []int64{partner})
+	if err != nil {
+		t.Fatalf("ClearConversations() err = %v, want nil", err)
+	}
+	if len(cleared) != 1 || cleared[0] != partner {
+		t.Errorf("ClearConversations() = %v, want [%d]", cleared, partner)
+	}
+
+	mine, err := d.ConversationBefore(ctx, me, partner, nil, 10)
+	if err != nil {
+		t.Fatalf("ConversationBefore(me) err = %v, want nil", err)
+	}
+	if len(mine) != 0 {
+		t.Errorf("len(ConversationBefore(me)) = %d, want 0", len(mine))
+	}
+	list, err := d.Conversations(ctx, me)
+	if err != nil {
+		t.Fatalf("Conversations(me) err = %v, want nil", err)
+	}
+	if len(list) != 0 {
+		t.Errorf("len(Conversations(me)) = %d, want 0", len(list))
+	}
+	unread, err := d.UnreadMessages(ctx, me)
+	if err != nil {
+		t.Fatalf("UnreadMessages(me) err = %v, want nil", err)
+	}
+	if unread != 0 {
+		t.Errorf("UnreadMessages(me) = %d, want 0", unread)
+	}
+
+	theirs, err := d.ConversationBefore(ctx, partner, me, nil, 10)
+	if err != nil {
+		t.Fatalf("ConversationBefore(partner) err = %v, want nil", err)
+	}
+	if len(theirs) != 1 {
+		t.Errorf("len(ConversationBefore(partner)) = %d, want 1", len(theirs))
+	}
+
+	if _, err := d.SendDirectMessage(ctx, partner, me, "new", now.Add(time.Second)); err != nil {
+		t.Fatalf("SendDirectMessage() err = %v, want nil", err)
+	}
+	mine, err = d.ConversationBefore(ctx, me, partner, nil, 10)
+	if err != nil {
+		t.Fatalf("ConversationBefore(me) err = %v, want nil", err)
+	}
+	if len(mine) != 1 || mine[0].Body != "new" {
+		t.Errorf("ConversationBefore(me) = %+v, want only %q", mine, "new")
+	}
+}
+
+func TestClearConversationsIgnoresStrangers(t *testing.T) {
+	d := writeTestDB(t)
+	ctx := context.Background()
+	me := scratchUser(t, d, "probe-dm-clear-c")
+	stranger := scratchUser(t, d, "probe-dm-clear-d")
+
+	cleared, err := d.ClearConversations(ctx, me, []int64{stranger, me})
+	if err != nil {
+		t.Fatalf("ClearConversations() err = %v, want nil", err)
+	}
+	if len(cleared) != 0 {
+		t.Errorf("ClearConversations() = %v, want none", cleared)
+	}
+}

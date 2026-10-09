@@ -23,9 +23,10 @@ import (
 const MessagesPrefix = "/pw-api/messages/"
 
 const (
-	maxMessageLength   = 4000
-	messagePreviewSize = 150
-	defaultMessagePage = 30
+	maxMessageLength        = 4000
+	messagePreviewSize      = 150
+	defaultMessagePage      = 30
+	maxClearedConversations = 500
 )
 
 type Messages struct {
@@ -58,6 +59,8 @@ func (h *Messages) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.guard(w, r, loc, user, false, func() (string, int, error) { return h.canSend(r, loc, user, tail) })
 	case head == "send" && tail == "" && r.Method == http.MethodPost:
 		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.send(r, loc, user) })
+	case head == "clear" && tail == "" && r.Method == http.MethodPost:
+		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.clear(r, loc, user) })
 	case head == "report" && tail == "" && r.Method == http.MethodPost:
 		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.report(r, loc, user) })
 	default:
@@ -255,6 +258,34 @@ func preview(body string) string {
 		return body
 	}
 	return string([]rune(body)[:messagePreviewSize]) + "…"
+}
+
+type conversationClearRequest struct {
+	PartnerIDs []int64 `json:"partner_ids"`
+}
+
+func (h *Messages) clear(r *http.Request, loc *i18n.Localizer, user *db.User) (string, int, error) {
+	raw, err := readBody(r)
+	if err != nil {
+		return "", 0, deny(http.StatusBadRequest, loc.T("api-bad-request"))
+	}
+	var input conversationClearRequest
+	if json.Unmarshal(raw, &input) != nil {
+		return "", 0, deny(http.StatusBadRequest, loc.T("api-bad-json"))
+	}
+	if len(input.PartnerIDs) == 0 || len(input.PartnerIDs) > maxClearedConversations {
+		return "", 0, deny(http.StatusBadRequest, loc.T("api-bad-request"))
+	}
+	cleared, err := h.deps.DB.ClearConversations(r.Context(), user.ID, input.PartnerIDs)
+	if err != nil {
+		return "", 0, err
+	}
+	ids := make(wikijson.Array, 0, len(cleared))
+	for _, id := range cleared {
+		ids = append(ids, id)
+	}
+	out, err := wikijson.Marshal(wikijson.Object{{Key: "cleared", Value: ids}})
+	return out, http.StatusOK, err
 }
 
 type sendRequest struct {
