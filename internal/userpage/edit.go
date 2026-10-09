@@ -294,7 +294,7 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 	var out strings.Builder
 	err = render.SystemPage(&out, shell.System{
 		Title:     loc.T("settings.title"),
-		SiteTitle: current.Title,
+		SiteTitle: productName,
 		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,

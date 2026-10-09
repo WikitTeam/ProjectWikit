@@ -127,7 +127,7 @@ func (h *Handler) page(r *http.Request, name string) (string, error) {
 	var out strings.Builder
 	err = render.SystemPage(&out, shell.System{
 		Title:     data.DisplayName,
-		SiteTitle: current.Title,
+		SiteTitle: productName,
 		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,
@@ -552,6 +552,8 @@ func displayName(p *db.Profile) string {
 	}
 	return firstNonEmpty(p.DisplayName, p.Username)
 }
+
+const productName = "ProjectWikit"
 
 func authIcon(s *db.Site) string {
 	if s.AuthIcon == "" {
