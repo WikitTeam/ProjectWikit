@@ -29,7 +29,10 @@ const (
 
 	NotificationsSubPrefix = NotificationsPrefix + "/"
 	MessagesSubPrefix      = MessagesPrefix + "/"
+	MyTicketSubPrefix      = MyTicketsPrefix + "/"
 )
+
+var ticketKinds = []string{"ticket", "membershipapply", "report"}
 
 var reactivePaths = []string{
 	FavouritesPrefix,
@@ -45,6 +48,14 @@ var reactivePaths = []string{
 func answers(path string) bool {
 	if slices.Contains(reactivePaths, path) {
 		return true
+	}
+	if rest, ok := strings.CutPrefix(path, MyTicketSubPrefix); ok {
+		kind, raw, ok := strings.Cut(rest, "/")
+		if !ok || !slices.Contains(ticketKinds, kind) {
+			return false
+		}
+		id, err := strconv.ParseInt(raw, 10, 64)
+		return err == nil && id > 0
 	}
 	rest, ok := strings.CutPrefix(path, MessagesSubPrefix)
 	if !ok || rest == "" {

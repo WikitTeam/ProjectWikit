@@ -55,6 +55,31 @@ export async function getOwnTickets(page: number) {
   return await wFetch<TicketListing>(`/pw-api/my-tickets?page=${page}`)
 }
 
+export interface ReportedMessage {
+  sender: string
+  body: string
+  createdAt: string | null
+}
+
+export interface TicketDetail extends TicketEntry {
+  body: string
+  sourcePage: string
+  sourceUrl: string
+  messages: Array<ReportedMessage>
+}
+
+export async function clearOwnTickets(items: Array<{ kind: string; id: number }>) {
+  return await wFetch<{ hidden: number }>(`/pw-api/my-tickets`, { method: 'DELETE', sendJson: true, body: { items } })
+}
+
+export async function clearAllOwnTickets() {
+  return await wFetch<{ hidden: number }>(`/pw-api/my-tickets`, { method: 'DELETE', sendJson: true, body: { all: true } })
+}
+
+export async function getOwnTicket(kind: string, id: string) {
+  return await wFetch<TicketDetail>(`/pw-api/my-tickets/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`)
+}
+
 export async function getOwnRatings(page: number) {
   return await wFetch<RatingListing>(`/pw-api/ratings?page=${page}`)
 }

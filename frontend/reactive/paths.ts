@@ -7,4 +7,5 @@ export const Paths = {
   ratings: '/ratings',
   likedPosts: '/liked-posts',
   myTickets: '/my-tickets',
+  myTicket: '/my-tickets/:kind/:id',
 }

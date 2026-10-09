@@ -6,7 +6,7 @@ import ConfigContextProvider from '~reactive/config'
 import { IConfigContext } from '~reactive/config/ConfigContext.types'
 import Favourites from '~reactive/pages/favourites'
 import LikedPosts from '~reactive/pages/liked-posts'
-import MyTickets from '~reactive/pages/my-tickets'
+import MyTickets, { MyTicket } from '~reactive/pages/my-tickets'
 import Messages from '~reactive/pages/messages'
 import Ratings from '~reactive/pages/ratings'
 import Notifications from '~reactive/pages/notifications'
@@ -35,6 +35,7 @@ export default function ReactivePage() {
               <Route path={Paths.ratings} element={<Ratings />} />
               <Route path={Paths.likedPosts} element={<LikedPosts />} />
               <Route path={Paths.myTickets} element={<MyTickets />} />
+              <Route path={Paths.myTicket} element={<MyTicket />} />
             </Routes>
           </BrowserRouter>
         </ThemeProvider>
