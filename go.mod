@@ -13,7 +13,7 @@ require (
 	golang.org/x/net v0.59.0
 	golang.org/x/sys v0.49.0
 	golang.org/x/term v0.46.0
-	golang.org/x/text v0.42.0
+	golang.org/x/text v0.43.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -32,5 +32,5 @@ require (
 	github.com/stangelandcl/ppmd v0.1.1 // indirect
 	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	go4.org v0.0.0-20260112195520-a5071408f32f // indirect
-	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
 )
