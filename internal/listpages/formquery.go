@@ -1,7 +1,10 @@
 package listpages
 
 import (
+	"cmp"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -24,16 +27,17 @@ func runWithForm(src Source, q Query, filter db.ListFilter, paginate bool) (Resu
 	}
 
 	kept = kept[min(q.Offset, len(kept)):]
+	matched := len(kept)
 	if q.Limit != nil && *q.Limit < len(kept) {
 		kept = kept[:max(*q.Limit, 0)]
 	}
 	total := len(kept)
 
 	if !paginate {
-		return Result{Pages: kept, Page: 1, TotalPages: 1, Total: total}, nil
+		return Result{Pages: kept, Page: 1, TotalPages: 1, Total: total, Matched: matched}, nil
 	}
 	if q.PerPage <= 0 {
-		return Result{Page: q.Page, TotalPages: 0, Total: total}, nil
+		return Result{Page: q.Page, TotalPages: 0, Total: total, Matched: matched}, nil
 	}
 	start := min((q.Page-1)*q.PerPage, total)
 	end := min(start+q.PerPage, total)
@@ -43,6 +47,7 @@ func runWithForm(src Source, q Query, filter db.ListFilter, paginate bool) (Resu
 		Page:       q.Page,
 		TotalPages: totalPages(total, q.PerPage),
 		Total:      total,
+		Matched:    matched,
 	}, nil
 }
 
@@ -69,11 +74,11 @@ func selectByForm(src Source, q Query, rows []db.Article) ([]db.Article, error) 
 		// Stable, so rows carrying the same value keep the order the database
 		// put them in.
 		sort.SliceStable(kept, func(i, j int) bool {
-			left, right := keys[kept[i].ID], keys[kept[j].ID]
+			order := compareValues(keys[kept[i].ID], keys[kept[j].ID])
 			if q.FormSortAsc {
-				return left < right
+				return order < 0
 			}
-			return left > right
+			return order > 0
 		})
 	}
 	return kept, nil
@@ -122,13 +127,33 @@ func compareForm(value, op, want string) bool {
 	case "<>":
 		return value != want
 	case "<":
-		return value < want
+		return compareValues(value, want) < 0
 	case ">":
-		return value > want
+		return compareValues(value, want) > 0
 	case "<=":
-		return value <= want
+		return compareValues(value, want) <= 0
 	case ">=":
-		return value >= want
+		return compareValues(value, want) >= 0
 	}
 	return strings.EqualFold(value, want)
+}
+
+func compareValues(left, right string) int {
+	l, lok := decimal(left)
+	r, rok := decimal(right)
+	if lok && rok {
+		return cmp.Compare(l, r)
+	}
+	return strings.Compare(left, right)
+}
+
+var decimalPattern = regexp.MustCompile(`^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$`)
+
+func decimal(s string) (float64, bool) {
+	s = strings.TrimSpace(s)
+	if !decimalPattern.MatchString(s) {
+		return 0, false
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	return f, err == nil
 }

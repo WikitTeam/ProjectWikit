@@ -18,6 +18,7 @@ type Result struct {
 	Page       int
 	TotalPages int
 	Total      int
+	Matched    int
 }
 
 func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
@@ -37,7 +38,7 @@ func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 		if containsFold(hidden, q.Only.Category) {
 			return empty, nil
 		}
-		return Result{Pages: []db.Article{*q.Only}, Page: 1, TotalPages: 1, Total: 1}, nil
+		return Result{Pages: []db.Article{*q.Only}, Page: 1, TotalPages: 1, Total: 1, Matched: 1}, nil
 	}
 	if q.HasFullName {
 		found, err := src.ArticleByRef(strings.ToLower(q.FullName))
@@ -50,7 +51,7 @@ func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 		if containsFold(hidden, found.Category) {
 			return empty, nil
 		}
-		return Result{Pages: []db.Article{*found}, Page: 1, TotalPages: 1, Total: 1}, nil
+		return Result{Pages: []db.Article{*found}, Page: 1, TotalPages: 1, Total: 1, Matched: 1}, nil
 	}
 
 	filter := q.Filter
@@ -64,13 +65,20 @@ func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
+	matched := total
+	if q.Limit != nil {
+		matched, err = src.CountArticles(filter, q.Offset, nil)
+		if err != nil {
+			return Result{}, err
+		}
+	}
 
 	if !paginate {
 		pages, err := src.ListArticles(filter, q.Offset, q.Limit)
 		if err != nil {
 			return Result{}, err
 		}
-		return Result{Pages: pages, Page: 1, TotalPages: 1, Total: total}, nil
+		return Result{Pages: pages, Page: 1, TotalPages: 1, Total: total, Matched: matched}, nil
 	}
 
 	offset, limit, skip := window(q)
@@ -87,6 +95,7 @@ func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 		Page:       q.Page,
 		TotalPages: totalPages(total, q.PerPage),
 		Total:      total,
+		Matched:    matched,
 	}, nil
 }
 

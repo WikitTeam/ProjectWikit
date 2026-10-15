@@ -141,7 +141,7 @@ func renderListed(env module.Env, common *page.Context, listed []db.Article,
 		index++
 		vars := page.NewVars(a, env.User, env.Vars, env.Loc)
 		vars.SetTagPrefix(tagPrefix)
-		return page.PageVars(body, vars, index, result.Total)
+		return page.PageVars(body, vars, index, result.Matched)
 	}
 
 	if !separate {
