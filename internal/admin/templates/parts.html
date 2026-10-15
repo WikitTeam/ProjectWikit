@@ -4,7 +4,7 @@
 <div class="control-group">
   <label class="control-label" for="id_{{esc .n}}">{{t .k}}</label>
   <div class="controls">
-    <input type="text" id="id_{{esc .n}}" name="{{esc .n}}" value="{{esc .v}}"{{if .w}} class="{{esc .w}}"{{end}}>
+    <input type="text" id="id_{{esc .n}}" name="{{esc .n}}" value="{{esc .v}}"{{if .w}} class="{{esc .w}}"{{end}}{{if .ph}} placeholder="{{esc .ph}}"{{end}}>
     {{if .h}}<span class="hint">{{t .h}}</span>{{end}}
   </div>
 </div>
@@ -14,7 +14,7 @@
 <div class="control-group">
   <label class="control-label" for="id_{{esc .n}}">{{t .k}}</label>
   <div class="controls">
-    <textarea id="id_{{esc .n}}" name="{{esc .n}}" rows="{{if .rows}}{{.rows}}{{else}}4{{end}}">{{esc .v}}</textarea>
+    <textarea id="id_{{esc .n}}" name="{{esc .n}}" rows="{{if .rows}}{{.rows}}{{else}}4{{end}}"{{if .ph}} placeholder="{{esc .ph}}"{{end}}>{{esc .v}}</textarea>
     {{if .h}}<span class="hint">{{t .h}}</span>{{end}}
   </div>
 </div>

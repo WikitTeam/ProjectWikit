@@ -63,7 +63,7 @@
           </select>
         </div>
       </div>
-      {{template "row_text" dict "n" "badge_text" "k" "admin.f-badge-text" "v" .Role.BadgeText "w" "narrow-3" "h" "admin.h-badge-text"}}
+      {{template "row_text" dict "n" "badge_text" "k" "admin.f-badge-text" "v" .Role.BadgeText "w" "narrow-3" "h" "admin.h-badge-text" "ph" .Role.Slug}}
       {{template "row_text" dict "n" "badge_bg" "k" "admin.f-badge-bg" "v" .Role.BadgeBg "w" "narrow-2"}}
       {{template "row_text" dict "n" "badge_text_color" "k" "admin.f-badge-text-color" "v" .Role.BadgeTextColor "w" "narrow-2"}}
       {{template "row_check" dict "n" "badge_show_border" "k" "admin.f-badge-border" "l" "admin.l-badge-border" "v" .Role.BadgeShowBorder}}
