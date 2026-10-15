@@ -27,3 +27,17 @@ func TestGalleriesLeavesAHeadCarryingABracket(t *testing.T) {
 		t.Errorf("Galleries(%q) = %q, want it left alone", in, got)
 	}
 }
+
+func TestGalleriesWithAList(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"[[gallery size=\"medium\"]]\n: a.png\n: b.png\n[[/gallery]]", "[[module GalleryList size=\"medium\"]]\n: a.png\n: b.png\n[[/module]]"},
+		{"[[gallery]]\n{$urls}\n[[/gallery]]", "[[module GalleryList]]\n{$urls}\n[[/module]]"},
+		{"[[gallery]]\ntext\n[[gallery]]\n: a.png\n[[/gallery]]", "[[module Gallery]]\ntext\n[[module GalleryList]]\n: a.png\n[[/module]]"},
+		{"[[gallery]] [[/gallery]]", "[[module Gallery]] [[/gallery]]"},
+	}
+	for _, c := range cases {
+		if got := Galleries(c.in); got != c.want {
+			t.Errorf("Galleries(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
