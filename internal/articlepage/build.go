@@ -62,6 +62,9 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 	req.name, req.params = article.ParsePath(strings.TrimPrefix(r.URL.EscapedPath(), "/"), found.HomePage)
 	req.encoded = article.Encode(req.params)
 
+	if target, ok := article.CodeTarget(req.name, req.params); ok {
+		return &result{Status: http.StatusFound, Location: target}, nil
+	}
 	if target, ok := article.RedirectTarget(req.name, req.params); ok {
 		return &result{Status: http.StatusFound, Location: target}, nil
 	}

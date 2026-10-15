@@ -193,3 +193,24 @@ func writeCorpus(t *testing.T, name string, value any) {
 		t.Fatalf("WriteFile(%q) = %v, want nil", path, err)
 	}
 }
+
+func TestCodeTarget(t *testing.T) {
+	cases := []struct {
+		path, want string
+		ok         bool
+	}{
+		{"component:theme/code/1", "/local--code/component:theme/1", true},
+		{"Some Page/code/2", "/local--code/some-page/2", true},
+		{"page/code/0", "", false},
+		{"page/code/x", "", false},
+		{"page/code/01", "", false},
+		{"page/offset/2", "", false},
+	}
+	for _, c := range cases {
+		name, params := ParsePath(c.path, "")
+		got, ok := CodeTarget(name, params)
+		if got != c.want || ok != c.ok {
+			t.Errorf("CodeTarget(%q) = %q, %v, want %q, %v", c.path, got, ok, c.want, c.ok)
+		}
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/page"
@@ -133,4 +134,13 @@ func iriToURI(s string) string {
 		}
 	}
 	return b.String()
+}
+
+func CodeTarget(name string, params Params) (target string, ok bool) {
+	raw := params.Get("code")
+	n, err := strconv.Atoi(raw)
+	if err != nil || n < 1 || strconv.Itoa(n) != raw {
+		return "", false
+	}
+	return iriToURI("/local--code/" + wikidot.Normalize(name) + "/" + raw), true
 }
