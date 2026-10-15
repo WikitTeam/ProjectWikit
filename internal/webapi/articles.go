@@ -76,6 +76,10 @@ func (h *Articles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.answer(w, r, loc, name, h.files)
 	case tail == tailFiles && r.Method == http.MethodPost:
 		h.answer(w, r, loc, name, h.upload)
+	case tail == tailForm && r.Method == http.MethodGet:
+		h.answer(w, r, loc, name, h.formFields)
+	case tail == tailForm && r.Method == http.MethodPost:
+		h.answer(w, r, loc, name, h.formSource)
 	default:
 		h.next.ServeHTTP(w, r)
 	}

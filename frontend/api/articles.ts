@@ -54,6 +54,38 @@ export async function updateArticle(pageId: string, data: ArticleUpdateRequest):
   return wFetch<ArticleData>(`/pw-api/articles/${pageId}`, { method: 'PUT', sendJson: true, body: data })
 }
 
+export interface ArticleFormField {
+  name: string
+  type: string
+  label: string
+  hint: string
+  default: string
+  value: string
+  options: Array<{ key: string; label: string }>
+  height: number
+  minLength: number
+  maxLength: number
+}
+
+export interface ArticleForm {
+  fields: ArticleFormField[]
+  values: Record<string, string>
+  broken: boolean
+}
+
+export function fetchArticleForm(pageId: string): Promise<ArticleForm> {
+  return wFetch<ArticleForm>(`/pw-api/articles/${pageId}/form`)
+}
+
+export async function buildArticleFormSource(pageId: string, values: Record<string, string>): Promise<string> {
+  const resp = await wFetch<{ source: string }>(`/pw-api/articles/${pageId}/form`, {
+    method: 'POST',
+    sendJson: true,
+    body: { values },
+  })
+  return resp.source
+}
+
 export async function deleteArticle(pageId: string) {
   await wFetch(`/pw-api/articles/${pageId}`, { method: 'DELETE', sendJson: true })
 }

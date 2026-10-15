@@ -516,6 +516,8 @@
   "footnote": "脚注",
   "footnote-block-title": "脚注",
   "form-definition-invalid": "该分类的表单定义无法解析，分类下的页面将无法显示表单内容：{error}",
+  "form-field-too-long": "“{label}”最多可填写 {count} 个字符。",
+  "form-field-too-short": "“{label}”至少需要填写 {count} 个字符。",
   "forum-like-signed-out": "请先登录后再点赞",
   "forum-like-toggle": "点赞",
   "forum-like-who": "查看点赞的人",

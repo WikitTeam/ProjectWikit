@@ -4,12 +4,13 @@ import { editor } from 'monaco-editor'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { createArticle, fetchArticle, updateArticle } from '../api/articles'
+import { ArticleFormField, buildArticleFormSource, createArticle, fetchArticle, fetchArticleForm, updateArticle } from '../api/articles'
 import { makePreview } from '../api/preview'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import { removeMessage, showPreviewMessage } from '../util/wikidot-message'
 import WikidotModal from '../util/wikidot-modal'
+import ArticleFormFields, { formInitialValues } from './article-form-fields'
 
 interface Props {
   pageId: string
@@ -108,6 +109,8 @@ const ArticleEditor: React.FC<Props> = ({
   const [fatalError, setFatalError] = useState(false)
   const [saved, setSaved] = useState(false)
   const [fullscreenEditor, setFullScreenEditor] = useState(false)
+  const [formFields, setFormFields] = useState<ArticleFormField[]>()
+  const [formValues, setFormValues] = useState<Record<string, string>>({})
   const [previewOriginalTitle, setPreviewOriginalTitle] = useState<string>()
   const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState<string>()
   const [previewOriginalBody, setPreviewOriginalBody] = useState<string>()
@@ -130,6 +133,15 @@ const ArticleEditor: React.FC<Props> = ({
     previewOriginalStyles.current = previewStyleElements?.() ?? []
 
     window.addEventListener('beforeunload', handleRefresh)
+
+    fetchArticleForm(pageId)
+      .then(form => {
+        if (form.fields.length > 0 && !form.broken) {
+          setFormValues(formInitialValues(form.fields, form.values))
+          setFormFields(form.fields)
+        }
+      })
+      .catch(() => {})
 
     if (!isNew) {
       setLoading(true)
@@ -180,15 +192,27 @@ const ArticleEditor: React.FC<Props> = ({
     })
   })
 
-  const onSubmit = useConstCallback(() => {
+  const currentSource = () => (formFields ? buildArticleFormSource(pageId, formValues) : Promise.resolve(source))
+
+  const onSubmit = useConstCallback(async () => {
     setSaving(true)
     setError('')
     setSavingSuccess(false)
 
+    let built: string
+    try {
+      built = await currentSource()
+    } catch (e) {
+      setSaving(false)
+      setFatalError(false)
+      setError(e.error || t('common.server-unreachable'))
+      return
+    }
+
     const input = {
       pageId: pageId,
       title: title,
-      source: source,
+      source: built,
       comment: comment,
       parent: pathParams?.['parent'],
     }
@@ -243,11 +267,19 @@ const ArticleEditor: React.FC<Props> = ({
     previewStyles.current = []
   }
 
-  const onPreview = useConstCallback(() => {
+  const onPreview = useConstCallback(async () => {
+    let built: string
+    try {
+      built = await currentSource()
+    } catch (e) {
+      setFatalError(false)
+      setError(e.error || t('common.server-unreachable'))
+      return
+    }
     const data = {
       pageId: pageId,
       title: title,
-      source: source,
+      source: built,
       pathParams: pathParams,
     }
 
@@ -310,6 +342,10 @@ const ArticleEditor: React.FC<Props> = ({
     setSource(value || '')
   })
 
+  const onFormChange = useConstCallback((name: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [name]: value }))
+  })
+
   const onCloseError = useConstCallback(() => {
     setError('')
     if (fatalError) {
@@ -361,7 +397,8 @@ const ArticleEditor: React.FC<Props> = ({
         {/* This is not supported right now but we have to add empty div for BHL */}
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`editor-area ${loading ? 'loading' : ''}`}>
-          {!useAdvancedEditor && (
+          {formFields && <ArticleFormFields fields={formFields} values={formValues} disabled={loading || saving} onChange={onFormChange} />}
+          {!formFields && !useAdvancedEditor && (
             <textarea
               id="edit-page-textarea"
               value={source}
@@ -373,7 +410,7 @@ const ArticleEditor: React.FC<Props> = ({
               disabled={loading || saving}
             />
           )}
-          {useAdvancedEditor && (
+          {!formFields && useAdvancedEditor && (
             <StyledEditor
               loading={t('articles.editor.loading')}
               height="350px"

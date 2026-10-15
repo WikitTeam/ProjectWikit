@@ -3,8 +3,12 @@
 package form
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -17,6 +21,7 @@ const (
 	TypeCheckbox = "checkbox"
 	TypeStatic   = "static"
 	TypeHidden   = "hidden"
+	TypePassword = "password"
 )
 
 type Option struct {
@@ -32,6 +37,9 @@ type Field struct {
 	Default   string
 	Value     string
 	Options   []Option
+	Height    int
+	MinLength int
+	MaxLength int
 }
 
 type Definition struct {
@@ -101,6 +109,12 @@ func readField(field *Field, body *yaml.Node) {
 			field.Value = value.Value
 		case "values":
 			field.Options = readOptions(value)
+		case "height":
+			field.Height, _ = strconv.Atoi(strings.TrimSpace(value.Value))
+		case "minlength":
+			field.MinLength, _ = strconv.Atoi(strings.TrimSpace(value.Value))
+		case "maxlength":
+			field.MaxLength, _ = strconv.Atoi(strings.TrimSpace(value.Value))
 		}
 	}
 }
@@ -259,3 +273,74 @@ func Checked(value string) bool {
 	return false
 }
 
+func (d *Definition) Serialize(values map[string]string) string {
+	var b strings.Builder
+	written := map[string]bool{}
+	for _, field := range d.Fields {
+		written[field.Name] = true
+		value, ok := values[field.Name]
+		switch field.Type {
+		case TypeStatic:
+			continue
+		case TypeHidden:
+			value, ok = field.Value, true
+		case TypeCheckbox:
+			value, ok = "0", true
+			if Checked(values[field.Name]) {
+				value = "1"
+			}
+		}
+		if !ok {
+			value = field.Default
+		}
+		writeEntry(&b, field.Name, value, field.Type == TypeSelect || field.Type == TypeCheckbox)
+	}
+	extra := make([]string, 0)
+	for name := range values {
+		if !written[name] {
+			extra = append(extra, name)
+		}
+	}
+	slices.Sort(extra)
+	for _, name := range extra {
+		writeEntry(&b, name, values[name], false)
+	}
+	return b.String()
+}
+
+func writeEntry(b *strings.Builder, name, value string, quoted bool) {
+	b.WriteString(name + ": ")
+	switch {
+	case quoted && !strings.ContainsAny(value, "\n\r"):
+		b.WriteString("'" + strings.ReplaceAll(value, "'", "''") + "'")
+	case plainScalar(value):
+		b.WriteString(value)
+	default:
+		b.WriteString(doubleQuoted(value))
+	}
+	b.WriteString("\n")
+}
+
+func plainScalar(value string) bool {
+	if value == "" || strings.ContainsAny(value, "\n\r\t\u00a0") || strings.TrimSpace(value) != value {
+		return false
+	}
+	var node yaml.Node
+	if yaml.Unmarshal([]byte("v: "+value), &node) != nil {
+		return false
+	}
+	mapping := documentMapping(&node)
+	if mapping == nil || len(mapping.Content) != 2 {
+		return false
+	}
+	got := mapping.Content[1]
+	return got.Kind == yaml.ScalarNode && got.Tag == "!!str" && got.Style == 0 && got.Value == value
+}
+
+func doubleQuoted(value string) string {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(value)
+	return strings.TrimSuffix(buf.String(), "\n")
+}
