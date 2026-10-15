@@ -166,7 +166,7 @@
   "articles.lock.error-dismiss": "关闭",
   "articles.lock.error-label": "错误:",
   "articles.lock.locked-label": "页面已锁定:",
-  "articles.lock.note": "页面被锁定（保护）后，只有站点版主和管理员可以编辑。此功能适用于首页等需要保护的页面。",
+  "articles.lock.note": "页面被锁定后，只有拥有「锁定文章」权限的用户才能编辑、移动、删除它，或修改它的标签、作者和文件。此功能适用于首页等需要保护的页面。",
   "articles.lock.save": "保存",
   "articles.lock.saved": "保存成功!",
   "articles.lock.saving": "保存中...",
