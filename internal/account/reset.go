@@ -180,7 +180,7 @@ func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db
 	if err != nil {
 		return err
 	}
-	if !user.IsActive {
+	if !user.ActiveAt(time.Now()) {
 		return nil
 	}
 	value, err := h.resetValue(ctx, user)

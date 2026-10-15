@@ -118,7 +118,7 @@ func (h *LoginHandler) authenticate(ctx context.Context, name, plain string) (*d
 	if err != nil || !ok {
 		return nil, nil
 	}
-	if !user.IsActive {
+	if !user.ActiveAt(time.Now()) {
 		return nil, nil
 	}
 	if password.NeedsRehash(hash) {

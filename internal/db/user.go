@@ -43,10 +43,13 @@ func (u *User) ActiveAt(now time.Time) bool {
 	if u.InactiveUntil == nil {
 		return u.IsActive
 	}
-	return now.After(*u.InactiveUntil)
+	return u.IsSuperuser || now.After(*u.InactiveUntil)
 }
 
 func (u *User) ForumActiveAt(now time.Time) bool {
+	if u.IsSuperuser {
+		return true
+	}
 	if u.ForumInactiveUntil == nil {
 		return u.IsForumActive
 	}
@@ -54,6 +57,9 @@ func (u *User) ForumActiveAt(now time.Time) bool {
 }
 
 func (u *User) MessagesAt(now time.Time) bool {
+	if u.IsSuperuser {
+		return true
+	}
 	if u.DirectMessagesUntil == nil {
 		return u.CanSendDirectMessages
 	}
