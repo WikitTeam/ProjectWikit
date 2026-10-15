@@ -23,6 +23,11 @@ Wikidot syntax parsing uses [FTML-WIKIT](https://github.com/WikitTeam/ProjectWik
 
 ## Install
 
+See the [Quick start](quickstart.md) for the steps to get one site running.
+
 ## Documentation
+
+- [English](https://pwikit-docs.unitreaty.org/en/)
+- [Chinese](https://pwikit-docs.unitreaty.org/)
 
 
