@@ -396,8 +396,8 @@ body.admin .system-content .content #admin-header .btn:hover { border-color: #ff
 .admin-shell .menu-box .first-button::after { color: var(--quiet); }
 .admin-shell .menu-box .first-button:hover::after { color: var(--ink); }
 .admin-shell .menu-box .group-head { border-bottom-color: var(--rule); }
-.admin-shell .menu-box .group-head .back { color: var(--signal); font-weight: 500; border-right-color: var(--rule); }
-.admin-shell .menu-box .group-head .back:hover { color: var(--ledger); text-decoration: underline; text-underline-offset: 3px; }
+.admin-shell .menu-box .group-head .back { color: var(--ink); font-weight: 500; border-right-color: var(--rule); }
+.admin-shell .menu-box .group-head .back:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .admin-shell .menu-box .group-head .group-name { color: var(--ink); font-weight: 600; }
 .admin-shell .menu-box .count { font-size: 12px; border-color: var(--quiet); color: var(--muted); }
 
