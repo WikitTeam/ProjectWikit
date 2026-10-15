@@ -21,7 +21,8 @@
 use super::prelude::*;
 use crate::parsing::strip::strip_whitespace;
 use crate::parsing::strip_newlines;
-use crate::tree::{AcceptsPartial, ListItem, ListType, PartialElement};
+use crate::tree::{AcceptsPartial, AttributeMap, ListItem, ListType, PartialElement};
+use std::borrow::Cow;
 
 // Definitions
 
@@ -136,20 +137,21 @@ fn parse_list_block<'r, 't>(
             return Err(parser.make_warn(ParseWarningKind::ListEmpty));
         }
 
-        // Convert and extract list elements
+        let mut loose = Vec::new();
+
         for element in elements {
             match element {
-                // Ensure all elements of a list are only items, i.e. [[li]].
                 Element::Partial(PartialElement::ListItem(list_item)) => {
+                    flush_loose(&mut items, &mut loose);
                     items.push(list_item);
                 }
 
-                // Or sub-lists.
                 Element::List {
                     ltype,
                     attributes,
                     items: sub_items,
                 } => {
+                    flush_loose(&mut items, &mut loose);
                     let element = Box::new(Element::List {
                         ltype,
                         attributes,
@@ -159,13 +161,16 @@ fn parse_list_block<'r, 't>(
                     items.push(ListItem::SubList { element });
                 }
 
-                // Ignore "whitespace" elements
-                element if element.is_whitespace() => continue,
+                element if element.is_whitespace() && loose.is_empty() => continue,
 
-                // Other kinds of elements result in an exception.
-                _ => return Err(parser.make_warn(ParseWarningKind::ListContainsNonItem)),
+                Element::Partial(_) => {
+                    return Err(parser.make_warn(ParseWarningKind::ListContainsNonItem))
+                }
+
+                element => loose.push(element),
             }
         }
+        flush_loose(&mut items, &mut loose);
 
         items
     };
@@ -177,6 +182,20 @@ fn parse_list_block<'r, 't>(
     };
 
     ok!(false; element, exceptions)
+}
+
+fn flush_loose<'t>(items: &mut Vec<ListItem<'t>>, loose: &mut Vec<Element<'t>>) {
+    strip_whitespace(loose);
+    if loose.is_empty() {
+        return;
+    }
+    let mut attributes = AttributeMap::new();
+    attributes.insert("style", Cow::Borrowed("list-style: none"));
+    items.push(ListItem::Elements {
+        hidden: false,
+        elements: std::mem::take(loose),
+        attributes,
+    });
 }
 
 // List item
