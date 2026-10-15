@@ -18,6 +18,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/ipban"
 	"github.com/WikitTeam/ProjectWikit/internal/lang"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
@@ -171,7 +172,8 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 
 	resolver := auth.NewResolver(store, conn, conn, log)
 	negotiate := lang.Middleware(bundle)
-	resolved := func(h http.Handler) http.Handler { return resolver.Middleware(negotiate(h)) }
+	banned := ipban.Middleware(ipban.Deps{DB: conn, Trust: trust, Bundle: bundle, Assets: static.NewAssets(assets), Log: log})
+	resolved := func(h http.Handler) http.Handler { return resolver.Middleware(negotiate(banned(h))) }
 	stack.login = resolved(stack.login)
 	stack.logout = resolved(stack.logout)
 	stack.signup = resolved(stack.signup)

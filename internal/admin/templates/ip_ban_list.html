@@ -1,0 +1,50 @@
+{{define "ip_ban_list.html"}}
+{{template "form_error" .Error}}
+<div class="widget-box narrow">
+  <div class="widget-title"><i class="fas fa-ban"></i><h5>{{t "admin.ip-ban-new"}}</h5></div>
+  <div class="widget-content">
+    <p class="hint">{{t "admin.ip-bans-hint"}}</p>
+    <form method="POST" action="{{esc .Action}}">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      <input type="hidden" name="editor_zone" value="{{esc .ZoneName}}" data-browser-zone>
+      {{template "row_text" dict "n" "network" "k" "admin.f-ip-network" "v" .Network "w" "narrow-4" "ph" "203.0.113.0/24"}}
+      <div class="control-group">
+        <label class="control-label" for="id_until">{{t "admin.sanction-until"}}</label>
+        <div class="controls"><input type="datetime-local" id="id_until" name="until" class="narrow-3"></div>
+      </div>
+      {{template "row_text" dict "n" "reason" "k" "admin.sanction-reason" "v" .Reason "w" "narrow-5"}}
+      <div class="form-actions"><button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i>{{t "admin.sanction-ban"}}</button></div>
+    </form>
+  </div>
+</div>
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>{{t "admin.f-ip-network"}}</th>
+      <th>{{t "admin.sanction-reason"}}</th>
+      <th>{{t "admin.sanction-until"}}</th>
+      <th>{{t "admin.f-ip-ban-by"}}</th>
+      <th class="right"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Bans}}
+    <tr>
+      <td class="stamp">{{esc .Network.String}}</td>
+      <td>{{if .Reason}}{{esc .Reason}}{{else}}<span class="muted">&mdash;</span>{{end}}</td>
+      <td class="stamp">{{if .Until}}{{when .Until}}{{if .Until.Before $.Now}} <span class="muted">{{t "admin.ip-ban-expired"}}</span>{{end}}{{else}}<span class="muted">{{t "admin.ip-ban-forever"}}</span>{{end}}</td>
+      <td>{{if .SetBy}}<span class="printuser">{{esc .SetBy}}</span>{{else}}<span class="muted">&mdash;</span>{{end}} <span class="stamp">{{when .SetAt}}</span></td>
+      <td class="right">
+        <form method="POST" action="{{esc $.Action}}">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button type="submit" name="delete" value="1" class="btn btn-mini"><i class="fas fa-unlock"></i>{{t "admin.ip-ban-lift"}}</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="muted">{{t "admin.empty"}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}

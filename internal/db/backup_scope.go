@@ -125,6 +125,7 @@ var rules = map[string]rule{
 	"pwikit_admin_log": {owned, `site_id = (SELECT id FROM s)`, ""},
 
 	"pwikit_member_sanction": {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_ip_ban":          {owned, `site_id = (SELECT id FROM s)`, ""},
 
 	// A subscription can hang off an article or off a forum thread, and the
 	// thread need not belong to an article.

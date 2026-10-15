@@ -104,6 +104,7 @@ var groups = []struct {
 		{roleSlug, "fa-shield-alt"},
 		{roleCategorySlug, "fa-sitemap"},
 		{inviteSlug, "fa-envelope"},
+		{ipBanSlug, "fa-ban"},
 	}},
 	{"forum", "admin.group-forum", "fa-comments", []railEntry{
 		{sectionSlug, "fa-list-alt"},

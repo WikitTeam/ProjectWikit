@@ -260,7 +260,7 @@ func TestEveryScreenIsRegistered(t *testing.T) {
 		"themes", "site", "roles", "role-categories", "users", "reports",
 		"forum-sections", "forum-categories", "admin-log",
 		"tags", "tag-categories", "page-categories",
-		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages",
+		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages", "ip-bans",
 	}
 	got := make([]string, 0, len(screens))
 	for _, s := range screens {
