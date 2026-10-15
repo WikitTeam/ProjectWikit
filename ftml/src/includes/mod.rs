@@ -198,6 +198,7 @@ fn replace_variables(content: &mut String, variables: &VariableMap) {
 
         let value = match variables.get(name) {
             Some(value) => value.as_ref(),
+            None if is_include_fallback(content, mtch.start(), name) => continue,
             None => "",
         };
 
@@ -209,5 +210,26 @@ fn replace_variables(content: &mut String, variables: &VariableMap) {
     matches.reverse();
     for (value, range) in matches {
         content.replace_range(range, value);
+    }
+}
+
+fn is_include_fallback(content: &str, start: usize, name: &str) -> bool {
+    let before = &content[..start];
+    let Some(key) = before.trim_end().strip_suffix('=') else {
+        return false;
+    };
+    let Some(rest) = key.trim_end().strip_suffix(name) else {
+        return false;
+    };
+    if !rest.ends_with(|c: char| c.is_whitespace() || c == '|') {
+        return false;
+    }
+    match before
+        .as_bytes()
+        .windows(9)
+        .rposition(|window| window.eq_ignore_ascii_case(b"[[include"))
+    {
+        Some(open) => !before[open..].contains("]]"),
+        None => false,
     }
 }
