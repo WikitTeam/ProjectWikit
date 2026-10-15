@@ -20,6 +20,7 @@ const MyTickets: React.FC = () => {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [selecting, setSelecting] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [reload, setReload] = useState(0)
 
@@ -31,6 +32,7 @@ const MyTickets: React.FC = () => {
         if (live) {
           setListing(resp)
           setSelected(new Set())
+          setSelecting(false)
         }
       })
       .catch(e => console.error('Failed to fetch own tickets', e))
@@ -79,6 +81,11 @@ const MyTickets: React.FC = () => {
     showConfirmModal(t('own-tickets.confirm-clear-selected', { count: items.length }), t('own-tickets.confirm'), () => run(() => clearOwnTickets(items)))
   })
 
+  const stopSelecting = useConstCallback(() => {
+    setSelecting(false)
+    setSelected(new Set())
+  })
+
   const onClearAll = useConstCallback(() => {
     showConfirmModal(t('own-tickets.confirm-clear-all'), t('own-tickets.confirm'), () => run(() => clearAllOwnTickets()))
   })
@@ -103,22 +110,31 @@ const MyTickets: React.FC = () => {
       {!loading && listing && listing.total > 0 && (
         <>
           <Bar.Toolbar>
-            <Bar.ToolbarLabel>
-              <input type="checkbox" checked={selected.size === rows.length && rows.length > 0} onChange={toggleAll} />
-              {t('own-tickets.select-all')}
-            </Bar.ToolbarLabel>
-            <span>{t('own-tickets.selected-count', { count: selected.size })}</span>
-            <Bar.ToolbarAction danger disabled={selected.size === 0 || clearing} onClick={onClearSelected}>
-              {t('own-tickets.clear-selected')}
-            </Bar.ToolbarAction>
-            <Bar.ToolbarAction danger disabled={clearing} onClick={onClearAll}>
-              {t('own-tickets.clear-all')}
-            </Bar.ToolbarAction>
+            {selecting ? (
+              <>
+                <Bar.ToolbarLabel>
+                  <input type="checkbox" checked={selected.size === rows.length && rows.length > 0} onChange={toggleAll} />
+                  {t('own-tickets.select-all')}
+                </Bar.ToolbarLabel>
+                <span>{t('own-tickets.selected-count', { count: selected.size })}</span>
+                <Bar.ToolbarAction danger disabled={selected.size === 0 || clearing} onClick={onClearSelected}>
+                  {t('own-tickets.clear-selected')}
+                </Bar.ToolbarAction>
+                <Bar.ToolbarAction onClick={stopSelecting}>{t('own-tickets.select-cancel')}</Bar.ToolbarAction>
+              </>
+            ) : (
+              <>
+                <Bar.ToolbarAction onClick={() => setSelecting(true)}>{t('own-tickets.select')}</Bar.ToolbarAction>
+                <Bar.ToolbarAction danger disabled={clearing} onClick={onClearAll}>
+                  {t('own-tickets.clear-all')}
+                </Bar.ToolbarAction>
+              </>
+            )}
           </Bar.Toolbar>
           <Styled.List>
             {listing.tickets.map(one => (
               <Bar.SelectRow key={refOf(one)}>
-                <input type="checkbox" checked={selected.has(refOf(one))} onChange={() => toggle(refOf(one))} />
+                {selecting && <input type="checkbox" checked={selected.has(refOf(one))} onChange={() => toggle(refOf(one))} />}
                 <Styled.Ticket>
                   <Styled.TicketHead>
                     <Styled.Badge positive={one.status !== 'pending'}>{t(`own-tickets.status-${one.status}`)}</Styled.Badge>

@@ -25,6 +25,7 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, k
   const loaderRef = useRef<HTMLDivElement | null>(null)
   const [isLoaderVisible, setIsLoaderVisible] = useState(false)
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [selecting, setSelecting] = useState<boolean>(false)
   const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
@@ -110,11 +111,17 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, k
       await clearNotifications(ids)
       setItems(prev => prev.filter(x => !selected.has(x.id)))
       setSelected(new Set())
+      setSelecting(false)
     } catch (e: any) {
       console.error('Failed to clear notifications', e)
     } finally {
       setClearing(false)
     }
+  })
+
+  const stopSelecting = useConstCallback(() => {
+    setSelecting(false)
+    setSelected(new Set())
   })
 
   const clearEverything = useConstCallback(async () => {
@@ -124,6 +131,7 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, k
       await clearAllNotifications(kind)
       setItems([])
       setSelected(new Set())
+      setSelecting(false)
       setHasMore(false)
     } catch (e: any) {
       console.error('Failed to clear notifications', e)
@@ -136,37 +144,46 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, k
     <>
       {items.length > 0 && (
         <Styled.Toolbar>
-          <Styled.ToolbarLabel>
-            <input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleAll} />
-            {t('notifications.select-all')}
-          </Styled.ToolbarLabel>
-          <span>{t('notifications.selected-count', { count: selected.size })}</span>
-          <Styled.ToolbarAction
-            danger
-            disabled={selected.size === 0 || clearing}
-            onClick={() =>
-              showConfirmModal(
-                t('notifications.clear-selected-confirm', { count: selected.size }),
-                t('notifications.clear-confirm-button'),
-                clearSelected,
-              )
-            }
-          >
-            {t('notifications.clear-selected')}
-          </Styled.ToolbarAction>
-          <Styled.ToolbarAction
-            danger
-            disabled={clearing}
-            onClick={() => showConfirmModal(t('notifications.clear-all-confirm'), t('notifications.clear-confirm-button'), clearEverything)}
-          >
-            {t('notifications.clear-all')}
-          </Styled.ToolbarAction>
+          {selecting ? (
+            <>
+              <Styled.ToolbarLabel>
+                <input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleAll} />
+                {t('notifications.select-all')}
+              </Styled.ToolbarLabel>
+              <span>{t('notifications.selected-count', { count: selected.size })}</span>
+              <Styled.ToolbarAction
+                danger
+                disabled={selected.size === 0 || clearing}
+                onClick={() =>
+                  showConfirmModal(
+                    t('notifications.clear-selected-confirm', { count: selected.size }),
+                    t('notifications.clear-confirm-button'),
+                    clearSelected,
+                  )
+                }
+              >
+                {t('notifications.clear-selected')}
+              </Styled.ToolbarAction>
+              <Styled.ToolbarAction onClick={stopSelecting}>{t('notifications.select-cancel')}</Styled.ToolbarAction>
+            </>
+          ) : (
+            <>
+              <Styled.ToolbarAction onClick={() => setSelecting(true)}>{t('notifications.select')}</Styled.ToolbarAction>
+              <Styled.ToolbarAction
+                danger
+                disabled={clearing}
+                onClick={() => showConfirmModal(t('notifications.clear-all-confirm'), t('notifications.clear-confirm-button'), clearEverything)}
+              >
+                {t('notifications.clear-all')}
+              </Styled.ToolbarAction>
+            </>
+          )}
         </Styled.Toolbar>
       )}
       <Styled.List>
         {items.map(item => (
           <Styled.SelectRow key={item.id}>
-            <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggle(item.id)} />
+            {selecting && <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggle(item.id)} />}
             <Notification notification={item} />
           </Styled.SelectRow>
         ))}

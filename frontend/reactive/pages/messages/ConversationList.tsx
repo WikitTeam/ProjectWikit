@@ -20,6 +20,7 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [selecting, setSelecting] = useState<boolean>(false)
   const [clearing, setClearing] = useState<boolean>(false)
   const navigate = useNavigate()
 
@@ -92,12 +93,18 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
       const gone = new Set(response.cleared)
       setConversations(prev => prev.filter(c => !gone.has(c.partner.id ?? 0)))
       setSelected(new Set())
+      setSelecting(false)
       if (selectedPartnerId !== null && gone.has(selectedPartnerId)) navigate(Paths.messages)
     } catch (err: any) {
       showErrorModal(err?.error || t('messages.conversation-list.delete-failed'))
     } finally {
       setClearing(false)
     }
+  }
+
+  const stopSelecting = () => {
+    setSelecting(false)
+    setSelected(new Set())
   }
 
   const confirmClear = () => {
@@ -118,22 +125,29 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
   return (
     <>
       <Styled.ConversationToolbar>
-        <Styled.ConversationToolbarLabel>
-          <input type="checkbox" checked={selected.size === conversations.length} onChange={toggleAll} />
-          {t('messages.conversation-list.select-all')}
-        </Styled.ConversationToolbarLabel>
-        <span>{t('messages.conversation-list.selected-count', { count: selected.size })}</span>
-        <Styled.HeaderSpacer />
-        <Styled.ToolbarAction danger disabled={selected.size === 0 || clearing} onClick={confirmClear}>
-          {t('messages.conversation-list.delete-selected')}
-        </Styled.ToolbarAction>
+        {selecting ? (
+          <>
+            <Styled.ConversationToolbarLabel>
+              <input type="checkbox" checked={selected.size === conversations.length} onChange={toggleAll} />
+              {t('messages.conversation-list.select-all')}
+            </Styled.ConversationToolbarLabel>
+            <span>{t('messages.conversation-list.selected-count', { count: selected.size })}</span>
+            <Styled.HeaderSpacer />
+            <Styled.ToolbarAction danger disabled={selected.size === 0 || clearing} onClick={confirmClear}>
+              {t('messages.conversation-list.delete-selected')}
+            </Styled.ToolbarAction>
+            <Styled.ToolbarAction onClick={stopSelecting}>{t('messages.conversation-list.select-cancel')}</Styled.ToolbarAction>
+          </>
+        ) : (
+          <Styled.ToolbarAction onClick={() => setSelecting(true)}>{t('messages.conversation-list.select')}</Styled.ToolbarAction>
+        )}
       </Styled.ConversationToolbar>
       {conversations.map(conv => {
         const isActive = selectedPartnerId === conv.partner.id
         const isUnread = conv.unread_count > 0
         return (
           <Styled.ConversationSelectRow key={conv.partner.id}>
-            <Styled.MessageCheckbox checked={selected.has(conv.partner.id ?? 0)} onChange={() => toggle(conv.partner.id ?? 0)} />
+            {selecting && <Styled.MessageCheckbox checked={selected.has(conv.partner.id ?? 0)} onChange={() => toggle(conv.partner.id ?? 0)} />}
             <Styled.ConversationItem href={`/-${Paths.messages}/${conv.partner.id}`} active={isActive} unread={isUnread}>
               <Styled.ConversationDot unread={isUnread} />
               <Styled.ConversationInfo>
