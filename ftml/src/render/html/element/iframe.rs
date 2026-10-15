@@ -27,7 +27,7 @@ pub fn render_iframe(ctx: &mut HtmlContext, url: &str, attributes: &AttributeMap
 
     ctx.html().iframe().attr(attr!(
         "src" => url,
-        "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals allow-same-origin",
+        "sandbox" => "allow-scripts allow-top-navigation-by-user-activation allow-popups allow-modals allow-same-origin",
         "allowfullscreen" => "",
         "crossorigin";;
         attributes
@@ -50,7 +50,7 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str, external: bool) {
             .attr(attr!(
                 "id" => &id,
                 "srcdoc" => &format!("{prepended_script}{contents}"),
-                "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals",
+                "sandbox" => "allow-scripts allow-top-navigation-by-user-activation allow-popups allow-modals",
                 "allow" => "fullscreen",
                 "allowfullscreen" => "allowfullscreen",
                 "style" => "width: 100%; height: 0",
@@ -65,7 +65,7 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str, external: bool) {
             .attr(attr!(
                 "id" => &id,
                 "src" => &iframe_src,
-                "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals allow-same-origin",
+                "sandbox" => "allow-scripts allow-top-navigation-by-user-activation allow-popups allow-modals allow-same-origin",
                 "allow" => "fullscreen",
                 "allowfullscreen" => "allowfullscreen",
                 "style" => "width: 100%; height: 0",
