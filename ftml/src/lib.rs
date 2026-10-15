@@ -132,7 +132,7 @@ pub mod tree;
 
 pub use self::includes::include;
 pub use self::parsing::parse;
-pub use self::preproc::preprocess;
+pub use self::preproc::{expand_head_conditionals, preprocess};
 pub use self::tokenizer::{tokenize, Tokenization};
 pub use self::utf16::Utf16IndexMap;
 
@@ -141,7 +141,7 @@ pub mod prelude {
     pub use super::data::PageCallbacks;
     pub use super::includes::{include, remove_noincludes, Includer};
     pub use super::parsing::{parse, ParseResult, ParseWarning};
-    pub use super::preprocess;
+    pub use super::{expand_head_conditionals, preprocess};
     pub use super::render::Render;
     pub use super::settings::{
         InterwikiSettings, WikitextMode, WikitextSettings, DEFAULT_INTERWIKI,

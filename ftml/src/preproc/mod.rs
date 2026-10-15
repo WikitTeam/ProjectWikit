@@ -18,8 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+mod conditionals;
 mod typography;
 mod whitespace;
+
+pub use self::conditionals::{expand_head_conditionals, expression_holds, if_condition_holds};
 
 /// Run the preprocessor on the given wikitext, which is modified in-place.
 ///

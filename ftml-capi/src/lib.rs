@@ -14,7 +14,7 @@ use ftml::render::html::HtmlRender;
 use ftml::render::text::TextRender;
 use ftml::render::Render;
 use ftml::settings::{WikitextMode, WikitextSettings};
-use ftml::{include, parse, preprocess, tokenize};
+use ftml::{expand_head_conditionals, include, parse, preprocess, tokenize};
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -524,6 +524,9 @@ fn render_with<R: Render>(
     }
 
     let text = &mut included_text.clone();
+    if !settings.no_conditionals {
+        expand_head_conditionals(text, bridge.as_ref());
+    }
     let tokens = tokenize(text);
     let (tree, _warnings) = parse(&tokens, &page_info, bridge.clone(), &settings).into();
     let output = renderer.render(&tree, &page_info, bridge, &settings);
@@ -639,6 +642,9 @@ unsafe fn collect_tree(
         .unwrap_or((source.clone(), vec![]));
 
     let text = &mut included_text.clone();
+    if !settings.no_conditionals {
+        expand_head_conditionals(text, bridge.as_ref());
+    }
     let tokens = tokenize(text);
     let (tree, _warnings) = parse(&tokens, &info, bridge, &settings).into();
 
