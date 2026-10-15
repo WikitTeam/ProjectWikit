@@ -209,7 +209,7 @@ func (h *Handler) forumCategoryForm(w http.ResponseWriter, r *http.Request, loc 
 
 func (h *Handler) verified(w http.ResponseWriter, r *http.Request) bool {
 	current := site.FromContext(r.Context())
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return false
 	}

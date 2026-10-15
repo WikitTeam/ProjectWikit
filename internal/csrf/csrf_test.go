@@ -204,3 +204,10 @@ func TestSetCookieMarksSecureOverTLS(t *testing.T) {
 		})
 	}
 }
+
+func TestVerifyRejectsAFileDomainWithAPlantedCookie(t *testing.T) {
+	r := postWith(testSecret, testSecret, "https://files.wiki.test")
+	if err := Verify(r, []string{"wiki.test"}); !errors.Is(err, ErrBadOrigin) {
+		t.Errorf("Verify(file domain origin) err = %v, want %v", err, ErrBadOrigin)
+	}
+}

@@ -45,7 +45,7 @@ func (h *Users) invite(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
 		return
 	}
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		refuseCSRF(w, r, loc)
 		return
 	}

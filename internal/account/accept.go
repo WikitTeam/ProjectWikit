@@ -73,7 +73,7 @@ func (h *AcceptHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPost && !form.Fatal {
-		if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+		if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}

@@ -117,7 +117,7 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		return loc.T("profile.error-avatar-size"), nil
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, maxAvatarBytes)
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		return "", errBadToken
 	}
 	if err := r.ParseMultipartForm(avatarMemory); err != nil {

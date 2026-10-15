@@ -69,7 +69,7 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Notice: current.SignupNotice, CSRF: token,
 	}
 	if r.Method == http.MethodPost {
-		if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+		if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
@@ -352,7 +352,7 @@ func (h *SignupHandler) sendCode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}

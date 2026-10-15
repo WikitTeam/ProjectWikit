@@ -76,7 +76,7 @@ func (h *Handler) themeForm(w http.ResponseWriter, r *http.Request, loc *i18n.Lo
 
 func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest string) error {
 	current := site.FromContext(r.Context())
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return nil
 	}

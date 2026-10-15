@@ -52,7 +52,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	form := shell.Login{AuthIcon: authIcon(current), SiteTitle: current.Title, CSRF: token}
 	if r.Method == http.MethodPost {
-		if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+		if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}

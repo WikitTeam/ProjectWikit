@@ -140,7 +140,7 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest string) error {
 	ctx := r.Context()
 	current := site.FromContext(ctx)
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return nil
 	}
@@ -283,7 +283,7 @@ func (h *Handler) roleCategories(w http.ResponseWriter, r *http.Request, loc *i1
 	ctx := r.Context()
 	if r.Method == http.MethodPost {
 		current := site.FromContext(ctx)
-		if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+		if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return nil
 		}

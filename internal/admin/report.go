@@ -148,7 +148,7 @@ func (h *Handler) fullConversation(ctx context.Context, loc *i18n.Localizer, id 
 func (h *Handler) saveReport(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest string) error {
 	ctx := r.Context()
 	current := site.FromContext(ctx)
-	if err := csrf.Verify(r, []string{current.Domain, current.MediaDomain}); err != nil {
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return nil
 	}
