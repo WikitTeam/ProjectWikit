@@ -13,3 +13,4 @@ postgresql
 /internal/pgbundle/archive
 /pwikit.toml
 /logs
+/dev
