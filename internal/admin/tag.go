@@ -72,19 +72,32 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		if page < 1 {
 			page = 1
 		}
-		found, total, err := h.deps.DB.AdminTags(ctx, siteID(ctx), query, perPage, (page-1)*perPage)
+		categories, err := h.deps.DB.AdminTagCategories(ctx, siteID(ctx))
+		if err != nil {
+			return err
+		}
+		var categoryID int64
+		wanted := int64(atoi(r.URL.Query().Get("category")))
+		for _, one := range categories {
+			if one.ID == wanted {
+				categoryID = one.ID
+			}
+		}
+		found, total, err := h.deps.DB.AdminTags(ctx, siteID(ctx), query, categoryID, perPage, (page-1)*perPage)
 		if err != nil {
 			return err
 		}
 		return h.page(w, r, loc, loc.T("admin.tags"), "tag_list.html", map[string]any{
-			"Tags":   found,
-			"Query":  query,
-			"Page":   page,
-			"Pages":  (total + perPage - 1) / perPage,
-			"Total":  total,
-			"New":    Prefix + tagSlug + "/new",
-			"Base":   Prefix + tagSlug + "/",
-			"Action": Prefix + tagSlug + "/",
+			"Tags":       found,
+			"Categories": categories,
+			"Category":   categoryID,
+			"Query":      query,
+			"Page":       page,
+			"Pages":      (total + perPage - 1) / perPage,
+			"Total":      total,
+			"New":        Prefix + tagSlug + "/new",
+			"Base":       Prefix + tagSlug + "/",
+			"Action":     Prefix + tagSlug + "/",
 		})
 	}
 	return h.tagForm(w, r, loc, rest, "")
@@ -179,6 +192,7 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 			"Categories": found,
 			"New":        Prefix + tagCategorySlug + "/new",
 			"Base":       Prefix + tagCategorySlug + "/",
+			"TagsHref":   Prefix + tagSlug + "/?category=",
 		})
 	}
 	return h.tagCategoryForm(w, r, loc, rest, "")

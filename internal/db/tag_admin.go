@@ -111,18 +111,20 @@ SELECT t.id, t.name, t.category_id, coalesce(c.name, ''),
        (SELECT count(*) FROM web_article_tags at WHERE at.tag_id = t.id)
 FROM web_tag t LEFT JOIN web_tagscategory c ON c.id = t.category_id
 WHERE ($1 = '' OR t.name ILIKE '%' || $1 || '%') AND t.site_id = $4
+  AND ($5::bigint = 0 OR t.category_id = $5)
 ORDER BY c.name NULLS FIRST, t.name
 LIMIT $2 OFFSET $3`)
 
 var qAdminTagCount = register("AdminTagCount", `
-SELECT count(*) FROM web_tag t WHERE ($1 = '' OR t.name ILIKE '%' || $1 || '%') AND t.site_id = $2`)
+SELECT count(*) FROM web_tag t WHERE ($1 = '' OR t.name ILIKE '%' || $1 || '%') AND t.site_id = $2
+  AND ($3::bigint = 0 OR t.category_id = $3)`)
 
-func (d *DB) AdminTags(ctx context.Context, siteID int64, query string, limit, offset int) ([]TagRow, int, error) {
+func (d *DB) AdminTags(ctx context.Context, siteID int64, query string, categoryID int64, limit, offset int) ([]TagRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminTagCount, query, siteID).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminTagCount, query, siteID, categoryID).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count tags: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminTags, query, limit, offset, siteID)
+	rows, err := d.pool.Query(ctx, qAdminTags, query, limit, offset, siteID, categoryID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list tags: %w", err)
 	}

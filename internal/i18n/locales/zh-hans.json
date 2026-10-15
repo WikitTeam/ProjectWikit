@@ -20,6 +20,7 @@
   "admin.addresses-cleared": "已清除 {n} 条 IP 记录。",
   "admin.admin-log": "操作记录",
   "admin.all": "全部",
+  "admin.all-categories": "所有分类",
   "admin.all-roles": "所有身份组",
   "admin.back": "返回",
   "admin.back-to-list": "返回列表",

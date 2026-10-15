@@ -10,7 +10,7 @@
       <td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td>
       <td class="stamp">{{esc .Slug}}</td>
       <td class="num">{{num .Priority}}</td>
-      <td class="num">{{.Tags}}</td>
+      <td class="num">{{if .Tags}}<a href="{{esc $.TagsHref}}{{.ID}}">{{.Tags}}</a>{{else}}{{.Tags}}{{end}}</td>
     </tr>
     {{else}}
     <tr><td colspan="4" class="muted">{{t "admin.empty"}}</td></tr>
