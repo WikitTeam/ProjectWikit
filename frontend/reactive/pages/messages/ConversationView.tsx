@@ -46,6 +46,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const listRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const wasAtBottomRef = useRef<boolean>(true)
   const messagesRef = useRef<DirectMessage[]>([])
   const selectModeRef = useRef<boolean>(false)
@@ -157,6 +158,7 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
       setSendError(err?.error || t('messages.conversation-view.send-failed'))
     } finally {
       setSending(false)
+      inputRef.current?.focus()
     }
   }
 
@@ -275,11 +277,13 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
       {!selectMode && (
         <Styled.Composer onSubmit={handleSend}>
           <Styled.ComposerInput
+            ref={inputRef}
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={canSend ? t('messages.conversation-view.input-placeholder') : t('messages.conversation-view.cannot-send')}
-            disabled={!canSend || sending}
+            disabled={!canSend}
+            readOnly={sending}
           />
           <Styled.SendButton type="submit" disabled={!canSend || sending || !draft.trim()}>
             {sending ? t('messages.conversation-view.sending') : t('messages.conversation-view.send')}
