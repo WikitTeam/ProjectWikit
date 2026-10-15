@@ -83,6 +83,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	site.Sandbox(w, site.FromContext(r.Context()), mimeType)
+
 	chunk := chunkSizeFor(mimeType)
 	if chunk == 0 {
 		w.Header().Set("Content-Type", mimeType)

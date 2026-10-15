@@ -157,6 +157,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, err)
 		return
 	}
+	if h.prefix == HTMLPrefix {
+		site.Sandbox(w, site.FromContext(r.Context()), out.contentType)
+	}
 	write(w, r, out)
 }
 
