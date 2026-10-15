@@ -155,6 +155,14 @@ where
             return false;
         }
 
+        if !block_rule.accepts_newlines
+            && self.closes_outer_format(self.current().token)
+            && self.closed_later(closing_name)
+        {
+            self.note_implicit_close();
+            return true;
+        }
+
         let closes_outer = self.evaluate_fn(|parser| {
             if block_rule.accepts_newlines && !first_iteration {
                 parser.get_optional_line_break()?;

@@ -54,6 +54,12 @@ pub fn consume<'p, 'r, 't>(
 
     // check if this node is cached
     let this_pos = current.span.start;
+    if parser.is_stray(this_pos) {
+        parser.step()?;
+        parser.depth_decrement();
+        return ok!(Elements::None);
+    }
+
     let step_orig = parser.remaining().len();
     let implicit_closes = parser.implicit_closes();
     match parser.cached_node(this_pos) {

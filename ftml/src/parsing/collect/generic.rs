@@ -129,6 +129,13 @@ where
             return ok!(paragraph_safe; last, exceptions);
         }
 
+        if let Some(stray) = crossed_block_end(parser, close_conditions) {
+            debug!("Found the end of an enclosing block, closing early");
+            parser.note_implicit_close();
+            parser.mark_stray(stray);
+            return ok!(paragraph_safe; parser.current(), exceptions);
+        }
+
         // See if the container should be aborted
         if parser.evaluate_any(invalid_conditions, &mut None) {
             debug!(
@@ -156,4 +163,40 @@ where
             parser.step()?;
         }
     }
+}
+
+// A block that ends inside this container closes it there, the way a browser
+// mends the crossed tags Wikidot writes out. The closing mark that comes later
+// is then left with nothing to close.
+fn crossed_block_end(parser: &Parser, close_conditions: &[ParseCondition]) -> Option<usize> {
+    let close = parser.open_format()?;
+    let closes_here = close_conditions
+        .iter()
+        .any(|condition| matches!(condition, ParseCondition::CurrentToken(token) if *token == close));
+    if !closes_here {
+        return None;
+    }
+
+    let mut stray = None;
+    let crossed = parser.evaluate_fn(|parser| {
+        let name = parser.get_end_block()?;
+        let name = name.strip_suffix('_').unwrap_or(name);
+        if !parser.closes_outer_block(name) {
+            return Ok(false);
+        }
+        loop {
+            let current = parser.current();
+            match current.token {
+                Token::InputEnd | Token::ParagraphBreak => return Ok(false),
+                token if token == close => {
+                    stray = Some(current.span.start);
+                    return Ok(true);
+                }
+                _ => {
+                    parser.step()?;
+                }
+            }
+        }
+    });
+    if crossed { stray } else { None }
 }

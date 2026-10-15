@@ -54,16 +54,28 @@ pub fn collect_container<'p, 'r, 't>(
         rule.name(),
     );
 
+    let close = match container_type {
+        ContainerType::Header(_) => None,
+        _ => close_conditions.iter().find_map(|condition| match condition {
+            ParseCondition::CurrentToken(token) => Some(*token),
+            _ => None,
+        }),
+    };
+    let outer = close.map(|token| parser.enter_format(token));
+
     // Iterate and consume all the tokens
-    let (elements, exceptions, paragraph_safe) = collect_consume(
+    let result = collect_consume(
         parser,
         rule,
         open_conditions,
         close_conditions,
         invalid_conditions,
         warn_kind,
-    )?
-    .into();
+    );
+    if let Some(outer) = outer {
+        parser.leave_block(outer);
+    }
+    let (elements, exceptions, paragraph_safe) = result?.into();
 
     // Empty container is invalid
     if elements.is_empty() {

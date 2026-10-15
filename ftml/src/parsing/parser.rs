@@ -30,7 +30,7 @@ use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use regex::Regex;
 use std::vec;
 use std::rc::Rc;
@@ -147,6 +147,7 @@ impl Drop for ParserTransaction<'_, '_, '_> {
 #[derive(Debug)]
 pub struct OpenBlock {
     name: String,
+    close: Option<Token>,
     outer: Option<Rc<OpenBlock>>,
 }
 
@@ -165,6 +166,7 @@ pub struct Parser<'r, 't> {
     substituted: Rc<Cell<usize>>,
     open_blocks: Option<Rc<OpenBlock>>,
     implicit_closes: Rc<Cell<usize>>,
+    strays: Rc<RefCell<HashSet<usize>>>,
 
     // Rule state
     rule: Rule,
@@ -219,6 +221,7 @@ impl<'r, 't> Parser<'r, 't> {
             substituted: Rc::new(Cell::new(0)),
             open_blocks: None,
             implicit_closes: Rc::new(Cell::new(0)),
+            strays: Rc::new(RefCell::new(HashSet::new())),
             full_text,
             rule: RULE_PAGE,
             depth: 0,
@@ -848,9 +851,46 @@ impl<'r, 't> Parser<'r, 't> {
         let outer = self.open_blocks.take();
         self.open_blocks = Some(Rc::new(OpenBlock {
             name: name.to_ascii_lowercase(),
+            close: None,
             outer: outer.clone(),
         }));
         outer
+    }
+
+    pub fn enter_format(&mut self, close: Token) -> Option<Rc<OpenBlock>> {
+        let outer = self.open_blocks.take();
+        self.open_blocks = Some(Rc::new(OpenBlock {
+            name: String::new(),
+            close: Some(close),
+            outer: outer.clone(),
+        }));
+        outer
+    }
+
+    pub fn closes_outer_format(&self, token: Token) -> bool {
+        let mut block = self
+            .open_blocks
+            .as_ref()
+            .and_then(|block| block.outer.as_deref());
+        while let Some(open) = block {
+            if open.close == Some(token) {
+                return true;
+            }
+            block = open.outer.as_deref();
+        }
+        false
+    }
+
+    pub fn open_format(&self) -> Option<Token> {
+        self.open_blocks.as_ref().and_then(|block| block.close)
+    }
+
+    pub fn mark_stray(&self, position: usize) {
+        self.strays.borrow_mut().insert(position);
+    }
+
+    pub fn is_stray(&self, position: usize) -> bool {
+        self.strays.borrow().contains(&position)
     }
 
     #[inline]
@@ -872,7 +912,7 @@ impl<'r, 't> Parser<'r, 't> {
             .as_ref()
             .and_then(|block| block.outer.as_deref());
         while let Some(open) = block {
-            if open.name.eq_ignore_ascii_case(name) {
+            if open.close.is_none() && open.name.eq_ignore_ascii_case(name) {
                 return true;
             }
             block = open.outer.as_deref();

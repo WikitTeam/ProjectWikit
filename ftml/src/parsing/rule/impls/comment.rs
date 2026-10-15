@@ -31,16 +31,32 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming tokens until end of comment");
 
+    let start = parser.current().span.end;
     check_step(parser, Token::LeftComment, ParseWarningKind::RuleFailed)?;
+
+    // The end is found in the text rather than among the tokens, because a
+    // URL, an e-mail address or a run of dashes swallows the "--" before "]".
+    let full = parser.full_text().inner();
+    let close = full
+        .get(start..)
+        .and_then(|rest| rest.find("--]"))
+        .map(|offset| start + offset + 3);
 
     loop {
         let ExtractedToken {
             token,
-            span: _span,
+            span,
             slice: _slice,
         } = parser.current();
 
         debug!("Received token '{}' inside comment", token.name());
+
+        if let Some(close) = close {
+            if span.start >= close {
+                debug!("Passed the end of comment, returning");
+                return ok!(Elements::None);
+            }
+        }
 
         match token {
             // Hit the end of the comment, return
