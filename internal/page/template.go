@@ -5,6 +5,7 @@ package page
 import (
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // Go's dot excludes newlines by default, so a %% pair may not span lines.
@@ -21,6 +22,44 @@ func ApplyTemplate(template string, resolve func(name string) (string, bool)) st
 		}
 		return match
 	})
+}
+
+func TemplateLayout(source string) string {
+	at := sectionBreak.FindStringIndex(source)
+	if at == nil {
+		return source
+	}
+	return source[:at[0]]
+}
+
+var (
+	moduleOpen  = regexp.MustCompile(`(?i)\[\[\s*module\s+([a-z0-9_]+)[^\]]*]]`)
+	moduleClose = regexp.MustCompile(`(?i)\[\[\s*/\s*module\s*]]`)
+)
+
+func OutsideModules(source string, hasBody func(name string) bool, fill func(string) string) string {
+	var out strings.Builder
+	rest := source
+	for {
+		open := moduleOpen.FindStringSubmatchIndex(rest)
+		if open == nil || !hasBody(rest[open[2]:open[3]]) {
+			if open == nil {
+				out.WriteString(fill(rest))
+				return out.String()
+			}
+			out.WriteString(fill(rest[:open[1]]))
+			rest = rest[open[1]:]
+			continue
+		}
+		closing := moduleClose.FindStringIndex(rest[open[1]:])
+		if closing == nil {
+			out.WriteString(fill(rest))
+			return out.String()
+		}
+		out.WriteString(fill(rest[:open[1]]))
+		out.WriteString(rest[open[1] : open[1]+closing[1]])
+		rest = rest[open[1]+closing[1]:]
+	}
 }
 
 // ThisVars is the pass an included page goes through. %%this|name%% reaches the

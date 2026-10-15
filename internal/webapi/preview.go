@@ -13,9 +13,11 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/form"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
+	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
@@ -98,7 +100,7 @@ func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		return "", nil, err
 	}
 
-	source, err := h.template(ctx, found)
+	source, err := h.template(ctx, found, parsed.PageID)
 	if err != nil {
 		return "", nil, err
 	}
@@ -108,11 +110,13 @@ func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	vars := env.Vars(found)
 	fill := vars
 	if fill == nil {
-		fill = page.NewVars(nil, user, nil, loc)
+		fill = page.NewDraftVars(strings.ToLower(parsed.PageID), parsed.Title, user, repo.NewVarSource(ctx, h.deps.DB, current), loc)
 	}
 	fill.SetContent(parsed.Source)
 
-	source = page.PageVars(source, fill, 1, 1)
+	source = page.OutsideModules(source, module.HasItemBody, func(s string) string {
+		return page.PageVars(s, fill, 1, 1)
+	})
 	source = page.ApplyTemplate(source, article.ThisPage(params, canonical(current, found, parsed, params)))
 	source = form.Strip(source)
 	source = page.PreRender(source, vars)
@@ -123,6 +127,7 @@ func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	}
 	pc := page.NewContext(found, found, params, user)
 	pc.CSRF, _ = csrf.Token(r)
+	pc.Draft = found == nil
 
 	html, err := env.HTML(source, info, env.Callbacks(vars, pc), renderer.ModeArticle)
 	if err != nil {
@@ -133,11 +138,15 @@ func (h *Preview) render(r *http.Request, loc *i18n.Localizer, current *db.Site,
 
 // A page with no row of its own still gets the category template, which is what
 // the editor shows while the page is being created.
-func (h *Preview) template(ctx context.Context, found *db.Article) (string, error) {
-	if found == nil || found.Name == templateName {
+func (h *Preview) template(ctx context.Context, found *db.Article, pageID string) (string, error) {
+	category, name := wikidot.Split(strings.ToLower(pageID))
+	if found != nil {
+		category, name = found.Category, found.Name
+	}
+	if name == templateName {
 		return "%%content%%", nil
 	}
-	template, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), found.Category+":"+templateName)
+	template, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), category+":"+templateName)
 	if errors.Is(err, db.ErrNotFound) {
 		return "%%content%%", nil
 	}
@@ -151,7 +160,7 @@ func (h *Preview) template(ctx context.Context, found *db.Article) (string, erro
 	if err != nil {
 		return "", err
 	}
-	return source, nil
+	return page.TemplateLayout(source), nil
 }
 
 func canonical(current *db.Site, found *db.Article, parsed previewCall, params page.PathParams) string {

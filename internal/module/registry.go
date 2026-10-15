@@ -8,6 +8,7 @@ import (
 type Info struct {
 	Name       string
 	HasContent bool
+	ItemBody   bool
 	Inline     bool
 	Removed    bool
 }
@@ -16,7 +17,7 @@ var registry = map[string]Info{
 	"applicationform":      {Name: "applicationform"},
 	"button":               {Name: "button", Inline: true},
 	"comments":             {Name: "comments"},
-	"countpages":           {Name: "countpages", HasContent: true},
+	"countpages":           {Name: "countpages", HasContent: true, ItemBody: true},
 	"css":                  {Name: "css", HasContent: true},
 	"files":                {Name: "files"},
 	"forumcategory":        {Name: "forumcategory"},
@@ -25,13 +26,13 @@ var registry = map[string]Info{
 	"forumpost":            {Name: "forumpost"},
 	"forumstart":           {Name: "forumstart"},
 	"forumthread":          {Name: "forumthread"},
-	"frontforum":           {Name: "frontforum", HasContent: true},
+	"frontforum":           {Name: "frontforum", HasContent: true, ItemBody: true},
 	"gallery":              {Name: "gallery"},
 	"input":                {Name: "input", HasContent: true},
 	"interwiki":            {Name: "interwiki", HasContent: true, Removed: true},
-	"listpages":            {Name: "listpages", HasContent: true},
-	"listusers":            {Name: "listusers", HasContent: true},
-	"members":              {Name: "members", HasContent: true},
+	"listpages":            {Name: "listpages", HasContent: true, ItemBody: true},
+	"listusers":            {Name: "listusers", HasContent: true, ItemBody: true},
+	"members":              {Name: "members", HasContent: true, ItemBody: true},
 	"membershipapply":      {Name: "membershipapply"},
 	"membershipbypassword": {Name: "membershipbypassword"},
 	"newpage":              {Name: "newpage"},
@@ -45,7 +46,7 @@ var registry = map[string]Info{
 	"search":               {Name: "search"},
 	"sitechanges":          {Name: "sitechanges"},
 	"tagcloud":             {Name: "tagcloud"},
-	"time":                 {Name: "time", HasContent: true},
+	"time":                 {Name: "time", HasContent: true, ItemBody: true},
 	"wantedpages":          {Name: "wantedpages"},
 }
 
@@ -57,6 +58,11 @@ func Lookup(name string) (Info, bool) {
 func HasContent(name string) bool {
 	info, ok := Lookup(name)
 	return ok && !info.Removed && info.HasContent
+}
+
+func HasItemBody(name string) bool {
+	info, ok := Lookup(name)
+	return ok && !info.Removed && info.HasContent && info.ItemBody
 }
 
 // A module that renders a block cannot sit in a paragraph without closing

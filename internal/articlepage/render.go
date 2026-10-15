@@ -12,7 +12,9 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/article"
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/form"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
@@ -107,7 +109,9 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 		return body{}, err
 	}
 	vars := h.vars(req, req.article)
-	source = page.PageVars(source, vars, 1, 1)
+	source = page.OutsideModules(source, module.HasItemBody, func(s string) string {
+		return page.PageVars(s, vars, 1, 1)
+	})
 	source = page.ApplyTemplate(source, article.ThisPage(req.params, canonical))
 	// The field definitions are read by the variables, not by the reader, so
 	// they never reach the renderer even on the template's own page.
@@ -152,7 +156,29 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 	if pc.OGDescription != "" {
 		out.excerpt = pc.OGDescription
 	}
+	if req.article.Name == templateName {
+		problem, err := h.formProblem(req)
+		if err != nil {
+			return body{}, err
+		}
+		out.html = problem + out.html
+	}
 	return out, nil
+}
+
+func (h *Handler) formProblem(req *request) (string, error) {
+	source, err := h.deps.DB.LatestSource(req.ctx, req.article.ID)
+	if errors.Is(err, db.ErrNotFound) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	if _, _, err := form.Parse(source); err != nil {
+		return `<div class="error-block"><p>` +
+			escape.HTML(req.loc.T("form-definition-invalid", "error", err.Error())) + "</p></div>\n", nil
+	}
+	return "", nil
 }
 
 func (h *Handler) context(req *request, source *db.Article) *page.Context {
@@ -181,7 +207,7 @@ func (h *Handler) source(req *request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return source, nil
+	return page.TemplateLayout(source), nil
 }
 
 func (h *Handler) missingBody(req *request) (body, error) {

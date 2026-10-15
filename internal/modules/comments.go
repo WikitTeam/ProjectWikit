@@ -11,6 +11,9 @@ import (
 func init() { module.Register("comments", renderComments) }
 
 func renderComments(env module.Env, _ map[string]string, _ string) (string, error) {
+	if env.Page != nil && env.Page.Article == nil && env.Page.Draft {
+		return "", nil
+	}
 	if env.Page == nil || env.Page.Article == nil {
 		return "", &module.Error{Message: env.Text("module-failed", "name", env.Name)}
 	}

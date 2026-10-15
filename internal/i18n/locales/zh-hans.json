@@ -515,6 +515,7 @@
   "favourite-toggle": "收藏",
   "footnote": "脚注",
   "footnote-block-title": "脚注",
+  "form-definition-invalid": "该分类的表单定义无法解析，分类下的页面将无法显示表单内容：{error}",
   "forum-like-signed-out": "请先登录后再点赞",
   "forum-like-toggle": "点赞",
   "forum-like-who": "查看点赞的人",

@@ -25,13 +25,13 @@ type Option struct {
 }
 
 type Field struct {
-	Name    string
-	Type    string
-	Label   string
-	Hint    string
-	Default string
-	Value   string
-	Options []Option
+	Name      string
+	Type      string
+	Label     string
+	Hint      string
+	Default   string
+	Value     string
+	Options   []Option
 }
 
 type Definition struct {
@@ -59,6 +59,7 @@ func Parse(source string) (*Definition, bool, error) {
 }
 
 func parseDefinition(body string) (*Definition, error) {
+	body = strings.ReplaceAll(body, "\u00a0", " ")
 	var root yaml.Node
 	if err := yaml.Unmarshal([]byte(body), &root); err != nil {
 		return nil, fmt.Errorf("parse form definition: %w", err)
@@ -119,7 +120,7 @@ func readOptions(node *yaml.Node) []Option {
 
 func ParseData(source string) (map[string]string, error) {
 	var root yaml.Node
-	if err := yaml.Unmarshal([]byte(source), &root); err != nil {
+	if err := yaml.Unmarshal([]byte(plainIndent(source)), &root); err != nil {
 		return nil, fmt.Errorf("parse form data: %w", err)
 	}
 	mapping := documentMapping(&root)
@@ -133,6 +134,19 @@ func ParseData(source string) (map[string]string, error) {
 		}
 	}
 	return out, nil
+}
+
+func plainIndent(source string) string {
+	if !strings.Contains(source, "\u00a0") {
+		return source
+	}
+	lines := strings.Split(source, "\n")
+	for i, line := range lines {
+		rest := strings.TrimLeft(line, " \t\u00a0")
+		indent := line[:len(line)-len(rest)]
+		lines[i] = strings.ReplaceAll(indent, "\u00a0", " ") + rest
+	}
+	return strings.Join(lines, "\n")
 }
 
 func documentMapping(root *yaml.Node) *yaml.Node {
@@ -201,6 +215,11 @@ func (d *Definition) Data(values map[string]string, name string) (string, bool) 
 			}
 		}
 		return EscapeMarkup(raw), true
+	case TypeCheckbox:
+		if Checked(raw) {
+			return "1", true
+		}
+		return "0", true
 	}
 	return EscapeMarkup(raw), true
 }
@@ -231,3 +250,12 @@ func EscapeMarkup(value string) string {
 	// a literal pair puts it back as text.
 	return "@@" + strings.ReplaceAll(value, "@@", strings.Repeat("@", 10)) + "@@"
 }
+
+func Checked(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "1", "true", "yes", "on":
+		return true
+	}
+	return false
+}
+

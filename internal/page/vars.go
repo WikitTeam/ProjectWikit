@@ -81,10 +81,18 @@ type Vars struct {
 	comment     *Comment
 	commentDone bool
 	tagPrefix   string
+	draft       string
+	draftName   string
+	draftTitle  string
 }
 
 func NewVars(article *db.Article, user *db.User, src VarSource, loc *i18n.Localizer) *Vars {
 	return &Vars{article: article, user: user, src: src, loc: loc, values: map[string]string{}}
+}
+
+func NewDraftVars(fullName, title string, user *db.User, src VarSource, loc *i18n.Localizer) *Vars {
+	category, name := wikidot.Split(fullName)
+	return &Vars{draft: category, draftName: name, draftTitle: title, user: user, src: src, loc: loc, values: map[string]string{}}
 }
 
 // Err reports the first query that failed. A failed lookup leaves the variable
@@ -111,6 +119,9 @@ func (v *Vars) text(id string) string {
 func (v *Vars) Lookup(name string) (string, bool) {
 	if v != nil && name == "content" && v.contentSet {
 		return v.content, true
+	}
+	if v != nil && v.article == nil && v.draft != "" {
+		return v.draftVar(name)
 	}
 	if v == nil || v.article == nil {
 		return "", false
@@ -314,6 +325,29 @@ func (v *Vars) compute(name string) (string, bool) {
 	return "", false
 }
 
+func (v *Vars) draftVar(name string) (string, bool) {
+	fullName := v.draft + ":" + v.draftName
+	if v.draft == wikidot.DefaultCategory {
+		fullName = v.draftName
+	}
+	switch name {
+	case "name":
+		return v.draftName, true
+	case "category":
+		return v.draft, true
+	case "fullname":
+		return fullName, true
+	case "title":
+		return v.draftTitle, true
+	case "title_linked", "linked_title":
+		return "[[[" + fullName + "|" + v.draftTitle + "]]]", true
+	}
+	if kind, field, ok := form.ParseVar(name); ok {
+		return v.formVar(kind, field)
+	}
+	return "", false
+}
+
 func (v *Vars) formVar(kind, field string) (string, bool) {
 	def, ok := v.definition()
 	if !ok || def == nil {
@@ -339,7 +373,11 @@ func (v *Vars) definition() (*form.Definition, bool) {
 	if v.formDefDone {
 		return v.formDef, true
 	}
-	def, err := v.src.CategoryForm(v.article.Category)
+	category := v.draft
+	if v.article != nil {
+		category = v.article.Category
+	}
+	def, err := v.src.CategoryForm(category)
 	if err != nil {
 		return nil, v.fail(err)
 	}
@@ -353,7 +391,10 @@ func (v *Vars) storedValues() (map[string]string, bool) {
 	if v.formValues != nil {
 		return v.formValues, true
 	}
-	source, ok := v.latestSource()
+	source, ok := v.content, v.contentSet
+	if !ok && v.article != nil {
+		source, ok = v.latestSource()
+	}
 	if !ok {
 		// A page with no revision yet still answers with the defaults.
 		source = ""

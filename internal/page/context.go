@@ -28,6 +28,8 @@ type Context struct {
 
 	Depth int
 
+	Draft bool
+
 	AddCSS         string
 	ComputedStyles []string
 	OGDescription  string
@@ -59,6 +61,7 @@ func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams PathP
 	clone.Title = c.Title
 	clone.CSRF = c.CSRF
 	clone.OnlyModules = c.OnlyModules
+	clone.Draft = c.Draft
 	return clone
 }
 
