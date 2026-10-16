@@ -42,7 +42,7 @@ body.admin { padding-top: 66px; }
 }
 .admin-shell .menu-box .nav-stacked > li > a {
   display: flex; align-items: center; gap: 10px;
-  padding: 7px 12px;
+  padding: 7px 12px; margin: 2px 2px;
   text-decoration: none; color: var(--muted); font-size: 14px;
   border-left: 2px solid transparent;
   border-radius: 0 var(--rad-sm) var(--rad-sm) 0;
@@ -50,8 +50,7 @@ body.admin { padding-top: 66px; }
 .admin-shell .menu-box .nav-stacked > li > a > i { font-size: 12px; width: 14px; text-align: center; flex: none; }
 .admin-shell .menu-box .nav-stacked > li > a:hover { color: var(--ink); background: var(--well); }
 .admin-shell .menu-box .nav-stacked > li.selected > a {
-  color: var(--ink); background: var(--well);
-  border-left-color: var(--ink); font-weight: 500;
+  color: var(--ink); background: var(--well); font-weight: 500;
 }
 .admin-shell .menu-box .first-button::after {
   content: "\203A"; margin-left: auto;
@@ -366,7 +365,7 @@ body.admin .system-content .content textarea:focus-visible {
 .admin-shell .changes-list .rev { color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
 
 .wikit-scope.admin-shell {
-  --ink: #1b1f24;
+  --ink: #2c323b;
   --muted: #4a5260;
   --rule: #c3cad3;
   --well: #eef2f6;
@@ -388,11 +387,10 @@ body.admin .system-content .content #admin-header .btn:hover { border-color: #ff
 .admin-shell .menu-box { padding: 0 14px 0 10px; }
 .admin-shell .menu-box .nav-stacked > li > a { color: #2a313b; font-weight: 500; border-left-width: 3px; }
 .admin-shell .menu-box .nav-stacked > li > a > i { color: var(--muted); }
-.admin-shell .menu-box .nav-stacked > li > a:hover { color: var(--ink); background: #e1e7ee; }
+.admin-shell .menu-box .nav-stacked > li > a:hover { color: var(--ink); background: #e1e7ee; border-radius: 0.45em; }
 .admin-shell .menu-box .nav-stacked > li.selected > a {
-  background: #fff; color: var(--ledger); font-weight: 600; border-left-color: var(--signal);
+  background: #dbe1ec; color: var(--ledger); font-weight: 600; border-radius: 0.45em;
 }
-.admin-shell .menu-box .nav-stacked > li.selected > a > i { color: var(--signal); }
 .admin-shell .menu-box .first-button::after { color: var(--quiet); }
 .admin-shell .menu-box .first-button:hover::after { color: var(--ink); }
 .admin-shell .menu-box .group-head { border-bottom-color: var(--rule); }
@@ -433,7 +431,7 @@ body.admin .system-content .content #admin-header .btn:hover { border-color: #ff
 
 body.admin .system-content .content .btn {
   font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none;
-  background: #fff; border-color: var(--quiet); color: var(--ink);
+  background: #fff; border-color: var(--quiet); border-radius: 0.75em; color: var(--ink);
 }
 body.admin .system-content .content .btn:hover { border-color: var(--ledger); background: var(--well); color: var(--ledger); }
 body.admin .system-content .content .btn-primary { background: var(--ledger); border-color: var(--ledger); color: #fff; font-weight: 600; }
