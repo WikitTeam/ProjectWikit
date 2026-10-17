@@ -25,24 +25,25 @@ func (p *AdminPageRow) FullName() string {
 const adminPageWhere = `
 WHERE ($1 = '' OR a.name ILIKE '%' || $1 || '%' OR a.title ILIKE '%' || $1 || '%')
 	AND ($2 = '' OR a.category = $2)
-	AND a.site_id = $3`
+	AND a.site_id = $3
+	AND ($4 = 0 OR EXISTS (SELECT 1 FROM web_article_tags t WHERE t.article_id = a.id AND t.tag_id = $4))`
 
 var qAdminPages = register("AdminPages", `
 SELECT a.id, a.category, a.name, coalesce(a.title, ''), a.updated_at,
 	(SELECT count(*) FROM web_articlelogentry l WHERE l.article_id = a.id)
 FROM web_article a`+adminPageWhere+`
 ORDER BY a.updated_at DESC, a.id DESC
-LIMIT $4 OFFSET $5`)
+LIMIT $5 OFFSET $6`)
 
 var qAdminPageCount = register("AdminPageCount", `
 SELECT count(*) FROM web_article a`+adminPageWhere)
 
-func (d *DB) AdminPages(ctx context.Context, siteID int64, query, category string, limit, offset int) ([]AdminPageRow, int, error) {
+func (d *DB) AdminPages(ctx context.Context, siteID int64, query, category string, tagID int64, limit, offset int) ([]AdminPageRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminPageCount, query, category, siteID).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminPageCount, query, category, siteID, tagID).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count pages: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminPages, query, category, siteID, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminPages, query, category, siteID, tagID, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list pages: %w", err)
 	}

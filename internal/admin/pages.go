@@ -56,7 +56,21 @@ func (h *Handler) pageList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if page < 1 {
 		page = 1
 	}
-	found, total, err := h.deps.DB.AdminPages(ctx, siteID(ctx), query, category, perPage, (page-1)*perPage)
+	var tag *db.TagRow
+	if wanted := atoi(r.URL.Query().Get("tag")); wanted > 0 {
+		one, err := h.deps.DB.AdminTag(ctx, siteID(ctx), int64(wanted))
+		if err != nil && !errors.Is(err, db.ErrNotFound) {
+			return err
+		}
+		if err == nil {
+			tag = &one
+		}
+	}
+	var tagID int64
+	if tag != nil {
+		tagID = tag.ID
+	}
+	found, total, err := h.deps.DB.AdminPages(ctx, siteID(ctx), query, category, tagID, perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}
@@ -69,6 +83,8 @@ func (h *Handler) pageList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Categories": categories,
 		"Query":      query,
 		"Category":   category,
+		"Tag":        tag,
+		"TagID":      tagID,
 		"Page":       page,
 		"Pages_":     (total + perPage - 1) / perPage,
 		"Total":      total,

@@ -20,7 +20,7 @@
     <tr>
       <td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td>
       <td>{{if .CategoryName}}{{esc .CategoryName}}{{else}}<span class="muted">—</span>{{end}}</td>
-      <td class="num">{{.Articles}}</td>
+      <td class="num">{{if .Articles}}<a href="{{esc $.PagesHref}}{{.ID}}">{{.Articles}}</a>{{else}}{{.Articles}}{{end}}</td>
     </tr>
     {{else}}
     <tr><td colspan="3" class="muted">{{t "admin.empty"}}</td></tr>

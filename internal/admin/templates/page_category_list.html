@@ -7,7 +7,7 @@
   <tbody>
     {{range .Categories}}
     <tr>
-      <td><a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a></td>
+      <td>{{if .ID}}<a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a>{{else}}<a href="{{esc $.New}}?name={{urlq .Name}}">{{esc .Name}}</a>{{end}}</td>
       <td>{{template "yes" .IsIndexed}}</td>
       <td class="num">{{.Articles}}</td>
     </tr>

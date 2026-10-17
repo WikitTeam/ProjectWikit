@@ -58,7 +58,11 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveTag(ctx, siteID(ctx), row); err != nil {
+		err := h.deps.DB.SaveTag(ctx, siteID(ctx), row)
+		if errors.Is(err, db.ErrTagTaken) {
+			return h.tagForm(w, r, loc, rest, loc.T("admin.tag-taken"))
+		}
+		if err != nil {
 			return err
 		}
 		h.noteID(r, did, tagSlug, row.ID, row.Name)
@@ -97,6 +101,7 @@ func (h *Handler) tags(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 			"Total":      total,
 			"New":        Prefix + tagSlug + "/new",
 			"Base":       Prefix + tagSlug + "/",
+			"PagesHref":  Prefix + pageSlug + "/?tag=",
 			"Action":     Prefix + tagSlug + "/",
 		})
 	}
@@ -158,7 +163,11 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 			row.ID = id
 		}
 		if r.PostFormValue("delete") != "" && row.ID != 0 {
-			if err := h.deps.DB.DeleteTagCategory(ctx, siteID(ctx), row.ID); err != nil {
+			err := h.deps.DB.DeleteTagCategory(ctx, siteID(ctx), row.ID)
+			if errors.Is(err, db.ErrTagCategoryNotEmpty) {
+				return h.tagCategoryForm(w, r, loc, rest, loc.T("admin.tag-category-not-empty"))
+			}
+			if err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, tagCategorySlug, row.ID, row.Name)
@@ -175,7 +184,14 @@ func (h *Handler) tagCategories(w http.ResponseWriter, r *http.Request, loc *i18
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveTagCategory(ctx, siteID(ctx), row); err != nil {
+		err := h.deps.DB.SaveTagCategory(ctx, siteID(ctx), row)
+		if errors.Is(err, db.ErrTagCategorySlugTaken) {
+			return h.tagCategoryForm(w, r, loc, rest, loc.T("admin.tag-category-slug-taken"))
+		}
+		if errors.Is(err, db.ErrTagCategoryOrderTaken) {
+			return h.tagCategoryForm(w, r, loc, rest, loc.T("admin.tag-category-priority-taken"))
+		}
+		if err != nil {
 			return err
 		}
 		h.noteID(r, did, tagCategorySlug, row.ID, row.Name)

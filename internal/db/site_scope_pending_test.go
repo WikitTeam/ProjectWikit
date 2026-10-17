@@ -11,7 +11,6 @@ var siteScopeByKey = []string{
 	"DeleteArticle.13",
 	"DeleteArticle.14",
 	"DetachRoleCategory",
-	"DetachTagCat",
 	"FindTag",
 	"HideAllOwnReports",
 	"HideAllOwnTickets",

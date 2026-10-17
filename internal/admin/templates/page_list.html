@@ -3,20 +3,22 @@
 <form class="form-search" method="GET" action="{{esc .Action}}">
   <div class="input-append">
     <input type="hidden" name="c" value="{{esc .Category}}">
+    {{if .Tag}}<input type="hidden" name="tag" value="{{.TagID}}">{{end}}
     <input type="text" class="search-query" name="q" value="{{esc .Query}}" placeholder="{{t "admin.search-pages"}}">
     <button type="submit" class="btn"><i class="fas fa-search"></i>{{t "admin.search"}}</button>
   </div>
 </form>
 
 <ul class="nav nav-pills">
-  <li{{if not .Category}} class="active"{{end}}><a href="{{esc .Action}}{{if .Query}}?q={{urlq .Query}}{{end}}">{{t "admin.all"}}</a></li>
+  <li{{if not .Category}} class="active"{{end}}><a href="{{esc .Action}}?q={{urlq .Query}}{{if .Tag}}&tag={{.TagID}}{{end}}">{{t "admin.all"}}</a></li>
   {{range $.Categories}}
   <li{{if eq .Category $.Category}} class="active"{{end}}>
-    <a href="{{esc $.Action}}?c={{urlq .Category}}{{if $.Query}}&q={{urlq $.Query}}{{end}}">{{esc .Category}} <span class="count">{{.Pages}}</span></a>
+    <a href="{{esc $.Action}}?c={{urlq .Category}}{{if $.Query}}&q={{urlq $.Query}}{{end}}{{if $.Tag}}&tag={{$.TagID}}{{end}}">{{esc .Category}} <span class="count">{{.Pages}}</span></a>
   </li>
   {{end}}
 </ul>
 
+{{if .Tag}}<p>{{t "admin.f-tag"}} <strong>{{esc .Tag.Name}}</strong> <a class="btn btn-mini" href="{{esc .Action}}?q={{urlq .Query}}&c={{urlq .Category}}"><i class="fas fa-times"></i>{{t "admin.clear-filter"}}</a></p>{{end}}
 <p class="stamp">{{t "admin.count" "n" .Total}}</p>
 
 <form method="POST" action="{{esc .Action}}">
@@ -61,5 +63,5 @@
   </div>
 </form>
 
-{{template "pager" dict "Base" (printf "%s?q=%s&c=%s&" .Action (urlq .Query) (urlq .Category)) "Page" .Page "Pages" .Pages_}}
+{{template "pager" dict "Base" (printf "%s?q=%s&c=%s&tag=%d&" .Action (urlq .Query) (urlq .Category) .TagID) "Page" .Page "Pages" .Pages_}}
 {{end}}

@@ -6,7 +6,33 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
+
+var (
+	ErrTagTaken              = errors.New("db: tag already exists in its category")
+	ErrTagCategorySlugTaken  = errors.New("db: tag category slug already in use")
+	ErrTagCategoryOrderTaken = errors.New("db: tag category priority already in use")
+	ErrTagCategoryNotEmpty   = errors.New("db: tag category still holds tags")
+)
+
+func uniqueViolation(err error) string {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return pgErr.ConstraintName
+	}
+	return ""
+}
+
+func tagCategoryTaken(err error) error {
+	switch uniqueViolation(err) {
+	case "":
+		return nil
+	case "web_tagscategory_priority_fd2df012_uniq":
+		return ErrTagCategoryOrderTaken
+	}
+	return ErrTagCategorySlugTaken
+}
 
 type TagCategoryRow struct {
 	ID          int64
@@ -61,7 +87,7 @@ var (
 INSERT INTO web_tagscategory (name, slug, description, priority, site_id) VALUES ($1,$2,$3,$4,$5) RETURNING id`)
 	qUpdateTagCat = register("UpdateTagCat", `
 UPDATE web_tagscategory SET name=$2, slug=$3, description=$4, priority=$5 WHERE id=$1 AND site_id=$6`)
-	qDetachTagCat = register("DetachTagCat", `UPDATE web_tag SET category_id = NULL WHERE category_id = $1`)
+	qTagCatInUse  = register("TagCatInUse", `SELECT EXISTS (SELECT 1 FROM web_tag WHERE category_id = $1 AND site_id = $2)`)
 	qDeleteTagCat = register("DeleteTagCat", `DELETE FROM web_tagscategory WHERE id = $1 AND site_id = $2`)
 )
 
@@ -69,12 +95,18 @@ func (d *DB) SaveTagCategory(ctx context.Context, siteID int64, c TagCategoryRow
 	if c.ID == 0 {
 		var id int64
 		err := d.pool.QueryRow(ctx, qInsertTagCat, c.Name, c.Slug, c.Description, c.Priority, siteID).Scan(&id)
+		if taken := tagCategoryTaken(err); taken != nil {
+			return taken
+		}
 		if err != nil {
 			return fmt.Errorf("create tag category %q: %w", c.Slug, err)
 		}
 		return nil
 	}
 	_, err := d.pool.Exec(ctx, qUpdateTagCat, c.ID, c.Name, c.Slug, c.Description, c.Priority, siteID)
+	if taken := tagCategoryTaken(err); taken != nil {
+		return taken
+	}
 	if err != nil {
 		return fmt.Errorf("update tag category %d: %w", c.ID, err)
 	}
@@ -88,8 +120,12 @@ func (d *DB) DeleteTagCategory(ctx context.Context, siteID, id int64) error {
 	}
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
-	if _, err := tx.Exec(ctx, qDetachTagCat, id); err != nil {
-		return fmt.Errorf("detach tag category %d: %w", id, err)
+	var inUse bool
+	if err := tx.QueryRow(ctx, qTagCatInUse, id, siteID).Scan(&inUse); err != nil {
+		return fmt.Errorf("check tag category %d: %w", id, err)
+	}
+	if inUse {
+		return ErrTagCategoryNotEmpty
 	}
 	if _, err := tx.Exec(ctx, qDeleteTagCat, id, siteID); err != nil {
 		return fmt.Errorf("delete tag category %d: %w", id, err)
@@ -163,17 +199,38 @@ var (
 )
 
 func (d *DB) SaveTag(ctx context.Context, siteID int64, t TagRow) error {
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin saving tag %q: %w", t.Name, err)
+	}
+	defer tx.Rollback(context.WithoutCancel(ctx))
+
+	categoryID := t.CategoryID
+	if categoryID == nil {
+		var id int64
+		err := tx.QueryRow(ctx, qFindTagCategory, defaultTagCategory, siteID).Scan(&id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = tx.QueryRow(ctx, qInsertTagCategory, defaultTagCategory, siteID).Scan(&id)
+		}
+		if err != nil {
+			return fmt.Errorf("find the default tag category: %w", err)
+		}
+		categoryID = &id
+	}
+
 	if t.ID == 0 {
 		var id int64
-		if err := d.pool.QueryRow(ctx, qInsertTagRow, t.Name, t.CategoryID, siteID, t.IsIndexed).Scan(&id); err != nil {
-			return fmt.Errorf("create tag %q: %w", t.Name, err)
-		}
-		return nil
+		err = tx.QueryRow(ctx, qInsertTagRow, t.Name, categoryID, siteID, t.IsIndexed).Scan(&id)
+	} else {
+		_, err = tx.Exec(ctx, qUpdateTag, t.ID, t.Name, categoryID, siteID, t.IsIndexed)
 	}
-	if _, err := d.pool.Exec(ctx, qUpdateTag, t.ID, t.Name, t.CategoryID, siteID, t.IsIndexed); err != nil {
-		return fmt.Errorf("update tag %d: %w", t.ID, err)
+	if uniqueViolation(err) != "" {
+		return ErrTagTaken
 	}
-	return nil
+	if err != nil {
+		return fmt.Errorf("save tag %q: %w", t.Name, err)
+	}
+	return tx.Commit(ctx)
 }
 
 func (d *DB) DeleteTag(ctx context.Context, siteID, id int64) error {

@@ -32,7 +32,13 @@ type CategoryOverride struct {
 var qAdminCategories = register("AdminCategories", `
 SELECT c.id, c.name, c.is_indexed,
        (SELECT count(*) FROM web_article a WHERE a.category = c.name AND a.site_id = c.site_id)
-FROM web_category c WHERE c.site_id = $1 ORDER BY c.name, c.id`)
+FROM web_category c WHERE c.site_id = $1
+UNION ALL
+SELECT 0, a.category, true, count(*)
+FROM web_article a
+WHERE a.site_id = $1 AND NOT EXISTS (SELECT 1 FROM web_category c WHERE c.site_id = $1 AND c.name = a.category)
+GROUP BY a.category
+ORDER BY 2, 1`)
 
 func (d *DB) AdminCategories(ctx context.Context, siteID int64) ([]CategoryRow, error) {
 	rows, err := d.pool.Query(ctx, qAdminCategories, siteID)

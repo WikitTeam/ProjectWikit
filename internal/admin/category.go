@@ -49,6 +49,9 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 		return err
 	}
 	row := db.CategoryRow{IsIndexed: true, Settings: db.SiteSettings{RatingMode: followSite, CreateTags: followSite}}
+	if rest == "new" {
+		row.Name = strings.TrimSpace(r.URL.Query().Get("name"))
+	}
 	if rest != "new" {
 		id, err := strconv.ParseInt(rest, 10, 64)
 		if err != nil {
