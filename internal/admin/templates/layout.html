@@ -132,7 +132,7 @@
   document.querySelectorAll('input[type="checkbox"][data-confirm]').forEach(function (box) {
     box.addEventListener('change', function () {
       if (!box.checked) { return; }
-      var host = document.querySelector('.system-content .content') || document.body;
+      var host = document.querySelector('.admin-shell') || document.body;
       var overlay = document.createElement('div');
       overlay.className = 'admin-confirm';
       var dialog = document.createElement('div');
