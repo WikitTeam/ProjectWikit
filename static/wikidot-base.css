@@ -2711,6 +2711,35 @@ table#odialog-box-container td div{
 	padding-bottom: 0.7em;	
 }
 
+#lightbox-nav-btnPrev:hover {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Crect width='44' height='44' rx='6' fill='%23000' fill-opacity='.55'/%3E%3Cpath d='M26 13l-9 9 9 9' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") left 15% no-repeat;
+}
+
+#lightbox-nav-btnNext:hover {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Crect width='44' height='44' rx='6' fill='%23000' fill-opacity='.55'/%3E%3Cpath d='M18 13l9 9-9 9' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 15% no-repeat;
+}
+
+#lightbox-secNav-btnClose {
+	display: block;
+	height: 22px;
+	margin-top: 0.4em;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cpath d='M5 5l12 12M17 5L5 17' stroke='%23666' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") right center no-repeat;
+}
+
+#lightbox-loading-link {
+	display: inline-block;
+	width: 32px;
+	height: 32px;
+	border: 3px solid #ddd;
+	border-top-color: #888;
+	border-radius: 50%;
+	animation: lightbox-spin 0.8s linear infinite;
+}
+
+@keyframes lightbox-spin {
+	to { transform: rotate(360deg); }
+}
+
 /* Navi bar */
 
 #navi-bar-shadow {
