@@ -421,17 +421,21 @@ const ArticleEditor: React.FC<Props> = ({
               options={monacoOptions}
             />
           )}
-          <p>{t('articles.editor.comment-label')}</p>
-          <textarea
-            id="edit-page-comments"
-            value={comment}
-            onChange={onInputChange}
-            name="comment"
-            rows={3}
-            cols={20}
-            style={{ width: '35%' }}
-            disabled={loading || saving}
-          />
+          {!formFields && (
+            <>
+              <p>{t('articles.editor.comment-label')}</p>
+              <textarea
+                id="edit-page-comments"
+                value={comment}
+                onChange={onInputChange}
+                name="comment"
+                rows={3}
+                cols={20}
+                style={{ width: '35%' }}
+                disabled={loading || saving}
+              />
+            </>
+          )}
           {loading && <Loader className="loader" />}
         </div>
         <div className="buttons alignleft">
