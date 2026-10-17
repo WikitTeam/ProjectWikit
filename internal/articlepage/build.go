@@ -36,10 +36,11 @@ type request struct {
 	params  article.Params
 	encoded string
 
-	article   *db.Article
-	forbidden bool
-	perms     perms.Set
-	look      db.CategoryLook
+	article     *db.Article
+	forbidden   bool
+	perms       perms.Set
+	hideToolbar bool
+	look        db.CategoryLook
 
 	csrf    string
 	csrfNew bool
@@ -109,6 +110,17 @@ func (h *Handler) load(req *request) error {
 	if checked && !req.perms.Has(perms.ViewArticles) {
 		req.forbidden = true
 		req.article = nil
+	}
+	if !subject.Superuser {
+		roleIDs := make([]int64, 0, len(subject.Roles))
+		for _, role := range subject.Roles {
+			roleIDs = append(roleIDs, role.ID)
+		}
+		category, _ := wikidot.Split(req.name)
+		req.hideToolbar, err = h.deps.DB.ToolbarHidden(req.ctx, req.site.ID, category, roleIDs)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

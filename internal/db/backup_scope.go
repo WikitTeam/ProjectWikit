@@ -98,6 +98,7 @@ var rules = map[string]rule{
 
 	"web_category":                      {owned, `site_id = (SELECT id FROM s)`, ""},
 	"web_category_permissions_override": {owned, `category_id IN (SELECT id FROM cat)`, ""},
+	"pwikit_category_toolbar_hidden":    {owned, `category_id IN (SELECT id FROM cat)`, ""},
 	"web_tag":                           {owned, `site_id = (SELECT id FROM s)`, ""},
 	"web_tagscategory":                  {owned, `site_id = (SELECT id FROM s)`, ""},
 	"web_theme":                         {owned, `site_id = (SELECT id FROM s)`, ""},

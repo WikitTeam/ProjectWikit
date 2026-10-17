@@ -13,6 +13,7 @@ type Options struct {
 	PageID         string
 	NormalizedName string
 	HasArticle     bool
+	HideToolbar    bool
 	Anonymous      bool
 
 	Perms  perms.Set
@@ -52,7 +53,7 @@ func PreferenceValue(on bool) string {
 
 func (o Options) JSON() (string, error) {
 	return wikijson.Marshal(wikijson.Object{
-		{Key: "optionsEnabled", Value: o.HasArticle},
+		{Key: "optionsEnabled", Value: o.HasArticle && !o.HideToolbar},
 		{Key: "editable", Value: o.Perms.Has(perms.EditArticles)},
 		{Key: "lockable", Value: o.Perms.Has(perms.LockArticles)},
 		{Key: "tagable", Value: o.Perms.Has(perms.TagArticles)},

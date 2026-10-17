@@ -50,6 +50,12 @@
       {{$rid := .Role.ID}}
       <div id="role-{{$rid}}" data-tab-panel="role-{{$rid}}"{{if $i}} hidden{{end}}>
         <div class="control-group">
+          <span class="control-label">{{t "admin.f-bottom-toolbar"}}</span>
+          <div class="controls">
+            <label class="checkbox"><input type="checkbox" name="hide_toolbar_{{$rid}}" value="1"{{if .HideToolbar}} checked{{end}}> {{t "admin.l-hide-toolbar"}}</label>
+          </div>
+        </div>
+        <div class="control-group">
           <span class="control-label">{{t "admin.f-override"}}</span>
           <div class="controls">
             <label class="checkbox"><input type="checkbox" name="override_{{$rid}}" value="1" data-reveals="matrix-{{$rid}}" data-mark="role-{{$rid}}"{{if .Present}} checked{{end}}> {{t "admin.l-override"}}</label>

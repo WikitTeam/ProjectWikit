@@ -97,21 +97,30 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 	}
 
 	type cell struct {
-		Role    db.RoleChoice
-		Grants  []grantGroup
-		Present bool
+		Role        db.RoleChoice
+		Grants      []grantGroup
+		Present     bool
+		HideToolbar bool
 	}
 	byRole := map[int64]db.CategoryOverride{}
 	for _, one := range row.Overrides {
 		byRole[one.RoleID] = one
 	}
+	var hidden []int64
+	if row.ID != 0 {
+		hidden, err = h.deps.DB.ToolbarHiddenRoles(ctx, row.ID)
+		if err != nil {
+			return err
+		}
+	}
 	cells := make([]cell, 0, len(roleList))
 	for _, one := range roleList {
 		override := byRole[one.ID]
 		cells = append(cells, cell{
-			Role:    one,
-			Grants:  grantGroups(catalog, override.Allow, override.Deny),
-			Present: len(override.Allow)+len(override.Deny) > 0,
+			Role:        one,
+			Grants:      grantGroups(catalog, override.Allow, override.Deny),
+			Present:     len(override.Allow)+len(override.Deny) > 0,
+			HideToolbar: slices.Contains(hidden, one.ID),
 		})
 	}
 
@@ -214,7 +223,11 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	}
 	catalog = pageScoped(catalog)
 	var overrides []db.CategoryOverride
+	var hidden []int64
 	for _, one := range roleList {
+		if r.PostFormValue("hide_toolbar_"+strconv.FormatInt(one.ID, 10)) != "" {
+			hidden = append(hidden, one.ID)
+		}
 		if r.PostFormValue("override_"+strconv.FormatInt(one.ID, 10)) == "" {
 			continue
 		}
@@ -235,6 +248,9 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 		overrides = append(overrides, next)
 	}
 	if err := h.deps.DB.SaveCategoryOverrides(ctx, row.ID, overrides); err != nil {
+		return err
+	}
+	if err := h.deps.DB.SaveToolbarHiddenRoles(ctx, row.ID, hidden); err != nil {
 		return err
 	}
 	h.noteID(r, did, pageCategorySlug, row.ID, row.Name)

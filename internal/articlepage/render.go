@@ -597,6 +597,7 @@ func (h *Handler) options(req *request) (string, error) {
 		PageID:         req.name,
 		NormalizedName: req.name,
 		HasArticle:     req.article != nil,
+		HideToolbar:    req.hideToolbar,
 		Anonymous:      req.user == nil,
 		Perms:          req.perms,
 		PathParams:     req.params,
