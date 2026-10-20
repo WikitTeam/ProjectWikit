@@ -498,3 +498,17 @@ body.admin .system-content .content .link-out { font-family: 'JetBrains Mono', u
   padding: 10px 12px; margin: 12px 0;
 }
 .admin-shell .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+
+@media (max-width: 900px) {
+  .admin-shell .row > .span9 { width: 100%; }
+  .admin-shell .btn-toolbar, .admin-shell .btn-group { flex-wrap: wrap; }
+  .admin-shell .form-search .input-append > * { min-width: 0; }
+  .admin-shell .form-search .input-append { flex-wrap: wrap; row-gap: 6px; max-width: none; }
+  body.admin .system-content .content .form-search .input-append > select { flex: 1 1 100%; max-width: none; border-radius: var(--rad); }
+  .admin-shell .table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-shell .table td { min-width: 4em; }
+  body.admin .system-content .content input,
+  body.admin .system-content .content select,
+  body.admin .system-content .content textarea { max-width: 100%; box-sizing: border-box; }
+}
+.admin-shell .table td.stamp { overflow-wrap: anywhere; }
