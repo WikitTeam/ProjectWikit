@@ -44,7 +44,8 @@ WHERE id = $1`)
 var qUpdateSiteRoles = register("UpdateSiteRoles", `
 UPDATE web_site SET
 	default_role_id = $2, verified_role_id = $3,
-	membership_password_enabled = $4, membership_password = $5, membership_password_role_id = $6
+	membership_password_enabled = $4, membership_password = $5, membership_password_role_id = $6,
+	application_role_id = $7
 WHERE id = $1`)
 
 func (d *DB) SaveSite(ctx context.Context, s *Site, settings SiteSettings, withRoles bool) error {
@@ -62,7 +63,7 @@ func (d *DB) SaveSite(ctx context.Context, s *Site, settings SiteSettings, withR
 	}
 	if withRoles {
 		_, err = tx.Exec(ctx, qUpdateSiteRoles, s.ID, s.DefaultRoleID, s.VerifiedRoleID,
-			s.MembershipPasswordEnabled, s.MembershipPassword, s.MembershipPasswordRoleID)
+			s.MembershipPasswordEnabled, s.MembershipPassword, s.MembershipPasswordRoleID, s.ApplicationRoleID)
 		if err != nil {
 			return fmt.Errorf("save the roles of site %d: %w", s.ID, err)
 		}

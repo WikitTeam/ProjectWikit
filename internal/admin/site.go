@@ -119,6 +119,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		next.MembershipPasswordEnabled = r.PostFormValue("membership_password_enabled") != ""
 		next.MembershipPassword = r.PostFormValue("membership_password")
 		next.MembershipPasswordRoleID = optionalID(r.PostFormValue("membership_password_role"))
+		next.ApplicationRoleID = optionalID(r.PostFormValue("application_role"))
 	}
 
 	settings := db.SiteSettings{

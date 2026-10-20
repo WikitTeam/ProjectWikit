@@ -30,7 +30,7 @@
         <label class="control-label" for="id_granted_role">{{t "admin.f-granted-role"}}</label>
         <div class="controls">
           <select id="id_granted_role" name="granted_role" class="narrow-3">
-            <option value="">&mdash;</option>
+            <option value="">{{t "admin.application-role-fallback"}}</option>
             {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Ticket.GrantedID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
           </select>
           <span class="hint">{{t "admin.h-granted-role"}}</span>

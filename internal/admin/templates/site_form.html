@@ -138,6 +138,22 @@
       </div>
     </div>
   </div>
+
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-user-check"></i><h5>{{t "admin.membership"}}</h5></div>
+    <div class="widget-content">
+      <div class="control-group">
+        <label class="control-label" for="id_application_role">{{t "admin.f-application-role"}}</label>
+        <div class="controls">
+          <select id="id_application_role" name="application_role" class="narrow-3">
+            <option value="">&mdash;</option>
+            {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Site.ApplicationRoleID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+          </select>
+          <span class="hint">{{t "admin.h-application-role"}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
   {{end}}
 
   <div class="form-actions">

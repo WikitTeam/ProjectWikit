@@ -10,7 +10,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
@@ -100,14 +99,6 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 			return err
 		}
 	}
-	outranked, err := h.outranked(ctx, row)
-	if err != nil {
-		return err
-	}
-	if outranked {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return nil
-	}
 
 	catalog, err := h.deps.DB.PermissionCatalog(ctx)
 	if err != nil {
@@ -165,14 +156,6 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 			return err
 		}
 	}
-	outranked, err := h.outranked(ctx, stored)
-	if err != nil {
-		return err
-	}
-	if outranked {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return nil
-	}
 	builtin := slices.Contains(builtinRoles, stored.Slug)
 
 	if r.PostFormValue("delete") != "" && stored.ID != 0 {
@@ -202,10 +185,11 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.InlineVisualMode = r.PostFormValue("inline_visual_mode")
 	next.ProfileVisualMode = r.PostFormValue("profile_visual_mode")
 	next.Color = strings.TrimSpace(r.PostFormValue("color"))
-	next.Icon, err = h.pickIcon(r, "icon", stored.Icon, roleIcon)
+	icon, err := h.pickIcon(r, "icon", stored.Icon, roleIcon)
 	if err != nil {
 		return h.roleForm(w, r, loc, rest, iconMessage(loc, err))
 	}
+	next.Icon = icon
 	next.BadgeText = strings.TrimSpace(r.PostFormValue("badge_text"))
 	next.BadgeBg = strings.TrimSpace(r.PostFormValue("badge_bg"))
 	next.BadgeTextColor = strings.TrimSpace(r.PostFormValue("badge_text_color"))
@@ -245,24 +229,6 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	h.noteID(r, did, roleSlug, next.ID, next.Slug)
 	redirect(w, Prefix+roleSlug+"/")
 	return nil
-}
-
-func (h *Handler) outranked(ctx context.Context, row db.RoleRow) (bool, error) {
-	if row.ID == 0 {
-		return false, nil
-	}
-	user := auth.FromContext(ctx)
-	if user == nil {
-		return true, nil
-	}
-	if user.IsSuperuser {
-		return false, nil
-	}
-	mine, err := h.deps.DB.OperationIndex(ctx, siteID(ctx), user.ID)
-	if err != nil {
-		return false, err
-	}
-	return row.Index < mine, nil
 }
 
 func validRoleSlug(slug string) bool {

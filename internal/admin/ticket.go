@@ -12,6 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
 
 const (
@@ -71,6 +72,9 @@ func (h *Handler) ticketScreen(w http.ResponseWriter, r *http.Request, loc *i18n
 				role = optionalID(r.PostFormValue("granted_role"))
 			} else {
 				role = stored.GrantedID
+			}
+			if role == nil && status == db.TicketApproved {
+				role = site.FromContext(ctx).ApplicationRoleID
 			}
 		}
 		mine := auth.FromContext(ctx)

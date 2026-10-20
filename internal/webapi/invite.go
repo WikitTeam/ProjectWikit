@@ -55,7 +55,8 @@ func (h *Users) invite(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
 		return
 	}
-	if !perms.Resolve(subject, nil).Has(perms.ManageUsers) {
+	granted := perms.Resolve(subject, nil)
+	if !granted.Has(perms.InviteMembers) {
 		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-forbidden")))
 		return
 	}
@@ -68,6 +69,10 @@ func (h *Users) invite(w http.ResponseWriter, r *http.Request, loc *i18n.Localiz
 	var input inviteRequest
 	if json.Unmarshal(raw, &input) != nil {
 		writeJSON(w, http.StatusBadRequest, field("error", loc.T("api-bad-json")))
+		return
+	}
+	if len(input.Roles) > 0 && !granted.Has(perms.ManagePermissions) {
+		writeJSON(w, http.StatusForbidden, field("error", loc.T("api-forbidden")))
 		return
 	}
 	email := strings.TrimSpace(input.Email)

@@ -130,12 +130,13 @@ func (d *DB) RolesByUsers(ctx context.Context, siteID int64, userIDs []int64) (m
 }
 
 var qAllRoles = register("AllRoles", `
-SELECT id, slug, name FROM web_role WHERE site_id = $1 ORDER BY index, id`)
+SELECT id, slug, name, is_staff FROM web_role WHERE site_id = $1 ORDER BY index, id`)
 
 type RoleChoice struct {
-	ID   int64
-	Slug string
-	Name string
+	ID      int64
+	Slug    string
+	Name    string
+	IsStaff bool
 }
 
 func (d *DB) AllRoles(ctx context.Context, siteID int64) ([]RoleChoice, error) {
@@ -148,7 +149,7 @@ func (d *DB) AllRoles(ctx context.Context, siteID int64) ([]RoleChoice, error) {
 	var out []RoleChoice
 	for rows.Next() {
 		var c RoleChoice
-		if err := rows.Scan(&c.ID, &c.Slug, &c.Name); err != nil {
+		if err := rows.Scan(&c.ID, &c.Slug, &c.Name, &c.IsStaff); err != nil {
 			return nil, err
 		}
 		out = append(out, c)

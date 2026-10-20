@@ -292,6 +292,14 @@ func (h *Handler) resetVotes(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	if err != nil {
 		return err
 	}
+	lower, err := h.mayEdit(ctx, row)
+	if err != nil {
+		return err
+	}
+	if !lower {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return nil
+	}
 	if r.Method != http.MethodPost {
 		return h.page(w, r, loc, loc.T("admin.reset-votes"), "user_reset_votes.html", map[string]any{
 			"User":   row,
@@ -436,6 +444,10 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	}
 	if err != nil {
 		return err
+	}
+	if !row.Unclaimed {
+		notFound(w)
+		return nil
 	}
 	if r.Method != http.MethodPost {
 		return h.mailInvite(w, r, loc, &row, "", "")

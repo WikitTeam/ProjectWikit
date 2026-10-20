@@ -63,7 +63,6 @@ var Catalog = []Group{
 		"manage_forum",
 		"view_sensitive_info",
 		"view_votes_timestamp",
-		"manage_updates",
 		"manage_permissions",
 	}},
 }

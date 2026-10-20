@@ -36,6 +36,9 @@ VALUES ($1, $2, $3, $4, $4, $5, false, '', 'hidden', $6, '#000000',
         '', '', '#808080', '#ffffff', false)
 RETURNING id`)
 
+var qSetApplicationRole = register("SetApplicationRole", `
+UPDATE web_site SET application_role_id = $2 WHERE id = $1`)
+
 type siteRole struct {
 	slug        string
 	index       int
@@ -101,6 +104,11 @@ func (d *DB) CreateSite(ctx context.Context, s NewSite) (int64, error) {
 			s.RoleNames[role.slug], role.staff, role.profile).Scan(&roleID)
 		if err != nil {
 			return 0, fmt.Errorf("create role %q for site %q: %w", role.slug, s.Slug, err)
+		}
+		if role.slug == "member" {
+			if _, err := tx.Exec(ctx, qSetApplicationRole, id, roleID); err != nil {
+				return 0, fmt.Errorf("set the application role of site %q: %w", s.Slug, err)
+			}
 		}
 		if len(role.permissions) == 0 {
 			continue

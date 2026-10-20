@@ -45,7 +45,6 @@ const (
 	ManageTags                   = "manage_tags"
 	ManageCategories             = "manage_categories"
 	ManageForum                  = "manage_forum"
-	ManageUpdates                = "manage_updates"
 	ReviewMembershipApplications = "review_membership_applications"
 	ViewActionsLog               = "view_actions_log"
 	ViewUserTickets              = "view_user_tickets"

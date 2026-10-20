@@ -1,6 +1,6 @@
 {{define "user_form.html"}}
 {{template "form_error" .Error}}
-<form method="POST" action="{{esc .Action}}">
+<form method="POST" action="{{esc .Action}}"{{if and .LockSelf .MaySetRoles}} data-confirm-unless="input[name=roles][data-staff]:checked" data-confirm="{{t "admin.confirm-lose-admin"}}" data-confirm-ok="{{t "admin.confirm-ok"}}" data-confirm-cancel="{{t "admin.cancel"}}"{{end}}>
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
   <input type="hidden" name="editor_zone" value="{{esc .ZoneName}}" data-browser-zone>
 
@@ -93,7 +93,7 @@
         <span class="control-label">{{t "admin.f-roles"}}</span>
         <div class="controls">
           {{range $.Roles}}
-          <label class="checkbox"><input type="checkbox" name="roles" value="{{.ID}}"{{if has $.Held .ID}} checked{{end}}> {{esc .Label}}</label>
+          <label class="checkbox"><input type="checkbox" name="roles" value="{{.ID}}"{{if has $.Held .ID}} checked{{end}}{{if .IsStaff}} data-staff="1"{{end}}> {{esc .Label}}</label>
           {{end}}
         </div>
       </div>
@@ -104,7 +104,7 @@
   <div class="form-actions">
     <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
     <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
-    <a class="btn" href="{{esc .Activate}}"><i class="fas fa-envelope"></i>{{t "admin.activate"}}</a>
+    {{if .MayActivate}}<a class="btn" href="{{esc .Activate}}"><i class="fas fa-envelope"></i>{{t "admin.activate"}}</a>{{end}}
     <a class="btn" href="{{esc .Activity}}"><i class="fas fa-history"></i>{{t "admin.user-activity"}}</a>
     {{if .MayReset}}<a class="btn btn-danger pull-right" href="{{esc .ResetVotes}}"><i class="fas fa-trash"></i>{{t "admin.reset-votes"}}</a>{{end}}
   </div>

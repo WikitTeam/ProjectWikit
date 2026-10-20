@@ -129,45 +129,63 @@
   });
 })();
 (function () {
+  function ask(source, done) {
+    var host = document.querySelector('.admin-shell') || document.body;
+    var overlay = document.createElement('div');
+    overlay.className = 'admin-confirm';
+    var dialog = document.createElement('div');
+    dialog.className = 'admin-confirm-box';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    var text = document.createElement('p');
+    text.textContent = source.dataset.confirm;
+    var bar = document.createElement('div');
+    bar.className = 'admin-confirm-buttons';
+    function button(cls, label) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = cls;
+      b.textContent = label;
+      bar.appendChild(b);
+      return b;
+    }
+    var ok = button('btn btn-primary', source.dataset.confirmOk);
+    var cancel = button('btn', source.dataset.confirmCancel);
+    function close(keep) {
+      document.removeEventListener('keydown', onKey);
+      overlay.remove();
+      done(keep);
+    }
+    function onKey(e) { if (e.key === 'Escape') { close(false); } }
+    ok.addEventListener('click', function () { close(true); });
+    cancel.addEventListener('click', function () { close(false); });
+    document.addEventListener('keydown', onKey);
+    dialog.appendChild(text);
+    dialog.appendChild(bar);
+    overlay.appendChild(dialog);
+    host.appendChild(overlay);
+    ok.focus();
+  }
   document.querySelectorAll('input[type="checkbox"][data-confirm]').forEach(function (box) {
     box.addEventListener('change', function () {
       if (!box.checked) { return; }
-      var host = document.querySelector('.admin-shell') || document.body;
-      var overlay = document.createElement('div');
-      overlay.className = 'admin-confirm';
-      var dialog = document.createElement('div');
-      dialog.className = 'admin-confirm-box';
-      dialog.setAttribute('role', 'dialog');
-      dialog.setAttribute('aria-modal', 'true');
-      var text = document.createElement('p');
-      text.textContent = box.dataset.confirm;
-      var bar = document.createElement('div');
-      bar.className = 'admin-confirm-buttons';
-      function button(cls, label) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = cls;
-        b.textContent = label;
-        bar.appendChild(b);
-        return b;
-      }
-      var ok = button('btn btn-primary', box.dataset.confirmOk);
-      var cancel = button('btn', box.dataset.confirmCancel);
-      function close(keep) {
-        document.removeEventListener('keydown', onKey);
-        overlay.remove();
+      ask(box, function (keep) {
         if (!keep) { box.checked = false; }
         box.focus();
-      }
-      function onKey(e) { if (e.key === 'Escape') { close(false); } }
-      ok.addEventListener('click', function () { close(true); });
-      cancel.addEventListener('click', function () { close(false); });
-      document.addEventListener('keydown', onKey);
-      dialog.appendChild(text);
-      dialog.appendChild(bar);
-      overlay.appendChild(dialog);
-      host.appendChild(overlay);
-      ok.focus();
+      });
+    });
+  });
+  document.querySelectorAll('form[data-confirm-unless]').forEach(function (form) {
+    var asked = false;
+    form.addEventListener('submit', function (e) {
+      if (asked || form.querySelector(form.dataset.confirmUnless)) { return; }
+      e.preventDefault();
+      var by = e.submitter || null;
+      ask(form, function (keep) {
+        if (!keep) { return; }
+        asked = true;
+        if (form.requestSubmit) { form.requestSubmit(by); } else { form.submit(); }
+      });
     });
   });
 })();

@@ -41,6 +41,9 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 			}
 			return h.resetVotes(w, r, loc, id)
 		case actionActivate:
+			if !h.allowed(w, r, perms.InviteMembers) {
+				return nil
+			}
 			return h.activate(w, r, loc, id)
 		case actionActivity:
 			return h.userActivity(w, r, loc, id)
@@ -153,13 +156,9 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
-	allowed, err := h.mayEdit(ctx, row)
+	lower, err := h.mayEdit(ctx, row)
 	if err != nil {
 		return err
-	}
-	if !allowed {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return nil
 	}
 
 	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
@@ -182,6 +181,10 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
+	var sanctionList []sanctionRow
+	if lower {
+		sanctionList = sanctionRows(sanctions, granted)
+	}
 	var lastLogin *time.Time
 	lastAddress := ""
 	if mine != nil && mine.IsSuperuser {
@@ -200,11 +203,13 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Roles":       choices,
 		"Held":        row.Roles,
 		"MaySetRoles": h.maySetRoles(mine, granted, row),
-		"Sanctions":   sanctionRows(sanctions, granted),
-		"MaySanction": len(sanctionRows(sanctions, granted)) > 0,
+		"Sanctions":   sanctionList,
+		"MaySanction": len(sanctionList) > 0,
+		"LockSelf":    mine != nil && !mine.IsSuperuser && mine.ID == row.ID && holdsStaff(roleList, row.Roles),
 		"MayAccount":  mine != nil && mine.IsSuperuser,
 		"ResetVotes":  Prefix + userSlug + "/" + rest + "/" + actionResetVote,
-		"MayReset":    granted.Has(perms.ResetMemberVotes),
+		"MayReset":    lower && granted.Has(perms.ResetMemberVotes),
+		"MayActivate": row.Unclaimed && granted.Has(perms.InviteMembers),
 		"Activity":    Prefix + userSlug + "/" + rest + "/" + actionActivity,
 		"Activate":    Prefix + userSlug + "/" + rest + "/" + actionActivate,
 		"MaySuper":    mine != nil && mine.IsSuperuser,
@@ -242,13 +247,9 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
-	allowed, err := h.mayEdit(ctx, stored)
+	lower, err := h.mayEdit(ctx, stored)
 	if err != nil {
 		return err
-	}
-	if !allowed {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return nil
 	}
 	granted, _, err := h.access(ctx)
 	if err != nil {
@@ -290,16 +291,34 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if next.Username == "" {
 		return h.userForm(w, r, loc, rest, loc.T("admin.user-no-name"))
 	}
+	if next.Email != "" && !strings.EqualFold(next.Email, stored.Email) {
+		if held, err := h.deps.DB.UserByEmail(ctx, next.Email); err == nil && held.ID != next.ID {
+			return h.userForm(w, r, loc, rest, loc.T("admin.invite-email-taken"))
+		} else if err != nil && !errors.Is(err, db.ErrNotFound) {
+			return err
+		}
+	}
 	err = h.deps.DB.SaveAdminUser(ctx, siteID(ctx), next, builtinRoles, maySetRoles, maySuper)
 	if err != nil {
 		return err
 	}
-	if err := h.saveSanctions(r, next.ID); err != nil {
-		return err
+	if lower {
+		if err := h.saveSanctions(r, next.ID); err != nil {
+			return err
+		}
 	}
 	h.noteID(r, db.AdminChanged, userSlug, next.ID, next.Username)
 	redirect(w, Prefix+userSlug+"/")
 	return nil
+}
+
+func holdsStaff(all []db.RoleChoice, held []int64) bool {
+	for _, one := range all {
+		if one.IsStaff && slices.Contains(held, one.ID) {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Handler) mayEdit(ctx context.Context, target db.AdminUserRow) (bool, error) {

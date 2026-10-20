@@ -212,7 +212,8 @@ var roleDependents = []string{
 		default_role_id = CASE WHEN default_role_id = $1 THEN NULL ELSE default_role_id END,
 		verified_role_id = CASE WHEN verified_role_id = $1 THEN NULL ELSE verified_role_id END,
 		membership_password_role_id = CASE WHEN membership_password_role_id = $1
-			THEN NULL ELSE membership_password_role_id END`),
+			THEN NULL ELSE membership_password_role_id END,
+		application_role_id = CASE WHEN application_role_id = $1 THEN NULL ELSE application_role_id END`),
 }
 
 func (d *DB) DeleteRole(ctx context.Context, siteID, id int64) error {

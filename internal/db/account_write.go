@@ -128,7 +128,7 @@ func (d *DB) UserByVerifiedEmail(ctx context.Context, email string) (*User, erro
 	return d.scanUser(ctx, qUserByVerifiedEmail, email)
 }
 
-var qSetEmail = register("SetEmail", `UPDATE web_user SET email = $2 WHERE id = $1`)
+var qSetEmail = register("SetEmail", `UPDATE web_user SET email = $2, email_verified_at = NULL WHERE id = $1`)
 
 func (d *DB) SetEmail(ctx context.Context, id int64, email string) error {
 	if _, err := d.pool.Exec(ctx, qSetEmail, id, email); err != nil {

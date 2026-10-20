@@ -27,6 +27,7 @@ type AdminUserRow struct {
 	CanSendDM          bool
 	DMUntil            *time.Time
 	IsSuperuser        bool
+	Unclaimed          bool
 	Banned             bool
 
 	OperationIndex int
@@ -36,7 +37,8 @@ type AdminUserRow struct {
 const adminUserColumns = `id, type, username, coalesce(wikidot_username, ''), coalesce(display_name, ''),
 	coalesce(email, ''), coalesce(bio, ''), coalesce(avatar, ''), coalesce(api_key, ''),
 	is_active, inactive_until, is_forum_active, forum_inactive_until,
-	can_send_direct_messages, direct_messages_until, is_superuser`
+	can_send_direct_messages, direct_messages_until, is_superuser,
+	password LIKE '!%' AND type <> 'bot'`
 
 const adminUserBanned = `(
 	(type <> 'wikidot' AND CASE WHEN inactive_until IS NULL THEN NOT is_active ELSE inactive_until > now() END)
@@ -81,7 +83,7 @@ func flagAt(flag bool, until *time.Time, now time.Time) bool {
 func scanAdminUser(row pgx.Row, u *AdminUserRow) error {
 	return row.Scan(&u.ID, &u.Type, &u.Username, &u.WikidotUsername, &u.DisplayName,
 		&u.Email, &u.Bio, &u.Avatar, &u.APIKey, &u.IsActive, &u.InactiveUntil,
-		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDM, &u.DMUntil, &u.IsSuperuser)
+		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDM, &u.DMUntil, &u.IsSuperuser, &u.Unclaimed)
 }
 
 func (d *DB) AdminUsers(ctx context.Context, siteID int64, query, kind string, roleID int64, bannedOnly bool, limit, offset int) ([]AdminUserRow, int, error) {
@@ -101,7 +103,7 @@ func (d *DB) AdminUsers(ctx context.Context, siteID int64, query, kind string, r
 		if err := rows.Scan(&u.ID, &u.Type, &u.Username, &u.WikidotUsername, &u.DisplayName,
 			&u.Email, &u.Bio, &u.Avatar, &u.APIKey, &u.IsActive, &u.InactiveUntil,
 			&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDM, &u.DMUntil, &u.IsSuperuser,
-			&u.Banned); err != nil {
+			&u.Unclaimed, &u.Banned); err != nil {
 			return nil, 0, err
 		}
 		out = append(out, u)
@@ -147,7 +149,9 @@ func (d *DB) AdminUser(ctx context.Context, siteID, id int64) (AdminUserRow, err
 
 var (
 	qUpdateAdminUser = register("UpdateAdminUser", `
-UPDATE web_user SET username=$2, wikidot_username=$3, display_name=$4, email=$5, bio=$6,
+UPDATE web_user SET username=$2, wikidot_username=$3, display_name=$4, email=$5::text, bio=$6,
+	email_verified_at = CASE WHEN email IS NOT DISTINCT FROM $5::text THEN email_verified_at
+		WHEN $5::text = '' THEN NULL ELSE now() END,
 	is_active=$7, inactive_until=$8, is_forum_active=$9, forum_inactive_until=$10,
 	can_send_direct_messages=$11, direct_messages_until=$12
 WHERE id=$1`)
