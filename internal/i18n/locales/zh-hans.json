@@ -281,7 +281,7 @@
   "admin.mirror-unused": "本站没有页面引用",
   "admin.mirror-used-here": "本站引用数",
   "admin.mirrors": "外部镜像",
-  "admin.mirrors-hint": "页面中的 [[include :站点:页面]] 指向本实例没有的站点时，使用这里保存的只读副本。扫描本站页面后可抓取缺失的页面；抓取只在此处或命令行手动进行，渲染页面时不会访问 Wikidot。",
+  "admin.mirrors-hint": "页面中的 [[include :站点:页面]] 指向本实例没有的站点时，使用这里保存的只读副本。",
   "admin.name-taken": "该用户名已被占用",
   "admin.new-bot": "新建机器人",
   "admin.new-category": "新建分类",
