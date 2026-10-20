@@ -271,6 +271,7 @@
   "admin.mirror-running": "正在抓取：{done} / {total}，失败 {failed}",
   "admin.mirror-scan": "扫描本站",
   "admin.mirror-scanned": "扫描完成：{pages} 个页面引用了 {refs} 处外部页面，其中 {instance} 个在本实例中，{mirrored} 个已有镜像，{missing} 个缺失。",
+  "admin.mirror-search": "站点或页面名",
   "admin.mirror-shadowed": "本实例已有同名站点，不再使用此镜像",
   "admin.mirror-status": "状态",
   "admin.mirror-status-failed": "抓取失败",

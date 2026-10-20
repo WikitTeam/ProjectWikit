@@ -110,10 +110,50 @@ func (h *Handler) mirrorList(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	if err != nil {
 		return err
 	}
+
+	view := r.URL.Query().Get("view")
+	if view != "all" {
+		view = "missing"
+	}
+	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
+	matches := func(wiki, page string) bool {
+		return query == "" || strings.Contains(":"+wiki+":"+page, query)
+	}
+	var shownMissing []db.MissingInclude
+	for _, m := range missing {
+		if matches(m.Wiki, m.Page) {
+			shownMissing = append(shownMissing, m)
+		}
+	}
+	var shownMirrors []db.Mirror
+	for _, m := range mirrors {
+		if matches(m.Wiki, m.Page) {
+			shownMirrors = append(shownMirrors, m)
+		}
+	}
+	total := len(shownMissing)
+	if view == "all" {
+		total = len(shownMirrors)
+	}
+	page := max(atoi(r.URL.Query().Get("page")), 1)
+	from, to := min((page-1)*perPage, total), min(page*perPage, total)
+	if view == "all" {
+		shownMirrors = shownMirrors[from:to]
+	} else {
+		shownMissing = shownMissing[from:to]
+	}
+
 	return h.page(w, r, loc, loc.T("admin.mirrors"), "mirror_list.html", map[string]any{
-		"Job":     h.mirrorJob(),
-		"Missing": missing,
-		"Mirrors": mirrors,
+		"Job":          h.mirrorJob(),
+		"View":         view,
+		"Query":        query,
+		"Missing":      shownMissing,
+		"Mirrors":      shownMirrors,
+		"MissingCount": len(missing),
+		"MirrorCount":  len(mirrors),
+		"Total":        total,
+		"Page":         page,
+		"Pages":        (total + perPage - 1) / perPage,
 		"Shadowed": func(wiki string) bool {
 			return local[wiki]
 		},
