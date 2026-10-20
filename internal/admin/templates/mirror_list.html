@@ -1,0 +1,74 @@
+{{define "mirror_job"}}
+{{if .Running}}
+<div class="alert alert-info">{{t "admin.mirror-running" "done" .Progress.Done "total" .Progress.Total "failed" .Progress.Failed}}{{if .Progress.Current}} <span class="stamp">{{esc .Progress.Current}}</span>{{end}}</div>
+<script>setTimeout(function () { location.replace(location.pathname); }, 3000);</script>
+{{else if not .Finished.IsZero}}
+<div class="alert{{if .Err}} alert-error{{else}} alert-success{{end}}">{{t "admin.mirror-finished" "fetched" .Result.Fetched "failed" .Result.Failed}} <span class="stamp">{{when .Finished}}</span>{{if .Err}} {{esc .Err}}{{end}}</div>
+{{end}}
+{{end}}
+
+{{define "mirror_list.html"}}
+{{if .Done}}<div class="alert alert-success">{{esc .Done}}</div>{{end}}
+{{template "mirror_job" .Job}}
+<div class="widget-box">
+  <div class="widget-title"><i class="fas fa-clone"></i><h5>{{t "admin.mirrors"}}</h5></div>
+  <div class="widget-content">
+    <p class="hint">{{t "admin.mirrors-hint"}}</p>
+    <form method="POST" action="{{esc .Action}}" class="inline-actions">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      <button type="submit" name="action" value="scan" class="btn"><i class="fas fa-search"></i>{{t "admin.mirror-scan"}}</button>
+      <button type="submit" name="action" value="fetch" class="btn btn-primary"{{if or .Job.Running (not .Missing)}} disabled{{end}}><i class="fas fa-download"></i>{{t "admin.mirror-fetch-missing" "n" (len .Missing)}}</button>
+    </form>
+  </div>
+</div>
+
+<div class="widget-box">
+  <div class="widget-title"><i class="fas fa-unlink"></i><h5>{{t "admin.mirror-missing"}}</h5></div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>{{t "admin.mirror-target"}}</th>
+        <th>{{t "admin.mirror-status"}}</th>
+        <th>{{t "admin.mirror-referrers"}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Missing}}
+      <tr>
+        <td class="stamp">:{{esc .Wiki}}:{{esc .Page}}</td>
+        <td>{{if .Status}}{{enum "admin.mirror-status-" .Status}}{{if .Problem}} <span class="muted">{{esc .Problem}}</span>{{end}}{{else}}<span class="muted">{{t "admin.mirror-status-none"}}</span>{{end}}</td>
+        <td>{{range $i, $p := .Pages}}{{if $i}}, {{end}}<a href="/{{esc $p}}" target="_blank">{{esc $p}}</a>{{end}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="3" class="muted">{{t "admin.empty"}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+<div class="widget-box">
+  <div class="widget-title"><i class="fas fa-clone"></i><h5>{{t "admin.mirror-all"}}</h5></div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>{{t "admin.mirror-target"}}</th>
+        <th>{{t "admin.mirror-status"}}</th>
+        <th>{{t "admin.mirror-fetched-at"}}</th>
+        <th class="right">{{t "admin.mirror-used-here"}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Mirrors}}
+      <tr>
+        <td class="stamp"><a href="{{esc $.Action}}{{.ID}}">:{{esc .Wiki}}:{{esc .Page}}</a>{{if call $.Shadowed .Wiki}} <span class="muted">{{t "admin.mirror-shadowed"}}</span>{{end}}</td>
+        <td>{{enum "admin.mirror-status-" .Status}}{{if .Problem}} <span class="muted">{{esc .Problem}}</span>{{end}}</td>
+        <td class="stamp">{{when .FetchedAt}}</td>
+        <td class="right">{{.Refs}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="4" class="muted">{{t "admin.empty"}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

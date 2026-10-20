@@ -140,6 +140,8 @@ func run(args []string) error {
 		return importCommand(args[1:])
 	case "reindex":
 		return reindex(args[1:])
+	case "mirror":
+		return mirrorCommand(args[1:])
 	case "unpack-postgres":
 		return unpackPostgres(args[1:])
 	case "service":
@@ -172,6 +174,7 @@ Commands:
   seed        write the pages a new site starts with
   import      import an unpacked wikidot backup
   reindex     put every page of a site back into the search index
+  mirror      keep copies of pages included from other Wikidot wikis
   service     start pwikit whenever the machine boots
   path        make pwikit runnable by name from any directory
   update      install a newer release, or put back the one before it

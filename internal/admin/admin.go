@@ -19,6 +19,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
+	"github.com/WikitTeam/ProjectWikit/internal/mirror"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
@@ -49,6 +50,7 @@ type Deps struct {
 	Mail     mail.Sender
 	Trust    *proxyheader.Trust
 	Updates  *update.Board
+	Mirrors  *mirror.Runner
 
 	Log *slog.Logger
 }
@@ -98,6 +100,7 @@ var groups = []struct {
 		{pageCategorySlug, "fa-folder-open"},
 		{tagSlug, "fa-tag"},
 		{tagCategorySlug, "fa-tags"},
+		{mirrorSlug, "fa-clone"},
 	}},
 	{"members", "admin.group-members", "fa-users", []railEntry{
 		{userSlug, "fa-user"},

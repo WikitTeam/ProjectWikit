@@ -1,0 +1,21 @@
+{{define "mirror_form.html"}}
+{{template "mirror_job" .Job}}
+<div class="widget-box">
+  <div class="widget-title"><i class="fas fa-clone"></i><h5>:{{esc .Mirror.Wiki}}:{{esc .Mirror.Page}}</h5></div>
+  <div class="widget-content">
+    <table class="table table-spec">
+      <tr><td><strong>{{t "admin.mirror-status"}}</strong></td><td>{{enum "admin.mirror-status-" .Mirror.Status}}{{if .Mirror.Problem}} <span class="muted">{{esc .Mirror.Problem}}</span>{{end}}</td></tr>
+      <tr><td><strong>{{t "admin.mirror-fetched-at"}}</strong></td><td class="stamp">{{when .Mirror.FetchedAt}}</td></tr>
+      <tr><td><strong>{{t "admin.mirror-origin"}}</strong></td><td><a href="https://{{esc .Mirror.Wiki}}.wikidot.com/{{esc .Mirror.Page}}" target="_blank" rel="noopener">https://{{esc .Mirror.Wiki}}.wikidot.com/{{esc .Mirror.Page}}</a></td></tr>
+      <tr><td><strong>{{t "admin.mirror-referrers"}}</strong></td><td>{{range $i, $p := .Referrers}}{{if $i}}, {{end}}<a href="/{{esc $p}}" target="_blank">{{esc $p}}</a>{{else}}<span class="muted">{{t "admin.mirror-unused"}}</span>{{end}}</td></tr>
+    </table>
+    <pre class="mirror-source">{{esc .Mirror.Source}}</pre>
+    <form method="POST" action="{{esc .Action}}" class="form-actions">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      <button type="submit" name="action" value="refetch" class="btn btn-primary"{{if .Job.Running}} disabled{{end}}><i class="fas fa-sync"></i>{{t "admin.mirror-refetch"}}</button>
+      <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
+      <button type="submit" name="action" value="delete" class="btn btn-danger pull-right"><i class="fas fa-trash"></i>{{t "admin.delete"}}</button>
+    </form>
+  </div>
+</div>
+{{end}}

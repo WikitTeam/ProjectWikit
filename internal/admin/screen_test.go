@@ -33,7 +33,7 @@ func TestScreenOpensForItsPermission(t *testing.T) {
 
 func TestSuspiciousIsSuperuserOnly(t *testing.T) {
 	for _, s := range screens {
-		if s.slug == suspiciousSlug && !s.super {
+		if (s.slug == suspiciousSlug || s.slug == mirrorSlug) && !s.super {
 			t.Errorf("screen %q super = false, want true", s.slug)
 		}
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/mirror"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 
 	// The modules register themselves; without this nothing answers a
@@ -114,7 +115,12 @@ func (r *Repository) IncludeSources(refs []renderer.IncludeRef) ([]renderer.Fetc
 func (r *Repository) offSiteSource(slug, name string) (*string, error) {
 	other, err := r.db.SiteBySlug(r.ctx, slug)
 	if errors.Is(err, db.ErrNotFound) {
-		return nil, nil
+		key := mirror.Key(slug, name)
+		source, ok, err := r.db.MirrorSource(r.ctx, key.Wiki, key.Page)
+		if err != nil || !ok {
+			return nil, err
+		}
+		return &source, nil
 	}
 	if err != nil {
 		return nil, err

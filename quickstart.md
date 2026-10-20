@@ -117,6 +117,7 @@ When the site's domain is a public one, pwikit obtains and renews the HTTPS cert
 - To send verification and password reset mail, fill in the `[mail]` section of `pwikit.toml`. Until then those messages are written to the log instead of being sent. See [Configuration](https://pwikit-docs.unitreaty.org/en/configuration).
 - Claim verification codes are sent by a shared service by default. To send them from a Wikidot account of your own, see [Claim verification codes](https://pwikit-docs.unitreaty.org/en/deployment#claim-verification-codes).
 - Set the site title, theme, roles and permissions in [Site administration](https://pwikit-docs.unitreaty.org/en/site-administration).
+- Do your pages include many components or pages from other Wikidot sites? See [Mirroring pages from other wikis](https://pwikit-docs.unitreaty.org/en/importing#mirroring-pages-from-other-wikis).
 - Take backups with `pwikit backup create`. See [Operations](https://pwikit-docs.unitreaty.org/en/operations).
 - Installed as a system service, pwikit updates itself to new releases early in the morning and rolls back when an update fails. See [Updating and rolling back](https://pwikit-docs.unitreaty.org/en/updating).
 - To move the instance to another disk or directory later, register the service again as described in [Moving an instance](https://pwikit-docs.unitreaty.org/en/deployment#moving-an-instance).

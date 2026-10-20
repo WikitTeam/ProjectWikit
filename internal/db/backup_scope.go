@@ -127,6 +127,7 @@ var rules = map[string]rule{
 
 	"pwikit_member_sanction": {owned, `site_id = (SELECT id FROM s)`, ""},
 	"pwikit_ip_ban":          {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_include_ref":     {owned, `site_id = (SELECT id FROM s)`, ""},
 
 	// A subscription can hang off an article or off a forum thread, and the
 	// thread need not belong to an article.
@@ -162,6 +163,7 @@ var rules = map[string]rule{
 	"web_user_user_permissions":                 {left, "", "roles took over from per-account rights"},
 	"dynamic_preferences_globalpreferencemodel": {left, "", "it belongs to the instance"},
 	"pwikit_update":                             {left, "", "it tracks the release the instance runs, not a site"},
+	"pwikit_include_mirror":                     {left, "", "mirrored pages of other wikis are an instance cache, fetched again on demand"},
 	"pwikit_claim_code":                         {left, "", "a pending claim code is spent within minutes and tied to no site"},
 }
 

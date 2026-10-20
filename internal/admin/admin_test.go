@@ -71,7 +71,7 @@ func TestTemplatesParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
-	for _, name := range []string{"layout.html", "dashboard.html", "suspicious.html", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html"} {
+	for _, name := range []string{"layout.html", "dashboard.html", "suspicious.html", "mirror_list.html", "mirror_form.html", "mirror_job", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html"} {
 		if h.templates.Lookup(name) == nil {
 			t.Errorf("Lookup(%q) = nil, want the template", name)
 		}
@@ -260,7 +260,7 @@ func TestEveryScreenIsRegistered(t *testing.T) {
 		"themes", "site", "roles", "role-categories", "users", "reports",
 		"forum-sections", "forum-categories", "admin-log",
 		"tags", "tag-categories", "page-categories",
-		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages", "ip-bans",
+		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages", "ip-bans", "include-mirrors",
 	}
 	got := make([]string, 0, len(screens))
 	for _, s := range screens {
@@ -282,7 +282,7 @@ func TestEveryScreenHasItsTemplates(t *testing.T) {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
 	for _, name := range []string{
-		"dashboard.html", "suspicious.html", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html", "site_form.html",
+		"dashboard.html", "suspicious.html", "mirror_list.html", "mirror_form.html", "mirror_job", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html", "site_form.html",
 		"role_list.html", "role_form.html", "role_category.html",
 		"user_list.html", "user_form.html", "user_activity.html",
 		"report_list.html", "report_form.html",

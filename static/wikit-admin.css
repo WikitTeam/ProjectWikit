@@ -489,3 +489,12 @@ body.admin .system-content .content textarea:focus-visible { outline-color: var(
 .admin-shell .hint code,
 .admin-shell .perm-matrix .perm-code,
 body.admin .system-content .content .link-out { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+
+.admin-shell .mirror-source {
+  max-height: 60vh; overflow: auto;
+  white-space: pre-wrap; word-break: break-all;
+  font-family: var(--font-mono); font-size: 12px;
+  background: var(--well); border: 1px solid var(--rule); border-radius: var(--rad-sm);
+  padding: 10px 12px; margin: 12px 0;
+}
+.admin-shell .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }

@@ -22,6 +22,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/lang"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
+	"github.com/WikitTeam/ProjectWikit/internal/mirror"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
@@ -34,6 +35,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
 	"github.com/WikitTeam/ProjectWikit/internal/webapi"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidotclient"
+	"github.com/WikitTeam/ProjectWikit/internal/wikidotsrc"
 )
 
 type pageStack struct {
@@ -164,6 +166,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(),
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
 		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Updates: board, Log: log,
+		Mirrors: mirror.NewRunner(conn, wikidotsrc.New(mirrorPerSite, mirrorTotal)),
 	}, next)
 	if err != nil {
 		return nil, err
