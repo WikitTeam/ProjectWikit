@@ -124,6 +124,8 @@ func (v *LocalVerifier) wikidotError(what string, target ClaimTarget, err error)
 	case errors.Is(err, wikidotclient.ErrRefused):
 		v.Log.Warn(what, "user", target.Name, "err", err)
 		return refused(CodeMessagesRefused)
+	case errors.Is(err, wikidotclient.ErrPaused):
+		return refused(CodeSignInPaused)
 	case errors.Is(err, wikidotclient.ErrLogin):
 		v.Log.Error("wikidot refused to sign in the account set in pwikit.toml", "account", v.Wikidot.Username())
 		return refused(CodeLoginFailed)

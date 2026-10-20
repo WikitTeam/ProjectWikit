@@ -24,11 +24,12 @@ const (
 	originSiteID = "648902"
 	tokenCookie  = "wikidot_token7"
 	timeout      = 15 * time.Second
-	loginPause   = time.Minute
+	loginPause   = 10 * time.Second
 )
 
 var (
 	ErrLogin       = errors.New("wikidotclient: wikidot refused the sign-in")
+	ErrPaused      = errors.New("wikidotclient: signing in again after a failure has to wait")
 	ErrUnavailable = errors.New("wikidotclient: wikidot did not answer")
 	ErrNoUser      = errors.New("wikidotclient: no such wikidot user")
 	ErrRefused     = errors.New("wikidotclient: wikidot refused the message")
@@ -140,7 +141,7 @@ func (c *Client) Send(ctx context.Context, to int64, subject, source string) err
 
 func (c *Client) login(ctx context.Context) error {
 	if !c.failedAt.IsZero() && c.now().Sub(c.failedAt) < loginPause {
-		return c.failedWith
+		return fmt.Errorf("%w: %w", ErrPaused, c.failedWith)
 	}
 	err := c.signIn(ctx)
 	if err != nil {

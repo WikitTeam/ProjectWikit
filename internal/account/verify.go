@@ -26,6 +26,7 @@ const (
 	CodeMessagesRefused    = "messages_refused"
 	CodeLoginFailed        = "login_failed"
 	CodeWikidotUnavailable = "wikidot_unavailable"
+	CodeSignInPaused       = "sign_in_paused"
 	CodeNoPendingCode      = "no_pending_code"
 	CodeExpired            = "code_expired"
 	CodeWrong              = "wrong_code"

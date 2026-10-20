@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -244,6 +245,7 @@ func TestLocalSendFailureMapping(t *testing.T) {
 	}{
 		{wikidotclient.ErrRefused, CodeMessagesRefused},
 		{wikidotclient.ErrLogin, CodeLoginFailed},
+		{fmt.Errorf("%w: %w", wikidotclient.ErrPaused, wikidotclient.ErrLogin), CodeSignInPaused},
 		{wikidotclient.ErrUnavailable, CodeWikidotUnavailable},
 		{errors.New("boom"), CodeInternal},
 	}

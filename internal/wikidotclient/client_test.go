@@ -146,10 +146,11 @@ func TestSendSignsInAgainWhenSignedOut(t *testing.T) {
 func TestSendWaitsAfterAFailedSignIn(t *testing.T) {
 	fake, client, now := newFake(t)
 	fake.acceptPW = "other"
-	for i := 0; i < 2; i++ {
-		if err := client.Send(context.Background(), 7, "s", "b"); !errors.Is(err, ErrLogin) {
-			t.Fatalf("Send() err = %v, want ErrLogin", err)
-		}
+	if err := client.Send(context.Background(), 7, "s", "b"); !errors.Is(err, ErrLogin) || errors.Is(err, ErrPaused) {
+		t.Fatalf("Send() err = %v, want ErrLogin", err)
+	}
+	if err := client.Send(context.Background(), 7, "s", "b"); !errors.Is(err, ErrPaused) {
+		t.Fatalf("Send() during the pause err = %v, want ErrPaused", err)
 	}
 	if fake.logins != 1 {
 		t.Errorf("logins = %d, want 1", fake.logins)

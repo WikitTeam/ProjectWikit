@@ -866,6 +866,7 @@
   "signup.verify-failed": "验证服务出现错误，请稍后重试",
   "signup.verify-messages-refused": "无法向该 Wikidot 账号发送站内信，请在 Wikidot 账号设置中允许接收站内信后重试",
   "signup.verify-no-code": "验证码不存在或已失效，请重新发送",
+  "signup.verify-paused": "验证码发送暂时受限，请稍后再试",
   "signup.verify-rate-limited": "验证码发送过于频繁，请稍后重试",
   "signup.verify-too-many": "验证码错误次数过多，请重新发送",
   "signup.verify-unavailable": "暂时无法连接 Wikidot，请稍后重试",

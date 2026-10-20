@@ -406,6 +406,7 @@ var verifyErrorKeys = map[string]string{
 	CodeMessagesRefused:    "signup.verify-messages-refused",
 	CodeLoginFailed:        "signup.verify-unavailable",
 	CodeWikidotUnavailable: "signup.verify-unavailable",
+	CodeSignInPaused:       "signup.verify-paused",
 	CodeNoPendingCode:      "signup.verify-no-code",
 	CodeExpired:            "signup.verify-expired",
 	CodeTooManyAttempts:    "signup.verify-too-many",
