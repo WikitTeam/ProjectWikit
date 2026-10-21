@@ -524,6 +524,7 @@
   "api-source-too-long": "页面内容超过大小限制",
   "api-subscription-not-found": "订阅不存在",
   "api-subscription-target-missing": "订阅的对象不存在",
+  "api-tags-unknown": "本页面不允许新建以下不存在的标签：{tags}",
   "api-ticket-not-found": "该工单不存在",
   "api-too-many-messages": "单次最多检举 {max} 条消息",
   "api-upload-too-large": "文件大小超过上传限制",

@@ -39,6 +39,7 @@ type createInput struct {
 type refusal struct {
 	key    string
 	status int
+	args   []any
 }
 
 func refuse(key string, status int) refusal { return refusal{key: key, status: status} }
@@ -65,13 +66,13 @@ func (h *Articles) createArticle(r *http.Request, loc *i18n.Localizer) (string, 
 
 	input, bad := readCreateInput(r)
 	if bad != nil {
-		return field("error", loc.T(bad.key)), bad.status, nil
+		return field("error", loc.T(bad.key, bad.args...)), bad.status, nil
 	}
 	name := wikidot.Normalize(input.PageID)
 	user := auth.FromContext(ctx)
 
 	if bad := h.mayCreate(r, name, user); bad != nil {
-		return field("error", loc.T(bad.key)), bad.status, nil
+		return field("error", loc.T(bad.key, bad.args...)), bad.status, nil
 	}
 	if _, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), name); err == nil {
 		return field("error", loc.T("api-page-exists")), http.StatusConflict, nil

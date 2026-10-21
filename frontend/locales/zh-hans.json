@@ -246,6 +246,8 @@
   "components.authorship-editor.add-label": "添加作者:",
   "components.authorship-editor.search-hint": "（输入以搜索用户）",
   "components.tag-editor.add-label": "添加标签:",
+  "components.tag-editor.cannot-create": "本页面仅允许添加已存在的标签",
+  "components.tag-editor.create": "新建标签「{tag}」",
   "components.tag-editor.search-hint": "（输入以搜索标签）",
   "favourites.breadcrumb": "收藏",
   "favourites.breadcrumb-profile": "个人",

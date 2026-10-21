@@ -118,6 +118,12 @@ const TagSuggestionCategory = styled.div`
   }
 `
 
+const TagSuggestionNote = styled.div`
+  padding: 4px 8px;
+  color: #666;
+  font-style: italic;
+`
+
 const TagSuggestionTag = styled.div`
   padding: 4px 8px;
   border-bottom: 1px solid #aaa;
@@ -191,6 +197,26 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
             ),
     }))
     .filter(x => !!x.tags.length)
+
+  const typed = inputValue.trim().split(/\s+/).filter(x => x && !x.endsWith(':'))
+  const knownTag = (name: string) => {
+    const [category, tag] = name.includes(':') ? name.split(':', 2) : ['_default', name]
+    const found = allTags.categories.find(x => x.slug.toLowerCase() === category.toLowerCase())
+    return !!found && allTags.tags.some(x => x.categoryId === found.id && x.name.toLowerCase() === tag.toLowerCase())
+  }
+  const fresh = typed.filter(x => !knownTag(x) && !tags.some(y => y.toLowerCase() === x.toLowerCase()))
+
+  const onCreateTags = (e: React.MouseEvent | null) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (!onChange || !typed.length) {
+      return
+    }
+    setInputValue('')
+    onChange([...tags.filter(x => !typed.some(y => y.toLowerCase() === x.toLowerCase())), ...typed])
+  }
 
   const onDeleteTag = (e: React.MouseEvent, tag: string) => {
     e.preventDefault()
@@ -309,9 +335,10 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
       }
       e.preventDefault()
       e.stopPropagation()
-    } else if (e.key === 'Enter' && canCreateTags) {
-      setInputValue('')
-      onChange?.([...tags.filter(x => x.toLowerCase() !== inputValue.toLowerCase()), inputValue])
+    } else if (e.key === 'Enter') {
+      if (canCreateTags) {
+        onCreateTags(null)
+      }
       e.preventDefault()
       e.stopPropagation()
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -385,7 +412,7 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
           {t('components.tag-editor.search-hint')}
         </TagInputTitle>
         <TagInput onChange={onInputChange} type="text" value={inputValue} onFocus={onInputFocus} ref={inputRef} onKeyDown={onInputKeyDown} />
-        {!!inputValue.trim().length && !!filteredCategories.length && suggestionsOpen && (
+        {!!inputValue.trim().length && (!!filteredCategories.length || !!fresh.length) && suggestionsOpen && (
           <TagSuggestionList ref={suggestionsRef}>
             {filteredCategories.map(category => (
               <React.Fragment key={category.slug}>
@@ -408,6 +435,14 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
                 ))}
               </React.Fragment>
             ))}
+            {!!fresh.length &&
+              (canCreateTags ? (
+                <TagSuggestionTag data-selector="" onClick={onCreateTags}>
+                  {t('components.tag-editor.create', { tag: fresh.join(' ') })}
+                </TagSuggestionTag>
+              ) : (
+                <TagSuggestionNote>{t('components.tag-editor.cannot-create')}</TagSuggestionNote>
+              ))}
           </TagSuggestionList>
         )}
       </TagInputArea>

@@ -92,7 +92,7 @@ func (h *Articles) update(r *http.Request, loc *i18n.Localizer, name string) (st
 		return field("error", loc.T("api-bad-json")), http.StatusBadRequest, nil
 	}
 	if bad := validateEdit(body); bad != nil {
-		return field("error", loc.T(bad.key)), bad.status, nil
+		return field("error", loc.T(bad.key, bad.args...)), bad.status, nil
 	}
 
 	user := auth.FromContext(ctx)
@@ -113,7 +113,7 @@ func (h *Articles) update(r *http.Request, loc *i18n.Localizer, name string) (st
 	if bad, err := e.apply(); err != nil {
 		return "", 0, err
 	} else if bad != nil {
-		return field("error", loc.T(bad.key)), bad.status, nil
+		return field("error", loc.T(bad.key, bad.args...)), bad.status, nil
 	}
 	return e.answer()
 }
@@ -296,6 +296,10 @@ func (e *editor) retag() (*refusal, error) {
 		return nil, err
 	}
 	rev, _, err := e.handler.deps.DB.SetArticleTags(e.req.Context(), siteID(e.req.Context()), e.article.ID, tags, allow, e.userID, e.at)
+	var unknown *db.UnknownTagsError
+	if errors.As(err, &unknown) {
+		return &refusal{key: "api-tags-unknown", status: http.StatusBadRequest, args: []any{"tags", strings.Join(unknown.Names, " ")}}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

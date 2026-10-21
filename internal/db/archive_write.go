@@ -287,7 +287,7 @@ func (d *DB) EnsureTags(ctx context.Context, siteID int64, names []string) ([]in
 	}
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
-	tags, err := resolveTags(ctx, tx, siteID, names, true)
+	tags, _, err := resolveTags(ctx, tx, siteID, names, true)
 	if err != nil {
 		return nil, err
 	}

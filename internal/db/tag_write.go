@@ -74,9 +74,12 @@ func (d *DB) SetArticleTags(ctx context.Context, siteID, articleID int64, tags [
 	}
 	defer tx.Rollback(ctx)
 
-	wanted, err := resolveTags(ctx, tx, siteID, tags, allowCreate)
+	wanted, unknown, err := resolveTags(ctx, tx, siteID, tags, allowCreate)
 	if err != nil {
 		return Revision{}, false, fmt.Errorf("resolve tags of %d: %w", articleID, err)
+	}
+	if len(unknown) > 0 {
+		return Revision{}, false, &UnknownTagsError{Names: unknown}
 	}
 	held, err := readArticleTags(ctx, tx, articleID)
 	if err != nil {
@@ -130,8 +133,17 @@ func (d *DB) SetArticleTags(ctx context.Context, siteID, articleID int64, tags [
 	return rev, true, nil
 }
 
-func resolveTags(ctx context.Context, tx pgx.Tx, siteID int64, tags []string, allowCreate bool) ([]taggedName, error) {
+type UnknownTagsError struct {
+	Names []string
+}
+
+func (e *UnknownTagsError) Error() string {
+	return "db: no such tags " + strings.Join(e.Names, " ")
+}
+
+func resolveTags(ctx context.Context, tx pgx.Tx, siteID int64, tags []string, allowCreate bool) ([]taggedName, []string, error) {
 	var out []taggedName
+	var unknown []string
 	for _, raw := range tags {
 		if strings.Contains(raw, " ") {
 			continue
@@ -139,9 +151,12 @@ func resolveTags(ctx context.Context, tx pgx.Tx, siteID int64, tags []string, al
 		category, name := splitTagName(strings.ToLower(raw))
 		id, err := tagID(ctx, tx, siteID, category, name, allowCreate)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if id == 0 {
+			if !slices.Contains(unknown, raw) {
+				unknown = append(unknown, raw)
+			}
 			continue
 		}
 		tag := taggedName{ID: id, Name: tagFullName(category, name)}
@@ -149,7 +164,7 @@ func resolveTags(ctx context.Context, tx pgx.Tx, siteID int64, tags []string, al
 			out = append(out, tag)
 		}
 	}
-	return out, nil
+	return out, unknown, nil
 }
 
 func tagID(ctx context.Context, tx pgx.Tx, siteID int64, category, name string, allowCreate bool) (int64, error) {

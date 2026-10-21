@@ -604,11 +604,16 @@ func (h *Handler) options(req *request) (string, error) {
 		Rating:         page.DisabledRating(),
 	}
 
-	tags, err := h.deps.DB.SiteCanCreateTags(req.ctx, req.site.ID)
+	siteTags, err := h.deps.DB.SiteCanCreateTags(req.ctx, req.site.ID)
 	if err != nil && !errors.Is(err, db.ErrNotFound) {
 		return "", err
 	}
-	options.CanCreateTags = tags == db.CreateTagsEnabled
+	category, _ := wikidot.Split(req.name)
+	categoryTags, err := h.deps.DB.CategoryCanCreateTags(req.ctx, req.site.ID, category)
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return "", err
+	}
+	options.CanCreateTags = db.CreatingTagsAllowed(siteTags, categoryTags)
 
 	if req.user != nil {
 		raw, err := h.deps.DB.UserPreference(req.ctx, req.user.ID,
