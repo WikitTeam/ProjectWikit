@@ -31,6 +31,7 @@
 </form>
 <ul class="nav nav-pills">
   <li{{if eq .View "missing"}} class="active"{{end}}><a href="{{esc .Action}}?view=missing&q={{urlq .Query}}">{{t "admin.mirror-missing"}} <span class="count">{{.MissingCount}}</span></a></li>
+  <li{{if eq .View "used"}} class="active"{{end}}><a href="{{esc .Action}}?view=used&q={{urlq .Query}}">{{t "admin.mirror-used"}} <span class="count">{{.UsedCount}}</span></a></li>
   <li{{if eq .View "all"}} class="active"{{end}}><a href="{{esc .Action}}?view=all&q={{urlq .Query}}">{{t "admin.mirror-all"}} <span class="count">{{.MirrorCount}}</span></a></li>
 </ul>
 <p class="stamp">{{t "admin.count" "n" .Total}}</p>

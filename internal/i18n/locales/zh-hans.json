@@ -280,6 +280,7 @@
   "admin.mirror-status-ok": "正常",
   "admin.mirror-target": "外部页面",
   "admin.mirror-unused": "本站没有页面引用",
+  "admin.mirror-used": "本站使用中的镜像",
   "admin.mirror-used-here": "本站引用数",
   "admin.mirrors": "外部镜像",
   "admin.mirrors-hint": "页面中的 [[include :站点:页面]] 指向本实例没有的站点时，使用这里保存的只读副本。",

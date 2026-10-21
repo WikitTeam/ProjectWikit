@@ -112,8 +112,14 @@ func (h *Handler) mirrorList(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 
 	view := r.URL.Query().Get("view")
-	if view != "all" {
+	if view != "all" && view != "used" {
 		view = "missing"
+	}
+	used := 0
+	for _, m := range mirrors {
+		if m.Refs > 0 {
+			used++
+		}
 	}
 	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 	matches := func(wiki, page string) bool {
@@ -127,20 +133,20 @@ func (h *Handler) mirrorList(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 	var shownMirrors []db.Mirror
 	for _, m := range mirrors {
-		if matches(m.Wiki, m.Page) {
+		if matches(m.Wiki, m.Page) && (view != "used" || m.Refs > 0) {
 			shownMirrors = append(shownMirrors, m)
 		}
 	}
 	total := len(shownMissing)
-	if view == "all" {
+	if view != "missing" {
 		total = len(shownMirrors)
 	}
 	page := max(atoi(r.URL.Query().Get("page")), 1)
 	from, to := min((page-1)*perPage, total), min(page*perPage, total)
-	if view == "all" {
-		shownMirrors = shownMirrors[from:to]
-	} else {
+	if view == "missing" {
 		shownMissing = shownMissing[from:to]
+	} else {
+		shownMirrors = shownMirrors[from:to]
 	}
 
 	return h.page(w, r, loc, loc.T("admin.mirrors"), "mirror_list.html", map[string]any{
@@ -151,6 +157,7 @@ func (h *Handler) mirrorList(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		"Mirrors":      shownMirrors,
 		"MissingCount": len(missing),
 		"MirrorCount":  len(mirrors),
+		"UsedCount":    used,
 		"Total":        total,
 		"Page":         page,
 		"Pages":        (total + perPage - 1) / perPage,
