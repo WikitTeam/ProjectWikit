@@ -96,6 +96,7 @@
       </div>
       {{template "row_area" dict "n" "signup_notice" "k" "admin.f-signup-notice" "v" .Site.SignupNotice}}
       {{template "row_area" dict "n" "password_help" "k" "admin.f-password-help" "v" .Site.PasswordHelp "h" "admin.h-password-help" "ph" (t "reset.help-default")}}
+      {{template "row_area" dict "n" "welcome_message" "k" "admin.f-welcome-message" "v" .Site.Welcome "h" "admin.h-welcome-message" "ph" (t "account.welcome-default" "site" .Site.Title)}}
       {{if .MayGrant}}
       <div class="control-group">
         <label class="control-label" for="id_default_role">{{t "admin.f-default-role"}}</label>

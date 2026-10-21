@@ -84,7 +84,16 @@ const Notification: React.FC<Props> = ({ notification }) => {
         </>
       )
     } else if (notification.type === 'welcome') {
-      return <Styled.TypeName>{t('notifications.item.type-welcome')}</Styled.TypeName>
+      return (
+        <>
+          <Styled.TypeName>{t('notifications.item.type-welcome')}</Styled.TypeName>
+          {notification.message && (
+            <Styled.PostContent>
+              <div dangerouslySetInnerHTML={{ __html: notification.message }} />
+            </Styled.PostContent>
+          )}
+        </>
+      )
     } else if (notification.type === 'post_like') {
       return (
         <>

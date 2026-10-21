@@ -3,6 +3,7 @@ package account
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/netip"
@@ -12,6 +13,8 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
+	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
@@ -92,7 +95,35 @@ func (d Deps) page(r *http.Request, loc *i18n.Localizer, current *db.Site, title
 }
 
 func (d Deps) welcome(ctx context.Context, userID int64) error {
-	return d.DB.SendNotification(ctx, 0, db.NotifyWelcome, "{}", []int64{userID}, time.Now())
+	current := site.FromContext(ctx)
+	if current == nil {
+		return d.DB.SendNotification(ctx, 0, db.NotifyWelcome, "{}", []int64{userID}, time.Now())
+	}
+	loc := d.Bundle.For(ctx)
+	source := strings.TrimSpace(current.Welcome)
+	if source == "" {
+		source = loc.T("account.welcome-default", "site", current.Title)
+	}
+	meta := "{}"
+	if body, err := d.welcomeBody(ctx, loc, current, source); err != nil {
+		d.logger().Error("render welcome message", "site", current.Slug, "err", err)
+	} else if encoded, err := json.Marshal(map[string]string{"message": body}); err == nil {
+		meta = string(encoded)
+	}
+	return d.DB.SendNotification(ctx, current.ID, db.NotifyWelcome, meta, []int64{userID}, time.Now())
+}
+
+func (d Deps) welcomeBody(ctx context.Context, loc *i18n.Localizer, current *db.Site, source string) (string, error) {
+	env := pagerender.Deps{DB: d.DB, Engine: d.Engine, Icons: d.Icons}.Env(ctx, loc, current, nil)
+	info, err := env.PageInfo(nil)
+	if err != nil {
+		return "", err
+	}
+	html, err := env.HTML(source, info, env.Callbacks(nil, page.NewContext(nil, nil, nil, nil)), renderer.ModeSystem)
+	if err != nil {
+		return "", err
+	}
+	return html.Body, nil
 }
 
 func authIcon(s *db.Site) string {

@@ -19,6 +19,7 @@ interface BaseNotification {
 
 interface NotificationWelcome extends BaseNotification {
   type: 'welcome'
+  message?: string
 }
 
 interface NotificationNewArticleRevision extends BaseNotification {

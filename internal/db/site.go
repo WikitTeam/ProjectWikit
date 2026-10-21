@@ -27,6 +27,7 @@ type Site struct {
 	FooterLicense string
 	SignupNotice  string
 	PasswordHelp  string
+	Welcome       string
 
 	MembershipPasswordEnabled bool
 	MembershipPassword        string
@@ -43,7 +44,7 @@ type Site struct {
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
-       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
+       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help, welcome_message,
        membership_password_enabled, membership_password, membership_password_role_id, application_role_id,
        default_role_id, verified_role_id, email_policy, language, time_zone
 FROM web_site
@@ -55,14 +56,14 @@ func scanSite(row pgx.Row, s *Site) error {
 	return row.Scan(
 		&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage,
 		&s.Icon, &s.ThemeID, &s.SystemThemeID,
-		&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp,
+		&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp, &s.Welcome,
 		&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID, &s.ApplicationRoleID,
 		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language, &s.TimeZone)
 }
 
 var qSiteBySlug = register("SiteBySlug", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
-       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
+       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help, welcome_message,
        membership_password_enabled, membership_password, membership_password_role_id, application_role_id,
        default_role_id, verified_role_id, email_policy, language, time_zone
 FROM web_site
@@ -72,7 +73,7 @@ var qSiteSlugs = register("SiteSlugs", `SELECT slug FROM web_site ORDER BY id`)
 
 var qSites = register("Sites", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
-       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help,
+       system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help, welcome_message,
        membership_password_enabled, membership_password, membership_password_role_id, application_role_id,
        default_role_id, verified_role_id, email_policy, language, time_zone
 FROM web_site
