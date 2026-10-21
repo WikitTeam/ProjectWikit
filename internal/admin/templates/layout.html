@@ -129,6 +129,15 @@
   });
 })();
 (function () {
+  document.querySelectorAll('.admin-shell table.table').forEach(function (table) {
+    if (table.parentElement.classList.contains('table-scroll')) { return; }
+    var wrap = document.createElement('div');
+    wrap.className = 'table-scroll';
+    table.parentNode.insertBefore(wrap, table);
+    wrap.appendChild(table);
+  });
+})();
+(function () {
   function ask(source, done) {
     var host = document.querySelector('.admin-shell') || document.body;
     var overlay = document.createElement('div');
