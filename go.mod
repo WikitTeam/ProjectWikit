@@ -7,7 +7,7 @@ require (
 	github.com/bodgit/sevenzip v1.6.5
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/klauspost/compress v1.20.3
-	github.com/tdewolff/minify/v2 v2.24.21
+	github.com/tdewolff/minify/v2 v2.24.22
 	github.com/ulikunitz/xz v0.5.17
 	golang.org/x/crypto v0.58.0
 	golang.org/x/net v0.61.0
@@ -30,7 +30,7 @@ require (
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/stangelandcl/ppmd v0.1.1 // indirect
-	github.com/tdewolff/parse/v2 v2.8.18 // indirect
+	github.com/tdewolff/parse/v2 v2.8.19 // indirect
 	go4.org v0.0.0-20260112195520-a5071408f32f // indirect
 	golang.org/x/sync v0.24.0 // indirect
 )
