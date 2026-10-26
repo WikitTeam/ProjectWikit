@@ -20,6 +20,10 @@ func UsersJSON(ctx context.Context, d *db.DB, users []db.User, now time.Time) (w
 	if err != nil {
 		return nil, err
 	}
+	siteSupers, err := d.SiteSuperusers(ctx, ctxSiteID(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
 	bySlug, err := d.RoleIDsBySlug(ctx, ctxSiteID(ctx), []string{slugEveryone, slugRegistered})
 	if err != nil {
 		return nil, err
@@ -62,7 +66,7 @@ func UsersJSON(ctx context.Context, d *db.DB, users []db.User, now time.Time) (w
 			Roles:       append(append([]perms.Role{}, base...), rolesOf(byID, own)...),
 			Active:      u.ActiveAt(now),
 			ForumActive: u.ForumActiveAt(now),
-			Superuser:   u.IsSuperuser,
+			Superuser:   u.IsSuperuser || siteSupers[u.ID],
 		}
 		editor := perms.Resolve(subject, nil).Has(perms.EditArticles)
 		out = append(out, pageconfig.SignedInUserJSON(u, own, true, editor).Object())

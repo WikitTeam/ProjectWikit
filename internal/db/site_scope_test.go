@@ -26,6 +26,7 @@ var perSiteTables = []string{
 	"pwikit_admin_log",
 	"web_externallink",
 	"pwikit_include_ref",
+	"pwikit_site_superuser",
 }
 
 func touchedTables(sql string) []string {

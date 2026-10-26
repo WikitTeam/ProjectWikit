@@ -177,6 +177,10 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return err
 	}
 	mine := auth.FromContext(ctx)
+	here, err := h.superHere(ctx)
+	if err != nil {
+		return err
+	}
 	var hold db.AccountEmail
 	if mine != nil && mine.IsSuperuser && granted.Has(perms.ViewSensitiveInfo) {
 		h.accounts().SettleHolds(ctx)
@@ -204,33 +208,35 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		lastAddress = seen.Address
 	}
 	return h.page(w, r, loc, loc.T("admin.users"), "user_form.html", map[string]any{
-		"User":        row,
-		"Now":         time.Now(),
-		"Zone":        site.Zone(ctx),
-		"ZoneName":    site.Zone(ctx).String(),
-		"Roles":       choices,
-		"Held":        row.Roles,
-		"MaySetRoles": h.maySetRoles(mine, granted, row),
-		"Sanctions":   sanctionList,
-		"MaySanction": len(sanctionList) > 0,
-		"LockSelf":    mine != nil && !mine.IsSuperuser && mine.ID == row.ID && holdsStaff(roleList, row.Roles),
-		"MayAccount":  mine != nil && mine.IsSuperuser,
-		"ResetVotes":  Prefix + userSlug + "/" + rest + "/" + actionResetVote,
-		"MayReset":    lower && granted.Has(perms.ResetMemberVotes),
-		"MayActivate": row.Unclaimed && granted.Has(perms.InviteMembers),
-		"Activity":    Prefix + userSlug + "/" + rest + "/" + actionActivity,
-		"Activate":    Prefix + userSlug + "/" + rest + "/" + actionActivate,
-		"MaySuper":    mine != nil && mine.IsSuperuser,
-		"Hold":        hold,
-		"HoldDays":    int(account.HoldPeriod / (24 * time.Hour)),
-		"Done":        userDone(loc, r.URL.Query().Get("said")),
-		"SeeEmail":    granted.Has(perms.ViewSensitiveInfo),
-		"LastLogin":   lastLogin,
-		"LastAddress": lastAddress,
-		"CSRF":        csrf.Issue(w, r),
-		"Error":       problem,
-		"Action":      Prefix + userSlug + "/" + rest,
-		"Back":        Prefix + userSlug + "/",
+		"User":         row,
+		"Now":          time.Now(),
+		"Zone":         site.Zone(ctx),
+		"ZoneName":     site.Zone(ctx).String(),
+		"Roles":        choices,
+		"Held":         row.Roles,
+		"MaySetRoles":  h.maySetRoles(mine, here, granted, row),
+		"Sanctions":    sanctionList,
+		"MaySanction":  len(sanctionList) > 0,
+		"LockSelf":     mine != nil && !here && mine.ID == row.ID && holdsStaff(roleList, row.Roles),
+		"MayAccount":   mine != nil && mine.IsSuperuser,
+		"ResetVotes":   Prefix + userSlug + "/" + rest + "/" + actionResetVote,
+		"MayReset":     lower && granted.Has(perms.ResetMemberVotes),
+		"MayActivate":  row.Unclaimed && granted.Has(perms.InviteMembers),
+		"Activity":     Prefix + userSlug + "/" + rest + "/" + actionActivity,
+		"Activate":     Prefix + userSlug + "/" + rest + "/" + actionActivate,
+		"MaySuper":     mine != nil && mine.IsSuperuser,
+		"MaySiteSuper": here && !row.IsSuperuser,
+		"DropSelf":     mine != nil && !mine.IsSuperuser && mine.ID == row.ID && !holdsStaff(roleList, row.Roles),
+		"Hold":         hold,
+		"HoldDays":     int(account.HoldPeriod / (24 * time.Hour)),
+		"Done":         userDone(loc, r.URL.Query().Get("said")),
+		"SeeEmail":     granted.Has(perms.ViewSensitiveInfo),
+		"LastLogin":    lastLogin,
+		"LastAddress":  lastAddress,
+		"CSRF":         csrf.Issue(w, r),
+		"Error":        problem,
+		"Action":       Prefix + userSlug + "/" + rest,
+		"Back":         Prefix + userSlug + "/",
 	})
 }
 
@@ -267,6 +273,10 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return err
 	}
 	mine := auth.FromContext(ctx)
+	here, err := h.superHere(ctx)
+	if err != nil {
+		return err
+	}
 	maySuper := mine != nil && mine.IsSuperuser
 	if maySuper && r.PostFormValue("hold") == "cancel" {
 		target, err := h.deps.DB.UserByID(ctx, stored.ID)
@@ -301,7 +311,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 			wantedEmail = strings.TrimSpace(r.PostFormValue("email"))
 		}
 	}
-	maySetRoles := h.maySetRoles(mine, granted, stored)
+	maySetRoles := h.maySetRoles(mine, here, granted, stored)
 	if maySetRoles {
 		next.Roles = nil
 		for _, raw := range r.PostForm["roles"] {
@@ -341,6 +351,20 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
+	if here && !stored.IsSuperuser {
+		on := r.PostFormValue("site_superuser") != ""
+		changed, err := h.deps.DB.SetSiteSuperuser(ctx, siteID(ctx), stored.ID, on, mine.ID, time.Now())
+		if err != nil {
+			return err
+		}
+		if changed {
+			action := actionSiteSuperOn
+			if !on {
+				action = actionSiteSuperOff
+			}
+			h.noteID(r, action, userSlug, stored.ID, stored.Username)
+		}
+	}
 	if lower {
 		if err := h.saveSanctions(r, next.ID); err != nil {
 			return err
@@ -356,6 +380,9 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 }
 
 const (
+	actionSiteSuperOn  = "site-super-on"
+	actionSiteSuperOff = "site-super-off"
+
 	saidHoldSent      = "hold-sent"
 	saidHoldCancelled = "hold-cancelled"
 )
@@ -375,6 +402,17 @@ func (h *Handler) accounts() account.Deps {
 		Trust: h.deps.Trust, Bundle: h.deps.Bundle, Log: h.deps.Log}
 }
 
+func (h *Handler) superHere(ctx context.Context) (bool, error) {
+	mine := auth.FromContext(ctx)
+	if mine == nil || !mine.ActiveAt(time.Now()) {
+		return false, nil
+	}
+	if mine.IsSuperuser {
+		return true, nil
+	}
+	return h.deps.DB.IsSiteSuperuser(ctx, siteID(ctx), mine.ID)
+}
+
 func holdsStaff(all []db.RoleChoice, held []int64) bool {
 	for _, one := range all {
 		if one.IsStaff && slices.Contains(held, one.ID) {
@@ -392,6 +430,16 @@ func (h *Handler) mayEdit(ctx context.Context, target db.AdminUserRow) (bool, er
 	if mine.IsSuperuser {
 		return true, nil
 	}
+	if target.IsSuperuser {
+		return false, nil
+	}
+	here, err := h.superHere(ctx)
+	if err != nil || here {
+		return here, err
+	}
+	if target.SiteSuperuser {
+		return false, nil
+	}
 	rank, err := h.deps.DB.OperationIndex(ctx, siteID(ctx), mine.ID)
 	if err != nil {
 		return false, err
@@ -399,7 +447,7 @@ func (h *Handler) mayEdit(ctx context.Context, target db.AdminUserRow) (bool, er
 	return target.OperationIndex > rank, nil
 }
 
-func (h *Handler) maySetRoles(mine *db.User, granted perms.Set, target db.AdminUserRow) bool {
+func (h *Handler) maySetRoles(mine *db.User, here bool, granted perms.Set, target db.AdminUserRow) bool {
 	if mine == nil {
 		return false
 	}
@@ -407,6 +455,12 @@ func (h *Handler) maySetRoles(mine *db.User, granted perms.Set, target db.AdminU
 		return true
 	}
 	if target.IsSuperuser {
+		return false
+	}
+	if here {
+		return true
+	}
+	if target.SiteSuperuser {
 		return false
 	}
 	return granted.Has(perms.ManagePermissions)

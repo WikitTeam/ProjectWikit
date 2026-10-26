@@ -15,13 +15,17 @@ import (
 const mirrorSlug = "include-mirrors"
 
 func init() {
-	register(screen{slug: mirrorSlug, label: "admin.mirrors", super: true, serve: (*Handler).mirrors})
+	register(screen{slug: mirrorSlug, label: "admin.mirrors", all: true, serve: (*Handler).mirrors})
 }
 
 func (h *Handler) mirrors(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer) error {
 	rest := strings.Trim(strings.TrimPrefix(r.URL.Path, Prefix+mirrorSlug), "/")
 	if r.Method == http.MethodPost {
 		if !h.verified(w, r) {
+			return nil
+		}
+		if r.PostFormValue("action") == "delete" && !instanceSuper(r.Context()) {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return nil
 		}
 		return h.mirrorAction(w, r, loc, rest)
@@ -193,6 +197,7 @@ func (h *Handler) mirrorForm(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		"Mirror":    row,
 		"Referrers": referrers,
 		"Job":       h.mirrorJob(),
+		"MayDelete": instanceSuper(ctx),
 		"CSRF":      csrf.Issue(w, r),
 		"Action":    Prefix + mirrorSlug + "/" + rest,
 		"Back":      Prefix + mirrorSlug + "/",

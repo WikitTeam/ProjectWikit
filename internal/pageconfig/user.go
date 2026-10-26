@@ -81,7 +81,7 @@ func SignedInUserJSON(u *db.User, userRoles []roles.Role, showAvatar, editor boo
 }
 
 // The superuser flag is deliberately not per-site. It belongs to whoever runs
-// the server, and every other way into the admin comes from a role, which is.
+// the server, and every other way into the admin belongs to one site.
 func IsStaff(u *db.User, userRoles []roles.Role) bool {
 	if u.IsSuperuser {
 		return true
@@ -109,12 +109,14 @@ type LoginStatus struct {
 	Roles             []roles.Role
 	CanEditArticles   bool
 	NotificationCount int
+	SiteSuperuser     bool
 }
 
 func (l LoginStatus) JSON(loc *i18n.Localizer) (string, error) {
 	user := AnonymousUserJSON(loc, true)
 	if l.User != nil {
 		user = SignedInUserJSON(l.User, l.Roles, true, l.CanEditArticles)
+		user.Staff = user.Staff || l.SiteSuperuser
 	}
 	return wikijson.Marshal(wikijson.Object{
 		{Key: "user", Value: user.Object()},

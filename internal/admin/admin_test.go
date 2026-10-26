@@ -196,8 +196,8 @@ func TestBuiltinRolesAreNamed(t *testing.T) {
 
 func TestEveryScreenNeedsAPermission(t *testing.T) {
 	for _, s := range screens {
-		if s.need == "" && !s.super {
-			t.Errorf("screen %q needs no permission, want one or super", s.slug)
+		if s.need == "" && !s.super && !s.all {
+			t.Errorf("screen %q needs no permission, want one, all or super", s.slug)
 		}
 	}
 }
@@ -213,19 +213,24 @@ func TestMaySetRoles(t *testing.T) {
 
 	cases := map[string]struct {
 		mine    *db.User
+		here    bool
 		granted perms.Set
 		target  db.AdminUserRow
 		want    bool
 	}{
-		"anonymous":                     {nil, granting, db.AdminUserRow{}, false},
-		"superuser over anyone":         {super, none, db.AdminUserRow{IsSuperuser: true}, true},
-		"granted over a plain target":   {plain, granting, db.AdminUserRow{}, true},
-		"granted over a superuser":      {plain, granting, db.AdminUserRow{IsSuperuser: true}, false},
-		"ungranted over a plain target": {plain, none, db.AdminUserRow{}, false},
+		"anonymous":                          {nil, false, granting, db.AdminUserRow{}, false},
+		"superuser over anyone":              {super, true, none, db.AdminUserRow{IsSuperuser: true}, true},
+		"granted over a plain target":        {plain, false, granting, db.AdminUserRow{}, true},
+		"granted over a superuser":           {plain, false, granting, db.AdminUserRow{IsSuperuser: true}, false},
+		"ungranted over a plain target":      {plain, false, none, db.AdminUserRow{}, false},
+		"granted over a site superuser":      {plain, false, granting, db.AdminUserRow{SiteSuperuser: true}, false},
+		"site superuser over a plain target": {plain, true, none, db.AdminUserRow{}, true},
+		"site superuser over another":        {plain, true, none, db.AdminUserRow{SiteSuperuser: true}, true},
+		"site superuser over a superuser":    {plain, true, none, db.AdminUserRow{IsSuperuser: true}, false},
 	}
 	h := &Handler{}
 	for name, c := range cases {
-		if got := h.maySetRoles(c.mine, c.granted, c.target); got != c.want {
+		if got := h.maySetRoles(c.mine, c.here, c.granted, c.target); got != c.want {
 			t.Errorf("maySetRoles(%s) = %t, want %t", name, got, c.want)
 		}
 	}

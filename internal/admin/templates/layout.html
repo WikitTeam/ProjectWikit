@@ -159,6 +159,7 @@
       return b;
     }
     var ok = button('btn btn-primary', source.dataset.confirmOk);
+    text.textContent = source.checked === false && source.dataset.confirmOff ? source.dataset.confirmOff : source.dataset.confirm;
     var cancel = button('btn', source.dataset.confirmCancel);
     function close(keep) {
       document.removeEventListener('keydown', onKey);
@@ -177,9 +178,10 @@
   }
   document.querySelectorAll('input[type="checkbox"][data-confirm]').forEach(function (box) {
     box.addEventListener('change', function () {
-      if (!box.checked) { return; }
+      var on = box.checked;
+      if (!on && !box.dataset.confirmOff) { return; }
       ask(box, function (keep) {
-        if (!keep) { box.checked = false; }
+        if (!keep) { box.checked = !on; }
         box.focus();
       });
     });

@@ -108,6 +108,14 @@
   <div class="widget-box narrow">
     <div class="widget-title"><i class="fas fa-shield-alt"></i><h5>{{t "admin.roles"}}</h5></div>
     <div class="widget-content">
+      {{if .MaySiteSuper}}
+      <div class="control-group">
+        <span class="control-label">{{t "admin.f-site-superuser"}}</span>
+        <div class="controls">
+          <label class="checkbox"><input type="checkbox" name="site_superuser" value="1"{{if .User.SiteSuperuser}} checked{{end}} data-confirm="{{t "admin.confirm-site-superuser"}}"{{if .DropSelf}} data-confirm-off="{{t "admin.confirm-lose-admin"}}"{{end}} data-confirm-ok="{{t "admin.confirm-ok"}}" data-confirm-cancel="{{t "admin.cancel"}}"> {{t "admin.l-site-superuser"}}</label>
+        </div>
+      </div>
+      {{end}}
       <div class="control-group">
         <span class="control-label">{{t "admin.f-roles"}}</span>
         <div class="controls">

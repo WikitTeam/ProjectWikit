@@ -77,6 +77,11 @@ func (p *Perms) Subject(u *db.User, now time.Time) (perms.Subject, error) {
 		subject.Active = u.ActiveAt(now)
 		subject.ForumActive = u.ForumActiveAt(now)
 		subject.Superuser = u.IsSuperuser
+		if !subject.Superuser {
+			if subject.Superuser, err = p.db.IsSiteSuperuser(p.ctx, p.siteID(), u.ID); err != nil {
+				return perms.Subject{}, err
+			}
+		}
 		subject.Unverified = unverified(p.site, u)
 		if !subject.Superuser && p.siteID() != 0 {
 			kinds, err := p.db.ActiveSanctions(p.ctx, p.siteID(), u.ID, now)

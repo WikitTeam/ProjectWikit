@@ -63,7 +63,8 @@ WHERE CASE WHEN u.inactive_until IS NULL THEN u.is_active ELSE u.inactive_until 
 	SELECT 1
 	FROM web_user_roles ur
 	JOIN web_role r ON r.id = ur.role_id
-	WHERE ur.user_id = u.id AND r.is_staff))
+	WHERE ur.user_id = u.id AND r.is_staff)
+	OR EXISTS (SELECT 1 FROM pwikit_site_superuser ss WHERE ss.user_id = u.id))
 ORDER BY u.id`)
 
 func (d *DB) ReleaseAudience(ctx context.Context) ([]int64, error) {
@@ -92,7 +93,8 @@ WHERE CASE WHEN u.inactive_until IS NULL THEN u.is_active ELSE u.inactive_until 
 	SELECT 1
 	FROM web_user_roles ur
 	JOIN web_role r ON r.id = ur.role_id
-	WHERE ur.user_id = u.id AND r.site_id = $1 AND r.is_staff))
+	WHERE ur.user_id = u.id AND r.site_id = $1 AND r.is_staff)
+	OR EXISTS (SELECT 1 FROM pwikit_site_superuser ss WHERE ss.user_id = u.id AND ss.site_id = $1))
 ORDER BY u.id`)
 
 func (d *DB) SiteStaff(ctx context.Context, siteID int64) ([]int64, error) {
@@ -114,11 +116,15 @@ func (d *DB) SiteStaff(ctx context.Context, siteID int64) ([]int64, error) {
 }
 
 var qStaffSitesOf = register("StaffSitesOf", `
-SELECT DISTINCT r.site_id
-FROM web_user_roles ur
-JOIN web_role r ON r.id = ur.role_id
-WHERE ur.user_id = $1 AND r.is_staff
-ORDER BY r.site_id`)
+SELECT site_id FROM (
+	SELECT r.site_id
+	FROM web_user_roles ur
+	JOIN web_role r ON r.id = ur.role_id
+	WHERE ur.user_id = $1 AND r.is_staff
+	UNION
+	SELECT site_id FROM pwikit_site_superuser WHERE user_id = $1
+) staff
+ORDER BY site_id`)
 
 func (d *DB) StaffSitesOf(ctx context.Context, userID int64) ([]int64, error) {
 	rows, err := d.pool.Query(ctx, qStaffSitesOf, userID)

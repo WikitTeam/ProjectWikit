@@ -67,15 +67,25 @@ type screen struct {
 	label string
 	need  string
 	super bool
+	all   bool
 	serve func(*Handler, http.ResponseWriter, *http.Request, *i18n.Localizer) error
 }
 
-// Only a superuser's permission set answers yes to everything.
-func (s screen) opensFor(granted perms.Set) bool {
-	if s.super {
+// A superuser of this site also holds every permission here, so the screens
+// that reach past the site ask for the instance-wide flag as well.
+func (s screen) opensFor(granted perms.Set, instance bool) bool {
+	switch {
+	case s.super:
+		return instance && granted.All()
+	case s.all:
 		return granted.All()
 	}
 	return granted.Has(s.need)
+}
+
+func instanceSuper(ctx context.Context) bool {
+	user := auth.FromContext(ctx)
+	return user != nil && user.IsSuperuser && user.ActiveAt(time.Now())
 }
 
 var screens []screen
@@ -200,7 +210,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if s.slug != head {
 			continue
 		}
-		if !s.opensFor(granted) {
+		if !s.opensFor(granted, instanceSuper(ctx)) {
 			h.next.ServeHTTP(w, r)
 			return
 		}
@@ -257,12 +267,12 @@ func (h *Handler) access(ctx context.Context) (perms.Set, bool, error) {
 	if err != nil {
 		return perms.Set{}, false, err
 	}
-	if !pageconfig.IsStaff(user, own) {
-		return perms.Set{}, false, nil
-	}
 	subject, err := repo.NewPerms(ctx, h.deps.DB).Subject(user, time.Now())
 	if err != nil {
 		return perms.Set{}, false, err
+	}
+	if !pageconfig.IsStaff(user, own) && !subject.Superuser {
+		return perms.Set{}, false, nil
 	}
 	return perms.Resolve(subject, nil), true, nil
 }

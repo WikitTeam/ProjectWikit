@@ -588,6 +588,7 @@ func (h *Handler) loginStatus(req *request) (string, error) {
 		status.Roles = userRoles
 		status.NotificationCount = count
 		status.CanEditArticles = perms.Resolve(subject, nil).Has(perms.EditArticles)
+		status.SiteSuperuser = subject.Superuser
 	}
 	return status.JSON(req.loc)
 }

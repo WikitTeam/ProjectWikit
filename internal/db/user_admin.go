@@ -27,6 +27,7 @@ type AdminUserRow struct {
 	CanSendDM          bool
 	DMUntil            *time.Time
 	IsSuperuser        bool
+	SiteSuperuser      bool
 	Unclaimed          bool
 	Banned             bool
 
@@ -53,7 +54,8 @@ WHERE ($1 = '' OR username ILIKE '%' || $1 || '%' OR wikidot_username ILIKE '%' 
 	AND (NOT $5::boolean OR ` + adminUserBanned + `)`
 
 var qAdminUsers = register("AdminUsers", `
-SELECT `+adminUserColumns+`, `+adminUserBanned+`
+SELECT `+adminUserColumns+`, `+adminUserBanned+`,
+	EXISTS (SELECT 1 FROM pwikit_site_superuser ss WHERE ss.site_id = $4 AND ss.user_id = web_user.id)
 FROM web_user`+adminUserWhere+`
 ORDER BY CASE WHEN type = 'wikidot' THEN wikidot_username ELSE username END, id
 LIMIT $6 OFFSET $7`)
@@ -103,7 +105,7 @@ func (d *DB) AdminUsers(ctx context.Context, siteID int64, query, kind string, r
 		if err := rows.Scan(&u.ID, &u.Type, &u.Username, &u.WikidotUsername, &u.DisplayName,
 			&u.Email, &u.Bio, &u.Avatar, &u.APIKey, &u.IsActive, &u.InactiveUntil,
 			&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDM, &u.DMUntil, &u.IsSuperuser,
-			&u.Unclaimed, &u.Banned); err != nil {
+			&u.Unclaimed, &u.Banned, &u.SiteSuperuser); err != nil {
 			return nil, 0, err
 		}
 		out = append(out, u)
@@ -141,6 +143,9 @@ func (d *DB) AdminUser(ctx context.Context, siteID, id int64) (AdminUserRow, err
 		u.Roles = append(u.Roles, roleID)
 	}
 	if err := rows.Err(); err != nil {
+		return AdminUserRow{}, err
+	}
+	if u.SiteSuperuser, err = d.IsSiteSuperuser(ctx, siteID, id); err != nil {
 		return AdminUserRow{}, err
 	}
 	u.OperationIndex, err = d.OperationIndex(ctx, siteID, id)

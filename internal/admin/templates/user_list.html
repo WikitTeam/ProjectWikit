@@ -46,6 +46,7 @@
       {{if $.SeeEmail}}<td class="stamp">{{if .Email}}{{esc .Email}}{{else}}&mdash;{{end}}</td>{{end}}
       <td>
         {{if .IsSuperuser}}<span class="state strong">{{t "admin.superuser"}}</span>
+        {{else if .SiteSuperuser}}<span class="state strong">{{t "admin.site-superuser"}}</span>
         {{else if .Banned}}<span class="state bad">{{t "admin.banned"}}</span>
         {{else if .ActiveAt $.Now}}<span class="state on">{{t "admin.active"}}</span>
         {{else}}<span class="state">{{t "admin.inactive"}}</span>{{end}}

@@ -74,7 +74,7 @@ func (h *Handler) layout(r *http.Request, loc *i18n.Localizer, title, body strin
 		group := navGroup{Key: g.key, Label: loc.T(g.label), Icon: g.icon}
 		for _, e := range g.entries {
 			s, ok := byslug[e.slug]
-			if !ok || !s.opensFor(granted) {
+			if !ok || !s.opensFor(granted, instanceSuper(ctx)) {
 				continue
 			}
 			item := navItem{

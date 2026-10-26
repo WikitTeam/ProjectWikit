@@ -14,7 +14,7 @@
       <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
       <button type="submit" name="action" value="refetch" class="btn btn-primary"{{if .Job.Running}} disabled{{end}}><i class="fas fa-sync"></i>{{t "admin.mirror-refetch"}}</button>
       <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
-      <button type="submit" name="action" value="delete" class="btn btn-danger pull-right"><i class="fas fa-trash"></i>{{t "admin.delete"}}</button>
+      {{if .MayDelete}}<button type="submit" name="action" value="delete" class="btn btn-danger pull-right"><i class="fas fa-trash"></i>{{t "admin.delete"}}</button>{{end}}
     </form>
   </div>
 </div>

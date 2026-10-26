@@ -165,6 +165,7 @@ var rules = map[string]rule{
 	"pwikit_update":                             {left, "", "it tracks the release the instance runs, not a site"},
 	"pwikit_include_mirror":                     {left, "", "mirrored pages of other wikis are an instance cache, fetched again on demand"},
 	"pwikit_claim_code":                         {left, "", "a pending claim code is spent within minutes and tied to no site"},
+	"pwikit_site_superuser":                     {left, "", "whoever runs the instance a site lands on decides who administers it"},
 }
 
 // An empty return means the table does not travel.
