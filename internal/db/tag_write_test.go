@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 )
@@ -82,15 +83,19 @@ func TestSetArticleTagsCreatesWhatItIsAllowedTo(t *testing.T) {
 	}
 }
 
-func TestSetArticleTagsSkipsWhatItMayNotCreate(t *testing.T) {
+func TestSetArticleTagsRefusesWhatItMayNotCreate(t *testing.T) {
 	d := writeTestDB(t)
 	ctx := context.Background()
 	id := scratchTagged(t, d)
+	name := "probe-never-seen-" + time.Now().Format("150405.000000")
 
-	_, wrote, err := d.SetArticleTags(ctx, seedSiteID(t, d), id,
-		[]string{"probe-never-seen-" + time.Now().Format("150405.000000")}, false, nil, time.Now().UTC())
-	if err != nil {
-		t.Fatalf("SetArticleTags() err = %v, want nil", err)
+	_, wrote, err := d.SetArticleTags(ctx, seedSiteID(t, d), id, []string{name}, false, nil, time.Now().UTC())
+	var unknown *UnknownTagsError
+	if !errors.As(err, &unknown) {
+		t.Fatalf("SetArticleTags() err = %v, want *UnknownTagsError", err)
+	}
+	if len(unknown.Names) != 1 || unknown.Names[0] != name {
+		t.Errorf("UnknownTagsError.Names = %v, want [%q]", unknown.Names, name)
 	}
 	if wrote {
 		t.Error("SetArticleTags() wrote a revision, want none")
