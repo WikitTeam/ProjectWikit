@@ -283,7 +283,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		if err != nil {
 			return err
 		}
-		if _, err := h.accounts().CancelHold(ctx, target, mine); err != nil {
+		if _, err := h.accounts().CancelHold(ctx, target, mine, account.HoldCancelled); err != nil {
 			return err
 		}
 		redirect(w, Prefix+userSlug+"/"+rest+"?said="+saidHoldCancelled)
@@ -390,7 +390,7 @@ const (
 func userDone(loc *i18n.Localizer, said string) string {
 	switch said {
 	case saidHoldSent:
-		return loc.T("admin.email-hold-sent")
+		return loc.T("admin.email-hold-sent", "days", int(account.HoldPeriod/(24*time.Hour)))
 	case saidHoldCancelled:
 		return loc.T("admin.email-hold-cancelled")
 	}

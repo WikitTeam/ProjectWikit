@@ -347,10 +347,12 @@ type ProfileEdit struct {
 	Language       string
 	Languages      []i18n.Choice
 
-	Email         string
-	EmailVerified bool
-	EmailPending  string
-	CanRename     bool
+	Email          string
+	EmailVerified  bool
+	EmailPending   string
+	EmailHeld      string
+	EmailHeldUntil *time.Time
+	CanRename      bool
 
 	Tab  string
 	Tabs []ProfileTab
@@ -446,6 +448,36 @@ func (v profileEditView) T(id string, args ...any) string { return v.r.loc.T(id,
 func (v profileEditView) Asset(name string) string        { return v.r.assets.URL(name) }
 func (v profileEditView) Initial() string                 { return initial(v.DisplayName) }
 func (v profileEditView) Nav() []ProfileTab               { return v.r.personalNav(v.ProfileURL, navEdit) }
+
+func (v profileEditView) HoldNote() string {
+	email := escape.HTML(v.EmailHeld)
+	if v.EmailHeldUntil == nil {
+		return v.T("profile.email-held-waiting", "email", email)
+	}
+	return v.T("profile.email-held", "email", email, "when", v.Time(*v.EmailHeldUntil))
+}
+
+// The text inside is only what shows before the script swaps in the reader's
+// own clock, so it names its zone.
+func (v profileEditView) Time(at any) string {
+	var t time.Time
+	switch x := at.(type) {
+	case time.Time:
+		t = x
+	case *time.Time:
+		if x == nil {
+			return ""
+		}
+		t = *x
+	default:
+		return ""
+	}
+	t = t.UTC()
+	return `<span class="odate w-date" data-timestamp="` +
+		strconv.FormatInt(t.Unix(), 10) + `000" data-format="` +
+		escape.HTML(v.T("profile.date-format-js")) + `" style="display: inline">` +
+		escape.HTML(timezone.Label(t)+" "+t.Format("2006-01-02 15:04")) + `</span>`
+}
 
 type systemView struct {
 	System

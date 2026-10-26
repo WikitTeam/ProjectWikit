@@ -30,8 +30,15 @@
       {{end}}
 
       {{if eq .Tab "email"}}
+      {{if .EmailHeld}}
+      <form id="email-hold-cancel" method="post" action="/-/profile/email-hold" hidden>
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <input type="hidden" name="zone" data-browser-zone>
+      </form>
+      {{end}}
       <form method="post" action="/-/profile/email" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <input type="hidden" name="zone" data-browser-zone>
         <div class="form-block">
           <div class="form-row">
             <span class="meta">
@@ -40,6 +47,7 @@
               {{else}}{{esc .Email}} — {{.T "profile.email-unverified"}}{{end}}
               {{if .EmailPending}}<br>{{.T "profile.email-pending" "email" .EmailPending}}{{end}}
             </span>
+            {{if .EmailHeld}}<span class="email-hold">{{.HoldNote}}<button type="submit" form="email-hold-cancel" class="btn-link">{{.T "profile.email-hold-cancel"}}</button></span>{{end}}
           </div>
           <div class="form-row">
             <label class="label" for="id_email">{{.T "profile.email-new"}}</label>
@@ -55,6 +63,7 @@
       {{else if eq .Tab "password"}}
       <form method="post" action="/-/profile/password" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <input type="hidden" name="zone" data-browser-zone>
         <div class="form-block">
           <div class="form-row">
             <label class="label" for="id_current">{{.T "profile.password-current"}}</label>
@@ -143,4 +152,5 @@
 
   </div>
 </div>
+{{template "browser_zone"}}
 {{end}}

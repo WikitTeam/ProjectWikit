@@ -22,6 +22,7 @@ const (
 	profilePath    = "/-/profile/edit"
 
 	emailPath    = "/-/profile/email"
+	holdPath     = "/-/profile/email-hold"
 	passwordPath = "/-/profile/password"
 	namePath     = "/-/profile/name"
 )
@@ -33,6 +34,7 @@ var outcomes = []string{
 	"email-invalid", "email-same", "email-needs-password",
 	"password-changed", "password-wrong", "password-unusable", "password-mismatch", "password-weak",
 	"name-changed", "name-cooldown", "name-taken", "name-invalid",
+	"email-hold-cancelled",
 }
 
 type SettingsHandler struct {
@@ -76,12 +78,15 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loc := h.deps.Bundle.For(ctx)
+	h.deps.RememberZone(ctx, user.ID, r.PostFormValue("zone"))
 
 	var outcome string
 	var err error
 	switch r.URL.Path {
 	case emailPath:
 		outcome, err = h.email(r, loc, user)
+	case holdPath:
+		outcome, err = h.cancelHold(ctx, user)
 	case passwordPath:
 		outcome, err = h.password(w, r, loc, user)
 	case namePath:
@@ -241,4 +246,11 @@ func plausibleEmail(value string) bool {
 		return false
 	}
 	return strings.Contains(domain, ".") && !strings.ContainsAny(value, " \t\r\n")
+}
+
+func (h *SettingsHandler) cancelHold(ctx context.Context, user *db.User) (string, error) {
+	if _, err := h.deps.CancelHold(ctx, user, user, HoldCancelledByUser); err != nil {
+		return "", err
+	}
+	return "email-hold-cancelled", nil
 }

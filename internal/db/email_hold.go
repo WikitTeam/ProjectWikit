@@ -48,11 +48,12 @@ type SettledEmail struct {
 	To       string
 	SiteID   *int64
 	Taken    bool
+	Pending  string
 }
 
 var (
 	qDueEmailHolds = register("DueEmailHolds", `
-SELECT id, username, email, held_email, held_site_id
+SELECT id, username, email, held_email, held_site_id, pending_email
 FROM web_user
 WHERE held_until IS NOT NULL AND held_until <= $1
 ORDER BY id
@@ -82,7 +83,7 @@ func (d *DB) SettleEmailHolds(ctx context.Context, now time.Time) ([]SettledEmai
 	var due []SettledEmail
 	for rows.Next() {
 		var one SettledEmail
-		if err := rows.Scan(&one.UserID, &one.Username, &one.From, &one.To, &one.SiteID); err != nil {
+		if err := rows.Scan(&one.UserID, &one.Username, &one.From, &one.To, &one.SiteID, &one.Pending); err != nil {
 			rows.Close()
 			return nil, err
 		}

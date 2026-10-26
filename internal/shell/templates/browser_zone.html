@@ -1,0 +1,9 @@
+{{define "browser_zone"}}
+<script>
+(function () {
+  var zone = '';
+  try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+  document.querySelectorAll('input[data-browser-zone]').forEach(function (input) { input.value = zone; });
+})();
+</script>
+{{end}}

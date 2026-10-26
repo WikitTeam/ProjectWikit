@@ -17,19 +17,10 @@
         <label class="control-label" for="id_email">{{t "admin.f-email"}}</label>
         <div class="controls">
           <input type="text" id="id_email" name="email" value="{{esc .User.Email}}" class="narrow-5">
+          {{if .Hold.Held}}<span class="email-hold">{{if .Hold.HeldUntil}}{{t "admin.email-held" "email" (esc .Hold.Held) "when" (when .Hold.HeldUntil)}}{{else}}{{t "admin.email-held-waiting" "email" (esc .Hold.Held)}}{{end}}<button type="submit" name="hold" value="cancel" class="btn-link">{{t "admin.email-hold-cancel"}}</button></span>{{end}}
           <span class="hint">{{t "admin.h-email-hold" "days" .HoldDays}}</span>
         </div>
       </div>
-      {{if .Hold.Held}}
-      <div class="control-group">
-        <span class="control-label">{{t "admin.f-email-held"}}</span>
-        <div class="controls">
-          <span class="stamp">{{esc .Hold.Held}}</span>
-          {{if .Hold.HeldUntil}}<span class="hint">{{t "admin.email-held-until"}} {{when .Hold.HeldUntil}}</span>{{else}}<span class="hint">{{t "admin.email-held-waiting"}}</span>{{end}}
-          <button type="submit" name="hold" value="cancel" class="btn btn-mini">{{t "admin.email-hold-cancel"}}</button>
-        </div>
-      </div>
-      {{end}}
       {{end}}
       {{template "row_area" dict "n" "bio" "k" "admin.f-bio" "v" .User.Bio}}
       {{else}}

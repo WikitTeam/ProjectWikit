@@ -271,6 +271,8 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		Email:          state.Email,
 		EmailVerified:  state.VerifiedAt != nil,
 		EmailPending:   state.Pending,
+		EmailHeld:      state.Held,
+		EmailHeldUntil: state.HeldUntil,
 		CanRename:      renamedAt == nil || time.Since(*renamedAt) >= account.RenameCooldown,
 		Said:           account.Outcome(r.URL.Query().Get("said")),
 		Tab:            settingsTab(r),

@@ -706,3 +706,6 @@ body.wikit-page .system-content .content .app-shell form label.label { font-size
 }
 .wikit-scope .app-shell .form-row .hint,
 body.wikit-page .system-content .content .app-shell form label.label .hint { font-weight: 400; color: var(--muted); }
+
+.wikit-scope .app-shell .email-hold { display: block; margin-top: 6px; font-size: 12px; color: var(--quiet); }
+.wikit-scope .app-shell .email-hold .btn-link { font-size: 12px; margin-left: 4px; }

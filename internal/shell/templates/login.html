@@ -3,6 +3,7 @@
   <div class="auth-shell">
     <form method="POST" class="auth-column">
       <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      <input type="hidden" name="zone" data-browser-zone>
 
       <div class="auth-mark">
         {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
@@ -43,4 +44,5 @@
     </form>
   </div>
 </div>
+{{template "browser_zone"}}
 {{end}}

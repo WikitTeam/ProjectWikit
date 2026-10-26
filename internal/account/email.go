@@ -67,12 +67,19 @@ func (h *EmailHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	when := ""
+	if outcome == "held" {
+		if user, state, err := h.target(ctx, uid); err == nil && user != nil && state.HeldUntil != nil {
+			when = h.deps.When(ctx, user.ID, *state.HeldUntil)
+		}
+	}
+
 	body, err := h.deps.page(r, loc, current, loc.T("email."+outcome+"-title"),
 		mustRender(shell.New(loc, h.deps.Assets).Notice(shell.Notice{
 			AuthIcon:  authIcon(current),
 			SiteTitle: current.Title,
 			Heading:   loc.T("email." + outcome + "-title"),
-			Body:      loc.T("email."+outcome, "days", holdDays()),
+			Body:      loc.T("email."+outcome, "when", when),
 			LinkURL:   noticeLink(outcome),
 			LinkText:  loc.T(noticeLinkKey(outcome)),
 		})))
@@ -157,6 +164,7 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 		if err != nil || !done {
 			return "dead", err
 		}
+		h.deps.holdOverridden(ctx, user, state, HoldDroppedChanged)
 		if state.VerifiedAt != nil {
 			if err := h.deps.warnPrevious(r, h.loc(ctx), user, state.Email, pending); err != nil {
 				return "", err
@@ -172,6 +180,7 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 		if err != nil || !done {
 			return "dead", err
 		}
+		h.deps.holdOverridden(ctx, user, state, HoldDroppedReverted)
 		if err := h.deps.retirePassword(ctx, user.ID); err != nil {
 			return "", err
 		}
