@@ -30,11 +30,14 @@ type Resolver struct {
 	sessions Sessions
 	users    Users
 	log      *slog.Logger
+	seen     func(r *http.Request, key string, user *db.User)
 }
 
 func NewResolver(store *session.Store, sessions Sessions, users Users, log *slog.Logger) *Resolver {
 	return &Resolver{store: store, sessions: sessions, users: users, log: log}
 }
+
+func (r *Resolver) OnSeen(f func(req *http.Request, key string, user *db.User)) { r.seen = f }
 
 type contextKey struct{}
 
@@ -128,6 +131,9 @@ func (r *Resolver) resolve(req *http.Request) *db.User {
 			r.log.Error("drop stale session", "err", err)
 		}
 		return nil
+	}
+	if r.seen != nil {
+		r.seen(req, cookie.Value, user)
 	}
 	return user
 }

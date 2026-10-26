@@ -174,6 +174,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	stack.adminPages = adminPages
 
 	resolver := auth.NewResolver(store, conn, conn, log)
+	resolver.OnSeen(account.NewDeviceTracker(accounts).Seen)
 	negotiate := lang.Middleware(bundle)
 	banned := ipban.Middleware(ipban.Deps{DB: conn, Trust: trust, Bundle: bundle, Assets: static.NewAssets(assets), Log: log})
 	resolved := func(h http.Handler) http.Handler { return resolver.Middleware(negotiate(banned(h))) }

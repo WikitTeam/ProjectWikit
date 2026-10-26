@@ -173,6 +173,9 @@ func (d Deps) signIn(ctx context.Context, w http.ResponseWriter, r *http.Request
 	if err := d.DB.SeenAddress(ctx, user.ID, d.clientIP(r), now); err != nil {
 		return err
 	}
+	if err := d.DB.SeenDevice(ctx, key, user.ID, d.siteID(r), true, d.clientIP(r), r.UserAgent(), now); err != nil {
+		return err
+	}
 	d.RememberZone(ctx, user.ID, r.PostFormValue("zone"))
 	http.SetCookie(w, &http.Cookie{
 		Name: session.CookieName, Value: key, Path: "/",

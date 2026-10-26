@@ -25,6 +25,7 @@ const (
 	holdPath     = "/-/profile/email-hold"
 	passwordPath = "/-/profile/password"
 	namePath     = "/-/profile/name"
+	devicesPath  = "/-/profile/devices"
 )
 
 const RenameCooldown = 30 * 24 * time.Hour
@@ -34,7 +35,7 @@ var outcomes = []string{
 	"email-invalid", "email-same", "email-needs-password",
 	"password-changed", "password-wrong", "password-unusable", "password-mismatch", "password-weak",
 	"name-changed", "name-cooldown", "name-taken", "name-invalid",
-	"email-hold-cancelled",
+	"email-hold-cancelled", "devices-ended", "devices-others-ended", "devices-gone",
 }
 
 type SettingsHandler struct {
@@ -87,6 +88,8 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		outcome, err = h.email(r, loc, user)
 	case holdPath:
 		outcome, err = h.cancelHold(ctx, user)
+	case devicesPath:
+		outcome, err = h.devices(r, user)
 	case passwordPath:
 		outcome, err = h.password(w, r, loc, user)
 	case namePath:

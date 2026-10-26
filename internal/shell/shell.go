@@ -235,6 +235,7 @@ const (
 	SettingsTabEmail    = "email"
 	SettingsTabPassword = "password"
 	SettingsTabName     = "name"
+	SettingsTabDevices  = "devices"
 )
 
 const (
@@ -353,6 +354,8 @@ type ProfileEdit struct {
 	EmailHeld      string
 	EmailHeldUntil *time.Time
 	CanRename      bool
+
+	Devices []Device
 
 	Tab  string
 	Tabs []ProfileTab
@@ -477,6 +480,16 @@ func (v profileEditView) Time(at any) string {
 		strconv.FormatInt(t.Unix(), 10) + `000" data-format="` +
 		escape.HTML(v.T("profile.date-format-js")) + `" style="display: inline">` +
 		escape.HTML(timezone.Label(t)+" "+t.Format("2006-01-02 15:04")) + `</span>`
+}
+
+type Device struct {
+	ID       int64
+	Name     string
+	Site     string
+	Address  string
+	SignedIn *time.Time
+	Seen     time.Time
+	Current  bool
 }
 
 type systemView struct {

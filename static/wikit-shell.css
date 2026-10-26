@@ -709,3 +709,13 @@ body.wikit-page .system-content .content .app-shell form label.label .hint { fon
 
 .wikit-scope .app-shell .email-hold { display: block; margin-top: 6px; font-size: 12px; color: var(--quiet); }
 .wikit-scope .app-shell .email-hold .btn-link { font-size: 12px; margin-left: 4px; }
+.wikit-scope .app-shell .device-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.wikit-scope .app-shell .device-list li { border: 1px solid var(--rule); border-radius: var(--rad); padding: 12px 14px; background: #fff; }
+.wikit-scope .app-shell .device-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.wikit-scope .app-shell .device-name { font-weight: 600; color: var(--ink); }
+.wikit-scope .app-shell .device-current { font-size: 12px; color: var(--signal); border: 1px solid var(--signal); border-radius: var(--rad); padding: 0 6px; }
+.wikit-scope .app-shell .device-end { margin-left: auto; }
+.wikit-scope .app-shell .device-end .btn-ghost { padding: 4px 10px; font-size: 13px; }
+.wikit-scope .app-shell .device-facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 8px 0 0; font-size: 13px; }
+.wikit-scope .app-shell .device-facts dt { color: var(--muted); }
+.wikit-scope .app-shell .device-facts dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }

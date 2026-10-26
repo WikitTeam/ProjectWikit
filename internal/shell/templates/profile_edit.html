@@ -83,6 +83,41 @@
           <a class="link-muted" href="/-/password_reset">{{.T "profile.password-forgot"}}</a>
         </div>
       </form>
+      {{else if eq .Tab "devices"}}
+      <div class="profile-form">
+        {{if .Devices}}
+        <ul class="device-list">
+          {{range .Devices}}
+          <li>
+            <div class="device-head">
+              <span class="device-name">{{esc .Name}}</span>
+              {{if .Current}}<span class="device-current">{{$.T "profile.device-current"}}</span>{{end}}
+              <form method="post" action="/-/profile/devices" class="device-end">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+                <input type="hidden" name="zone" data-browser-zone>
+                <input type="hidden" name="device" value="{{.ID}}">
+                <button class="btn-ghost" type="submit">{{$.T "profile.device-end"}}</button>
+              </form>
+            </div>
+            <dl class="device-facts">
+              {{if .Site}}<dt>{{$.T "profile.device-site"}}</dt><dd>{{esc .Site}}</dd>{{end}}
+              {{if .Address}}<dt>{{$.T "profile.device-address"}}</dt><dd>{{esc .Address}}</dd>{{end}}
+              {{if .SignedIn}}<dt>{{$.T "profile.device-signed-in"}}</dt><dd>{{$.Time .SignedIn}}</dd>{{end}}
+              <dt>{{$.T "profile.device-seen"}}</dt><dd>{{$.Time .Seen}}</dd>
+            </dl>
+          </li>
+          {{end}}
+        </ul>
+        <form method="post" action="/-/profile/devices">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+          <input type="hidden" name="zone" data-browser-zone>
+          <input type="hidden" name="action" value="others">
+          <button class="btn-primary" type="submit">{{.T "profile.device-end-others"}}</button>
+        </form>
+        {{else}}
+        <p class="meta">{{.T "profile.device-none"}}</p>
+        {{end}}
+      </div>
       {{else if eq .Tab "name"}}
       <form method="post" action="/-/profile/name" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">

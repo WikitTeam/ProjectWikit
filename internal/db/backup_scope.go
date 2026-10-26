@@ -156,6 +156,7 @@ var rules = map[string]rule{
 	"web_usedtoken":                             {left, "", "a spent token is worth nothing anywhere"},
 	"web_actionlogentry":                        {left, "", "nothing writes it any more"},
 	"django_session":                            {left, "", "a session belongs to the server it was opened on"},
+	"pwikit_session_device":                     {left, "", "it describes a session, which stays behind"},
 	"django_admin_log":                          {left, "", "nothing writes it any more"},
 	"auth_group":                                {left, "", "roles took over from groups"},
 	"auth_group_permissions":                    {left, "", "roles took over from groups"},

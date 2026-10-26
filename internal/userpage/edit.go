@@ -19,6 +19,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
@@ -206,6 +207,7 @@ var settingsTabList = []struct{ tab, label string }{
 	{shell.SettingsTabEmail, "profile.tab-email"},
 	{shell.SettingsTabPassword, "profile.tab-password"},
 	{shell.SettingsTabName, "profile.tab-name"},
+	{shell.SettingsTabDevices, "profile.tab-devices"},
 }
 
 // The email, password and name forms post elsewhere and come back with only an
@@ -282,6 +284,11 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 	}
 
 	data.Tabs = settingsTabs(loc, data.Tab)
+	if data.Tab == shell.SettingsTabDevices {
+		if data.Devices, err = h.devices(r, loc, viewer.ID); err != nil {
+			return "", err
+		}
+	}
 
 	render := shell.New(loc, h.deps.Assets)
 	content, err := render.ProfileEdit(data)
@@ -302,4 +309,36 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		Content:   content,
 	})
 	return out.String(), err
+}
+
+func (h *EditHandler) devices(r *http.Request, loc *i18n.Localizer, userID int64) ([]shell.Device, error) {
+	rows, err := h.deps.DB.Devices(r.Context(), userID)
+	if err != nil {
+		return nil, err
+	}
+	current := ""
+	if c, err := r.Cookie(session.CookieName); err == nil {
+		current = c.Value
+	}
+	out := make([]shell.Device, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, shell.Device{
+			ID: row.ID, Name: deviceName(loc, row.Agent), Site: row.SiteTitle, Address: row.Address,
+			SignedIn: row.SignedInAt, Seen: row.SeenAt, Current: row.Key == current,
+		})
+	}
+	return out, nil
+}
+
+func deviceName(loc *i18n.Localizer, ua string) string {
+	a := account.ParseAgent(ua)
+	switch {
+	case a.Browser != "" && a.System != "":
+		return loc.T("profile.device-name", "browser", a.Browser, "system", a.System)
+	case a.Browser != "":
+		return a.Browser
+	case a.System != "":
+		return a.System
+	}
+	return loc.T("profile.device-unknown")
 }
