@@ -173,6 +173,7 @@ func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db
 	if email == "" {
 		return nil
 	}
+	h.deps.SettleHolds(ctx)
 	user, err := h.deps.DB.UserByVerifiedEmail(ctx, email)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil

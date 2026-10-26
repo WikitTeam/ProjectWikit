@@ -16,12 +16,16 @@ import (
 )
 
 func (d Deps) link(r *http.Request, purpose string, userID int64, value token.Value) string {
+	return d.linkWith(d.Tokens, r, purpose, userID, value)
+}
+
+func (d Deps) linkWith(g token.Generator, r *http.Request, purpose string, userID int64, value token.Value) string {
 	host := ""
 	if current := site.FromContext(r.Context()); current != nil {
 		host = d.origin(r, current)
 	}
 	uid := base64.RawURLEncoding.EncodeToString([]byte(id(userID)))
-	return host + EmailPrefix + purpose + "/" + uid + "/" + d.Tokens.Make(value, time.Now())
+	return host + EmailPrefix + purpose + "/" + uid + "/" + g.Make(value, time.Now())
 }
 
 func (d Deps) origin(r *http.Request, current *db.Site) string {

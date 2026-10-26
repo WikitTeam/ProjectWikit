@@ -72,7 +72,7 @@ func (h *EmailHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			AuthIcon:  authIcon(current),
 			SiteTitle: current.Title,
 			Heading:   loc.T("email." + outcome + "-title"),
-			Body:      loc.T("email." + outcome),
+			Body:      loc.T("email."+outcome, "days", holdDays()),
 			LinkURL:   noticeLink(outcome),
 			LinkText:  loc.T(noticeLinkKey(outcome)),
 		})))
@@ -111,6 +111,7 @@ func mustRender(body string, err error) string {
 
 func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string, error) {
 	ctx := r.Context()
+	h.deps.SettleHolds(ctx)
 	user, state, err := h.target(ctx, uid)
 	if err != nil || user == nil {
 		return "dead", err
@@ -118,6 +119,12 @@ func (h *EmailHandler) act(r *http.Request, purpose, uid, secret string) (string
 	now := time.Now()
 
 	switch purpose {
+	case purposeHold:
+		return h.deps.confirmHold(r, user, state, secret, now)
+
+	case purposeCancel:
+		return h.deps.cancelHold(ctx, user, state, secret, now)
+
 	case purposeVerify:
 		if !h.deps.Tokens.Check(secret, verifyValue(user.ID, state), now) {
 			return "dead", nil

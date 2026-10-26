@@ -202,9 +202,10 @@ func peopleFor(ctx context.Context, conn *pgx.Conn, table string, keepPasswords 
 		return `WITH who AS (` + peopleQuery + `) SELECT ` + columns + ` FROM ` + QuoteName(table) +
 			` t WHERE t.instance_id IN (SELECT id FROM who)`, nil
 	}
-	// Whoever runs the site now decides who administers it, and a key issued on
-	// the old instance should not open the new one.
-	swap := map[string]string{"is_superuser": `false`, "api_key": `NULL`}
+	// Whoever runs the site now decides who administers it, and neither a key
+	// issued on the old instance nor an address change waiting there carries over.
+	swap := map[string]string{"is_superuser": `false`, "api_key": `NULL`,
+		"held_email": `''`, "held_until": `NULL`, "held_site_id": `NULL`}
 	if !keepPasswords {
 		// The marker every comparison fails against. The account arrives, but
 		// nobody signs in as it until they reset.

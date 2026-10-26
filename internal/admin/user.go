@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/account"
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
@@ -176,6 +177,13 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return err
 	}
 	mine := auth.FromContext(ctx)
+	var hold db.AccountEmail
+	if mine != nil && mine.IsSuperuser && granted.Has(perms.ViewSensitiveInfo) {
+		h.accounts().SettleHolds(ctx)
+		if hold, err = h.deps.DB.AccountEmail(ctx, row.ID); err != nil {
+			return err
+		}
+	}
 
 	sanctions, err := h.deps.DB.MemberSanctions(ctx, siteID(ctx), row.ID)
 	if err != nil {
@@ -213,6 +221,9 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Activity":    Prefix + userSlug + "/" + rest + "/" + actionActivity,
 		"Activate":    Prefix + userSlug + "/" + rest + "/" + actionActivate,
 		"MaySuper":    mine != nil && mine.IsSuperuser,
+		"Hold":        hold,
+		"HoldDays":    int(account.HoldPeriod / (24 * time.Hour)),
+		"Done":        userDone(loc, r.URL.Query().Get("said")),
 		"SeeEmail":    granted.Has(perms.ViewSensitiveInfo),
 		"LastLogin":   lastLogin,
 		"LastAddress": lastAddress,
@@ -256,11 +267,23 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return err
 	}
 	mine := auth.FromContext(ctx)
+	maySuper := mine != nil && mine.IsSuperuser
+	if maySuper && r.PostFormValue("hold") == "cancel" {
+		target, err := h.deps.DB.UserByID(ctx, stored.ID)
+		if err != nil {
+			return err
+		}
+		if _, err := h.accounts().CancelHold(ctx, target, mine); err != nil {
+			return err
+		}
+		redirect(w, Prefix+userSlug+"/"+rest+"?said="+saidHoldCancelled)
+		return nil
+	}
 
 	next := stored
 	// The account itself is shared by every site of the instance, so only a
 	// superuser changes it.
-	maySuper := mine != nil && mine.IsSuperuser
+	wantedEmail := ""
 	if maySuper {
 		zone := editorZone(r)
 		next.Username = strings.TrimSpace(r.PostFormValue("username"))
@@ -275,7 +298,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		next.DMUntil = untilUnless(next.CanSendDM, r.PostFormValue("direct_messages_until"), zone)
 		next.IsSuperuser = r.PostFormValue("is_superuser") != ""
 		if granted.Has(perms.ViewSensitiveInfo) {
-			next.Email = strings.TrimSpace(r.PostFormValue("email"))
+			wantedEmail = strings.TrimSpace(r.PostFormValue("email"))
 		}
 	}
 	maySetRoles := h.maySetRoles(mine, granted, stored)
@@ -291,11 +314,27 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if next.Username == "" {
 		return h.userForm(w, r, loc, rest, loc.T("admin.user-no-name"))
 	}
-	if next.Email != "" && !strings.EqualFold(next.Email, stored.Email) {
-		if held, err := h.deps.DB.UserByEmail(ctx, next.Email); err == nil && held.ID != next.ID {
-			return h.userForm(w, r, loc, rest, loc.T("admin.invite-email-taken"))
-		} else if err != nil && !errors.Is(err, db.ErrNotFound) {
+	held := false
+	if wantedEmail != "" && !strings.EqualFold(wantedEmail, stored.Email) {
+		state, err := h.deps.DB.AccountEmail(ctx, stored.ID)
+		if err != nil {
 			return err
+		}
+		if !strings.EqualFold(wantedEmail, state.Held) {
+			target, err := h.deps.DB.UserByID(ctx, stored.ID)
+			if err != nil {
+				return err
+			}
+			switch err := h.accounts().HoldEmail(r, loc, target, wantedEmail, mine); {
+			case errors.Is(err, account.ErrHoldInvalid):
+				return h.userForm(w, r, loc, rest, loc.T("admin.email-invalid"))
+			case errors.Is(err, account.ErrHoldTaken):
+				return h.userForm(w, r, loc, rest, loc.T("admin.invite-email-taken"))
+			case err != nil && !errors.Is(err, account.ErrHoldSame):
+				return err
+			case err == nil:
+				held = true
+			}
 		}
 	}
 	err = h.deps.DB.SaveAdminUser(ctx, siteID(ctx), next, builtinRoles, maySetRoles, maySuper)
@@ -308,8 +347,32 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		}
 	}
 	h.noteID(r, db.AdminChanged, userSlug, next.ID, next.Username)
+	if held {
+		redirect(w, Prefix+userSlug+"/"+rest+"?said="+saidHoldSent)
+		return nil
+	}
 	redirect(w, Prefix+userSlug+"/")
 	return nil
+}
+
+const (
+	saidHoldSent      = "hold-sent"
+	saidHoldCancelled = "hold-cancelled"
+)
+
+func userDone(loc *i18n.Localizer, said string) string {
+	switch said {
+	case saidHoldSent:
+		return loc.T("admin.email-hold-sent")
+	case saidHoldCancelled:
+		return loc.T("admin.email-hold-cancelled")
+	}
+	return ""
+}
+
+func (h *Handler) accounts() account.Deps {
+	return account.Deps{DB: h.deps.DB, Tokens: h.deps.Tokens, Mail: h.deps.Mail,
+		Trust: h.deps.Trust, Bundle: h.deps.Bundle, Log: h.deps.Log}
 }
 
 func holdsStaff(all []db.RoleChoice, held []int64) bool {

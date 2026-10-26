@@ -15,17 +15,22 @@ type AccountEmail struct {
 	Previous   string
 	VerifiedAt *time.Time
 	ChangedAt  *time.Time
+	Held       string
+	HeldUntil  *time.Time
+	HeldSite   *int64
 }
 
 var qAccountEmail = register("AccountEmail", `
-SELECT email, pending_email, previous_email, email_verified_at, email_changed_at
+SELECT email, pending_email, previous_email, email_verified_at, email_changed_at,
+	held_email, held_until, held_site_id
 FROM web_user
 WHERE id = $1`)
 
 func (d *DB) AccountEmail(ctx context.Context, id int64) (AccountEmail, error) {
 	var a AccountEmail
 	err := d.pool.QueryRow(ctx, qAccountEmail, id).
-		Scan(&a.Email, &a.Pending, &a.Previous, &a.VerifiedAt, &a.ChangedAt)
+		Scan(&a.Email, &a.Pending, &a.Previous, &a.VerifiedAt, &a.ChangedAt,
+			&a.Held, &a.HeldUntil, &a.HeldSite)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return AccountEmail{}, ErrNotFound
 	}
@@ -74,7 +79,8 @@ func (d *DB) SetPendingEmail(ctx context.Context, id int64, email string) error 
 var qApplyPendingEmail = register("ApplyPendingEmail", `
 UPDATE web_user
 SET previous_email = email, email = pending_email, pending_email = '',
-	email_verified_at = $2, email_changed_at = $2
+	email_verified_at = $2, email_changed_at = $2,
+	held_email = '', held_until = NULL, held_site_id = NULL
 WHERE id = $1 AND lower(pending_email) = lower($3)`)
 
 func (d *DB) ApplyPendingEmail(ctx context.Context, id int64, pending string, at time.Time) (bool, error) {
@@ -88,7 +94,8 @@ func (d *DB) ApplyPendingEmail(ctx context.Context, id int64, pending string, at
 var qRevertEmail = register("RevertEmail", `
 UPDATE web_user
 SET email = previous_email, previous_email = '', pending_email = '',
-	email_verified_at = $2, email_changed_at = $2
+	email_verified_at = $2, email_changed_at = $2,
+	held_email = '', held_until = NULL, held_site_id = NULL
 WHERE id = $1 AND previous_email <> '' AND lower(previous_email) = lower($3)`)
 
 func (d *DB) RevertEmail(ctx context.Context, id int64, previous string, at time.Time) (bool, error) {
