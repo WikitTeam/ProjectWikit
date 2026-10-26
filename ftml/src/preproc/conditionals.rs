@@ -76,9 +76,11 @@ pub fn expand_head_conditionals(text: &mut String, callbacks: &dyn PageCallbacks
                     out.push_str(&expand_within(&rest[..end], callbacks));
                     rest = &rest[end..];
                 }
+                // An unclosed head must not stop the scan, or every later head keeps
+                // its conditional for the parser to retry on.
                 None => {
-                    out.push_str(rest);
-                    rest = "";
+                    out.push_str("[[");
+                    rest = &rest[2..];
                 }
             }
             continue;
@@ -243,6 +245,14 @@ mod test {
         assert_eq!(
             expand(r#"[[span class="[[#if 1 | [[#if 0 | a | b ]] | c ]]"]]"#),
             r#"[[span class="b"]]"#,
+        );
+    }
+
+    #[test]
+    fn heads_after_an_unclosed_head() {
+        assert_eq!(
+            expand("> [[include a\n> |b=c\n> ]]\n[[div class=\"[[#if 1 | a | b ]]\"]]"),
+            "> [[include a\n> |b=c\n> ]]\n[[div class=\"a\"]]",
         );
     }
 
