@@ -330,6 +330,102 @@ func TestNoSuchIncludeReportsLoopAfterOverflow(t *testing.T) {
 	}
 }
 
+func TestIncludePagesStopsAtMaxIncludedBytes(t *testing.T) {
+	repo := &fakeRepo{includeBody: strings.Repeat("x", MaxIncludedBytes/2)}
+	c := newCallbacks(t, repo)
+
+	refs := []renderer.IncludeRef{{FullName: "a"}, {FullName: "b"}, {FullName: "c"}}
+	got, err := c.IncludePages(refs)
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("len(IncludePages()) = %d, want 3", len(got))
+	}
+	for i, wantContent := range []bool{true, true, false} {
+		if hasContent := got[i].Content != nil; hasContent != wantContent {
+			t.Errorf("IncludePages()[%d] has content = %v, want %v", i, hasContent, wantContent)
+		}
+	}
+}
+
+func TestIncludePagesTakesBackEveryIncludeOfANameOverMaxIncludedBytes(t *testing.T) {
+	repo := &fakeRepo{includeBody: strings.Repeat("x", MaxIncludedBytes/2)}
+	c := newCallbacks(t, repo)
+
+	refs := []renderer.IncludeRef{{FullName: "a"}, {FullName: "b"}, {FullName: "a"}}
+	got, err := c.IncludePages(refs)
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	for i, wantContent := range []bool{false, true, false} {
+		if hasContent := got[i].Content != nil; hasContent != wantContent {
+			t.Errorf("IncludePages()[%d] (%s) has content = %v, want %v", i, got[i].FullName, hasContent, wantContent)
+		}
+	}
+}
+
+func TestIncludePagesSkipsRepositoryPastMaxIncludedBytes(t *testing.T) {
+	repo := &fakeRepo{includeBody: strings.Repeat("x", MaxIncludedBytes)}
+	c := newCallbacks(t, repo)
+	if _, err := c.IncludePages([]renderer.IncludeRef{{FullName: "a"}}); err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+
+	repo.includeSeen = nil
+	got, err := c.IncludePages([]renderer.IncludeRef{{FullName: "b"}})
+	if err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+	if got[0].Content != nil {
+		t.Errorf("IncludePages()[0].Content length = %d, want nil", len(*got[0].Content))
+	}
+	if repo.includeSeen != nil {
+		t.Errorf("repository refs = %v, want no call", repo.includeSeen)
+	}
+}
+
+func TestNoSuchIncludeReportsTooLarge(t *testing.T) {
+	repo := &fakeRepo{includeBody: strings.Repeat("x", MaxIncludedBytes)}
+	c := newCallbacks(t, repo)
+	names := []string{"SCP 173", ":other-wiki:component:x"}
+	refs := []renderer.IncludeRef{{FullName: "first"}, {FullName: names[0]}, {FullName: names[1]}}
+	if _, err := c.IncludePages(refs); err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+
+	for _, name := range names {
+		got, err := c.NoSuchInclude(name)
+		if err != nil {
+			t.Fatalf("NoSuchInclude(%q) err = %v, want nil", name, err)
+		}
+		want := `[[div class="error-block"]]` + message(t, "include-too-large", "name", name) + `[[/div]]`
+		if got != want {
+			t.Errorf("NoSuchInclude(%q) = %q, want %q", name, got, want)
+		}
+	}
+}
+
+func TestNoSuchIncludeReportsLoopOffSite(t *testing.T) {
+	c := newCallbacks(t, &fakeRepo{})
+	for range MaxIncludeLevel {
+		c.NextIncludeLevel()
+	}
+	name := ":other-wiki:component:x"
+	if _, err := c.IncludePages([]renderer.IncludeRef{{FullName: name}}); err != nil {
+		t.Fatalf("IncludePages() err = %v, want nil", err)
+	}
+
+	got, err := c.NoSuchInclude(name)
+	if err != nil {
+		t.Fatalf("NoSuchInclude() err = %v, want nil", err)
+	}
+	want := `[[div class="error-block"]]` + message(t, "include-loop", "name", name) + `[[/div]]`
+	if got != want {
+		t.Errorf("NoSuchInclude(%q) = %q, want %q", name, got, want)
+	}
+}
+
 func TestRepositoryBoundCallbacksFailWithoutRepository(t *testing.T) {
 	c := newCallbacks(t, nil)
 

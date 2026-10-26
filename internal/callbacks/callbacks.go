@@ -18,7 +18,12 @@ import (
 //go:embed injected.js
 var injectedCode string
 
-const MaxIncludeLevel = 25
+const (
+	MaxIncludeLevel = 10
+	// Pages that include themselves or each other grow several times over per
+	// level, so the level alone does not keep a render finite.
+	MaxIncludedBytes = 30 << 20
+)
 
 var (
 	ErrUserNotFound = errors.New("user not found")
@@ -45,7 +50,8 @@ type Callbacks struct {
 	vars          *page.Vars
 	pageCtx       *page.Context
 	level         int
-	includeErrors map[string]bool
+	included      int
+	includeErrors map[string]string
 }
 
 var _ renderer.Callbacks = (*Callbacks)(nil)
@@ -65,7 +71,7 @@ func New(loc *i18n.Localizer, repo Repository) *Callbacks {
 		loc:           loc,
 		repo:          repo,
 		level:         MaxIncludeLevel,
-		includeErrors: make(map[string]bool),
+		includeErrors: make(map[string]string),
 	}
 }
 
@@ -148,13 +154,10 @@ func (c *Callbacks) NormalizePageName(fullName string) (string, error) {
 
 func (c *Callbacks) IncludePages(refs []renderer.IncludeRef) ([]renderer.FetchedPage, error) {
 	if c.level <= 0 {
-		out := make([]renderer.FetchedPage, 0, len(refs))
-		for _, ref := range refs {
-			name, _ := c.localName(ref.FullName)
-			c.includeErrors[wikidot.Normalize(name)] = true
-			out = append(out, renderer.FetchedPage{FullName: ref.FullName})
-		}
-		return out, nil
+		return c.refuse(refs, "include-loop"), nil
+	}
+	if c.included >= MaxIncludedBytes {
+		return c.refuse(refs, "include-too-large"), nil
 	}
 	if c.repo == nil {
 		return nil, ErrNoRepository
@@ -188,7 +191,49 @@ func (c *Callbacks) IncludePages(refs []renderer.IncludeRef) ([]renderer.Fetched
 		substituted := page.PreRender(*fetched[i].Content, c.vars)
 		fetched[i].Content = &substituted
 	}
+	c.limitIncluded(fetched, local)
 	return fetched, nil
+}
+
+// Every fetched page replaces one include in the text, so the running total
+// bounds how far the text can grow past the page itself. ftml hands the first
+// answer for a name to every include of that name, so a name that runs over is
+// taken back from all of its includes in the pass.
+func (c *Callbacks) limitIncluded(fetched []renderer.FetchedPage, local []renderer.IncludeRef) {
+	over := map[string]bool{}
+	for i := range fetched {
+		if fetched[i].Content == nil {
+			continue
+		}
+		size := len(*fetched[i].Content)
+		if c.included+size > MaxIncludedBytes {
+			c.included = MaxIncludedBytes
+			over[fetched[i].FullName] = true
+			continue
+		}
+		c.included += size
+	}
+	for i := range fetched {
+		if !over[fetched[i].FullName] {
+			continue
+		}
+		fetched[i].Content = nil
+		if i < len(local) {
+			c.refuse(local[i:i+1], "include-too-large")
+		}
+	}
+}
+
+// The reason is kept under the name ftml will report the include by, so the
+// block it then asks for says why the page stopped rather than that it is missing.
+func (c *Callbacks) refuse(refs []renderer.IncludeRef, reason string) []renderer.FetchedPage {
+	out := make([]renderer.FetchedPage, 0, len(refs))
+	for _, ref := range refs {
+		name, _ := c.localName(ref.FullName)
+		c.includeErrors[wikidot.Normalize(name)] = reason
+		out = append(out, renderer.FetchedPage{FullName: ref.FullName})
+	}
+	return out
 }
 
 // A ref naming this very wiki means the same as one naming no wiki. One naming
@@ -209,11 +254,11 @@ func (c *Callbacks) localName(fullName string) (string, bool) {
 // the block cannot be used to tell a missing page from an unreadable one.
 func (c *Callbacks) NoSuchInclude(fullName string) (string, error) {
 	name, ok := c.localName(fullName)
+	if reason := c.includeErrors[wikidot.Normalize(name)]; reason != "" {
+		return `[[div class="error-block"]]` + c.text(reason, "name", name) + `[[/div]]`, nil
+	}
 	if !ok {
 		return `[[div class="error-block"]]` + c.text("include-off-site", "name", fullName) + `[[/div]]`, nil
-	}
-	if c.includeErrors[wikidot.Normalize(name)] {
-		return `[[div class="error-block"]]` + c.text("include-loop", "name", name) + `[[/div]]`, nil
 	}
 	return `[[div class="error-block"]]` + c.text("include-missing", "name", name) +
 		` ([[a href="/` + name + `/edit/true" target="_blank"]]` + c.text("include-create") + `[[/a]])[[/div]]`, nil

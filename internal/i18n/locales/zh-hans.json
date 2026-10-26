@@ -608,6 +608,7 @@
   "include-loop": "插入的页面 \"{name}\" 导致了循环包含",
   "include-missing": "插入的页面 \"{name}\" 不存在",
   "include-off-site": "无法获取插入的页面 \"{name}\"，可能是站点标识名有误，或您无权在该站点查看此页面",
+  "include-too-large": "插入的内容总量已达上限，\"{name}\" 未被插入",
   "ip-banned": "您所在的网络地址已被本站封禁，无法进行此操作。",
   "ip-banned-title": "无法进行此操作",
   "language-name": "简体中文",
