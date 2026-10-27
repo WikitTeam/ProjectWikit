@@ -34,6 +34,10 @@ var _ http.Handler = (*SignupHandler)(nil)
 func NewSignup(d Deps) *SignupHandler { return &SignupHandler{deps: d} }
 
 func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if current := site.FromContext(r.Context()); current != nil && !current.SignupOpen {
+		h.closed(w, r, current)
+		return
+	}
 	switch r.URL.Path {
 	case CheckPath:
 		h.check(w, r)
@@ -104,6 +108,34 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.deps.logger().Error("render signup", "err", err)
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+func (h *SignupHandler) closed(w http.ResponseWriter, r *http.Request, current *db.Site) {
+	if r.URL.Path != SignupPath {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	}
+	if auth.FromContext(r.Context()) != nil {
+		redirect(w, homePath, http.StatusFound)
+		return
+	}
+	loc := h.deps.Bundle.For(r.Context())
+	render := shell.New(loc, h.deps.Assets)
+	content, err := render.Signup(shell.Signup{AuthIcon: authIcon(current), SiteTitle: current.Title, Closed: true})
+	if err == nil {
+		var body string
+		body, err = h.deps.page(r, loc, current, loc.T("signup.title"), content)
+		if err == nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusForbidden)
+			if r.Method != http.MethodHead {
+				_, _ = w.Write([]byte(body))
+			}
+			return
+		}
+	}
+	h.deps.logger().Error("render closed signup", "err", err)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 

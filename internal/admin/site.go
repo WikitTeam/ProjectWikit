@@ -108,6 +108,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.SignupNotice = r.PostFormValue("signup_notice")
 	next.PasswordHelp = r.PostFormValue("password_help")
 	next.Welcome = r.PostFormValue("welcome_message")
+	next.SignupOpen = r.PostFormValue("signup_open") != ""
 	next.EmailPolicy = r.PostFormValue("email_policy")
 	next.Language = r.PostFormValue("language")
 	next.TimeZone = strings.TrimSpace(r.PostFormValue("time_zone"))

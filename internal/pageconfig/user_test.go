@@ -226,3 +226,20 @@ func TestIsStaffOfPlainUser(t *testing.T) {
 		t.Error("IsStaff(user, reader) = true, want false")
 	}
 }
+
+func TestLoginStatusSignupClosed(t *testing.T) {
+	b, err := i18n.Load("")
+	if err != nil {
+		t.Fatalf("i18n.Load() err = %v, want nil", err)
+	}
+	loc := b.Localizer(i18n.DefaultLanguage)
+	for _, closed := range []bool{true, false} {
+		got, err := LoginStatus{SignupClosed: closed}.JSON(loc)
+		if err != nil {
+			t.Fatalf("JSON() err = %v, want nil", err)
+		}
+		if has := strings.Contains(got, `"signupClosed": true`); has != closed {
+			t.Errorf("LoginStatus{SignupClosed: %v}.JSON() = %s, want signupClosed present = %v", closed, got, closed)
+		}
+	}
+}

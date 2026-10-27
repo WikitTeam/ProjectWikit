@@ -86,6 +86,7 @@
   <div class="widget-box narrow">
     <div class="widget-title"><i class="fas fa-user"></i><h5>{{t "admin.site-accounts"}}</h5></div>
     <div class="widget-content">
+      {{template "row_check" dict "n" "signup_open" "k" "admin.f-signup-open" "l" "admin.l-signup-open" "v" .Site.SignupOpen "h" "admin.h-signup-open"}}
       <div class="control-group">
         <label class="control-label" for="id_email_policy">{{t "admin.f-email-policy"}}</label>
         <div class="controls">

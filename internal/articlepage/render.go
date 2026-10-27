@@ -571,7 +571,7 @@ func (h *Handler) tagBlock(req *request) ([]shell.TagCategory, error) {
 }
 
 func (h *Handler) loginStatus(req *request) (string, error) {
-	status := pageconfig.LoginStatus{User: req.user}
+	status := pageconfig.LoginStatus{User: req.user, SignupClosed: !req.site.SignupOpen}
 	if req.user != nil {
 		userRoles, err := h.deps.DB.RolesByUser(req.ctx, req.site.ID, req.user.ID)
 		if err != nil {

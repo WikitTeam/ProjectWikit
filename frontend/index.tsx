@@ -34,6 +34,7 @@ import { makePasswordToggle } from './util/password'
 import { makeTopBar } from './articles/top-bar'
 import AdminSusUsers from './entrypoints/admin-sus-users'
 import { renderTo } from '~util/react-render-into'
+import { showErrorModal } from '~util/wikidot-modal'
 import { setLanguage } from '~util/i18n'
 
 // The page already declares its language for the browser, so the bundle reads
@@ -52,6 +53,22 @@ function makePostLikes(node: HTMLElement) {
   const props = { postId: Number(node.dataset.postId), liked: node.dataset.liked === 'true', count: Number(node.dataset.count) }
   node.innerHTML = ''
   renderTo(node, <PostLikes {...props} />)
+}
+
+// A link is refused when clicked, and anything else is the signup page itself,
+// which says so as soon as it opens.
+function makeSignupClosed() {
+  document.querySelectorAll('.w-signup-closed').forEach((node: HTMLElement) => {
+    const message = node.dataset.message!
+    if (node.tagName !== 'A') {
+      showErrorModal(message)
+      return
+    }
+    node.addEventListener('click', e => {
+      e.preventDefault()
+      showErrorModal(message)
+    })
+  })
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -73,6 +90,7 @@ window.addEventListener('DOMContentLoaded', () => {
   makePasswordToggle()
   attachUserActions()
   makeTopBar()
+  makeSignupClosed()
 
   // add new things here!
   const processNode = (node: HTMLElement) => {

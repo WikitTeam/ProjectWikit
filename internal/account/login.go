@@ -50,7 +50,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	loc := h.deps.Bundle.For(ctx)
 	token := csrf.Issue(w, r)
 
-	form := shell.Login{AuthIcon: authIcon(current), SiteTitle: current.Title, CSRF: token}
+	form := shell.Login{AuthIcon: authIcon(current), SiteTitle: current.Title, SignupClosed: !current.SignupOpen, CSRF: token}
 	if r.Method == http.MethodPost {
 		if err := csrf.Verify(r, []string{current.Domain}); err != nil {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)

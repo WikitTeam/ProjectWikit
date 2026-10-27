@@ -469,6 +469,7 @@
   "page-login-status.sign-in": "登录",
   "page-login-status.sign-out": "登出",
   "page-login-status.sign-up": "创建账户",
+  "page-login-status.signup-closed": "本站设置了不允许注册。",
   "page-options.authorship": "作者信息",
   "page-options.backlinks": "反向链接",
   "page-options.delete": "删除",

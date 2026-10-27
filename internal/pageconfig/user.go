@@ -110,6 +110,7 @@ type LoginStatus struct {
 	CanEditArticles   bool
 	NotificationCount int
 	SiteSuperuser     bool
+	SignupClosed      bool
 }
 
 func (l LoginStatus) JSON(loc *i18n.Localizer) (string, error) {
@@ -118,8 +119,12 @@ func (l LoginStatus) JSON(loc *i18n.Localizer) (string, error) {
 		user = SignedInUserJSON(l.User, l.Roles, true, l.CanEditArticles)
 		user.Staff = user.Staff || l.SiteSuperuser
 	}
-	return wikijson.Marshal(wikijson.Object{
+	out := wikijson.Object{
 		{Key: "user", Value: user.Object()},
 		{Key: "notificationCount", Value: l.NotificationCount},
-	})
+	}
+	if l.SignupClosed {
+		out = append(out, wikijson.Field{Key: "signupClosed", Value: true})
+	}
+	return wikijson.Marshal(out)
 }

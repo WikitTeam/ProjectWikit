@@ -288,8 +288,9 @@ func newFeed(v profileView, label string, f ProfileFeed, empty string) feed {
 }
 
 type Login struct {
-	AuthIcon  string
-	SiteTitle string
+	AuthIcon     string
+	SiteTitle    string
+	SignupClosed bool
 
 	Username string
 	CSRF     string
@@ -305,6 +306,7 @@ type Signup struct {
 	Email     string
 	IsWikidot bool
 	Sent      bool
+	Closed    bool
 	CSRF      string
 	Error     string
 }

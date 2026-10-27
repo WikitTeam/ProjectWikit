@@ -5,13 +5,15 @@ import { Paths } from '~reactive/paths'
 import { UserData } from '../api/user'
 import useConstCallback from '../util/const-callback'
 import { DEFAULT_AVATAR } from '../util/user-view'
+import { showErrorModal } from '../util/wikidot-modal'
 
 interface Props {
   user: UserData
   notificationCount: number
+  signupClosed?: boolean
 }
 
-const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) => {
+const PageLoginStatus: React.FC<Props> = ({ user, notificationCount, signupClosed }: Props) => {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
@@ -41,10 +43,18 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
     setIsOpen(!isOpen)
   })
 
+  const onSignUp = useConstCallback(e => {
+    if (!signupClosed) {
+      return
+    }
+    e.preventDefault()
+    showErrorModal(t('page-login-status.signup-closed'))
+  })
+
   if (user.type === 'anonymous') {
     return (
       <>
-        <a className="login-status-create-account btn" href="/-/signup">
+        <a className="login-status-create-account btn" href="/-/signup" onClick={onSignUp}>
           {t('page-login-status.sign-up')}
         </a>{' '}
         <span>{t('page-login-status.or')}</span>{' '}

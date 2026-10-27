@@ -37,7 +37,7 @@
         <a class="link-muted" href="/-/password_reset">{{.T "login.forgot"}}</a>
         <div class="action-inline">
           <span class="meta">{{.T "login.no-account"}}</span>
-          <a class="link-muted" href="/-/signup">{{.T "login.signup"}}</a>
+          <a class="link-muted{{if .SignupClosed}} w-signup-closed{{end}}" href="/-/signup"{{if .SignupClosed}} data-message="{{.T "signup.closed"}}"{{end}}>{{.T "login.signup"}}</a>
         </div>
       </div>
 
