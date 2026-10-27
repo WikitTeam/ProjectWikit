@@ -592,7 +592,8 @@ body.wikit-page .system-content .content form label.label {
   .wikit-scope .dl dt { padding-bottom: 2px; border-top: 1px solid var(--rule); }
   .wikit-scope .dl dd { padding-top: 2px; padding-bottom: 14px; border-top: none; }
   .wikit-scope .dl > dt:nth-last-child(2) { border-bottom: none; }
-  .wikit-scope .app-header .path { display: none; }
+  .wikit-scope .app-header .path,
+  .wikit-scope .app-header .divider { display: none; }
   .wikit-scope .feed li { grid-template-columns: 1fr; }
   .wikit-scope .feed .when { grid-row: 3; }
 }

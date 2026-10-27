@@ -33,6 +33,10 @@ export const Divider = styled.span`
   width: 1px;
   height: 18px;
   background: rgba(255, 255, 255, 0.28);
+
+  @media (max-width: 720px) {
+    display: none;
+  }
 `
 
 export const Path = styled.span`
