@@ -169,6 +169,8 @@ func (h *EditHandler) avatar(r *http.Request, loc *i18n.Localizer, viewer *db.Us
 		return nil, loc.T("profile.error-avatar-type"), nil
 	}
 
+	data, ext = shrinkAvatar(data, ext)
+
 	tag := make([]byte, 8)
 	if _, err := rand.Read(tag); err != nil {
 		return nil, "", err
