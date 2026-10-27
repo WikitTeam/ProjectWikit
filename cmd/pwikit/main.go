@@ -40,6 +40,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/secretfile"
 	"github.com/WikitTeam/ProjectWikit/internal/seed"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/sitemap"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/update"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
@@ -407,6 +408,7 @@ func serve(ctx context.Context, args []string) (err error) {
 	articleAPI := served(stack.articleAPI)
 	allArticles := served(stack.allArticles)
 	fileAPI := served(stack.fileAPI)
+	sitemaps := served(sitemap.New(conn, log))
 
 	// A system path nobody claims is a mistyped URL, not a page name, so these
 	// two answer before the article handler sees them.
@@ -461,6 +463,8 @@ func serve(ctx context.Context, args []string) (err error) {
 		webapi.AllArticlesPath:          allArticles,
 		webapi.ArticlesPrefix:           articleAPI,
 		webapi.FilesPrefix:              fileAPI,
+		sitemap.Path:                    sitemaps,
+		sitemap.RobotsPath:              sitemaps,
 		"/":                             articles,
 	}
 
