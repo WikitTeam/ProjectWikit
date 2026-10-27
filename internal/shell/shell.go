@@ -209,6 +209,7 @@ type Profile struct {
 	Avatar      string
 	Subtitle    string
 	AuthIcon    string
+	SiteTitle   string
 
 	IsSelf           bool
 	CanDirectMessage bool
@@ -339,6 +340,7 @@ type Accept struct {
 
 type ProfileEdit struct {
 	AuthIcon    string
+	SiteTitle   string
 	DisplayName string
 	Avatar      string
 	ProfileURL  string

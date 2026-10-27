@@ -17,7 +17,7 @@
     {{else if .Sent}}
     <div class="auth-column">
       <div class="auth-mark">
-        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="{{esc .SiteTitle}}">{{end}}
       </div>
       <div class="auth-heading">
         <h1 class="h1">{{.T "signup.sent-title"}}</h1>
@@ -32,7 +32,7 @@
       <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
       <div class="auth-mark">
-        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="{{esc .SiteTitle}}">{{end}}
       </div>
 
       <div class="auth-heading">

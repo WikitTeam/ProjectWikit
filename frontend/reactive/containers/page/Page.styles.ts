@@ -61,3 +61,44 @@ export const MainContainer = styled.div`
     border-right: none;
   }
 `
+
+export const Footer = styled.footer`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 24px;
+  padding: 16px 24px;
+  background: ${({ theme }) => theme.bar};
+  color: #9fb0c3;
+  font-size: 13px;
+  line-height: 1.5;
+
+  a {
+    color: ${({ theme }) => theme.barForeground};
+    text-underline-offset: 3px;
+  }
+
+  a:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.barForeground};
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 700px) {
+    padding: 14px 16px;
+  }
+`
+
+export const FooterHome = styled.a`
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+`
+
+export const FooterCredit = styled.span`
+  margin-left: auto;
+
+  a { text-decoration-color: rgba(255, 255, 255, 0.35); }
+  a:hover { text-decoration-color: currentColor; }
+`

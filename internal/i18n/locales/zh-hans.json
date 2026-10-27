@@ -241,7 +241,7 @@
   "admin.h-permissions": "「继承」表示该身份组不单独设定此权限，结果由用户持有的其他身份组（包括 everyone 与 registered）决定；没有任何身份组设为允许时，视为不允许。只要任一身份组设为拒绝，结果即为拒绝。",
   "admin.h-rename": "有分类时填写为「分类:名称」，无分类时仅填写名称。",
   "admin.h-reply": "提交者将在通知与「我提交的工单」页面中看到此回复",
-  "admin.h-signup-open": "关闭后，注册页与注册请求将被拒绝。已有账号与邀请链接不受影响。",
+  "admin.h-signup-open": "已有账号与邀请链接不受影响。",
   "admin.h-steps": "回退的版本数",
   "admin.h-suspicious": "将使用同一地址的账号相互连接显示；按住节点可进行拖拽。",
   "admin.h-system-theme": "登录、个人资料、管理后台等页面使用的主题",

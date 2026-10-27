@@ -34,6 +34,10 @@
                 {{.Content}}
             </div>
         </div>
+        <footer class="site-footer">
+            {{if .SiteTitle}}<a class="site-footer-home" href="/">{{esc .SiteTitle}}</a>{{end}}
+            <span class="site-footer-credit">Powered by <a href="https://github.com/WikitTeam/ProjectWikit/" target="_blank" rel="noopener">ProjectWikit</a></span>
+        </footer>
     </div>
     <div id="w-modals"></div>
 </body>

@@ -6,7 +6,7 @@
       <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
       <div class="auth-mark">
-        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="{{esc .SiteTitle}}">{{end}}
       </div>
 
       <div class="auth-heading">
@@ -35,7 +35,7 @@
       <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
       <div class="auth-mark">
-        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="{{esc .SiteTitle}}">{{end}}
       </div>
 
       <div class="auth-heading">
@@ -68,7 +68,7 @@
     {{else}}
     <div class="auth-column">
       <div class="auth-mark">
-        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="ProjectWikit">{{end}}
+        {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="{{esc .SiteTitle}}">{{end}}
       </div>
 
       {{if eq .Stage "sent"}}

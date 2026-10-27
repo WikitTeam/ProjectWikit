@@ -378,7 +378,7 @@ body.admin .system-content .content textarea:focus-visible {
 .admin-shell #admin-header .navbar-inner { background: var(--ledger); border-bottom: none; }
 .admin-shell #admin-header .brand { color: #fff; font-weight: 600; border-right-color: rgba(255, 255, 255, .28); }
 .admin-shell #admin-header .title a { color: #fff; font-weight: 500; }
-.admin-shell #admin-header .title .admin-panel { color: #c9d3de; font-size: 12px; letter-spacing: 0; }
+.admin-shell #admin-header .title .admin-panel { color: #dce3eb; font-size: 13px; letter-spacing: 0; }
 .admin-shell #admin-header .stamp { color: #dce3eb; font-size: 13px; }
 body.admin .system-content .content #admin-header .btn { color: #fff; border-color: rgba(255, 255, 255, .45); background: transparent; }
 body.admin .system-content .content #admin-header .btn:hover { border-color: #fff; background: rgba(255, 255, 255, .08); }
@@ -515,3 +515,7 @@ body.admin .system-content .content .link-out { font-family: 'JetBrains Mono', u
 
 .admin-shell .email-hold { display: block; font-size: 12px; color: var(--quiet); margin-top: 4px; }
 .admin-shell .email-hold .btn-link { background: none; border: none; padding: 0; margin-left: 4px; font-size: 12px; color: var(--signal); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+body.admin .system-container { min-height: calc(100vh - 66px); }
+.admin-shell > .container { flex: 1; display: flex; width: 100%; }
+.admin-shell > .container > .row { flex: 1; }

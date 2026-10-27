@@ -4,9 +4,8 @@
   <div id="admin-header" class="navbar navbar-fixed-top">
     <div class="navbar-inner">
       <div class="container">
-        <a class="brand" href="/">ProjectWikit</a>
+        <a class="brand" href="/">{{esc .SiteTitle}}</a>
         <div class="title">
-          <a href="/">{{esc .SiteTitle}}</a>
           <span class="admin-panel">{{.T "admin.title"}}</span>
         </div>
         <div id="admin-login-status">

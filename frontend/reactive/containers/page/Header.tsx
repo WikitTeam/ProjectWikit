@@ -9,11 +9,12 @@ interface Props {
 
 const Header: React.FC<Props> = ({ crumb }) => {
   const { site } = useConfigContext()
+  const siteTitle = site?.title || 'ProjectWikit'
   return (
     <Styled.Container>
       <Styled.Brand href="/">
-        <Styled.BrandLogo src={site?.systemIcon || '/-/static/images/wikitHana.png'} alt="ProjectWikit" />
-        <Styled.Wordmark>ProjectWikit</Styled.Wordmark>
+        <Styled.BrandLogo src={site?.systemIcon || '/-/static/images/wikitHana.png'} alt={siteTitle} />
+        <Styled.Wordmark>{siteTitle}</Styled.Wordmark>
       </Styled.Brand>
       <Styled.Divider />
       <Styled.Path>

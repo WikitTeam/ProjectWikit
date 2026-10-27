@@ -127,7 +127,7 @@ func (h *Handler) page(r *http.Request, name string) (string, error) {
 	var out strings.Builder
 	err = render.SystemPage(&out, shell.System{
 		Title:     data.DisplayName,
-		SiteTitle: productName,
+		SiteTitle: siteTitle(current),
 		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,
@@ -175,6 +175,7 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		DisplayName: displayName(profile),
 		Avatar:      avatar(profile),
 		AuthIcon:    authIcon(current),
+		SiteTitle:   siteTitle(current),
 		FromWikidot: profile.Type == printuser.TypeWikidot,
 		IsBot:       profile.Type == printuser.TypeBot,
 		FullName:    strings.TrimSpace(profile.FirstName + " " + profile.LastName),
@@ -554,6 +555,13 @@ func displayName(p *db.Profile) string {
 }
 
 const productName = "ProjectWikit"
+
+func siteTitle(s *db.Site) string {
+	if s.Title == "" {
+		return productName
+	}
+	return s.Title
+}
 
 func authIcon(s *db.Site) string {
 	if s.AuthIcon == "" {

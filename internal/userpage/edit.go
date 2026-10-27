@@ -264,6 +264,7 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 
 	data := shell.ProfileEdit{
 		AuthIcon:       authIcon(current),
+		SiteTitle:      siteTitle(current),
 		DisplayName:    displayName(profile),
 		Avatar:         avatar(profile),
 		ProfileURL:     Prefix + url.PathEscape(profile.Username),
@@ -305,7 +306,7 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 	var out strings.Builder
 	err = render.SystemPage(&out, shell.System{
 		Title:     loc.T("settings.title"),
-		SiteTitle: productName,
+		SiteTitle: siteTitle(current),
 		ThemeURL:  theme,
 		BodyClass: "wikit-page",
 		Content:   content,

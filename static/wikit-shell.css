@@ -719,3 +719,48 @@ body.wikit-page .system-content .content .app-shell form label.label .hint { fon
 .wikit-scope .app-shell .device-facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 8px 0 0; font-size: 13px; }
 .wikit-scope .app-shell .device-facts dt { color: var(--muted); }
 .wikit-scope .app-shell .device-facts dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+
+body.wikit-page .system-container { display: flex; flex-direction: column; }
+body.wikit-page .system-content,
+body.wikit-page .system-content > .content,
+body.wikit-page .system-content > .content > .wikit-scope { flex: 1; display: flex; flex-direction: column; }
+body.wikit-page .wikit-scope .app-shell,
+body.wikit-page .wikit-scope .auth-shell { flex: 1; min-height: 0; }
+
+body.wikit-page .site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 24px;
+  padding: 16px 24px;
+  background: #1d2b3a;
+  color: #9fb0c3;
+  font-family: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+body.wikit-page .site-footer a { color: #fff; text-underline-offset: 3px; }
+body.wikit-page .site-footer-home { font-weight: 600; text-decoration: none; }
+body.wikit-page .site-footer-home:hover { text-decoration: underline; }
+body.wikit-page .site-footer-credit { margin-left: auto; }
+body.wikit-page .site-footer-credit a { text-decoration-color: rgba(255, 255, 255, .35); }
+body.wikit-page .site-footer-credit a:hover { text-decoration-color: #fff; }
+body.wikit-page .site-footer a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+body.wikit-page .system-container:has(.auth-shell) .site-footer {
+  justify-content: center;
+  padding: 0 24px 32px;
+  background: transparent;
+  color: #6b6b70;
+  font-size: 12px;
+}
+body.wikit-page .system-container:has(.auth-shell) .site-footer-home { display: none; }
+body.wikit-page .system-container:has(.auth-shell) .site-footer-credit { margin-left: 0; }
+body.wikit-page .system-container:has(.auth-shell) .site-footer a { color: #0b0b0d; text-decoration-color: #c4c4c8; }
+body.wikit-page .system-container:has(.auth-shell) .site-footer a:hover { text-decoration-color: #0b0b0d; }
+body.wikit-page .system-container:has(.auth-shell) .site-footer a:focus-visible { outline-color: #0b0b0d; }
+
+@media (max-width: 700px) {
+  body.wikit-page .site-footer { padding: 14px 16px; }
+}
