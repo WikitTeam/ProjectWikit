@@ -31,9 +31,9 @@
       {{template "row_static" dict "k" "admin.f-bio" "v" .User.Bio}}
       {{end}}
       {{template "row_static" dict "k" "admin.f-user-type" "v" .User.Type}}
-      {{template "row_static" dict "k" "admin.f-api-key" "v" .User.APIKey}}
       {{template "row_static" dict "k" "admin.f-rank" "v" (printf "%d" .User.OperationIndex)}}
-      {{if .MayAccount}}
+      {{if .SeeKey}}{{template "row_static" dict "k" "admin.f-api-key" "v" .User.APIKey}}{{end}}
+      {{if .SeeEmail}}
       {{template "row_time" dict "k" "admin.f-last-login" "v" (when .LastLogin)}}
       {{template "row_static" dict "k" "admin.f-last-address" "v" .LastAddress}}
       {{end}}

@@ -115,11 +115,8 @@ func (h *Handler) userList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if state != stateBanned {
 		state = ""
 	}
-	found, total, err := h.deps.DB.AdminUsers(ctx, siteID(ctx), query, kind, roleID, state == stateBanned, perPage, (page-1)*perPage)
-	if err != nil {
-		return err
-	}
-	granted, _, err := h.access(ctx)
+	sensitive := seesSensitive(ctx)
+	found, total, err := h.deps.DB.AdminUsers(ctx, siteID(ctx), query, kind, roleID, state == stateBanned, sensitive, perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}
@@ -136,7 +133,7 @@ func (h *Handler) userList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Page":     page,
 		"Pages":    (total + perPage - 1) / perPage,
 		"Total":    total,
-		"SeeEmail": granted.Has(perms.ViewSensitiveInfo),
+		"SeeEmail": sensitive,
 		"Base":     Prefix + userSlug + "/",
 		"Action":   Prefix + userSlug + "/",
 	})
@@ -181,8 +178,9 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
+	sensitive := seesSensitive(ctx)
 	var hold db.AccountEmail
-	if mine != nil && mine.IsSuperuser && granted.Has(perms.ViewSensitiveInfo) {
+	if sensitive {
 		h.accounts().SettleHolds(ctx)
 		if hold, err = h.deps.DB.AccountEmail(ctx, row.ID); err != nil {
 			return err
@@ -199,7 +197,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	}
 	var lastLogin *time.Time
 	lastAddress := ""
-	if mine != nil && mine.IsSuperuser {
+	if sensitive {
 		seen, err := h.deps.DB.LastSeen(ctx, row.ID)
 		if err != nil {
 			return err
@@ -230,7 +228,8 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Hold":         hold,
 		"HoldDays":     int(account.HoldPeriod / (24 * time.Hour)),
 		"Done":         userDone(loc, r.URL.Query().Get("said")),
-		"SeeEmail":     granted.Has(perms.ViewSensitiveInfo),
+		"SeeEmail":     sensitive,
+		"SeeKey":       sensitive || (row.Type == db.UserTypeBot && granted.Has(perms.ManageBots)),
 		"LastLogin":    lastLogin,
 		"LastAddress":  lastAddress,
 		"CSRF":         csrf.Issue(w, r),
@@ -307,7 +306,7 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		next.ForumInactiveUntil = untilUnless(next.IsForumActive, r.PostFormValue("forum_inactive_until"), zone)
 		next.DMUntil = untilUnless(next.CanSendDM, r.PostFormValue("direct_messages_until"), zone)
 		next.IsSuperuser = r.PostFormValue("is_superuser") != ""
-		if granted.Has(perms.ViewSensitiveInfo) {
+		if seesSensitive(ctx) {
 			wantedEmail = strings.TrimSpace(r.PostFormValue("email"))
 		}
 	}
@@ -400,6 +399,13 @@ func userDone(loc *i18n.Localizer, said string) string {
 func (h *Handler) accounts() account.Deps {
 	return account.Deps{DB: h.deps.DB, Tokens: h.deps.Tokens, Mail: h.deps.Mail,
 		Trust: h.deps.Trust, Bundle: h.deps.Bundle, Log: h.deps.Log}
+}
+
+// Addresses and keys belong to the account, which every site of the instance
+// shares, so a site's own administrators never see them.
+func seesSensitive(ctx context.Context) bool {
+	mine := auth.FromContext(ctx)
+	return mine != nil && mine.IsSuperuser && mine.ActiveAt(time.Now())
 }
 
 func (h *Handler) superHere(ctx context.Context) (bool, error) {

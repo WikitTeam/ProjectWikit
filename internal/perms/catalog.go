@@ -61,7 +61,6 @@ var Catalog = []Group{
 		"manage_categories",
 		"manage_tags",
 		"manage_forum",
-		"view_sensitive_info",
 		"view_votes_timestamp",
 		"manage_permissions",
 	}},
@@ -77,3 +76,7 @@ func GroupOf(name string) string {
 	}
 	return ""
 }
+
+// Retired names still sit in the permission table, but nothing grants anything
+// through them. Email addresses and IPs are shown to instance superusers only.
+var Retired = []string{ViewSensitiveInfo}

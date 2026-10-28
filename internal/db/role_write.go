@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -125,6 +127,9 @@ func (d *DB) PermissionCatalog(ctx context.Context) ([]string, error) {
 		var name string
 		if err := rows.Scan(&name); err != nil {
 			return nil, err
+		}
+		if slices.Contains(perms.Retired, name) {
+			continue
 		}
 		out = append(out, name)
 	}

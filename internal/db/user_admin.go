@@ -48,7 +48,7 @@ const adminUserBanned = `(
 
 const adminUserWhere = `
 WHERE ($1 = '' OR username ILIKE '%' || $1 || '%' OR wikidot_username ILIKE '%' || $1 || '%'
-	OR display_name ILIKE '%' || $1 || '%' OR email ILIKE '%' || $1 || '%')
+	OR display_name ILIKE '%' || $1 || '%' OR ($6::boolean AND email ILIKE '%' || $1 || '%'))
 	AND ($2 = '' OR type = $2)
 	AND ($3::bigint = 0 OR EXISTS (SELECT 1 FROM web_user_roles ur WHERE ur.user_id = web_user.id AND ur.role_id = $3))
 	AND (NOT $5::boolean OR ` + adminUserBanned + `)`
@@ -58,7 +58,7 @@ SELECT `+adminUserColumns+`, `+adminUserBanned+`,
 	EXISTS (SELECT 1 FROM pwikit_site_superuser ss WHERE ss.site_id = $4 AND ss.user_id = web_user.id)
 FROM web_user`+adminUserWhere+`
 ORDER BY CASE WHEN type = 'wikidot' THEN wikidot_username ELSE username END, id
-LIMIT $6 OFFSET $7`)
+LIMIT $7 OFFSET $8`)
 
 var qAdminUserCount = register("AdminUserCount", `
 SELECT count(*) FROM web_user`+adminUserWhere)
@@ -88,12 +88,14 @@ func scanAdminUser(row pgx.Row, u *AdminUserRow) error {
 		&u.IsForumActive, &u.ForumInactiveUntil, &u.CanSendDM, &u.DMUntil, &u.IsSuperuser, &u.Unclaimed)
 }
 
-func (d *DB) AdminUsers(ctx context.Context, siteID int64, query, kind string, roleID int64, bannedOnly bool, limit, offset int) ([]AdminUserRow, int, error) {
+// Matching on email is a lookup by email, so it is only done for someone who may
+// see the addresses anyway.
+func (d *DB) AdminUsers(ctx context.Context, siteID int64, query, kind string, roleID int64, bannedOnly, byEmail bool, limit, offset int) ([]AdminUserRow, int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qAdminUserCount, query, kind, roleID, siteID, bannedOnly).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qAdminUserCount, query, kind, roleID, siteID, bannedOnly, byEmail).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count users: %w", err)
 	}
-	rows, err := d.pool.Query(ctx, qAdminUsers, query, kind, roleID, siteID, bannedOnly, limit, offset)
+	rows, err := d.pool.Query(ctx, qAdminUsers, query, kind, roleID, siteID, bannedOnly, byEmail, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list users: %w", err)
 	}
