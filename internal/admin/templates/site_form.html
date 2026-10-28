@@ -21,6 +21,7 @@
           <span class="hint">{{t "admin.h-language"}}</span>
         </div>
       </div>
+      {{template "row_check" dict "n" "language_follows_visitor" "k" "admin.f-language-follows" "l" "admin.l-language-follows" "v" .Site.LanguageFollowsVisitor "h" "admin.h-language-follows"}}
       <div class="control-group">
         <label class="control-label" for="id_time_zone">{{t "admin.f-time-zone"}}</label>
         <div class="controls">

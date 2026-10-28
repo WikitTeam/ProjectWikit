@@ -776,6 +776,22 @@ func tickUpdate(p *paths.Paths, serveArgs []string) error {
 	return json.NewEncoder(os.Stdout).Encode(map[string]any{"apply": apply, "by_hand": apply != "" && st.ScheduledByHand})
 }
 
+func announceRollback(ctx context.Context, conn *db.DB, st db.UpdateState) error {
+	audience, err := conn.ReleaseAudience(ctx)
+	if err != nil {
+		return err
+	}
+	meta, err := json.Marshal(map[string]string{"version": st.LastTo, "from": st.LastFrom})
+	if err != nil {
+		return err
+	}
+	at := time.Now()
+	if st.LastAt != nil {
+		at = *st.LastAt
+	}
+	return conn.SendNotification(ctx, 0, db.NotifyUpdateRolledBack, string(meta), audience, at)
+}
+
 func announceRelease(ctx context.Context, conn *db.DB, st db.UpdateState, now time.Time) error {
 	audience, err := conn.ReleaseAudience(ctx)
 	if err != nil {
@@ -872,24 +888,42 @@ func recordUpdate(p *paths.Paths, f *updateFlags, serveArgs []string) error {
 }
 
 func notifyRollback(ctx context.Context, p *paths.Paths, in instanceSettings, conn *db.DB, st db.UpdateState) {
-	to, err := conn.SuperuserEmails(ctx)
-	if err != nil || len(to) == 0 {
+	if err := announceRollback(ctx, conn, st); err != nil {
+		fmt.Fprintf(os.Stderr, "pwikit: tell the administrators about the rollback: %v\n", err)
+	}
+	recipients, err := conn.SuperuserRecipients(ctx)
+	if err != nil || len(recipients) == 0 {
 		return
 	}
 	bundle, err := i18n.Load(p.Locales())
 	if err != nil {
 		return
 	}
-	loc := bundle.Localizer(i18n.DefaultLanguage)
+	byLanguage := map[string][]string{}
+	var order []string
+	for _, one := range recipients {
+		lang := bundle.Instance()
+		if bundle.Has(one.Language) {
+			lang = i18n.Normalize(one.Language)
+		}
+		if _, seen := byLanguage[lang]; !seen {
+			order = append(order, lang)
+		}
+		byLanguage[lang] = append(byLanguage[lang], one.Email)
+	}
 	at := ""
 	if st.LastAt != nil {
 		at = st.LastAt.Local().Format("2006-01-02 15:04 MST")
 	}
-	subject := loc.T("update.mail-rolled-back-subject", "version", st.LastTo, "from", st.LastFrom)
-	body := loc.T("update.mail-rolled-back-body", "root", p.Root(), "time", at, "from", st.LastFrom,
-		"version", st.LastTo, "error", st.LastError, "log", filepath.Join(p.Logs(), "update.log"))
-	if err := mail.New(mailConfig(in.cfg.Mail)).Send(ctx, to, subject, body); err != nil {
-		fmt.Fprintf(os.Stderr, "could not mail the superusers about the rollback: %v\n", err)
+	sender := mail.New(mailConfig(in.cfg.Mail))
+	for _, lang := range order {
+		loc := bundle.Localizer(lang)
+		subject := loc.T("update.mail-rolled-back-subject", "version", st.LastTo, "from", st.LastFrom)
+		body := loc.T("update.mail-rolled-back-body", "root", p.Root(), "time", at, "from", st.LastFrom,
+			"version", st.LastTo, "error", st.LastError, "log", filepath.Join(p.Logs(), "update.log"))
+		if err := sender.Send(ctx, byLanguage[lang], subject, body); err != nil {
+			fmt.Fprintf(os.Stderr, "could not mail the superusers about the rollback: %v\n", err)
+		}
 	}
 }
 

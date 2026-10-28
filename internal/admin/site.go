@@ -111,6 +111,7 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.SignupOpen = r.PostFormValue("signup_open") != ""
 	next.EmailPolicy = r.PostFormValue("email_policy")
 	next.Language = r.PostFormValue("language")
+	next.LanguageFollowsVisitor = r.PostFormValue("language_follows_visitor") != ""
 	next.TimeZone = strings.TrimSpace(r.PostFormValue("time_zone"))
 	next.ThemeID = optionalID(r.PostFormValue("active_theme"))
 	next.SystemThemeID = optionalID(r.PostFormValue("system_theme"))

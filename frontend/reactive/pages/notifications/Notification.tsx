@@ -119,6 +119,13 @@ const Notification: React.FC<Props> = ({ notification }) => {
           )}
         </>
       )
+    } else if (notification.type === 'update_rolled_back') {
+      return (
+        <>
+          <Styled.TypeName>{t('notifications.item.type-rolled-back', { version: notification.version, from: notification.from })}</Styled.TypeName>
+          <Styled.PostContent>{t('notifications.item.rolled-back-hint')}</Styled.PostContent>
+        </>
+      )
     } else if (notification.type === 'new_ticket') {
       const path = { ticket: 'tickets', membershipapply: 'membership-applications', report: 'reports' }[notification.kind]
       return (

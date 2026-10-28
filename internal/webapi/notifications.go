@@ -30,6 +30,7 @@ var notificationKinds = []string{
 	db.NotifyDirectMessage,
 	db.NotifyPostLike,
 	db.NotifyReleaseAvailable,
+	db.NotifyUpdateRolledBack,
 	db.NotifyNewTicket,
 	db.NotifyTicketResult,
 }

@@ -47,12 +47,12 @@ func TestTReturnsIDWhenMissing(t *testing.T) {
 
 func TestTFallsBackToDefaultLanguage(t *testing.T) {
 	dir := t.TempDir()
-	writeCatalog(t, dir, "en", map[string]string{"toc-open": "Expand"})
+	writeCatalog(t, dir, "fr", map[string]string{"toc-open": "Déplier"})
 	b := load(t, dir)
 
-	l := b.Localizer("en")
-	if got := l.T("toc-open"); got != "Expand" {
-		t.Errorf("T(%q) = %q, want %q", "toc-open", got, "Expand")
+	l := b.Localizer("fr")
+	if got := l.T("toc-open"); got != "Déplier" {
+		t.Errorf("T(%q) = %q, want %q", "toc-open", got, "Déplier")
 	}
 	if got := l.T("toc-close"); got != "收起" {
 		t.Errorf("T(%q) = %q, want fallback %q", "toc-close", got, "收起")

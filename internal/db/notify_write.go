@@ -15,6 +15,7 @@ const (
 	NotifyDirectMessage      = "direct_message"
 	NotifyPostLike           = "post_like"
 	NotifyReleaseAvailable   = "release_available"
+	NotifyUpdateRolledBack   = "update_rolled_back"
 	NotifyNewTicket          = "new_ticket"
 )
 

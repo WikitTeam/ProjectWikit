@@ -62,11 +62,16 @@ ON CONFLICT (id) DO UPDATE SET
 
 	qSiteDomains = register("SiteDomains", `SELECT domain FROM web_site ORDER BY id`)
 
-	qSuperuserEmails = register("SuperuserEmails", `
-SELECT email FROM web_user
+	qSuperuserRecipients = register("SuperuserRecipients", `
+SELECT email, CASE WHEN language <> '' THEN language ELSE last_language END FROM web_user
 WHERE is_superuser AND is_active AND email <> ''
 ORDER BY id`)
 )
+
+type Recipient struct {
+	Email    string
+	Language string
+}
 
 func (d *DB) UpdateState(ctx context.Context) (UpdateState, error) {
 	var s UpdateState
@@ -106,8 +111,21 @@ func (d *DB) SiteDomains(ctx context.Context) ([]string, error) {
 	return d.strings(ctx, qSiteDomains, "list site domains")
 }
 
-func (d *DB) SuperuserEmails(ctx context.Context) ([]string, error) {
-	return d.strings(ctx, qSuperuserEmails, "list superuser addresses")
+func (d *DB) SuperuserRecipients(ctx context.Context) ([]Recipient, error) {
+	rows, err := d.pool.Query(ctx, qSuperuserRecipients)
+	if err != nil {
+		return nil, fmt.Errorf("list superuser addresses: %w", err)
+	}
+	defer rows.Close()
+	var out []Recipient
+	for rows.Next() {
+		var one Recipient
+		if err := rows.Scan(&one.Email, &one.Language); err != nil {
+			return nil, err
+		}
+		out = append(out, one)
+	}
+	return out, rows.Err()
 }
 
 func (d *DB) strings(ctx context.Context, query, what string) ([]string, error) {

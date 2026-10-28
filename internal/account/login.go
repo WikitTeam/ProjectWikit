@@ -10,6 +10,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/password"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
@@ -167,7 +168,7 @@ func (d Deps) signIn(ctx context.Context, w http.ResponseWriter, r *http.Request
 	if err := d.DB.SaveSession(ctx, key, data, now.Add(session.CookieAge)); err != nil {
 		return err
 	}
-	if err := d.DB.SetLastLogin(ctx, user.ID, now); err != nil {
+	if err := d.DB.SetLastLogin(ctx, user.ID, now, d.browserLanguage(r)); err != nil {
 		return err
 	}
 	if err := d.DB.SeenAddress(ctx, user.ID, d.clientIP(r), now); err != nil {
@@ -183,6 +184,13 @@ func (d Deps) signIn(ctx context.Context, w http.ResponseWriter, r *http.Request
 		HttpOnly: true, Secure: d.Trust.Scheme(r) == "https", SameSite: http.SameSiteLaxMode,
 	})
 	return nil
+}
+
+func (d Deps) browserLanguage(r *http.Request) string {
+	if d.Bundle == nil {
+		return ""
+	}
+	return d.Bundle.Match(r.Header.Get(i18n.AcceptHeader))
 }
 
 type LogoutHandler struct {

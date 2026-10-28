@@ -623,6 +623,7 @@ func createSite(args []string) error {
 	mediaDomain := fs.String("media-domain", "", "domain the uploaded files are served on; defaults to -domain")
 	title := fs.String("title", "", "site title")
 	headline := fs.String("headline", "", "site subtitle")
+	lang := fs.String("language", i18n.InstanceLanguage, "language the site speaks to visitors whose browser asks for none it has, such as en or zh-hans")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args); err != nil {
@@ -656,6 +657,13 @@ func createSite(args []string) error {
 	if err := prepareDataDir(p); err != nil {
 		return err
 	}
+	bundle, err := i18n.Load(p.Locales())
+	if err != nil {
+		return err
+	}
+	if !bundle.Has(*lang) {
+		return fmt.Errorf("-language %q has no translation; choose one of %s", *lang, strings.Join(bundle.Languages(), ", "))
+	}
 	ctx := context.Background()
 	dsn, release, err := resolveDatabase(ctx, *database, *dataDir)
 	if err != nil {
@@ -682,14 +690,10 @@ func createSite(args []string) error {
 	}
 	defer conn.Close()
 
-	bundle, err := i18n.Load(p.Locales())
-	if err != nil {
-		return err
-	}
-	loc := bundle.Localizer(i18n.DefaultLanguage)
+	loc := bundle.Localizer(*lang)
 	id, err := conn.CreateSite(ctx, db.NewSite{
 		Slug: *slug, Title: *title, Headline: *headline,
-		Domain: *domain, MediaDomain: *mediaDomain,
+		Domain: *domain, MediaDomain: *mediaDomain, Language: loc.Lang(),
 		RoleNames: map[string]string{
 			"admin":  loc.T("site.role-admin"),
 			"member": loc.T("site.role-member"),
@@ -699,6 +703,10 @@ func createSite(args []string) error {
 		return err
 	}
 	fmt.Printf("created site %s (%d) on %s\n", *slug, id, *domain)
+	if !given(fs, "language") {
+		fmt.Printf("site language: %s (%s). Pass -language to choose another, or change it later under Site settings in the admin panel.\n",
+			bundle.Name(loc.Lang()), loc.Lang())
+	}
 	announceHTTPS(*domain)
 	return nil
 }

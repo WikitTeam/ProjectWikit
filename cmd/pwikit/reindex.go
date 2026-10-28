@@ -62,9 +62,9 @@ func reindex(args []string) error {
 	}
 	defer closeEngine()
 
-	loc := bundle.Localizer(i18n.DefaultLanguage)
-	store := cliRepository{data: repo.New(ctx, conn, printuser.New(loc, roles.FileIcons(p.Files())), repo.Options{Loc: loc})}
 	for _, current := range sites {
+		loc := bundle.Localizer(current.Language)
+		store := cliRepository{data: repo.New(ctx, conn, printuser.New(loc, roles.FileIcons(p.Files())), repo.Options{Loc: loc})}
 		written, err := reindexSite(ctx, conn, engine, store, loc, current)
 		if err != nil {
 			return err

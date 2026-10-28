@@ -56,21 +56,21 @@ func serve(t *testing.T, accept string, current *db.Site, user *db.User) (string
 }
 
 func TestMiddlewarePrefersTheMemberChoice(t *testing.T) {
-	got, _ := serve(t, "zh-CN", &db.Site{Language: "zh-hans"}, &db.User{Language: "en"})
+	got, _ := serve(t, "zh-CN", &db.Site{Language: "zh-hans", LanguageFollowsVisitor: true}, &db.User{Language: "en"})
 	if got != "en" {
 		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, "en")
 	}
 }
 
 func TestMiddlewareFallsBackToTheBrowser(t *testing.T) {
-	got, _ := serve(t, "en-GB", &db.Site{Language: "zh-hans"}, &db.User{})
+	got, _ := serve(t, "en-GB", &db.Site{Language: "zh-hans", LanguageFollowsVisitor: true}, &db.User{})
 	if got != "en" {
 		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, "en")
 	}
 }
 
 func TestMiddlewareFallsBackToTheSite(t *testing.T) {
-	got, _ := serve(t, "de", &db.Site{Language: "en"}, nil)
+	got, _ := serve(t, "de", &db.Site{Language: "en", LanguageFollowsVisitor: true}, nil)
 	if got != "en" {
 		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, "en")
 	}
@@ -78,8 +78,22 @@ func TestMiddlewareFallsBackToTheSite(t *testing.T) {
 
 func TestMiddlewareWithoutASiteOrAUser(t *testing.T) {
 	got, _ := serve(t, "", nil, nil)
-	if got != i18n.DefaultLanguage {
-		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, i18n.DefaultLanguage)
+	if got != i18n.InstanceLanguage {
+		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, i18n.InstanceLanguage)
+	}
+}
+
+func TestMiddlewareIgnoresTheBrowserWhenTheSiteSaysSo(t *testing.T) {
+	got, _ := serve(t, "en-GB", &db.Site{Language: "zh-hans"}, nil)
+	if got != "zh-hans" {
+		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, "zh-hans")
+	}
+}
+
+func TestMiddlewareKeepsTheMemberChoiceWhenTheSiteIgnoresTheBrowser(t *testing.T) {
+	got, _ := serve(t, "zh-CN", &db.Site{Language: "zh-hans"}, &db.User{Language: "en"})
+	if got != "en" {
+		t.Errorf("LanguageFrom(ctx) = %q, want %q", got, "en")
 	}
 }
 

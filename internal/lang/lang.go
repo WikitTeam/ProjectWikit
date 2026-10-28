@@ -17,7 +17,7 @@ func Middleware(bundle *i18n.Bundle) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			serve := bundle.Negotiate(chosen(ctx), r.Header.Get(i18n.AcceptHeader), siteDefault(ctx))
+			serve := bundle.Negotiate(chosen(ctx), browser(r), siteDefault(ctx))
 			next.ServeHTTP(w, r.WithContext(i18n.WithLanguage(ctx, serve)))
 		})
 		return respheader.VaryLanguage(inner)
@@ -36,4 +36,11 @@ func siteDefault(ctx context.Context) string {
 		return current.Language
 	}
 	return ""
+}
+
+func browser(r *http.Request) string {
+	if current := site.FromContext(r.Context()); current != nil && !current.LanguageFollowsVisitor {
+		return ""
+	}
+	return r.Header.Get(i18n.AcceptHeader)
 }

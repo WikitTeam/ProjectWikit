@@ -329,10 +329,12 @@ func (d *DB) SetPassword(ctx context.Context, id int64, hash string) error {
 }
 
 var qSetLastLogin = register("SetLastLogin", `
-UPDATE web_user SET last_login = $2 WHERE id = $1`)
+UPDATE web_user SET last_login = $2,
+	last_language = CASE WHEN $3::text = '' THEN last_language ELSE $3::text END
+WHERE id = $1`)
 
-func (d *DB) SetLastLogin(ctx context.Context, id int64, at time.Time) error {
-	if _, err := d.pool.Exec(ctx, qSetLastLogin, id, at); err != nil {
+func (d *DB) SetLastLogin(ctx context.Context, id int64, at time.Time, lang string) error {
+	if _, err := d.pool.Exec(ctx, qSetLastLogin, id, at, lang); err != nil {
 		return fmt.Errorf("store last login of user %d: %w", id, err)
 	}
 	return nil

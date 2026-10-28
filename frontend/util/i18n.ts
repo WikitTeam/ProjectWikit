@@ -1,9 +1,11 @@
 import zhHans from '../locales/zh-hans.json'
+import en from '../locales/en.json'
 
 type Catalog = Record<string, string>
 
 const catalogs: Record<string, Catalog> = {
   'zh-hans': zhHans,
+  en: en,
 }
 
 const FALLBACK = 'zh-hans'

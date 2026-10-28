@@ -89,6 +89,12 @@ interface NotificationReleaseAvailable extends BaseNotification {
   notes: string
 }
 
+interface NotificationUpdateRolledBack extends BaseNotification {
+  type: 'update_rolled_back'
+  version: string
+  from: string
+}
+
 interface NotificationNewTicket extends BaseNotification {
   type: 'new_ticket'
   kind: 'ticket' | 'membershipapply' | 'report'
@@ -115,6 +121,7 @@ export type Notification =
   | NotificationDirectMessage
   | NotificationPostLike
   | NotificationReleaseAvailable
+  | NotificationUpdateRolledBack
   | NotificationNewTicket
   | NotificationTicketResult
 

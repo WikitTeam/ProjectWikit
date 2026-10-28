@@ -38,6 +38,13 @@ func (b *Bundle) Negotiate(chosen, accept, siteDefault string) string {
 	if b.Has(siteDefault) {
 		return Normalize(siteDefault)
 	}
+	return b.Instance()
+}
+
+func (b *Bundle) Instance() string {
+	if b.Has(InstanceLanguage) {
+		return InstanceLanguage
+	}
 	return DefaultLanguage
 }
 

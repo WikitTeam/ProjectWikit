@@ -54,8 +54,8 @@ func TestNegotiateFallsBackToTheSiteLanguage(t *testing.T) {
 }
 
 func TestNegotiateIgnoresLanguagesTheBundleLacks(t *testing.T) {
-	if got := english(t).Negotiate("de", "de", "de"); got != DefaultLanguage {
-		t.Errorf("Negotiate(%q, %q, %q) = %q, want %q", "de", "de", "de", got, DefaultLanguage)
+	if got := english(t).Negotiate("de", "de", "de"); got != InstanceLanguage {
+		t.Errorf("Negotiate(%q, %q, %q) = %q, want %q", "de", "de", "de", got, InstanceLanguage)
 	}
 }
 

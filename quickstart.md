@@ -45,6 +45,8 @@ No database setup is needed: pwikit carries PostgreSQL.
 
    Replace both domains with your own. To try pwikit on your own computer, use `-domain localhost` and open `http://localhost:8080`.
 
+   **The site language is English unless you say otherwise.** For a Chinese site, add `-language zh-hans` to the command. The site language names the roles a new site starts with, and is what visitors see when their browser asks for a language the site doesn't have. You can change it at any time under **Site settings** in the admin panel, but the starter roles keep the names they were created with. By default, each visitor sees the interface in their browser's language; see [Interface language](https://pwikit-docs.unitreaty.org/en/site-administration#interface-language).
+
 3. **Fill the site and create the administrator.** Take one of the two paths, depending on where the site comes from.
 
    **A new, empty site**, with the starter pages:

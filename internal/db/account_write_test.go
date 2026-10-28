@@ -161,7 +161,7 @@ func TestSetPasswordAndLastLogin(t *testing.T) {
 		t.Fatalf("SetPassword() err = %v, want nil", err)
 	}
 	when := time.Date(2026, 9, 5, 11, 4, 34, 0, time.UTC)
-	if err := d.SetLastLogin(ctx, id, when); err != nil {
+	if err := d.SetLastLogin(ctx, id, when, ""); err != nil {
 		t.Fatalf("SetLastLogin() err = %v, want nil", err)
 	}
 	hash, last, _, err := d.ResetFields(ctx, id)

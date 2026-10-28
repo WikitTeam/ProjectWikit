@@ -83,19 +83,19 @@ func render(args []string) error {
 		if err != nil {
 			return err
 		}
-		users := printuser.New(bundle.Localizer(i18n.DefaultLanguage), roles.FileIcons(p.Files()))
-		store.data = repo.New(ctx, conn, users, repo.Options{Loc: bundle.Localizer(i18n.DefaultLanguage)})
+		users := printuser.New(bundle.Localizer(i18n.InstanceLanguage), roles.FileIcons(p.Files()))
+		store.data = repo.New(ctx, conn, users, repo.Options{Loc: bundle.Localizer(i18n.InstanceLanguage)})
 		current, err := resolveSite(ctx, conn, *siteSlug)
 		if err != nil {
 			return err
 		}
-		vars, article, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.DefaultLanguage), current, *category, *pageName)
+		vars, article, err = cliPageVars(ctx, conn, bundle.Localizer(i18n.InstanceLanguage), current, *category, *pageName)
 		if err != nil {
 			return err
 		}
 	}
 
-	cb := callbacks.New(bundle.Localizer(i18n.DefaultLanguage), store)
+	cb := callbacks.New(bundle.Localizer(i18n.InstanceLanguage), store)
 	cb.SetSite(*siteSlug)
 	cb.SetPageVars(vars)
 	if article != nil {

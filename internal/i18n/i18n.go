@@ -19,9 +19,10 @@ import (
 var embedded embed.FS
 
 const (
-	DefaultLanguage = "zh-hans"
-	embeddedDir     = "locales"
-	fileSuffix      = ".json"
+	DefaultLanguage  = "zh-hans"
+	InstanceLanguage = "en"
+	embeddedDir      = "locales"
+	fileSuffix       = ".json"
 )
 
 type Bundle struct {

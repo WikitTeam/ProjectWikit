@@ -14,14 +14,15 @@ type NewSite struct {
 	Headline    string
 	Domain      string
 	MediaDomain string
+	Language    string
 	RoleNames   map[string]string
 }
 
 var qInsertSite = register("InsertSite", `
 INSERT INTO web_site (slug, title, headline, domain, media_domain, home_page,
                       footer_license, signup_notice, password_help, email_policy,
-                      membership_password, membership_password_enabled)
-VALUES ($1, $2, $3, $4, $5, 'main', '', '', '', $6, '', false)
+                      membership_password, membership_password_enabled, language)
+VALUES ($1, $2, $3, $4, $5, 'main', '', '', '', $6, '', false, $7)
 RETURNING id`)
 
 var qInsertSiteSettings = register("InsertSiteSettings", `
@@ -91,7 +92,7 @@ func (d *DB) CreateSite(ctx context.Context, s NewSite) (int64, error) {
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
 	var id int64
-	err = tx.QueryRow(ctx, qInsertSite, s.Slug, s.Title, s.Headline, s.Domain, s.MediaDomain, EmailOptional).Scan(&id)
+	err = tx.QueryRow(ctx, qInsertSite, s.Slug, s.Title, s.Headline, s.Domain, s.MediaDomain, EmailOptional, s.Language).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("create site %q: %w", s.Slug, err)
 	}
