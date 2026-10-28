@@ -28,6 +28,7 @@ type AdminUserRow struct {
 	DMUntil            *time.Time
 	IsSuperuser        bool
 	SiteSuperuser      bool
+	BotOfSite          bool
 	Unclaimed          bool
 	Banned             bool
 
@@ -117,6 +118,9 @@ func (d *DB) AdminUsers(ctx context.Context, siteID int64, query, kind string, r
 
 var qAdminUser = register("AdminUser", `SELECT `+adminUserColumns+` FROM web_user WHERE id = $1`)
 
+var qBotOfSite = register("BotOfSite", `
+SELECT EXISTS (SELECT 1 FROM pwikit_bot_site WHERE site_id = $1 AND user_id = $2)`)
+
 var qAdminUserRoles = register("AdminUserRoles", `
 SELECT ur.role_id FROM web_user_roles ur
 JOIN web_role r ON r.id = ur.role_id
@@ -149,6 +153,9 @@ func (d *DB) AdminUser(ctx context.Context, siteID, id int64) (AdminUserRow, err
 	}
 	if u.SiteSuperuser, err = d.IsSiteSuperuser(ctx, siteID, id); err != nil {
 		return AdminUserRow{}, err
+	}
+	if err := d.pool.QueryRow(ctx, qBotOfSite, siteID, id).Scan(&u.BotOfSite); err != nil {
+		return AdminUserRow{}, fmt.Errorf("read the site of bot %d: %w", id, err)
 	}
 	u.OperationIndex, err = d.OperationIndex(ctx, siteID, id)
 	return u, err

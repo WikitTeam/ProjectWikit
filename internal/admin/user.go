@@ -229,7 +229,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"HoldDays":     int(account.HoldPeriod / (24 * time.Hour)),
 		"Done":         userDone(loc, r.URL.Query().Get("said")),
 		"SeeEmail":     sensitive,
-		"SeeKey":       sensitive || (row.Type == db.UserTypeBot && granted.Has(perms.ManageBots)),
+		"SeeKey":       sensitive || (row.BotOfSite && granted.Has(perms.ManageBots)),
 		"LastLogin":    lastLogin,
 		"LastAddress":  lastAddress,
 		"CSRF":         csrf.Issue(w, r),

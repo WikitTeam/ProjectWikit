@@ -130,7 +130,7 @@ func (h *Handler) saveBot(w http.ResponseWriter, r *http.Request, loc *i18n.Loca
 	if _, err := rand.Read(raw[:]); err != nil {
 		return err
 	}
-	id, err := h.deps.DB.CreateBot(ctx, name, base64.RawURLEncoding.EncodeToString(raw[:]), time.Now())
+	id, err := h.deps.DB.CreateBot(ctx, siteID(ctx), name, base64.RawURLEncoding.EncodeToString(raw[:]), time.Now())
 	if err != nil {
 		return err
 	}

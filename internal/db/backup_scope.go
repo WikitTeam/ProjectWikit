@@ -72,6 +72,7 @@ const peopleQuery = scopeCTE + `,
        UNION SELECT author_id FROM web_userticket WHERE site_id = (SELECT id FROM s)
        UNION SELECT reviewed_by_id FROM web_userticket WHERE site_id = (SELECT id FROM s)
        UNION SELECT user_id FROM pwikit_admin_log WHERE site_id = (SELECT id FROM s)
+       UNION SELECT user_id FROM pwikit_bot_site WHERE site_id = (SELECT id FROM s)
      )
 SELECT id FROM who WHERE id IS NOT NULL`
 
@@ -127,6 +128,7 @@ var rules = map[string]rule{
 
 	"pwikit_member_sanction": {owned, `site_id = (SELECT id FROM s)`, ""},
 	"pwikit_ip_ban":          {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_bot_site":        {owned, `site_id = (SELECT id FROM s)`, ""},
 	"pwikit_include_ref":     {owned, `site_id = (SELECT id FROM s)`, ""},
 
 	// A subscription can hang off an article or off a forum thread, and the

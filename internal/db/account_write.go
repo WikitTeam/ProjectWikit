@@ -34,17 +34,22 @@ func (d *DB) CreateTypedUser(ctx context.Context, username, displayName, hash, k
 }
 
 var qCreateBot = register("CreateBot", `
-INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
-	username, display_name, type, api_key, bio, is_forum_active, is_active,
-	can_send_direct_messages, pending_email, previous_email)
-VALUES ('!', false, '', '', '', $1, $2, NULL, 'bot', $3, '', true, true, true, '', '')
-RETURNING id`)
+WITH bot AS (
+	INSERT INTO web_user (password, is_superuser, first_name, last_name, email, date_joined,
+		username, display_name, type, api_key, bio, is_forum_active, is_active,
+		can_send_direct_messages, pending_email, previous_email)
+	VALUES ('!', false, '', '', '', $1, $2, NULL, 'bot', $3, '', true, true, true, '', '')
+	RETURNING id
+), owner AS (
+	INSERT INTO pwikit_bot_site (user_id, site_id) SELECT id, $4 FROM bot
+)
+SELECT id FROM bot`)
 
 // A bot signs in with its key rather than a password, so the password column
 // holds the marker that makes every comparison fail.
-func (d *DB) CreateBot(ctx context.Context, username, apiKey string, at time.Time) (int64, error) {
+func (d *DB) CreateBot(ctx context.Context, siteID int64, username, apiKey string, at time.Time) (int64, error) {
 	var id int64
-	if err := d.pool.QueryRow(ctx, qCreateBot, at, username, apiKey).Scan(&id); err != nil {
+	if err := d.pool.QueryRow(ctx, qCreateBot, at, username, apiKey, siteID).Scan(&id); err != nil {
 		return 0, fmt.Errorf("create bot %q: %w", username, err)
 	}
 	return id, nil
