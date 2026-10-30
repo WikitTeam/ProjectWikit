@@ -504,3 +504,45 @@ func TestProfileEditShowsTheProblem(t *testing.T) {
 		t.Error("ProfileEdit() does not show the error it was given")
 	}
 }
+
+func TestPrintLeavesTheSiteOut(t *testing.T) {
+	var b strings.Builder
+	err := profileTestRenderer(t).Print(&b, Data{
+		SiteName: "Test Wiki",
+		OGURL:    "https://test.example/scp-173",
+		NavTop:   "<p>top nav</p>",
+		NavSide:  "<p>side nav</p>",
+		Title:    "SCP-173",
+		Content:  "<p>body</p>",
+	})
+	if err != nil {
+		t.Fatalf("Print() err = %v, want nil", err)
+	}
+	got := b.String()
+	for _, want := range []string{
+		`<div id="page-title">SCP-173</div>`,
+		"<p>body</p>",
+		`<a href="https://test.example/scp-173">https://test.example/scp-173</a>`,
+		`<meta name="robots" content="noindex">`,
+		`id="print-footer"`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("Print() lacks %q", want)
+		}
+	}
+	for _, unwanted := range []string{"top nav", "side nav", `id="side-bar"`, `id="page-options-container"`, `id="login-status"`} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("Print() contains %q, want it left out", unwanted)
+		}
+	}
+}
+
+func TestPrintWithoutATitleHasNoTitleBlock(t *testing.T) {
+	var b strings.Builder
+	if err := profileTestRenderer(t).Print(&b, Data{Content: "<p>body</p>"}); err != nil {
+		t.Fatalf("Print() err = %v, want nil", err)
+	}
+	if strings.Contains(b.String(), `id="page-title"`) {
+		t.Error(`Print(Data{Title: ""}) contains id="page-title", want none`)
+	}
+}

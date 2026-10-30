@@ -109,6 +109,10 @@ func (r *Renderer) Page(w io.Writer, d Data) error {
 	return tmpl.ExecuteTemplate(w, "page.html", view{Data: d, r: r})
 }
 
+func (r *Renderer) Print(w io.Writer, d Data) error {
+	return tmpl.ExecuteTemplate(w, "page_print.html", view{Data: d, r: r})
+}
+
 func (r *Renderer) NotFound(d NotFound) (string, error) {
 	return r.execute("page_404.html", struct {
 		AllowCreate bool

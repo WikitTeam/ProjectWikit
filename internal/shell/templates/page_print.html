@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="{{esc .Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="{{esc .OGURL}}">
+
+    <title>{{esc .SiteTitle}}</title>
+
+    <link rel="icon" type="image/x-icon" href="/local--files/{{esc .SiteIcon}}">
+
+    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "fontawesome/css/all.css")}}">
+
+    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "wikidot-base.css")}}">
+    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "app.css")}}">
+    {{if .ThemeURL}}<link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">{{end}}
+    <style>
+        .printer-friendly #content-wrap { margin: 0 auto; min-height: 0; }
+        .printer-friendly #main-content { float: none; width: auto; margin: 0; padding: 0 1em; }
+        .printer-friendly #print-head { margin: 1em; padding-bottom: .5em; border-bottom: 1px solid #ccc; font-size: 90%; }
+        .printer-friendly #print-footer { margin: 2em 1em 1em; padding-top: .5em; border-top: 1px solid #ccc; font-size: 85%; }
+    </style>
+
+    <script src="{{esc (.Asset "app.js")}}" type="text/javascript"></script>
+
+    {{range .ComputedStyles}}
+        <style class="computed-style">{{.}}</style>
+    {{end}}
+</head>
+<body id="html-body" class="printer-friendly">
+    <div id="container-wrap">
+        <div id="container">
+            <div id="print-head">
+                <strong>{{esc .SiteName}}</strong><br>
+                {{.T "page.print-source" "link" (printf "<a href=\"%s\">%s</a>" (esc .OGURL) (esc .OGURL))}}
+            </div>
+            <div id="content-wrap">
+                <div id="main-content">
+                    {{if .Title}}<div id="page-title">{{esc .Title}}</div>{{end}}
+                    <div id="page-content">
+                        {{.Content}}
+                    </div>
+                </div>
+            </div>
+            <div id="print-footer" class="license-area">
+                {{.LicenseHTML}}
+            </div>
+        </div>
+    </div>
+    <div id="w-modals"></div>
+</body>
+</html>

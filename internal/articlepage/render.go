@@ -53,13 +53,17 @@ func (h *Handler) render(req *request) (*result, error) {
 		return nil, err
 	}
 	req.look = look
-	navTop, topStyles, err := h.nav(req, firstNonEmpty(look.NavTop, "nav:top"))
-	if err != nil {
-		return nil, err
-	}
-	navSide, sideStyles, err := h.nav(req, firstNonEmpty(look.NavSide, "nav:side"))
-	if err != nil {
-		return nil, err
+	var navTop, navSide string
+	var topStyles, sideStyles []string
+	if !req.print {
+		navTop, topStyles, err = h.nav(req, firstNonEmpty(look.NavTop, "nav:top"))
+		if err != nil {
+			return nil, err
+		}
+		navSide, sideStyles, err = h.nav(req, firstNonEmpty(look.NavSide, "nav:side"))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	canonical := h.canonicalURL(req)
@@ -72,14 +76,23 @@ func (h *Handler) render(req *request) (*result, error) {
 	}
 	out.styles = slices.Concat(topStyles, sideStyles, out.styles)
 
-	data, err := h.shellData(req, out, canonical, navTop, navSide)
-	if err != nil {
-		return nil, err
-	}
-
 	var page strings.Builder
-	if err := h.shell(req.loc).Page(&page, data); err != nil {
-		return nil, err
+	if req.print {
+		data, err := h.printData(req, out, canonical)
+		if err != nil {
+			return nil, err
+		}
+		if err := h.shell(req.loc).Print(&page, data); err != nil {
+			return nil, err
+		}
+	} else {
+		data, err := h.shellData(req, out, canonical, navTop, navSide)
+		if err != nil {
+			return nil, err
+		}
+		if err := h.shell(req.loc).Page(&page, data); err != nil {
+			return nil, err
+		}
 	}
 	body := page.String()
 	res := &result{Status: out.status, Body: body}
@@ -492,10 +505,7 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 
 	title := firstNonEmpty(out.title, req.site.Title)
 	// The site name belongs in the browser tab, not in a share card headline.
-	document := title
-	if title != req.site.Title && req.site.Title != "" {
-		document = title + " - " + req.site.Title
-	}
+	document := documentTitle(title, req.site.Title)
 	return shell.Data{
 		SiteName:          req.site.Title,
 		SiteHeadline:      req.site.Headline,
@@ -522,6 +532,38 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 		LoginStatusConfig: login,
 		OptionsConfig:     options,
 	}, nil
+}
+
+// The printed copy stays out of search results, since the page itself is
+// already indexed under its own address.
+func (h *Handler) printData(req *request, out body, canonical string) (shell.Data, error) {
+	theme, err := h.themeURL(req)
+	if err != nil {
+		return shell.Data{}, err
+	}
+	license, err := h.license(req)
+	if err != nil {
+		return shell.Data{}, err
+	}
+	return shell.Data{
+		SiteName:       req.site.Title,
+		SiteTitle:      documentTitle(firstNonEmpty(out.title, req.site.Title), req.site.Title),
+		SiteIcon:       req.site.Icon,
+		License:        license,
+		OGURL:          canonical,
+		NoIndex:        true,
+		ThemeURL:       theme,
+		ComputedStyles: out.styles,
+		Title:          out.title,
+		Content:        out.html,
+	}, nil
+}
+
+func documentTitle(title, siteTitle string) string {
+	if title != siteTitle && siteTitle != "" {
+		return title + " - " + siteTitle
+	}
+	return title
 }
 
 func (h *Handler) themeURL(req *request) (string, error) {

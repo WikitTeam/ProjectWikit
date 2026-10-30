@@ -922,6 +922,7 @@
   "page.license": "Unless otherwise stated, the content of this page is licensed under {link}.",
   "page.not-found": "The page {page} you want to access does not exist.",
   "page.page-info": "page revision: {rev}, last edited: {date}",
+  "page.print-source": "Source: {link}",
   "page.search-placeholder": "Search this site",
   "page.search-submit": "Search",
   "password.all-numeric": "Your password can't be entirely numeric.",

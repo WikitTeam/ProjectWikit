@@ -41,6 +41,7 @@ type request struct {
 	perms       perms.Set
 	hideToolbar bool
 	look        db.CategoryLook
+	print       bool
 
 	csrf    string
 	csrfNew bool
@@ -60,13 +61,18 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 		user: auth.FromContext(ctx),
 	}
 	req.csrf, req.csrfNew = csrf.Token(r)
-	req.name, req.params = article.ParsePath(strings.TrimPrefix(r.URL.EscapedPath(), "/"), found.HomePage)
+	path := strings.TrimPrefix(r.URL.EscapedPath(), "/")
+	path, req.print = printPath(path)
+	req.name, req.params = article.ParsePath(path, found.HomePage)
 	req.encoded = article.Encode(req.params)
 
 	if target, ok := article.CodeTarget(req.name, req.params); ok {
 		return &result{Status: http.StatusFound, Location: target}, nil
 	}
 	if target, ok := article.RedirectTarget(req.name, req.params); ok {
+		if req.print {
+			target = "/" + printPrefix + strings.TrimPrefix(target, "/")
+		}
 		return &result{Status: http.StatusFound, Location: target}, nil
 	}
 
@@ -85,6 +91,18 @@ func (h *Handler) build(r *http.Request) (*result, error) {
 	}
 
 	return h.render(req)
+}
+
+const printPrefix = "printer--friendly/"
+
+func printPath(path string) (string, bool) {
+	if path == strings.TrimSuffix(printPrefix, "/") {
+		return "", true
+	}
+	if rest, ok := strings.CutPrefix(path, printPrefix); ok {
+		return rest, true
+	}
+	return path, false
 }
 
 // A page the visitor may not see is dropped here, which is what leaves every

@@ -128,3 +128,36 @@ func TestNotFoundNamesOfAnExplicitDefaultCategory(t *testing.T) {
 		t.Errorf("notFoundNames(%q) = %v, want [_404]", "_default:no-such-page", got)
 	}
 }
+
+func TestPrintPath(t *testing.T) {
+	cases := []struct {
+		in, want string
+		print    bool
+	}{
+		{"scp-173", "scp-173", false},
+		{"printer--friendly/scp-173", "scp-173", true},
+		{"printer--friendly/scp-173/offset/2", "scp-173/offset/2", true},
+		{"printer--friendly/", "", true},
+		{"printer--friendly", "", true},
+		{"printer--friendly-page", "printer--friendly-page", false},
+	}
+	for _, c := range cases {
+		got, print := printPath(c.in)
+		if got != c.want || print != c.print {
+			t.Errorf("printPath(%q) = %q, %v, want %q, %v", c.in, got, print, c.want, c.print)
+		}
+	}
+}
+
+func TestDocumentTitle(t *testing.T) {
+	cases := []struct{ title, site, want string }{
+		{"SCP-173", "Test Wiki", "SCP-173 - Test Wiki"},
+		{"Test Wiki", "Test Wiki", "Test Wiki"},
+		{"SCP-173", "", "SCP-173"},
+	}
+	for _, c := range cases {
+		if got := documentTitle(c.title, c.site); got != c.want {
+			t.Errorf("documentTitle(%q, %q) = %q, want %q", c.title, c.site, got, c.want)
+		}
+	}
+}

@@ -135,6 +135,7 @@ func TestNameAllowed(t *testing.T) {
 		{"reserved name uppercased", "API", false},
 		{"reserved name pw-api", "pw-api", false},
 		{"reserved name local--files", "local--files", false},
+		{"reserved name printer--friendly", "printer--friendly", false},
 		{"chinese", "测试", false},
 		{"space", "foo bar", false},
 		{"slash", "foo/bar", false},

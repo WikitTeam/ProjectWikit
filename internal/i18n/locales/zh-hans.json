@@ -922,6 +922,7 @@
   "page.license": "除非特别注明，本页内容采用以下授权方式：{link}。",
   "page.not-found": "您请求的页面 {page} 不存在",
   "page.page-info": "页面版本：{rev}，最后编辑：{date}",
+  "page.print-source": "来源：{link}",
   "page.search-placeholder": "搜索本站",
   "page.search-submit": "搜索",
   "password.all-numeric": "密码不能只包含数字。",
