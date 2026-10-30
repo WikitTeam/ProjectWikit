@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -163,12 +164,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
-	choices := make([]db.RoleChoice, 0, len(roleList))
-	for _, one := range roleList {
-		if !slices.Contains(builtinRoles, one.Slug) {
-			choices = append(choices, one)
-		}
-	}
+	choices := assignableRoles(roleList)
 	granted, _, err := h.access(ctx)
 	if err != nil {
 		return err
@@ -236,6 +232,7 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Error":        problem,
 		"Action":       Prefix + userSlug + "/" + rest,
 		"Back":         Prefix + userSlug + "/",
+		"Access":       h.accessHref(ctx, "?user="+url.QueryEscape(row.Username)),
 	})
 }
 

@@ -68,6 +68,7 @@ type screen struct {
 	need  string
 	super bool
 	all   bool
+	anyOf []string
 	serve func(*Handler, http.ResponseWriter, *http.Request, *i18n.Localizer) error
 }
 
@@ -79,6 +80,8 @@ func (s screen) opensFor(granted perms.Set, instance bool) bool {
 		return instance && granted.All()
 	case s.all:
 		return granted.All()
+	case len(s.anyOf) > 0:
+		return slices.ContainsFunc(s.anyOf, granted.Has)
 	}
 	return granted.Has(s.need)
 }
@@ -116,6 +119,7 @@ var groups = []struct {
 		{userSlug, "fa-user"},
 		{roleSlug, "fa-shield-alt"},
 		{roleCategorySlug, "fa-sitemap"},
+		{accessSlug, "fa-stethoscope"},
 		{inviteSlug, "fa-envelope"},
 		{ipBanSlug, "fa-ban"},
 	}},

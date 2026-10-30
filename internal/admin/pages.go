@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -127,6 +128,7 @@ func (h *Handler) pageForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"CSRF":    csrf.Issue(w, r),
 		"Action":  Prefix + pageSlug + "/" + strconv.FormatInt(id, 10),
 		"Back":    Prefix + pageSlug + "/",
+		"Access":  h.accessHref(ctx, "?target="+url.QueryEscape(article.FullName())),
 	})
 }
 

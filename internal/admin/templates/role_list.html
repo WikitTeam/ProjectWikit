@@ -7,12 +7,12 @@
   <tbody>
     {{range .Roles}}
     <tr>
-      <td><a href="{{esc $.Base}}{{.ID}}">{{if .Name}}{{esc .Name}}{{else}}{{esc .Slug}}{{end}}</a></td>
+      <td><a href="{{esc $.Base}}{{.ID}}">{{if .Name}}{{esc .Name}}{{else}}{{esc .Slug}}{{end}}</a>{{if index $.Warnings .ID}} <i class="fas fa-exclamation-triangle role-flag" title="{{t "admin.role-flag"}}"></i>{{end}}</td>
       <td class="stamp">{{esc .Slug}}</td>
       <td class="num">{{.Index}}</td>
       <td>{{template "yes" .IsStaff}}</td>
       <td>{{template "yes" (index $.Managing .ID)}}</td>
-      <td class="num">{{if .Users}}<a href="{{esc $.UsersHref}}{{.ID}}">{{.Users}}</a>{{else}}{{.Users}}{{end}}</td>
+      <td class="num">{{if index $.Builtin .ID}}{{else if .Users}}<a href="{{esc $.UsersHref}}{{.ID}}">{{.Users}}</a>{{else}}{{.Users}}{{end}}</td>
     </tr>
     {{else}}
     <tr><td colspan="6" class="muted">{{t "admin.empty"}}</td></tr>

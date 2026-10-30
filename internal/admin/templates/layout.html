@@ -22,6 +22,19 @@
       <div id="site-manager-menu" class="span3">
         <div class="menu-container normal-container">
 
+          <div class="menu-search" data-search hidden>
+            <input type="search" placeholder="{{.T "admin.search-admin"}}" aria-label="{{.T "admin.search-admin"}}" autocomplete="off">
+          </div>
+          <div class="menu-box search-results" data-level="search" hidden>
+            <ul class="nav nav-tabs nav-stacked">
+              <li data-search-text="{{esc .Dashboard.Label}}"><a href="{{esc .Dashboard.Href}}"><i class="fas {{esc .Dashboard.Icon}}"></i>{{esc .Dashboard.Label}}</a></li>
+              {{range .Groups}}{{$group := .Label}}{{range .Items}}
+              <li data-search-text="{{esc .Label}} {{esc $group}}"><a href="{{esc .Href}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}<span class="search-group">{{esc $group}}</span></a></li>
+              {{end}}{{end}}
+            </ul>
+            <p class="search-none" hidden>{{.T "admin.search-none"}}</p>
+          </div>
+
           <div class="menu-box first-level" data-level="first"{{if .Open}} hidden{{end}}>
             <ul class="nav nav-tabs nav-stacked">
               <li{{if .Dashboard.Active}} class="selected"{{end}}>
@@ -101,6 +114,51 @@
     if (!a) { return; }
     if (a.dataset.open) { e.preventDefault(); open(a.dataset.open); return; }
     if (a.hasAttribute('data-back')) { e.preventDefault(); open('first'); }
+  });
+
+  var bar = document.querySelector('#site-manager-menu [data-search]');
+  var results = document.querySelector('#site-manager-menu .search-results');
+  if (!bar || !results) { return; }
+  var input = bar.querySelector('input');
+  var rows = results.querySelectorAll('li');
+  var none = results.querySelector('.search-none');
+  var before = null;
+  bar.hidden = false;
+  function visible() {
+    return Array.prototype.filter.call(rows, function (li) { return !li.hidden; });
+  }
+  input.addEventListener('input', function () {
+    var words = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      if (before) { open(before); before = null; }
+      return;
+    }
+    if (!before) {
+      var shown = Array.prototype.find.call(boxes, function (b) { return !b.hidden && b !== results; });
+      before = shown ? shown.dataset.level : 'first';
+    }
+    open('search');
+    rows.forEach(function (li) {
+      var text = li.dataset.searchText.toLowerCase();
+      li.hidden = !words.every(function (w) { return text.indexOf(w) >= 0; });
+    });
+    none.hidden = visible().length > 0;
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      var first = visible()[0];
+      if (first && input.value.trim()) { e.preventDefault(); location.href = first.querySelector('a').href; }
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    var t = e.target;
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) { return; }
+    if (t.closest('input, textarea, select, [contenteditable]')) { return; }
+    e.preventDefault();
+    input.focus();
   });
 })();
 (function () {

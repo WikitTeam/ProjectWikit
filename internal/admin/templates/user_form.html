@@ -124,6 +124,7 @@
     <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
     {{if .MayActivate}}<a class="btn" href="{{esc .Activate}}"><i class="fas fa-envelope"></i>{{t "admin.activate"}}</a>{{end}}
     <a class="btn" href="{{esc .Activity}}"><i class="fas fa-history"></i>{{t "admin.user-activity"}}</a>
+    {{if .Access}}<a class="btn" href="{{esc .Access}}"><i class="fas fa-stethoscope"></i>{{t "admin.access-check-user"}}</a>{{end}}
     {{if .MayReset}}<a class="btn btn-danger pull-right" href="{{esc .ResetVotes}}"><i class="fas fa-trash"></i>{{t "admin.reset-votes"}}</a>{{end}}
   </div>
 </form>

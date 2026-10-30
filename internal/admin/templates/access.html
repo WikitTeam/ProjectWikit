@@ -1,0 +1,199 @@
+{{define "access.html"}}
+<ul class="nav nav-pills">
+  <li{{if eq .Tab ""}} class="active"{{end}}><a href="{{esc .Base}}">{{t "admin.access-tab-user"}}</a></li>
+  <li{{if eq .Tab "role"}} class="active"{{end}}><a href="{{esc .Base}}role">{{t "admin.access-tab-role"}}</a></li>
+  <li{{if eq .Tab "holders"}} class="active"{{end}}><a href="{{esc .Base}}holders">{{t "admin.access-tab-holders"}}</a></li>
+  <li{{if eq .Tab "lint"}} class="active"{{end}}><a href="{{esc .Base}}lint">{{t "admin.access-tab-lint"}}</a></li>
+</ul>
+{{if eq .Tab ""}}{{template "access_user" .}}{{end}}
+{{if eq .Tab "role"}}{{template "access_role" .}}{{end}}
+{{if eq .Tab "holders"}}{{template "access_holders" .}}{{end}}
+{{if eq .Tab "lint"}}{{template "access_lint" .}}{{end}}
+{{end}}
+
+{{define "access_perm_select"}}
+<select id="id_perm" name="perm">
+  {{if .all}}<option value="">{{t "admin.access-every-perm"}}</option>{{end}}
+  {{range .groups}}<optgroup label="{{esc .Label}}">
+    {{range .Perms}}<option value="{{esc .Name}}"{{if eq .Name $.picked}} selected{{end}}>{{esc .Label}}</option>{{end}}
+  </optgroup>{{end}}
+</select>
+{{end}}
+
+{{define "access_facts"}}
+<table class="table table-condensed access-facts"><tbody>
+  {{range .}}<tr><th>{{esc .Label}}</th><td{{if .Tone}} class="tone-{{.Tone}}"{{end}}>{{.Value}}</td></tr>{{end}}
+</tbody></table>
+{{end}}
+
+{{define "access_user"}}
+<form class="form-horizontal" method="GET" action="{{esc .Base}}">
+  <div class="control-group">
+    <label class="control-label" for="id_user">{{t "admin.access-who"}}</label>
+    <div class="controls">
+      <input type="text" id="id_user" name="user" value="{{esc .Form.User}}" placeholder="{{t "admin.pick-user"}}">
+      <label class="checkbox"><input type="checkbox" name="anonymous" value="1"{{if .Form.Anonymous}} checked{{end}}> {{t "admin.access-as-anonymous"}}</label>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="id_perm">{{t "admin.permissions"}}</label>
+    <div class="controls">{{template "access_perm_select" (dict "groups" .Perms "picked" .Form.Perm "all" true)}}</div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="id_target">{{t "admin.access-target"}}</label>
+    <div class="controls">
+      <input type="text" id="id_target" name="target" value="{{esc .Form.Target}}" placeholder="{{t "admin.access-target-placeholder"}}">
+    </div>
+  </div>
+  <div class="form-actions"><button type="submit" class="btn btn-primary"><i class="fas fa-stethoscope"></i>{{t "admin.access-check"}}</button></div>
+</form>
+{{template "form_error" .Problem}}
+{{if .Who}}
+<div class="row-fluid">
+  <div class="span6">{{template "access_facts" .Who}}</div>
+  <div class="span6">{{template "access_facts" .What}}</div>
+</div>
+{{end}}
+{{with .Verdict}}{{template "access_verdict" .}}{{end}}
+{{with .Table}}
+<table class="table table-hover table-condensed access-table">
+  <thead><tr><th></th><th>{{t "admin.permissions"}}</th><th>{{t "admin.access-decided-at"}}</th><th>{{t "admin.access-reason"}}</th><th></th></tr></thead>
+  {{range .}}
+  <tbody>
+    <tr class="access-group"><th colspan="5">{{esc .Label}}</th></tr>
+    {{range .Rows}}
+    <tr>
+      <td class="access-mark tone-{{if .Allowed}}allow{{else}}deny{{end}}"><i class="fas fa-{{if .Allowed}}check{{else}}times{{end}}"></i></td>
+      <td>{{esc .Label}} <span class="stamp">{{esc .Name}}</span></td>
+      <td class="stamp">{{esc .Step}}</td>
+      <td>{{.Summary}}{{if .Also}} <span class="muted">{{t "admin.access-more" "n" (len .Also)}}</span>{{end}}</td>
+      <td class="right"><a href="{{esc .Detail}}">{{t "admin.access-details"}}</a></td>
+    </tr>
+    {{end}}
+  </tbody>
+  {{end}}
+</table>
+{{end}}
+{{end}}
+
+{{define "access_verdict"}}
+<div class="verdict verdict-{{if .Allowed}}allow{{else}}deny{{end}}">
+  <div class="verdict-line">
+    <span class="verdict-mark"><i class="fas fa-{{if .Allowed}}check{{else}}times{{end}}"></i></span>
+    <strong>{{esc .Label}}</strong> <span class="stamp">{{esc .Name}}</span>
+    <span class="state {{if .Allowed}}allow{{else}}deny{{end}}">{{if .Allowed}}{{t "admin.access-allowed"}}{{else}}{{t "admin.access-refused"}}{{end}}</span>
+  </div>
+  <div class="verdict-why"><span class="state strong">{{esc .Step}}</span> {{.Summary}}</div>
+  {{if .Also}}<div class="verdict-also">{{t "admin.access-also"}}{{range $i, $a := .Also}}{{if $i}}{{t "admin.access-join"}}{{end}}{{$a}}{{end}}</div>{{end}}
+  {{if .Fix.Text}}<div class="verdict-fix"><i class="fas fa-wrench"></i> {{.Fix.Text}}{{if .Fix.Href}} <a href="{{esc .Fix.Href}}">{{esc .Fix.Link}}</a>{{end}}</div>{{end}}
+</div>
+<details class="access-steps">
+  <summary>{{t "admin.access-steps"}}</summary>
+  <ol>
+    {{range .Steps}}
+    <li class="step-{{.State}}{{if .Decisive}} decisive{{end}}">
+      <div class="step-head">
+        <span class="step-n">{{.Number}}</span><span class="step-title">{{esc .Title}}</span>
+        <span class="state {{.State}}">{{esc .Label}}</span>
+        {{if .Decisive}}<span class="state strong">{{t "admin.access-decisive"}}</span>{{end}}
+      </div>
+      {{if .Roles}}
+      <table class="table table-condensed access-roles">
+        <thead><tr><th>{{t "admin.f-role"}}</th><th>{{t "admin.access-role-setting"}}</th><th>{{t "admin.access-override"}}</th><th>{{t "admin.access-result"}}</th></tr></thead>
+        <tbody>{{range .Roles}}<tr><td><a href="{{esc .Href}}">{{.Name}}</a></td><td>{{esc .Base}}</td><td>{{esc .Override}}</td><td{{if .Tone}} class="tone-{{.Tone}}"{{end}}>{{esc .Result}}</td></tr>{{end}}</tbody>
+      </table>
+      {{end}}
+      {{range .Lines}}<p>{{.}}</p>{{end}}
+    </li>
+    {{end}}
+  </ol>
+</details>
+{{end}}
+
+{{define "access_role"}}
+<p class="hint">{{t "admin.h-access-role"}}</p>
+<form class="form-horizontal" method="GET" action="{{esc .Base}}role">
+  <div class="control-group">
+    <label class="control-label" for="id_role">{{t "admin.f-role"}}</label>
+    <div class="controls"><select id="id_role" name="role">
+      <option value="">—</option>
+      {{range .Roles}}<option value="{{.ID}}"{{if eq .ID $.Form.Role}} selected{{end}}>{{esc .Label}}</option>{{end}}
+    </select></div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="id_category">{{t "admin.access-category"}}</label>
+    <div class="controls"><select id="id_category" name="category">
+      <option value="">{{t "admin.access-sitewide"}}</option>
+      {{range .Categories}}<option value="{{esc .}}"{{if eq . $.Form.Category}} selected{{end}}>{{esc .}}</option>{{end}}
+    </select></div>
+  </div>
+  <div class="form-actions"><button type="submit" class="btn btn-primary"><i class="fas fa-stethoscope"></i>{{t "admin.access-check"}}</button></div>
+</form>
+{{with .RoleTable}}
+<h4><a href="{{esc $.RoleHref}}">{{esc $.RoleName}}</a></h4>
+{{if $.Everyone}}<div class="alert">{{t "admin.access-role-shared"}}</div>{{end}}
+<table class="table table-condensed access-table">
+  <thead><tr><th>{{t "admin.permissions"}}</th><th>{{t "admin.access-role-setting"}}</th><th>{{t "admin.access-override"}}</th><th>{{t "admin.access-result"}}</th></tr></thead>
+  {{range .}}
+  <tbody>
+    <tr class="access-group"><th colspan="4">{{esc .Label}}</th></tr>
+    {{range .Rows}}<tr><td>{{esc .Label}} <span class="stamp">{{esc .Name}}</span></td><td>{{esc .Base}}</td><td>{{esc .Override}}</td><td{{if .Tone}} class="tone-{{.Tone}}"{{end}}>{{esc .Result}}</td></tr>{{end}}
+  </tbody>
+  {{end}}
+</table>
+{{end}}
+{{end}}
+
+{{define "access_holders"}}
+<form class="form-horizontal" method="GET" action="{{esc .Base}}holders">
+  <div class="control-group">
+    <label class="control-label" for="id_perm">{{t "admin.permissions"}}</label>
+    <div class="controls">{{template "access_perm_select" (dict "groups" .Perms "picked" .Form.Perm "all" false)}}</div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="id_target">{{t "admin.access-target"}}</label>
+    <div class="controls">
+      <input type="text" id="id_target" name="target" value="{{esc .Form.Target}}" placeholder="{{t "admin.access-target-placeholder"}}">
+    </div>
+  </div>
+  <div class="form-actions"><button type="submit" class="btn btn-primary"><i class="fas fa-search"></i>{{t "admin.access-check"}}</button></div>
+</form>
+{{template "form_error" .Problem}}
+{{if .Checked}}
+<table class="table table-condensed access-facts"><tbody>
+  {{with .Anonymous}}<tr><th>{{t "admin.access-anonymous"}}</th><td class="tone-{{if .Allowed}}allow{{else}}deny{{end}}"><i class="fas fa-{{if .Allowed}}check{{else}}times{{end}}"></i> {{.Summary}}</td></tr>{{end}}
+  {{with .Member}}<tr><th>{{t "admin.access-plain-member"}}</th><td class="tone-{{if .Allowed}}allow{{else}}deny{{end}}"><i class="fas fa-{{if .Allowed}}check{{else}}times{{end}}"></i> {{.Summary}}</td></tr>{{end}}
+</tbody></table>
+<p class="hint">{{t "admin.h-access-plain-member"}}</p>
+{{if .Truncated}}<div class="alert">{{t "admin.access-truncated" "n" .Truncated}}</div>{{end}}
+<h4>{{t "admin.access-holders" "n" (len .Holders)}}</h4>
+{{template "access_people" .Holders}}
+<h4>{{t "admin.access-refused-list" "n" (len .Refused)}}</h4>
+{{template "access_people" .Refused}}
+{{end}}
+{{end}}
+
+{{define "access_people"}}
+<table class="table table-condensed"><tbody>
+  {{range .}}<tr>
+    <td class="access-mark tone-{{if .Allowed}}allow{{else}}deny{{end}}"><i class="fas fa-{{if .Allowed}}check{{else}}times{{end}}"></i></td>
+    <td><a href="{{esc .Href}}">{{esc .Name}}</a></td>
+    <td>{{.Summary}}</td>
+    <td class="right"><a href="{{esc .Check}}">{{t "admin.access-details"}}</a></td>
+  </tr>{{else}}<tr><td class="muted">{{t "admin.empty"}}</td></tr>{{end}}
+</tbody></table>
+{{end}}
+
+{{define "access_lint"}}
+{{if .Findings}}
+<table class="table table-condensed access-lint"><tbody>
+  {{range .Findings}}<tr>
+    <td><span class="state {{.Tone}}">{{t (printf "admin.lint-tone-%s" .Tone)}}</span></td>
+    <td>{{.Text}}</td>
+    <td class="right">{{if .Href}}<a href="{{esc .Href}}">{{esc .Link}}</a>{{end}}</td>
+  </tr>{{end}}
+</tbody></table>
+{{else}}
+<div class="alert">{{t "admin.lint-clean"}}</div>
+{{end}}
+{{end}}

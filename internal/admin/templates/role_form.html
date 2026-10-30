@@ -1,5 +1,13 @@
 {{define "role_form.html"}}
 {{template "form_error" .Error}}
+{{if .Warnings}}
+<div class="alert alert-block role-warnings">
+  <h4><i class="fas fa-exclamation-triangle"></i>{{t "admin.role-warnings"}}</h4>
+  <ul>
+    {{range .Warnings}}<li>{{.Text}}{{if .Href}} <a href="{{esc .Href}}">{{esc .Link}}</a>{{end}}</li>{{end}}
+  </ul>
+</div>
+{{end}}
 <form method="POST" action="{{esc .Action}}" enctype="multipart/form-data">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
@@ -106,6 +114,6 @@
   </div>
   {{end}}
 
-  {{template "save_row" dict "back" .Back "del" (and .Role.ID (not .Builtin))}}
+  {{template "save_row" dict "back" .Back "del" (and .Role.ID (not .Builtin)) "access" (and .Role.ID .Access)}}
 </form>
 {{end}}

@@ -1,5 +1,5 @@
 .admin-shell .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
-.admin-shell .row { display: flex; align-items: flex-start; }
+.admin-shell .row { display: flex; align-items: flex-start; min-width: 0; }
 .admin-shell .row > .span3 { width: 232px; flex: none; }
 .admin-shell .row > .span9 { flex: 1; min-width: 0; }
 .admin-shell .row-fluid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 36px; }
@@ -249,6 +249,7 @@ body.admin .system-content .content .control-label {
 .admin-shell .form-actions { display: flex; align-items: center; gap: 12px; padding-top: 18px; flex-wrap: wrap; }
 
 body.admin .system-content .content input[type=text],
+body.admin .system-content .content input[type=search],
 body.admin .system-content .content input[type=email],
 body.admin .system-content .content input[type=password],
 body.admin .system-content .content input[type=number],
@@ -260,6 +261,7 @@ body.admin .system-content .content textarea {
   font-size: 14px; width: 100%;
 }
 body.admin .system-content .content input[type=text]:focus,
+body.admin .system-content .content input[type=search]:focus,
 body.admin .system-content .content input[type=email]:focus,
 body.admin .system-content .content input[type=password]:focus,
 body.admin .system-content .content input[type=number]:focus,
@@ -454,6 +456,7 @@ body.admin .system-content .content .control-label {
 }
 .admin-shell .hint { font-size: 13px; color: var(--muted); }
 body.admin .system-content .content input[type=text],
+body.admin .system-content .content input[type=search],
 body.admin .system-content .content input[type=email],
 body.admin .system-content .content input[type=password],
 body.admin .system-content .content input[type=number],
@@ -461,6 +464,7 @@ body.admin .system-content .content input[type=datetime-local],
 body.admin .system-content .content select,
 body.admin .system-content .content textarea { border-color: var(--quiet); }
 body.admin .system-content .content input[type=text]:focus,
+body.admin .system-content .content input[type=search]:focus,
 body.admin .system-content .content input[type=email]:focus,
 body.admin .system-content .content input[type=password]:focus,
 body.admin .system-content .content input[type=number]:focus,
@@ -519,3 +523,41 @@ body.admin .system-content .content .link-out { font-family: 'JetBrains Mono', u
 body.admin .system-container { min-height: calc(100vh - 66px); }
 .admin-shell > .container { flex: 1; display: flex; width: 100%; }
 .admin-shell > .container > .row { flex: 1; }
+
+.admin-shell .tone-allow { color: #1a7f37; }
+.admin-shell .tone-deny { color: var(--danger); }
+.admin-shell .state.allow { border-color: #1a7f37; color: #1a7f37; }
+.admin-shell .state.deny { border-color: var(--danger); color: var(--danger); }
+.admin-shell .state.warn { border-color: #9a6700; color: #9a6700; }
+.admin-shell .access-facts th { width: 9em; color: var(--muted); font-weight: 500; text-align: left; white-space: nowrap; }
+.admin-shell .access-table .access-group th { padding-top: 16px; }
+.admin-shell .access-mark { width: 1.5em; font-weight: 700; }
+.admin-shell .verdict { border: 1px solid var(--rule); border-left-width: 4px; border-radius: var(--rad); padding: 12px 14px; margin: 18px 0 10px; }
+.admin-shell .verdict-allow { border-left-color: #1a7f37; }
+.admin-shell .verdict-deny { border-left-color: var(--danger); }
+.admin-shell .verdict-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: 15px; }
+.admin-shell .verdict-mark { font-weight: 700; }
+.admin-shell .verdict-allow .verdict-mark { color: #1a7f37; }
+.admin-shell .verdict-deny .verdict-mark { color: var(--danger); }
+.admin-shell .verdict-why, .admin-shell .verdict-also, .admin-shell .verdict-fix { margin-top: 6px; font-size: 13px; }
+.admin-shell .verdict-also, .admin-shell .verdict-fix { color: var(--muted); }
+.admin-shell .access-steps > summary { cursor: pointer; font-size: 13px; margin-bottom: 8px; }
+.admin-shell .access-steps > ol { list-style: none; margin: 0; padding: 0; }
+.admin-shell .access-steps > ol > li { border-top: 1px solid var(--rule); padding: 10px 0; }
+.admin-shell .access-steps > ol > li.step-skip, .admin-shell .access-steps > ol > li.step-none { opacity: 0.5; }
+.admin-shell .access-steps > ol > li.decisive { opacity: 1; }
+.admin-shell .access-steps .step-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.admin-shell .access-steps .step-n { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 1.5em; }
+.admin-shell .access-steps .step-title { font-weight: 500; }
+.admin-shell .access-steps p { margin: 4px 0 0 2.1em; font-size: 13px; }
+.admin-shell .access-steps .access-roles { margin: 6px 0 0 2.1em; width: auto; }
+.admin-shell .access-lint td.right { white-space: nowrap; }
+.admin-shell .tone-allow > .fa-check, .admin-shell .tone-deny > .fa-times { margin-right: 6px; }
+.admin-shell .role-warnings { border-color: #9a6700; background: #fff8e5; }
+.admin-shell .role-warnings h4, .admin-shell .role-flag { color: #9a6700; }
+.admin-shell .role-warnings h4 .fa-exclamation-triangle { margin-right: 6px; }
+.admin-shell .role-warnings ul { color: var(--ink); margin-bottom: 0; }
+.admin-shell .menu-search { padding: 0 14px 12px 10px; }
+.admin-shell .menu-search input { width: 100%; box-sizing: border-box; }
+.admin-shell .search-results .search-group { margin-left: auto; padding-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+.admin-shell .search-results .search-none { margin: 6px 2px; font-size: 13px; color: var(--muted); }

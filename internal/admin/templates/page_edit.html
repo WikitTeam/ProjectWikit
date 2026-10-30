@@ -16,6 +16,7 @@
       <div class="form-actions">
         <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
         <a class="btn" href="{{esc .Back}}">{{t "admin.back-to-list"}}</a>
+        {{if .Access}}<a class="btn" href="{{esc .Access}}"><i class="fas fa-stethoscope"></i>{{t "admin.access-check-page"}}</a>{{end}}
         <a class="btn pull-right" href="/{{esc .Full}}" target="_blank" rel="noreferrer"><i class="fas fa-external-link-alt"></i>{{t "admin.open-page"}}</a>
       </div>
     </form>

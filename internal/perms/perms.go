@@ -198,111 +198,27 @@ func Resolve(s Subject, o *Object) Set {
 	if !s.Active && !s.Anonymous {
 		return Set{named: map[string]bool{}}
 	}
-
+	e := prepare(s, o)
+	// Only a name some role allows, or one authorship hands out, can come out
+	// allowed, so nothing else needs deciding.
+	candidates := map[string]bool{ManageArticleAuthors: true, EditForumThreads: true, EditForumPosts: true}
+	for _, role := range e.roles {
+		for name, v := range role.base {
+			if v == Allow {
+				candidates[name] = true
+			}
+		}
+		for name, v := range role.override {
+			if v == Allow {
+				candidates[name] = true
+			}
+		}
+	}
 	granted := make(map[string]bool)
-	// A role that refuses a permission refuses it for everyone holding that
-	// role, so the refusals are collected across roles and applied last.
-	refused := make(map[string]bool)
-	for _, role := range s.Roles {
-		allow := make(map[string]bool, len(role.Permissions))
-		for _, name := range role.Permissions {
-			allow[name] = true
-		}
-		deny := make(map[string]bool, len(role.Restrictions))
-		for _, name := range role.Restrictions {
-			delete(allow, name)
-			deny[name] = true
-		}
-		if o != nil {
-			applyOverride(allow, deny, o.Overrides, role.ID)
-		}
-		for name := range allow {
+	for name := range candidates {
+		if e.decide(name, nil) {
 			granted[name] = true
-		}
-		for name := range deny {
-			refused[name] = true
-		}
-	}
-	for name := range refused {
-		delete(granted, name)
-	}
-	if o != nil {
-		applyObject(granted, o, s)
-	}
-	if s.Unverified {
-		for _, name := range unverified {
-			delete(granted, name)
-		}
-	}
-	for _, kind := range s.Sanctions {
-		for _, name := range sanctioned(kind) {
-			delete(granted, name)
 		}
 	}
 	return Set{named: granted}
-}
-
-func applyOverride(allow, deny map[string]bool, overrides []Override, roleID int64) {
-	for _, override := range overrides {
-		if override.RoleID != roleID {
-			continue
-		}
-		for _, name := range override.Permissions {
-			allow[name] = true
-			delete(deny, name)
-		}
-		for _, name := range override.Restrictions {
-			delete(allow, name)
-			deny[name] = true
-		}
-		return
-	}
-}
-
-func applyObject(granted map[string]bool, o *Object, s Subject) {
-	switch o.Kind {
-	case KindForumSection:
-		if o.HiddenForUsers && granted[ViewForumSections] && !granted[ViewHiddenForumSections] {
-			delete(granted, ViewForumSections)
-		}
-		return
-	case KindForumThread:
-		applyThread(granted, o, s)
-		return
-	case KindForumPost:
-		// The grant reads the site-wide answer rather than what this thread
-		// has left, so a locked thread still lets its author keep the post.
-		if o.Author && Resolve(s, nil).Has(CreateForumPosts) {
-			granted[EditForumPosts] = true
-		}
-		if o.Thread != nil {
-			applyThread(granted, o.Thread, s)
-		}
-		return
-	}
-	if o.Locked {
-		if !granted[LockArticles] {
-			for _, name := range lockable {
-				delete(granted, name)
-			}
-		}
-		return
-	}
-	if o.Author {
-		granted[ManageArticleAuthors] = true
-	}
-}
-
-func applyThread(granted map[string]bool, o *Object, s Subject) {
-	if o.Author {
-		granted[EditForumThreads] = true
-	}
-	barred := !s.Anonymous && !s.ForumActive
-	locked := o.Locked && !granted[LockForumThreads]
-	if !barred && !locked {
-		return
-	}
-	for _, name := range silenced {
-		delete(granted, name)
-	}
 }

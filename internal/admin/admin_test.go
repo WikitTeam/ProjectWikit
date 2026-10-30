@@ -196,9 +196,21 @@ func TestBuiltinRolesAreNamed(t *testing.T) {
 
 func TestEveryScreenNeedsAPermission(t *testing.T) {
 	for _, s := range screens {
-		if s.need == "" && !s.super && !s.all {
-			t.Errorf("screen %q needs no permission, want one, all or super", s.slug)
+		if s.need == "" && !s.super && !s.all && len(s.anyOf) == 0 {
+			t.Errorf("screen %q needs no permission, want one, any of several, all or super", s.slug)
 		}
+	}
+}
+
+func TestScreenOpensForAnyOf(t *testing.T) {
+	s := screen{anyOf: []string{perms.ManageUsers, perms.ManageRoles}}
+	roles := perms.Resolve(perms.Subject{Active: true, Roles: []perms.Role{{ID: 1, Permissions: []string{perms.ManageRoles}}}}, nil)
+	tags := perms.Resolve(perms.Subject{Active: true, Roles: []perms.Role{{ID: 1, Permissions: []string{perms.ManageTags}}}}, nil)
+	if !s.opensFor(roles, false) {
+		t.Error("opensFor(manage_roles) = false, want true")
+	}
+	if s.opensFor(tags, false) {
+		t.Error("opensFor(manage_tags) = true, want false")
 	}
 }
 
@@ -265,7 +277,7 @@ func TestEveryScreenIsRegistered(t *testing.T) {
 		"themes", "site", "roles", "role-categories", "users", "reports",
 		"forum-sections", "forum-categories", "admin-log",
 		"tags", "tag-categories", "page-categories",
-		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages", "ip-bans", "include-mirrors",
+		"tickets", "membership-applications", "invite-links", "suspicious", "forum-posts", "pages", "ip-bans", "include-mirrors", "access",
 	}
 	got := make([]string, 0, len(screens))
 	for _, s := range screens {
@@ -287,7 +299,7 @@ func TestEveryScreenHasItsTemplates(t *testing.T) {
 		t.Fatalf("New() err = %v, want nil", err)
 	}
 	for _, name := range []string{
-		"dashboard.html", "suspicious.html", "mirror_list.html", "mirror_form.html", "mirror_job", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html", "site_form.html",
+		"dashboard.html", "suspicious.html", "access.html", "mirror_list.html", "mirror_form.html", "mirror_job", "layout.html", "row_text", "pager", "save_row", "theme_list.html", "theme_form.html", "site_form.html",
 		"role_list.html", "role_form.html", "role_category.html",
 		"user_list.html", "user_form.html", "user_activity.html",
 		"report_list.html", "report_form.html",

@@ -47,9 +47,15 @@ func (h *Handler) roles(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		if err != nil {
 			return err
 		}
+		warnings, err := h.roleWarnings(r.Context(), loc)
+		if err != nil {
+			return err
+		}
 		return h.page(w, r, loc, loc.T("admin.roles"), "role_list.html", map[string]any{
 			"Roles":     found,
 			"Managing":  managing,
+			"Warnings":  warnings,
+			"Builtin":   builtinIDs(found),
 			"UsersHref": Prefix + userSlug + "/?role=",
 			"New":       Prefix + roleSlug + "/new",
 			"Base":      Prefix + roleSlug + "/",
@@ -79,6 +85,52 @@ func (h *Handler) managingRoles(ctx context.Context, roles []db.RoleRow) (map[in
 		}
 	}
 	return out, nil
+}
+
+// Only the roles everyone holds are flagged. A Deny on any other role is
+// usually the point of that role.
+func (h *Handler) roleWarnings(ctx context.Context, loc *i18n.Localizer) (map[int64][]finding, error) {
+	x, err := h.newExplainer(ctx, loc)
+	if err != nil {
+		return nil, err
+	}
+	findings, err := h.lint(ctx, x)
+	if err != nil {
+		return nil, err
+	}
+	out := map[int64][]finding{}
+	for _, f := range findings {
+		if choice, ok := x.roles[f.RoleID]; ok && slices.Contains(builtinRoles, choice.Slug) {
+			out[f.RoleID] = append(out[f.RoleID], f)
+		}
+	}
+	return out, nil
+}
+
+// Everyone and registered are added to every visitor when permissions are
+// worked out, so a stored link to them would only skew the member count.
+func assignableRoles(all []db.RoleChoice) []db.RoleChoice {
+	out := make([]db.RoleChoice, 0, len(all))
+	for _, one := range all {
+		if !slices.Contains(builtinRoles, one.Slug) {
+			out = append(out, one)
+		}
+	}
+	return out
+}
+
+// A role the form did not offer is dropped rather than refused, so a setting
+// that already points at a built-in role clears on the next save.
+func offered(id *int64, choices []db.RoleChoice) *int64 {
+	if id == nil {
+		return nil
+	}
+	for _, one := range choices {
+		if one.ID == *id {
+			return id
+		}
+	}
+	return nil
 }
 
 func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest, problem string) error {
@@ -112,6 +164,16 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
+	warnings, err := h.roleWarnings(ctx, loc)
+	if err != nil {
+		return err
+	}
+	own := warnings[row.ID]
+	for i := range own {
+		if own[i].Href == Prefix+roleSlug+"/"+rest {
+			own[i].Href = ""
+		}
+	}
 
 	return h.page(w, r, loc, loc.T("admin.roles"), "role_form.html", map[string]any{
 		"Role":         row,
@@ -123,8 +185,10 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Builtin":      slices.Contains(builtinRoles, row.Slug),
 		"CSRF":         csrf.Issue(w, r),
 		"Error":        problem,
+		"Warnings":     own,
 		"Action":       Prefix + roleSlug + "/" + rest,
 		"Back":         Prefix + roleSlug + "/",
+		"Access":       h.accessHref(ctx, "role?role="+strconv.FormatInt(row.ID, 10)),
 	})
 }
 
@@ -307,4 +371,14 @@ func atoi(raw string) int {
 		return 0
 	}
 	return n
+}
+
+func builtinIDs(roles []db.RoleRow) map[int64]bool {
+	out := map[int64]bool{}
+	for _, one := range roles {
+		if slices.Contains(builtinRoles, one.Slug) {
+			out[one.ID] = true
+		}
+	}
+	return out
 }

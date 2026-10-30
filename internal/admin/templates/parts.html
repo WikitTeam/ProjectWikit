@@ -77,6 +77,7 @@
 <div class="form-actions">
   <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
   {{if .back}}<a class="btn" href="{{esc .back}}">{{t "admin.back-to-list"}}</a>{{end}}
+  {{if .access}}<a class="btn" href="{{esc .access}}"><i class="fas fa-stethoscope"></i>{{t "admin.access-check-role"}}</a>{{end}}
   {{if .del}}<button type="submit" name="delete" value="1" class="btn btn-danger pull-right"><i class="fas fa-trash"></i>{{t "admin.delete"}}</button>{{end}}
 </div>
 {{end}}
