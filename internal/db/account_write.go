@@ -99,7 +99,7 @@ func (d *DB) ActivateUser(ctx context.Context, id int64, username string, displa
 var qGrantRole = register("GrantRole", `
 INSERT INTO web_user_roles (user_id, role_id)
 SELECT $1, $2
-WHERE EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3)
+WHERE EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3 AND slug NOT IN ('everyone', 'registered'))
   AND NOT EXISTS (
 	SELECT 1 FROM web_user_roles WHERE user_id = $1 AND role_id = $2)`)
 

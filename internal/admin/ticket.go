@@ -144,10 +144,11 @@ func (h *Handler) ticketForm(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 	mayGrant := grants && granted.Has(perms.ManagePermissions)
 	if mayGrant {
-		roleList, err = h.deps.DB.AllRoles(ctx, siteID(ctx))
+		all, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 		if err != nil {
 			return err
 		}
+		roleList = assignableRoles(all)
 	}
 	return h.page(w, r, loc, loc.T(title), "ticket_form.html", map[string]any{
 		"Ticket":   row,

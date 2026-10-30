@@ -59,7 +59,7 @@ func (h *Handler) siteForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Site":        current,
 		"Settings":    settings,
 		"Themes":      themes,
-		"Roles":       roleList,
+		"Roles":       assignableRoles(roleList),
 		"RatingModes": ratingModes,
 		"TagModes":    tagModes,
 		"Policies":    emailPolicy,
@@ -117,12 +117,17 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.SystemThemeID = optionalID(r.PostFormValue("system_theme"))
 
 	if granted.Has(perms.ManagePermissions) {
-		next.DefaultRoleID = optionalID(r.PostFormValue("default_role"))
-		next.VerifiedRoleID = optionalID(r.PostFormValue("verified_role"))
+		roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
+		if err != nil {
+			return err
+		}
+		choices := assignableRoles(roleList)
+		next.DefaultRoleID = offered(optionalID(r.PostFormValue("default_role")), choices)
+		next.VerifiedRoleID = offered(optionalID(r.PostFormValue("verified_role")), choices)
 		next.MembershipPasswordEnabled = r.PostFormValue("membership_password_enabled") != ""
 		next.MembershipPassword = r.PostFormValue("membership_password")
-		next.MembershipPasswordRoleID = optionalID(r.PostFormValue("membership_password_role"))
-		next.ApplicationRoleID = optionalID(r.PostFormValue("application_role"))
+		next.MembershipPasswordRoleID = offered(optionalID(r.PostFormValue("membership_password_role")), choices)
+		next.ApplicationRoleID = offered(optionalID(r.PostFormValue("application_role")), choices)
 	}
 
 	settings := db.SiteSettings{

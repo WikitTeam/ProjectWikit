@@ -100,7 +100,7 @@ var qGrantTicketRole = register("GrantTicketRole", `
 INSERT INTO web_user_roles (user_id, role_id)
 SELECT t.author_id, $2 FROM web_userticket t
 WHERE t.id = $1 AND t.author_id IS NOT NULL
-  AND EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3)
+  AND EXISTS (SELECT 1 FROM web_role WHERE id = $2 AND site_id = $3 AND slug NOT IN ('everyone', 'registered'))
 ON CONFLICT DO NOTHING`)
 
 func (d *DB) ReviewTicket(ctx context.Context, siteID, id int64, status, notes, reply string, by int64, role *int64, at time.Time) error {

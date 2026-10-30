@@ -323,13 +323,7 @@ func (h *Handler) grantableRoles(r *http.Request, all []db.RoleChoice) []db.Role
 	if !grantsFrom(r.Context()).Has(perms.ManagePermissions) {
 		return nil
 	}
-	out := make([]db.RoleChoice, 0, len(all))
-	for _, one := range all {
-		if !contains(builtinRoles, one.Slug) {
-			out = append(out, one)
-		}
-	}
-	return out
+	return assignableRoles(all)
 }
 
 func (h *Handler) grantPicked(r *http.Request, userID int64) error {
