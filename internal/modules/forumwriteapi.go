@@ -77,6 +77,7 @@ func forumPostSubmit(env module.Env, params map[string]string) (wikijson.Object,
 	if err != nil {
 		return nil, err
 	}
+	module.Emit(env.Site, "post.created", map[string]any{"thread_id": thread.ID, "post_id": id, "user": actorName(env.User)})
 
 	post, err := env.Data.ForumPost(id)
 	if err != nil {
@@ -131,6 +132,7 @@ func forumThreadSubmit(env module.Env, params map[string]string) (wikijson.Objec
 	if err != nil {
 		return nil, err
 	}
+	module.Emit(env.Site, "post.created", map[string]any{"thread_id": threadID, "post_id": postID, "user": actorName(env.User)})
 	if env.User != nil {
 		if err := env.Data.SubscribeToThread(env.User.ID, threadID); err != nil {
 			return nil, err
@@ -643,4 +645,11 @@ func actorOf(env module.Env) *int64 {
 		return nil
 	}
 	return &env.User.ID
+}
+
+func actorName(u *db.User) string {
+	if u == nil {
+		return ""
+	}
+	return u.Username
 }

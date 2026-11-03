@@ -148,3 +148,5 @@ func recordedRoot(dir string) (string, bool) {
 	root := strings.TrimSpace(string(recorded))
 	return root, filepath.IsAbs(root)
 }
+
+func (p *Paths) Plugins() string { return filepath.Join(p.root, "plugins") }

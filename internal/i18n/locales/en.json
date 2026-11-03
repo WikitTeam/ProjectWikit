@@ -1273,9 +1273,21 @@
   "module-authorrank-pages": "Pages",
   "module-authorrank-empty": "No authors to rank yet.",
   "profile.show-trend": "Show my score over time on my profile",
+  "module-plugin-failed": "Plugin module '{name}' failed",
+  "admin.plugins": "Plugins",
+  "admin.plugins-none": "No plugins are installed on this instance.",
+  "admin.plugin-enabled": "On this site",
+  "admin.plugin-name": "Plugin",
+  "admin.plugin-modules": "Modules",
+  "admin.plugin-perms": "Permissions",
+  "admin.plugin-perm-kv": "Keep its own data",
+  "admin.plugin-perm-pages.read": "Read public pages",
+  "admin.plugin-perm-http": "Reach these addresses",
   "search-forum-comments": "Page discussions",
   "profile.from": "From",
   "profile.to": "To",
   "profile.filter": "Filter",
-  "profile.filter-clear": "Clear"
+  "profile.filter-clear": "Clear",
+  "admin.plugin-description": "Description",
+  "admin.plugin-no-description": "No description"
 }

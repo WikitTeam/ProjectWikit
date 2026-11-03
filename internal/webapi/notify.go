@@ -6,8 +6,10 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
@@ -21,6 +23,11 @@ func (h *Articles) notifyRevision(r *http.Request, article *db.Article, rev db.R
 		return err
 	}
 	editor := auth.FromContext(ctx)
+	event := "page.edited"
+	if entry.Type == db.LogNew {
+		event = "page.created"
+	}
+	module.Emit(site.FromContext(ctx), event, map[string]any{"page": article.FullName(), "user": usernameOf(editor)})
 	if err := h.seen(r, editor); err != nil {
 		return err
 	}
@@ -102,4 +109,11 @@ func (h *Articles) seen(r *http.Request, user *db.User) error {
 		return nil
 	}
 	return h.deps.DB.SeenAddress(r.Context(), user.ID, &addr, time.Now().UTC())
+}
+
+func usernameOf(u *db.User) string {
+	if u == nil {
+		return ""
+	}
+	return u.Username
 }

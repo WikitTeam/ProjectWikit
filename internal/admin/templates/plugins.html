@@ -1,0 +1,42 @@
+{{define "plugins.html"}}
+{{if not .Plugins}}
+<div class="widget-box">
+  <div class="widget-title"><i class="fas fa-puzzle-piece"></i><h5>{{t "admin.plugins"}}</h5></div>
+  <div class="widget-content"><p class="muted">{{t "admin.plugins-none"}}</p></div>
+</div>
+{{else}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <table class="table table-hover plugin-table">
+    <thead>
+      <tr>
+        <th>{{t "admin.plugin-enabled"}}</th>
+        <th>{{t "admin.plugin-name"}}</th>
+        <th>{{t "admin.plugin-description"}}</th>
+        <th>{{t "admin.plugin-modules"}}</th>
+        <th>{{t "admin.plugin-perms"}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Plugins}}
+      <tr>
+        <td><input type="checkbox" name="enabled" value="{{esc .Name}}" id="id_plugin_{{esc .Name}}"{{if .Enabled}} checked{{end}}></td>
+        <td>
+          <label for="id_plugin_{{esc .Name}}"><strong>{{esc .Title}}</strong> <span class="stamp">{{esc .Version}}</span></label>
+        </td>
+        <td>{{if .Description}}{{esc .Description}}{{else}}<span class="muted">{{t "admin.plugin-no-description"}}</span>{{end}}</td>
+        <td>{{range .Modules}}<code>[[module {{esc .}}]]</code> {{end}}</td>
+        <td>
+          {{range .Permissions}}<div>{{esc .}}</div>{{end}}
+          {{range .Hosts}}<div><code>{{esc .}}</code></div>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
+  </div>
+</form>
+{{end}}
+{{end}}

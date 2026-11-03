@@ -9,6 +9,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
@@ -49,8 +50,12 @@ func (h *Articles) remove(r *http.Request, loc *i18n.Localizer, name string) (st
 	if err := h.noticeDeletion(ctx, loc, current, user, article); err != nil {
 		return "", 0, err
 	}
+	public := module.Plugins != nil && module.Plugins.PagePublic(ctx, current, article.FullName())
 	if err := h.deps.DB.DeleteArticle(ctx, siteID(ctx), article.ID, article.FullName()); err != nil {
 		return "", 0, err
+	}
+	if public {
+		module.Emit(current, "page.deleted", map[string]any{"page": article.FullName(), "user": usernameOf(user)})
 	}
 	if err := h.seen(r, user); err != nil {
 		return "", 0, err

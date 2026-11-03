@@ -1273,9 +1273,21 @@
   "module-authorrank-pages": "页面数",
   "module-authorrank-empty": "还没有可排名的作者。",
   "profile.show-trend": "在主页显示得分走势",
+  "module-plugin-failed": "插件模块“{name}”运行失败",
+  "admin.plugins": "插件",
+  "admin.plugins-none": "这个实例没有安装插件。",
+  "admin.plugin-enabled": "本站启用",
+  "admin.plugin-name": "插件",
+  "admin.plugin-modules": "模块",
+  "admin.plugin-perms": "权限",
+  "admin.plugin-perm-kv": "保存自己的数据",
+  "admin.plugin-perm-pages.read": "读取公开页面",
+  "admin.plugin-perm-http": "访问以下网址",
   "search-forum-comments": "页面讨论",
   "profile.from": "开始日期",
   "profile.to": "结束日期",
   "profile.filter": "筛选",
-  "profile.filter-clear": "清除"
+  "profile.filter-clear": "清除",
+  "admin.plugin-description": "描述",
+  "admin.plugin-no-description": "暂无描述"
 }

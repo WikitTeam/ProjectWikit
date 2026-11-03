@@ -154,6 +154,7 @@ func rateVote(env module.Env, params map[string]string) (wikijson.Object, error)
 	if err != nil {
 		return nil, err
 	}
+	module.Emit(env.Site, "vote.changed", map[string]any{"page": article.FullName(), "user": actorName(env.User), "vote": value})
 	if err := env.Data.SeenAddress(env.User); err != nil {
 		return nil, err
 	}

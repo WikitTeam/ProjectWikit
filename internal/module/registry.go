@@ -62,7 +62,15 @@ func Lookup(name string) (Info, bool) {
 
 func HasContent(name string) bool {
 	info, ok := Lookup(name)
+	if !ok && Plugins != nil {
+		return Plugins.ModuleHasContent(strings.ToLower(strings.TrimSpace(name)))
+	}
 	return ok && !info.Removed && info.HasContent
+}
+
+func Builtin(name string) bool {
+	_, ok := registry[name]
+	return ok
 }
 
 func HasItemBody(name string) bool {

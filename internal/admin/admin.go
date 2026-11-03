@@ -22,6 +22,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/mirror"
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/plugin"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
@@ -54,6 +55,7 @@ type Deps struct {
 	Updates  *update.Board
 	Mirrors  *mirror.Runner
 	Engine   renderer.Renderer
+	Plugins  *plugin.Host
 	Icons    roles.IconLoader
 
 	Log *slog.Logger
@@ -118,6 +120,7 @@ var groups = []struct {
 		{tagSlug, "fa-tag"},
 		{tagCategorySlug, "fa-tags"},
 		{mirrorSlug, "fa-clone"},
+		{pluginSlug, "fa-puzzle-piece"},
 	}},
 	{"members", "admin.group-members", "fa-users", []railEntry{
 		{userSlug, "fa-user"},

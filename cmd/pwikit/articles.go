@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -23,7 +24,9 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/mail"
 	"github.com/WikitTeam/ProjectWikit/internal/mirror"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/plugin"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
@@ -89,6 +92,14 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	}
 	icons := roles.FileIcons(p.Files())
 	board.Bundle = bundle
+	plugins, err := plugin.Load(context.Background(), p.Plugins(), conn, log, module.Builtin)
+	if err != nil {
+		closeEngine()
+		return nil, err
+	}
+	if len(plugins.Installed()) > 0 {
+		module.Plugins = plugins
+	}
 
 	pages := articlepage.New(articlepage.Deps{
 		DB:          conn,
@@ -138,8 +149,11 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		adminPages:    next,
 		favesAPI:      webapi.NewFavourites(api, next),
 		ownRowsAPI:    webapi.NewOwnRows(api, next),
-		close:         closeEngine,
-		unresolved:    site.NewUnresolved(bundle, static.NewAssets(assets)),
+		close: func() {
+			plugins.Close(context.Background())
+			closeEngine()
+		},
+		unresolved: site.NewUnresolved(bundle, static.NewAssets(assets)),
 	}
 	store := session.New(secret)
 	verifier, err := claimVerifier(conn, p, cfg.Wikidot, bundle, log)
@@ -167,7 +181,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
 		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Updates: board, Log: log,
 		Mirrors: mirror.NewRunner(conn, wikidotsrc.New(mirrorPerSite, mirrorTotal)),
-		Engine:  engine, Icons: icons,
+		Engine:  engine, Icons: icons, Plugins: plugins,
 	}, next)
 	if err != nil {
 		return nil, err

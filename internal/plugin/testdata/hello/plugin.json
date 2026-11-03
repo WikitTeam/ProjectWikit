@@ -1,0 +1,12 @@
+{
+  "name": "hello",
+  "version": "1.0.0",
+  "api": 1,
+  "title": "Hello",
+  "description": "向读者问好，并统计页面访问次数。",
+  "modules": [{"name": "hello", "content": true}, {"name": "pagetitle"}, {"name": "echo"}, {"name": "spin"}],
+  "profile_title": "Hello",
+  "events": ["page.created", "page.edited"],
+  "permissions": ["kv", "pages.read"],
+  "timeout_ms": 300
+}

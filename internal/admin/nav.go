@@ -124,6 +124,7 @@ var screenTemplates = map[string][]string{
 	ipBanSlug:          {"ip_ban_list.html"},
 	membershipSlug:     {"ticket_list.html", "ticket_form.html"},
 	membershipQuizSlug: {"membership_quiz.html"},
+	pluginSlug:         {"plugins.html"},
 	mirrorSlug:         {"mirror_form.html", "mirror_list.html"},
 	pageCategorySlug:   {"page_category_form.html", "page_category_list.html"},
 	pageSlug:           {"page_list.html", "page_edit.html"},

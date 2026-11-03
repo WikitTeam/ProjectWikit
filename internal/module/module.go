@@ -3,6 +3,7 @@
 package module
 
 import (
+	"context"
 	"slices"
 	"strings"
 	"time"
@@ -190,6 +191,28 @@ func (e Env) MediaDomain() string {
 
 type Renderer func(env Env, params map[string]string, body string) (string, error)
 
+// Plugins answers for module names the built-in registry does not know, and
+// hears what happens on a site. It stays nil on an instance without plugins.
+var Plugins interface {
+	ModuleHasContent(name string) bool
+	RenderModule(env Env, name string, params map[string]string, body string) (string, bool, error)
+	Emit(site *db.Site, event string, payload map[string]any)
+	PagePublic(ctx context.Context, site *db.Site, name string) bool
+	ProfileSections(ctx context.Context, site *db.Site, owner, viewer *db.User) []ProfileSection
+}
+
+type ProfileSection struct {
+	Plugin string
+	Title  string
+	Body   string
+}
+
+func Emit(site *db.Site, event string, payload map[string]any) {
+	if Plugins != nil {
+		Plugins.Emit(site, event, payload)
+	}
+}
+
 var renderers = map[string]Renderer{}
 
 // Register is called from each module's own file. A name the registry does not
@@ -212,6 +235,12 @@ func Render(env Env, name string, params map[string]string, body string) (string
 		if render, ok := renderers[info.Name]; ok {
 			env.Name = name
 			return render(env, params, body)
+		}
+	}
+	if key := strings.ToLower(strings.TrimSpace(name)); !ok && Plugins != nil && allowed(env.Page, key) {
+		env.Name = name
+		if html, handled, err := Plugins.RenderModule(env, key, params, body); handled {
+			return html, err
 		}
 	}
 	return "", &Error{Message: env.Text("module-unknown", "name", name)}

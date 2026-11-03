@@ -11,6 +11,8 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/module"
+	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
@@ -210,4 +212,28 @@ func signed(v float64) string {
 		return "+" + s
 	}
 	return s
+}
+
+func (h *Handler) pluginSections(r *http.Request, loc *i18n.Localizer, current *db.Site,
+	profile *db.Profile, viewer *db.User) ([]shell.PluginSection, error) {
+
+	if module.Plugins == nil {
+		return nil, nil
+	}
+	ctx := r.Context()
+	found := module.Plugins.ProfileSections(ctx, current, &db.User{ID: profile.ID, Username: profile.Username}, viewer)
+	if len(found) == 0 {
+		return nil, nil
+	}
+	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.Env(ctx, loc, current, viewer)
+	out := make([]shell.PluginSection, 0, len(found))
+	for _, f := range found {
+		html, err := env.Message(f.Body)
+		if err != nil {
+			h.log().Error("render plugin profile block", "plugin", f.Plugin, "err", err)
+			continue
+		}
+		out = append(out, shell.PluginSection{Title: f.Title, HTML: html})
+	}
+	return out, nil
 }

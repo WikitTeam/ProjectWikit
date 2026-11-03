@@ -200,6 +200,12 @@
         {{end}}
       </section>
       {{end}}
+      {{range .PluginSections}}
+      <section class="profile-section plugin-block">
+        <span class="label">{{esc .Title}}</span>
+        <div class="plugin-body">{{.HTML}}</div>
+      </section>
+      {{end}}
       {{end}}
 
     </main>

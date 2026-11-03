@@ -260,6 +260,9 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		if err == nil && profile.Bio != "" {
 			data.BioHTML, err = h.bio(r, loc, current, profile, viewer)
 		}
+		if err == nil {
+			data.PluginSections, err = h.pluginSections(r, loc, current, profile, viewer)
+		}
 	}
 	if err != nil {
 		return shell.Profile{}, err

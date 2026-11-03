@@ -322,6 +322,8 @@ type Profile struct {
 	Posts ProfileFeed
 
 	PagesFrom, PagesTo string
+
+	PluginSections []PluginSection
 }
 
 const (
@@ -745,4 +747,9 @@ func SystemNotFound(bundle *i18n.Bundle, assets *static.Assets) http.Handler {
 		name, _, _ := strings.Cut(strings.TrimPrefix(req.URL.Path, "/-/"), "/")
 		New(loc, assets).Missing(w, req, loc.T("system.category-not-found", "name", name))
 	})
+}
+
+type PluginSection struct {
+	Title string
+	HTML  string
 }
