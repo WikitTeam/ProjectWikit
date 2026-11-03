@@ -109,6 +109,7 @@ type LoginStatus struct {
 	Roles             []roles.Role
 	CanEditArticles   bool
 	NotificationCount int
+	Unread            db.Unread
 	SiteSuperuser     bool
 	SignupClosed      bool
 }
@@ -122,6 +123,13 @@ func (l LoginStatus) JSON(loc *i18n.Localizer) (string, error) {
 	out := wikijson.Object{
 		{Key: "user", Value: user.Object()},
 		{Key: "notificationCount", Value: l.NotificationCount},
+	}
+	if l.Unread.Total() > 0 {
+		out = append(out, wikijson.Field{Key: "unread", Value: wikijson.Object{
+			{Key: "notices", Value: l.Unread.Notices},
+			{Key: "comments", Value: l.Unread.Comments},
+			{Key: "messages", Value: l.Unread.Messages},
+		}})
 	}
 	if l.SignupClosed {
 		out = append(out, wikijson.Field{Key: "signupClosed", Value: true})

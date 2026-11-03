@@ -112,6 +112,10 @@ func (h *Handler) saveSite(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	next.EmailPolicy = r.PostFormValue("email_policy")
 	next.Language = r.PostFormValue("language")
 	next.LanguageFollowsVisitor = r.PostFormValue("language_follows_visitor") != ""
+	next.SelfVotesForbidden = r.PostFormValue("self_votes_forbidden") != ""
+	next.EditForbiddenHint = r.PostFormValue("edit_forbidden_hint")
+	next.DeletionNoticeEnabled = r.PostFormValue("deletion_notice_enabled") != ""
+	next.DeletionNotice = r.PostFormValue("deletion_notice")
 	next.TimeZone = strings.TrimSpace(r.PostFormValue("time_zone"))
 	next.ThemeID = optionalID(r.PostFormValue("active_theme"))
 	next.SystemThemeID = optionalID(r.PostFormValue("system_theme"))

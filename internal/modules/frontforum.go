@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
@@ -92,7 +93,7 @@ func frontForumItems(env module.Env, ids []int64, params map[string]string) ([]f
 
 	limit := frontForumLimit
 	if n, err := wikinum.Int(params["limit"]); err == nil && n >= 0 {
-		limit = n
+		limit = min(n, listpages.MaxPerPage)
 	}
 	offset := 0
 	if n, err := wikinum.Int(params["offset"]); err == nil && n > 0 {

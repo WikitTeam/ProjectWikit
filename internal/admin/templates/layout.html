@@ -29,7 +29,7 @@
             <ul class="nav nav-tabs nav-stacked">
               <li data-search-text="{{esc .Dashboard.Label}}"><a href="{{esc .Dashboard.Href}}"><i class="fas {{esc .Dashboard.Icon}}"></i>{{esc .Dashboard.Label}}</a></li>
               {{range .Groups}}{{$group := .Label}}{{range .Items}}
-              <li data-search-text="{{esc .Label}} {{esc $group}}"><a href="{{esc .Href}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}<span class="search-group">{{esc $group}}</span></a></li>
+              <li data-search-text="{{esc .Label}} {{esc $group}}{{with .Search}} {{esc .}}{{end}}"><a href="{{esc .Href}}"><i class="fas {{esc .Icon}}"></i>{{esc .Label}}<span class="search-group">{{esc $group}}</span></a></li>
               {{end}}{{end}}
             </ul>
             <p class="search-none" hidden>{{.T "admin.search-none"}}</p>

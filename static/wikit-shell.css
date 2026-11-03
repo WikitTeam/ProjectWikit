@@ -765,3 +765,145 @@ body.wikit-page .system-container:has(.auth-shell) .site-footer a:focus-visible 
 @media (max-width: 700px) {
   body.wikit-page .site-footer { padding: 14px 16px; }
 }
+
+.wikit-scope .app-shell fieldset.notify-choices { margin: 0; border: 0; min-width: 0; }
+.wikit-scope .app-shell fieldset.notify-choices + .form-row { border-top: 1px solid var(--rule); }
+.wikit-scope .app-shell .notify-choices legend { float: left; width: 100%; padding: 0; margin: 0 0 2px; font-size: 13px; font-weight: 600; line-height: 1; }
+.wikit-scope .app-shell .notify-choices label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.wikit-scope .app-shell .notify-choices input { width: auto; margin: 0; }
+
+.wikit-scope .app-shell .mute-list { margin-top: 28px; }
+.wikit-scope .app-shell .mute-list h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.wikit-scope .app-shell .mute-list .hint { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.wikit-scope .app-shell .mute-list ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.wikit-scope .app-shell .mute-list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.wikit-scope .app-shell .mute-list li a { color: var(--ink); }
+.wikit-scope .app-shell .mute-list .mute-site { font-size: 12px; color: var(--muted); }
+.wikit-scope .app-shell .mute-list form { margin: 0 0 0 auto; }
+.wikit-scope .app-shell .mute-list .btn-ghost { padding: 3px 10px; font-size: 13px; }
+
+.wikit-scope .profile-head .socials { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 4px; }
+.wikit-scope .profile-head .social {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.wikit-scope .profile-head .social i,
+.wikit-scope .profile-head .social-icon { flex: none; width: 16px; height: 16px; font-size: 15px; line-height: 16px; text-align: center; color: var(--ink); transition: color 120ms ease; }
+.wikit-scope .profile-head .social-icon {
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.wikit-scope .profile-head .social-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wikit-scope .profile-head .social:hover { color: var(--ink); }
+.wikit-scope .profile-head .social:hover i,
+.wikit-scope .profile-head .social:hover .social-icon { color: var(--brand); }
+.wikit-scope .profile-head .social:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .wikit-scope .profile-head .social i,
+  .wikit-scope .profile-head .social-icon { transition: none; }
+}
+
+.wikit-scope .pins { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.wikit-scope .pins li { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: var(--rad-sm); background: #fff; min-width: 0; }
+.wikit-scope .pins .pin-title { color: var(--ink); font-weight: 600; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wikit-scope .pins .pin-title:hover { text-decoration: underline; }
+.wikit-scope .pins .pin-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+
+.wikit-scope .pin-hint { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.wikit-scope .feed.pages li { position: relative; }
+.wikit-scope .feed .pin-mark { font-size: 11px; color: var(--signal); border: 1px solid var(--signal); border-radius: var(--rad-sm); padding: 0 5px; line-height: 16px; }
+.wikit-scope .feed .pin-form { margin: 0; }
+.wikit-scope .feed .pin-form .btn-link { padding: 0; border: 0; background: none; font-size: 12px; color: var(--muted); cursor: pointer; }
+.wikit-scope .feed .pin-form .btn-link:hover { color: var(--ink); text-decoration: underline; }
+
+.wikit-scope .app-shell fieldset.profile-extras { margin: 0; border: 0; min-width: 0; }
+.wikit-scope .app-shell fieldset.profile-extras + .form-row,
+.wikit-scope .app-shell .form-row + fieldset.profile-extras,
+.wikit-scope .app-shell fieldset.profile-extras + fieldset.profile-extras { border-top: 1px solid var(--rule); }
+.wikit-scope .app-shell .profile-extras legend { float: left; width: 100%; padding: 0; margin: 0 0 4px; font-size: 13px; font-weight: 600; line-height: 1; }
+.wikit-scope .app-shell .profile-extras .pair { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 5fr); gap: 8px; }
+body.wikit-page .system-content .content .app-shell .profile-extras .pair input,
+body.wikit-page .system-content .content .app-shell .profile-extras .pair select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-sm);
+  background: #fff;
+  font-size: 14px;
+  color: var(--ink);
+}
+body.wikit-page .system-content .content .app-shell .profile-extras .pair input:focus,
+body.wikit-page .system-content .content .app-shell .profile-extras .pair select:focus { outline: 2px solid var(--signal); outline-offset: -1px; }
+@media (max-width: 520px) {
+  .wikit-scope .app-shell .profile-extras .pair { grid-template-columns: 1fr; }
+}
+
+.wikit-scope .app-shell fieldset.notify-choices + fieldset.notify-choices { border-top: 1px solid var(--rule); }
+.wikit-scope .profile-head .social:hover,
+.wikit-scope .profile-head .social:focus { background: none; }
+
+.wikit-scope .profile-section.activity { margin: 28px 0 24px; }
+.wikit-scope .activity-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.wikit-scope .activity-head .label { margin: 0; }
+.wikit-scope .activity-site select { padding: 3px 6px; border: 1px solid var(--rule); border-radius: var(--rad-sm); background: #fff; font-size: 13px; color: var(--ink); }
+.wikit-scope .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 0 0 14px; border: 1px solid var(--rule); border-radius: var(--rad-sm); }
+.wikit-scope .stats > div { padding: 10px 14px; }
+.wikit-scope .stats > div + div { border-left: 1px solid var(--rule); }
+.wikit-scope .stats dt { margin: 0 0 2px; font-size: 12px; color: var(--muted); }
+.wikit-scope .stats dd { margin: 0; font-size: 20px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) {
+  .wikit-scope .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wikit-scope .stats > div:nth-child(3) { border-left: 0; }
+  .wikit-scope .stats > div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+.wikit-scope .heatmap { overflow-x: auto; padding-bottom: 4px; }
+.wikit-scope .activity-site { display: flex; gap: 6px; }
+.wikit-scope .heatmap-months { display: grid; grid-auto-flow: column; grid-auto-columns: 13px; font-size: 11px; color: var(--muted); height: 16px; }
+.wikit-scope .heatmap-months span { white-space: nowrap; }
+.wikit-scope .heatmap-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 13px; }
+.wikit-scope .heatmap-week { display: grid; grid-template-rows: repeat(7, 13px); }
+.wikit-scope .heatmap i { display: block; width: 10px; height: 10px; border-radius: 2px; background: var(--well); outline: 1px solid rgba(0, 0, 0, 0.04); outline-offset: -1px; }
+.wikit-scope .heatmap i.blank { background: none; outline: 0; }
+.wikit-scope .heatmap i.l1 { background: #c6dbf7; }
+.wikit-scope .heatmap i.l2 { background: #86b1ee; }
+.wikit-scope .heatmap i.l3 { background: #3f7fd9; }
+.wikit-scope .heatmap i.l4 { background: #1d4f9f; }
+.wikit-scope .heatmap-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 12px; color: var(--muted); min-width: 0; }
+.wikit-scope .heatmap-scale { display: inline-flex; align-items: center; gap: 3px; }
+.wikit-scope .heatmap-scale i { display: inline-block; margin: 0 1px; }
+.wikit-scope .score-trend { margin: 16px 0 0; }
+.wikit-scope .score-trend figcaption { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.wikit-scope .score-trend svg { display: block; width: 100%; max-width: 600px; height: auto; overflow: visible; }
+.wikit-scope .score-trend path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.wikit-scope .score-trend .zero { stroke: var(--ink); stroke-opacity: 0.25; stroke-dasharray: 3 3; }
+.wikit-scope .score-trend text { font-size: 11px; fill: var(--muted); }
+.wikit-scope .heatmap i[data-day] { cursor: pointer; }
+.wikit-scope .heatmap i[data-day]:hover, .wikit-scope .heatmap i[data-day]:focus-visible { outline: 1px solid var(--ink); outline-offset: 0; }
+.wikit-scope .heatmap i.picked { outline: 2px solid var(--ink); outline-offset: 0; }
+.wikit-scope .activity-day { margin-top: 10px; border-top: 1px solid var(--rule); padding-top: 8px; font-size: 13px; }
+.wikit-scope .activity-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.wikit-scope .activity-day-head strong { font-weight: 600; }
+.wikit-scope .activity-day-close { background: none; border: 0; padding: 0; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; }
+.wikit-scope .activity-day-close:hover { color: var(--ink); }
+.wikit-scope .activity-day ol { list-style: none; margin: 0; padding: 0; }
+.wikit-scope .activity-day li { display: grid; grid-template-columns: 3em minmax(0, 1fr) auto auto; align-items: baseline; gap: 10px; padding: 3px 0; line-height: 1.4; }
+.wikit-scope .activity-day li + li { border-top: 1px dashed var(--rule); }
+.wikit-scope .activity-day .kind { font-size: 12px; color: var(--muted); }
+.wikit-scope .activity-day .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.wikit-scope .activity-day .note { font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wikit-scope .activity-day time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wikit-scope .activity-day-pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.wikit-scope .activity-day-pager button { background: none; border: 1px solid var(--rule); padding: 1px 8px; font: inherit; color: var(--ink); cursor: pointer; }
+.wikit-scope .activity-day-pager button:disabled { color: var(--muted); cursor: default; opacity: 0.5; }
+.wikit-scope .activity-day .empty { color: var(--muted); padding: 4px 0; }
+.wikit-scope .feed-dates { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; }
+.wikit-scope .feed-dates input[type="date"] { font: inherit; padding: 3px 6px; border: 1px solid var(--rule); background: transparent; color: var(--ink); }
+.wikit-scope .feed-dates .sep { color: var(--muted); }
+.wikit-scope .feed-dates .clear { font-size: 12px; color: var(--muted); }
+.wikit-scope .activity-day-loader { margin: 10px 0; color: var(--ink); }

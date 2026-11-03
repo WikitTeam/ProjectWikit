@@ -16,7 +16,6 @@ func init() { module.Register("members", renderMembers) }
 
 const (
 	defaultMembersPerPage = 100
-	maxMembersPerPage     = 500
 )
 
 func renderMembers(env module.Env, params map[string]string, body string) (string, error) {
@@ -125,7 +124,7 @@ func membersPerPage(params map[string]string) int {
 	if err != nil || n <= 0 {
 		return defaultMembersPerPage
 	}
-	return min(n, maxMembersPerPage)
+	return min(n, listpages.MaxPerPage)
 }
 
 func membersPage(path page.PathParams, totalPages int) int {

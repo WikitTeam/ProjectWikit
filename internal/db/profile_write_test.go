@@ -69,14 +69,14 @@ func TestUserPostsCountsCommentsOnlyOnTheNamedSites(t *testing.T) {
 		{"no site", nil, 0},
 	}
 	for _, c := range cases {
-		got, err := d.UserPostCount(ctx, user, nil, c.sites)
+		got, err := d.UserPostCount(ctx, user, nil, c.sites, nil, nil)
 		if err != nil {
 			t.Fatalf("UserPostCount(%s) err = %v, want nil", c.name, err)
 		}
 		if got != c.want {
 			t.Errorf("UserPostCount(%s) = %d, want %d", c.name, got, c.want)
 		}
-		posts, err := d.UserPosts(ctx, user, nil, c.sites, 0, 10)
+		posts, err := d.UserPosts(ctx, user, nil, c.sites, nil, nil, 0, 10)
 		if err != nil {
 			t.Fatalf("UserPosts(%s) err = %v, want nil", c.name, err)
 		}

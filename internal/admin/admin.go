@@ -23,7 +23,9 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
+	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
+	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
@@ -51,6 +53,8 @@ type Deps struct {
 	Trust    *proxyheader.Trust
 	Updates  *update.Board
 	Mirrors  *mirror.Runner
+	Engine   renderer.Renderer
+	Icons    roles.IconLoader
 
 	Log *slog.Logger
 }
@@ -121,6 +125,7 @@ var groups = []struct {
 		{roleCategorySlug, "fa-sitemap"},
 		{accessSlug, "fa-stethoscope"},
 		{inviteSlug, "fa-envelope"},
+		{announcementSlug, "fa-bullhorn"},
 		{ipBanSlug, "fa-ban"},
 	}},
 	{"forum", "admin.group-forum", "fa-comments", []railEntry{
@@ -132,6 +137,7 @@ var groups = []struct {
 		{reportSlug, "fa-exclamation-triangle"},
 		{ticketSlug, "fa-life-ring"},
 		{membershipSlug, "fa-check-circle"},
+		{membershipQuizSlug, "fa-question-circle"},
 	}},
 	{"records", "admin.group-records", "fa-clipboard-list", []railEntry{
 		{adminLogSlug, "fa-clock"},

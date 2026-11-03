@@ -121,6 +121,7 @@ func siteChangesBuild(env module.Env, path page.PathParams, params map[string]st
 	if perPage <= 0 {
 		return siteChangesView{}, errSiteChange
 	}
+	perPage = min(perPage, listpages.MaxPerPage)
 
 	current := 1
 	if n, err := wikinum.Int(path.Get("p")); err == nil {

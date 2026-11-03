@@ -61,6 +61,8 @@ func (h *Messages) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.send(r, loc, user) })
 	case head == "clear" && tail == "" && r.Method == http.MethodPost:
 		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.clear(r, loc, user) })
+	case head == "report-content" && tail == "" && r.Method == http.MethodPost:
+		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.reportContent(r, loc, user) })
 	case head == "report" && tail == "" && r.Method == http.MethodPost:
 		h.guard(w, r, loc, user, true, func() (string, int, error) { return h.report(r, loc, user) })
 	default:
@@ -327,18 +329,6 @@ func (h *Messages) send(r *http.Request, loc *i18n.Localizer, user *db.User) (st
 
 	sent, err := h.deps.DB.SendDirectMessage(ctx, user.ID, recipient.ID, body, time.Now())
 	if err != nil {
-		return "", 0, err
-	}
-	meta, err := wikijson.Marshal(wikijson.Object{
-		{Key: "sender_id", Value: user.ID},
-		{Key: "sender_name", Value: user.DisplayLabel()},
-		{Key: "message_id", Value: sent.ID},
-		{Key: "preview", Value: preview(sent.Body)},
-	})
-	if err != nil {
-		return "", 0, err
-	}
-	if err := h.deps.DB.SendNotification(ctx, 0, db.NotifyDirectMessage, meta, []int64{recipient.ID}, sent.CreatedAt); err != nil {
 		return "", 0, err
 	}
 	out, err := wikijson.Marshal(messageJSON(sent))

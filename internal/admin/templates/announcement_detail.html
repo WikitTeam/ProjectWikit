@@ -1,0 +1,16 @@
+{{define "announcement_detail.html"}}
+<p><a href="{{esc .Back}}"><i class="fas fa-chevron-left"></i>{{t "admin.back"}}</a></p>
+<div class="widget-box narrow">
+  <div class="widget-title"><i class="fas fa-bullhorn"></i><h5>{{if .Announcement.Title}}{{esc .Announcement.Title}}{{else}}{{t "admin.announcement-untitled"}}{{end}}</h5></div>
+  <div class="widget-content">
+    {{$scope := t "admin.announcement-scope-site"}}{{if .Announcement.Instance}}{{$scope = t "admin.announcement-scope-instance"}}{{end}}
+    {{template "row_static" dict "k" "admin.f-announcement-scope" "v" $scope}}
+    {{template "row_static" dict "k" "admin.announcement-by" "v" .Announcement.Author}}
+    <div class="control-group">
+      <span class="control-label">{{t "admin.announcement-sent-at"}}</span>
+      <div class="controls"><span class="stamp">{{when .Announcement.SentAt}}</span></div>
+    </div>
+    <div class="announcement-body">{{.Message}}</div>
+  </div>
+</div>
+{{end}}

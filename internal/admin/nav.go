@@ -1,8 +1,11 @@
 package admin
 
 import (
+	"io/fs"
 	"net/http"
+	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
@@ -14,6 +17,7 @@ type navItem struct {
 	Label  string
 	Icon   string
 	Active bool
+	Search string
 }
 
 type navGroup struct {
@@ -82,6 +86,7 @@ func (h *Handler) layout(r *http.Request, loc *i18n.Localizer, title, body strin
 				Label:  loc.T(s.label),
 				Icon:   e.icon,
 				Active: e.slug == active,
+				Search: searchText(loc, e.slug),
 			}
 			if item.Active {
 				group.Open = true
@@ -106,4 +111,85 @@ func (h *Handler) layout(r *http.Request, loc *i18n.Localizer, title, body strin
 		}
 	}
 	return v
+}
+
+// screenTemplates names what each screen renders, so the menu search finds a
+// screen by the fields and sections on it and not only by its title.
+var screenTemplates = map[string][]string{
+	accessSlug:         {"access.html"},
+	adminLogSlug:       {"admin_log.html"},
+	categorySlug:       {"forum_category_form.html", "forum_category_list.html"},
+	inviteSlug:         {"invite_list.html"},
+	announcementSlug:   {"announcement.html", "announcement_detail.html"},
+	ipBanSlug:          {"ip_ban_list.html"},
+	membershipSlug:     {"ticket_list.html", "ticket_form.html"},
+	membershipQuizSlug: {"membership_quiz.html"},
+	mirrorSlug:         {"mirror_form.html", "mirror_list.html"},
+	pageCategorySlug:   {"page_category_form.html", "page_category_list.html"},
+	pageSlug:           {"page_list.html", "page_edit.html"},
+	recentPostSlug:     {"forum_posts.html"},
+	reportSlug:         {"report_list.html", "report_form.html"},
+	roleCategorySlug:   {"role_category.html"},
+	roleSlug:           {"role_list.html", "role_form.html"},
+	sectionSlug:        {"forum_section_form.html", "forum_section_list.html"},
+	siteSlug:           {"site_form.html"},
+	suspiciousSlug:     {"suspicious.html"},
+	tagCategorySlug:    {"tag_category_form.html", "tag_category_list.html"},
+	tagSlug:            {"tag_form.html", "tag_list.html"},
+	themeSlug:          {"theme_form.html", "theme_list.html"},
+	ticketSlug:         {"ticket_list.html", "ticket_form.html"},
+	userSlug: {"user_list.html", "user_form.html", "user_new.html", "user_invite.html", "user_mail.html",
+		"user_claim.html", "user_bot.html", "user_activity.html", "user_reset_votes.html"},
+}
+
+var (
+	searchKeyPattern = regexp.MustCompile(`(?:"[kl]" |\bt )"(admin\.[a-z0-9-]+)"`)
+	searchKeysOnce   sync.Once
+	searchKeys       map[string][]string
+)
+
+// Hints read as sentences and buttons sit on every screen, so neither helps
+// tell one screen from another.
+func screenSearchKeys() map[string][]string {
+	searchKeysOnce.Do(func() {
+		searchKeys = map[string][]string{}
+		seenOn := map[string]int{}
+		for slug, names := range screenTemplates {
+			seen := map[string]bool{}
+			for _, name := range names {
+				body, err := fs.ReadFile(files, "templates/"+name)
+				if err != nil {
+					continue
+				}
+				for _, m := range searchKeyPattern.FindAllStringSubmatch(string(body), -1) {
+					key := m[1]
+					if seen[key] || strings.HasPrefix(key, "admin.h-") || strings.HasPrefix(key, "admin.ph-") {
+						continue
+					}
+					seen[key] = true
+					searchKeys[slug] = append(searchKeys[slug], key)
+					seenOn[key]++
+				}
+			}
+		}
+		for slug, keys := range searchKeys {
+			kept := keys[:0]
+			for _, key := range keys {
+				if seenOn[key] < 4 {
+					kept = append(kept, key)
+				}
+			}
+			searchKeys[slug] = kept
+		}
+	})
+	return searchKeys
+}
+
+func searchText(loc *i18n.Localizer, slug string) string {
+	keys := screenSearchKeys()[slug]
+	words := make([]string, len(keys))
+	for i, key := range keys {
+		words[i] = loc.T(key)
+	}
+	return strings.Join(words, " ")
 }

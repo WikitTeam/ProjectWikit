@@ -1,24 +1,37 @@
-import { t } from '~util/i18n'
 import * as React from 'react'
 import { useState } from 'react'
-import { matchPath, useNavigate } from 'react-router-dom'
-import { ProfilePage } from '~reactive/containers/page'
+import { matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { NotificationKind } from '~api/notifications'
 import { useConfigContext } from '~reactive/config'
+import { ProfilePage } from '~reactive/containers/page'
 import NotificationsInfiniteScroll from '~reactive/pages/notifications/NotificationsInfiniteScroll'
 import { Paths } from '~reactive/paths'
+import { t } from '~util/i18n'
 import useConstCallback from '../../../util/const-callback'
 import * as Styled from './Notifications.styles'
+import NotificationView from './NotificationView'
 
-const KINDS: NotificationKind[] = ['all', 'direct_message', 'post_like', 'replies', 'new_ticket']
+const NOTICE_KINDS: NotificationKind[] = ['notices', 'new_ticket']
+const COMMENT_KINDS: NotificationKind[] = ['comments', 'replies', 'forum_mention', 'post_like']
+
+const kindLabel = (kind: NotificationKind) => t(`notifications.kind-${kind === 'notices' || kind === 'comments' ? 'all' : kind}`)
 
 const Notifications: React.FC = () => {
+  const { pathname } = useLocation()
+  const viewing = matchPath(`${Paths.notifications}/view/:id`, pathname)
+  if (viewing) return <NotificationView key={viewing.params.id} id={Number(viewing.params.id)} />
+  const onComments = Boolean(matchPath(`${Paths.comments}/*`, pathname))
+  return <Section key={onComments ? 'comments' : 'notices'} onComments={onComments} pathname={pathname} />
+}
+
+const Section: React.FC<{ onComments: boolean; pathname: string }> = ({ onComments, pathname }) => {
   const [forceUpdate, setForceUpdate] = useState<boolean>(false)
-  const [kind, setKind] = useState<NotificationKind>('all')
   const { reviewsTickets } = useConfigContext()
-  const kinds = reviewsTickets ? KINDS : KINDS.filter(one => one !== 'new_ticket')
+  const kinds = onComments ? COMMENT_KINDS : NOTICE_KINDS.filter(one => reviewsTickets || one !== 'new_ticket')
+  const [kind, setKind] = useState<NotificationKind>(kinds[0])
   const showUnread = Boolean(
-    matchPath(`/-${Paths.notifications}`, window.location.pathname) || matchPath(`/-${Paths.notificationsUnread}`, window.location.pathname),
+    matchPath(onComments ? Paths.comments : Paths.notifications, pathname) ||
+      matchPath(onComments ? Paths.commentsUnread : Paths.notificationsUnread, pathname),
   )
   const navigate = useNavigate()
 
@@ -38,32 +51,46 @@ const Notifications: React.FC = () => {
   })
 
   return (
-    <ProfilePage crumb={t('notifications.crumb')}>
+    <ProfilePage crumb={onComments ? t('notifications.comments-title') : t('notifications.crumb')}>
       <Styled.SectionHead>
         <Styled.Kicker>
-          <b>{t('notifications.breadcrumb-profile')}</b><span className="sep">/</span>{t('notifications.breadcrumb')}
+          <b>{t('notifications.breadcrumb-profile')}</b>
+          <span className="sep">/</span>
+          {onComments ? t('notifications.comments-title') : t('notifications.breadcrumb')}
         </Styled.Kicker>
-        <Styled.H1>{t('notifications.title')}</Styled.H1>
+        <Styled.H1>{onComments ? t('notifications.comments-title') : t('notifications.title')}</Styled.H1>
       </Styled.SectionHead>
       <Styled.FilterContainer>
         <Styled.RadioLabel checked={showUnread}>
-          <Styled.RadioInput type="radio" name="filter" checked={showUnread} onChange={() => onChecked(Paths.notificationsUnread)} />
+          <Styled.RadioInput
+            type="radio"
+            name="filter"
+            checked={showUnread}
+            onChange={() => onChecked(onComments ? Paths.commentsUnread : Paths.notificationsUnread)}
+          />
           {t('notifications.tab-unread')}
         </Styled.RadioLabel>
         <Styled.RadioLabel checked={!showUnread}>
-          <Styled.RadioInput type="radio" name="filter" checked={!showUnread} onChange={() => onChecked(Paths.notificationsAll)} />
+          <Styled.RadioInput
+            type="radio"
+            name="filter"
+            checked={!showUnread}
+            onChange={() => onChecked(onComments ? Paths.commentsAll : Paths.notificationsAll)}
+          />
           {t('notifications.tab-all')}
         </Styled.RadioLabel>
       </Styled.FilterContainer>
-      <Styled.FilterContainer>
-        <Styled.FilterLabel>{t('notifications.kind-label')}</Styled.FilterLabel>
-        {kinds.map(one => (
-          <Styled.RadioLabel checked={kind === one} key={one}>
-            <Styled.RadioInput type="radio" name="kind" checked={kind === one} onChange={() => onKind(one)} />
-            {t(`notifications.kind-${one}`)}
-          </Styled.RadioLabel>
-        ))}
-      </Styled.FilterContainer>
+      {kinds.length > 1 && (
+        <Styled.FilterContainer>
+          <Styled.FilterLabel>{t('notifications.kind-label')}</Styled.FilterLabel>
+          {kinds.map(one => (
+            <Styled.RadioLabel checked={kind === one} key={one}>
+              <Styled.RadioInput type="radio" name="kind" checked={kind === one} onChange={() => onKind(one)} />
+              {kindLabel(one)}
+            </Styled.RadioLabel>
+          ))}
+        </Styled.FilterContainer>
+      )}
       <NotificationsInfiniteScroll
         key={`tab-${showUnread}-${kind}`}
         batchSize={10}

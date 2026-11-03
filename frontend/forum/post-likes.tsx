@@ -1,8 +1,9 @@
-import { t } from '~util/i18n'
 import * as React from 'react'
 import { useCallback, useState } from 'react'
+import { t } from '~util/i18n'
 import { fetchPostLikes, likePost, PostLikesResponse, unlikePost } from '../api/likes'
 import { UserData } from '../api/user'
+import { showReportModal } from '../util/report-modal'
 import UserView from '../util/user-view'
 import WikidotModal from '../util/wikidot-modal'
 
@@ -81,15 +82,26 @@ const PostLikes: React.FC<Props> = ({ postId, liked: initialLiked, count: initia
       <a href="#" className="like-count" title={t('forum.likes.who')} onClick={onOpen}>
         {count}
       </a>
+      <a
+        href="#"
+        className="post-report"
+        style={{ marginLeft: '0.6em', opacity: 0.55 }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '0.55')}
+        title={t('report.post')}
+        aria-label={t('report.post')}
+        onClick={e => {
+          e.preventDefault()
+          showReportModal({ post_id: postId }, t('report.post'))
+        }}
+      >
+        <i className="fas fa-exclamation-triangle" />
+      </a>
     </>
   )
 }
 
-const LikerList: React.FC<{ listing: PostLikesResponse; loading: boolean; onPage: (page: number) => void }> = ({
-  listing,
-  loading,
-  onPage,
-}) => (
+const LikerList: React.FC<{ listing: PostLikesResponse; loading: boolean; onPage: (page: number) => void }> = ({ listing, loading, onPage }) => (
   <div className="w-post-likers">
     <h2>{t('forum.likes.title', { count: listing.count })}</h2>
     <div className="w-post-likers-list">
@@ -103,11 +115,7 @@ const LikerList: React.FC<{ listing: PostLikesResponse; loading: boolean; onPage
   </div>
 )
 
-const Pager: React.FC<{ listing: PostLikesResponse; loading: boolean; onPage: (page: number) => void }> = ({
-  listing,
-  loading,
-  onPage,
-}) => {
+const Pager: React.FC<{ listing: PostLikesResponse; loading: boolean; onPage: (page: number) => void }> = ({ listing, loading, onPage }) => {
   const pages = pagesAround(listing.page, listing.pages)
   return (
     <div className="pager">

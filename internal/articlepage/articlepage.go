@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
@@ -33,6 +34,14 @@ type Deps struct {
 type Handler struct {
 	deps  Deps
 	shell func(loc *i18n.Localizer) *shell.Renderer
+
+	hintsMu sync.Mutex
+	hints   map[int64]renderedHint
+}
+
+type renderedHint struct {
+	source string
+	html   string
 }
 
 const allowedMethods = "GET, HEAD, OPTIONS"

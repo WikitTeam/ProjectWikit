@@ -85,12 +85,21 @@ func rateGetVotes(env module.Env, _ map[string]string) (wikijson.Object, error) 
 		}
 		out = append(out, fields)
 	}
+	points, err := env.Data.RatingTrend(article.ID, rating.Mode == page.RatingModeStars)
+	if err != nil {
+		return nil, err
+	}
+	trend := make(wikijson.Array, len(points))
+	for i, p := range points {
+		trend[i] = wikijson.Array{p.At.UnixMilli(), p.Value}
+	}
 	return wikijson.Object{
 		{Key: "pageId", Value: article.FullName()},
 		{Key: "votes", Value: out},
 		{Key: "rating", Value: rating.Value},
 		{Key: "popularity", Value: rating.Popularity},
 		{Key: "mode", Value: rating.Mode},
+		{Key: "trend", Value: trend},
 	}, nil
 }
 
@@ -123,6 +132,15 @@ func rateVote(env module.Env, params map[string]string) (wikijson.Object, error)
 	if err != nil {
 		return nil, err
 	}
+	if value != nil {
+		own, err := votesOwnPage(env, article.ID)
+		if err != nil {
+			return nil, err
+		}
+		if own {
+			return nil, &module.Error{Message: env.Text("module-rate-own-page")}
+		}
+	}
 
 	var userID int64
 	if env.User != nil {
@@ -132,13 +150,45 @@ func rateVote(env module.Env, params map[string]string) (wikijson.Object, error)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := env.Data.ReplaceVote(article.ID, userID, value, role); err != nil {
+	old, err := env.Data.ReplaceVote(article.ID, userID, value, role)
+	if err != nil {
 		return nil, err
 	}
 	if err := env.Data.SeenAddress(env.User); err != nil {
 		return nil, err
 	}
-	return rateGetRating(env, params)
+	out, err := rateGetRating(env, params)
+	if err != nil {
+		return nil, err
+	}
+	// The widget tells the reader what their click did, which it can only do
+	// knowing the vote that was there before.
+	var previous, current any
+	if old != nil {
+		previous = old.Rate
+	}
+	if value != nil {
+		current = *value
+	}
+	return append(out, wikijson.Field{Key: "previousVote", Value: previous}, wikijson.Field{Key: "vote", Value: current}), nil
+}
+
+// Taking a vote back stays open, so a vote cast before the site turned this on
+// can still be withdrawn.
+func votesOwnPage(env module.Env, articleID int64) (bool, error) {
+	if env.Site == nil || !env.Site.SelfVotesForbidden || env.User == nil {
+		return false, nil
+	}
+	authors, err := env.Data.ArticleAuthors(articleID)
+	if err != nil {
+		return false, err
+	}
+	for _, author := range authors {
+		if author.ID == env.User.ID {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // An empty value is the reader taking their vote back, which is what the null

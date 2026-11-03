@@ -112,6 +112,21 @@ interface NotificationTicketResult extends BaseNotification {
   reply: string
 }
 
+interface NotificationAnnouncement extends BaseNotification {
+  type: 'announcement'
+  title: string
+  message: string
+  author: string
+  instance: boolean
+}
+
+interface NotificationPageDeleted extends BaseNotification {
+  type: 'page_deleted'
+  title: string
+  page: string
+  message: string
+}
+
 export type Notification =
   | NotificationNewPostReply
   | NotificationNewThreadPost
@@ -124,6 +139,8 @@ export type Notification =
   | NotificationUpdateRolledBack
   | NotificationNewTicket
   | NotificationTicketResult
+  | NotificationPageDeleted
+  | NotificationAnnouncement
 
 export interface NotificationsResponse {
   cursor: number
@@ -139,16 +156,23 @@ export interface NotificationSubscriptionResponse {
   status?: string
 }
 
-export type NotificationKind = 'all' | 'post_like' | 'replies' | 'direct_message' | 'new_ticket'
+export interface UnreadCounts {
+  notices: number
+  comments: number
+  messages: number
+}
+
+export type NotificationKind = 'notices' | 'new_ticket' | 'comments' | 'replies' | 'forum_mention' | 'post_like'
 
 // The reply tab covers both shapes a forum answer can arrive as, so one tab
 // does not leave half of them behind.
 const KIND_QUERY: Record<NotificationKind, string> = {
-  all: '',
-  post_like: 'post_like',
-  replies: 'new_post_reply,new_thread_post',
-  direct_message: 'direct_message',
+  notices: 'notices',
   new_ticket: 'new_ticket,ticket_result',
+  comments: 'comments',
+  replies: 'new_post_reply,new_thread_post',
+  forum_mention: 'forum_mention',
+  post_like: 'post_like',
 }
 
 export async function getNotifications(
@@ -156,12 +180,20 @@ export async function getNotifications(
   limit: number = 10,
   unread: boolean = false,
   mark_viewed: boolean = false,
-  kind: NotificationKind = 'all',
+  kind: NotificationKind = 'notices',
 ) {
   const type = KIND_QUERY[kind] ? `&type=${KIND_QUERY[kind]}` : ''
   return await wFetch<NotificationsResponse>(
     `/pw-api/notifications?cursor=${cursor}&limit=${limit}&unread=${unread}&mark_as_viewed=${mark_viewed}${type}`,
   )
+}
+
+export async function setMute(target: { article_id?: number; thread_id?: number; user_id?: number }, muted: boolean) {
+  return await wFetch<{ status: string }>(`/pw-api/notifications/mute`, { method: muted ? 'POST' : 'DELETE', sendJson: true, body: target })
+}
+
+export async function getNotification(id: number) {
+  return await wFetch<NotificationsResponse>(`/pw-api/notifications?id=${id}&mark_as_viewed=true`)
 }
 
 export async function clearNotifications(ids: number[]) {

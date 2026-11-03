@@ -1,8 +1,8 @@
-import { t } from '~util/i18n'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { sprintf } from 'sprintf-js'
 import styled from 'styled-components'
+import { t } from '~util/i18n'
 import { deleteArticleVotes } from '../api/articles'
 import { fetchPageVotes, ModuleRateVote, RatingMode } from '../api/rate'
 import useConstCallback from '../util/const-callback'
@@ -10,6 +10,7 @@ import formatDate from '../util/date-format'
 import Loader from '../util/loader'
 import UserView from '../util/user-view'
 import WikidotModal from '../util/wikidot-modal'
+import RatingTrend from './rating-trend'
 
 interface Props {
   pageId: string
@@ -93,6 +94,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
   const [mode, setMode] = useState<RatingMode>('disabled')
   const [votes, setVotes] = useState<Array<ModuleRateVote>>([])
   const [popularity, setPopularity] = useState(0)
+  const [trend, setTrend] = useState<Array<[number, number]>>([])
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState(false)
 
@@ -114,6 +116,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setRating(rating.rating)
       setPopularity(rating.popularity)
       setMode(rating.mode)
+      setTrend(rating.trend ?? [])
     } catch (e) {
       setError(e.error || t('common.server-unreachable'))
     } finally {
@@ -138,6 +141,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setRating(rating.rating)
       setPopularity(rating.popularity)
       setMode(rating.mode)
+      setTrend(rating.trend ?? [])
     } catch (e) {
       setError(e.error || t('common.server-unreachable'))
     } finally {
@@ -180,7 +184,8 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <div className="w-rate-module page-rate-widget-box" data-page-id={pageId}>
         <span className="rate-points">
-          {t('articles.rating.updown-label')}<span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>
+          {t('articles.rating.updown-label')}
+          <span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>
         </span>
         <span className="rateup btn btn-default">
           <a title={t('articles.rating.like')} href="#">
@@ -205,7 +210,8 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <div className="w-stars-rate-module" data-page-id={pageId}>
         <div className="w-stars-rate-rating">
-          {t('articles.rating.stars-label')}<span className="w-stars-rate-number">{votes.length ? sprintf('%.1f', rating) : '—'}</span>
+          {t('articles.rating.stars-label')}
+          <span className="w-stars-rate-number">{votes.length ? sprintf('%.1f', rating) : '—'}</span>
         </div>
         <div className="w-stars-rate-control">
           <div className="w-stars-rate-stars-wrapper">
@@ -308,6 +314,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <div>
         {ratingElement}
+        <RatingTrend points={trend} stars={mode === 'stars'} />
         {canResetVotes && (
           <>
             <br />

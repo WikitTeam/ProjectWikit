@@ -180,6 +180,18 @@ export function showErrorModal(error: string) {
   uuid = addUnmanagedModal(modal)
 }
 
+export function showInfoModal(text: string) {
+  let uuid: string | null = null
+  const onClose = () => {
+    if (uuid) removeUnmanagedModal(uuid)
+  }
+  uuid = addUnmanagedModal(
+    <WikidotModal buttons={[{ title: t('util.wikidot-modal.error-dismiss'), onClick: onClose }]}>
+      <p>{text}</p>
+    </WikidotModal>,
+  )
+}
+
 export function showRevertModal(pageId: string, entry: ArticleLogEntry) {
   let uuid: string | null = null
 

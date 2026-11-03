@@ -400,7 +400,7 @@ func announcePost(env module.Env, thread *db.ForumThread, post *db.ForumThreadPo
 		if err != nil {
 			return err
 		}
-		if err := env.Data.SendNotification(db.NotifyNewPostReply, encoded, chain); err != nil {
+		if err := sendThreadNotice(env, thread.ID, db.NotifyNewPostReply, encoded, chain); err != nil {
 			return err
 		}
 	}
@@ -413,7 +413,7 @@ func announcePost(env module.Env, thread *db.ForumThread, post *db.ForumThreadPo
 	if err != nil {
 		return err
 	}
-	if err := env.Data.SendNotification(db.NotifyNewThreadPost, encoded, watchers); err != nil {
+	if err := sendThreadNotice(env, thread.ID, db.NotifyNewThreadPost, encoded, watchers); err != nil {
 		return err
 	}
 	return announceMentions(env, thread, post, title, source, "")
@@ -454,7 +454,7 @@ func announceMentions(env module.Env, thread *db.ForumThread, post *db.ForumThre
 	if err != nil {
 		return err
 	}
-	return env.Data.SendNotification(db.NotifyForumMention, encoded, ids)
+	return sendThreadNotice(env, thread.ID, db.NotifyForumMention, encoded, ids)
 }
 
 func replyChain(env module.Env, from *db.ForumThreadPost) ([]int64, error) {
@@ -628,4 +628,19 @@ func threadHome(env module.Env, thread *db.ForumThread) (*db.ForumCategory, *db.
 		return nil, nil, err
 	}
 	return category, section, nil
+}
+
+func sendThreadNotice(env module.Env, threadID int64, kind, meta string, readers []int64) error {
+	readers, err := env.Data.WithoutMutes(&threadID, actorOf(env), readers)
+	if err != nil {
+		return err
+	}
+	return env.Data.SendNotification(kind, meta, readers)
+}
+
+func actorOf(env module.Env) *int64 {
+	if env.User == nil {
+		return nil
+	}
+	return &env.User.ID
 }

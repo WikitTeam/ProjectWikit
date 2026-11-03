@@ -8,7 +8,9 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 )
 
-const maxPerPage = 250
+// MaxPerPage is the most rows any paged module shows at once, whatever its
+// perPage or limit asks for.
+const MaxPerPage = 250
 
 // PageIndex is what the first row's %%index%% counts from, so it moves with
 // the pagination rather than with the offset.
@@ -24,7 +26,7 @@ type Result struct {
 func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 	// The cap belongs here rather than in the parsing, because what the reader
 	// asked for is what the frontend gets handed back.
-	q.PerPage = min(q.PerPage, maxPerPage)
+	q.PerPage = min(q.PerPage, MaxPerPage)
 	empty := Result{Page: 1, TotalPages: 1}
 	if q.Invalid {
 		return empty, nil

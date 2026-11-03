@@ -1,6 +1,7 @@
 package userpage
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"slices"
@@ -42,6 +43,9 @@ var reactivePaths = []string{
 	NotificationsPrefix,
 	NotificationsPrefix + "/all",
 	NotificationsPrefix + "/unread",
+	NotificationsPrefix + "/comments",
+	NotificationsPrefix + "/comments/all",
+	NotificationsPrefix + "/comments/unread",
 	MessagesPrefix,
 }
 
@@ -54,6 +58,10 @@ func answers(path string) bool {
 		if !ok || !slices.Contains(ticketKinds, kind) {
 			return false
 		}
+		id, err := strconv.ParseInt(raw, 10, 64)
+		return err == nil && id > 0
+	}
+	if raw, ok := strings.CutPrefix(path, NotificationsPrefix+"/view/"); ok {
 		id, err := strconv.ParseInt(raw, 10, 64)
 		return err == nil && id > 0
 	}
@@ -146,7 +154,15 @@ func (h *ReactiveHandler) config(r *http.Request, viewer *db.User) (string, erro
 		}
 		reviews = submitted > 0
 	}
-	out := wikijson.Object{{Key: "user", Value: user.Object()}, {Key: "reviewsTickets", Value: reviews}}
+	unread, err := h.deps.DB.UnreadCounts(ctx, viewer.ID)
+	if err != nil {
+		return "", err
+	}
+	out := wikijson.Object{
+		{Key: "user", Value: user.Object()},
+		{Key: "reviewsTickets", Value: reviews},
+		{Key: "unread", Value: unreadJSON(unread)},
+	}
 	if current := site.FromContext(ctx); current != nil {
 		out = append(out, wikijson.Field{Key: "site", Value: wikijson.Object{
 			{Key: "title", Value: current.Title},
@@ -154,4 +170,17 @@ func (h *ReactiveHandler) config(r *http.Request, viewer *db.User) (string, erro
 		}})
 	}
 	return wikijson.Marshal(out)
+}
+
+func unreadJSON(u db.Unread) wikijson.Object {
+	return wikijson.Object{
+		{Key: "notices", Value: u.Notices},
+		{Key: "comments", Value: u.Comments},
+		{Key: "messages", Value: u.Messages},
+	}
+}
+
+func unreadOf(ctx context.Context, d *db.DB, userID int64) (shell.Unread, error) {
+	u, err := d.UnreadCounts(ctx, userID)
+	return shell.Unread{Notices: u.Notices, Comments: u.Comments, Messages: u.Messages}, err
 }

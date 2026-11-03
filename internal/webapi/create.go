@@ -28,10 +28,11 @@ const (
 )
 
 type createInput struct {
-	PageID string  `json:"pageId"`
-	Title  *string `json:"title"`
-	Source *string `json:"source"`
-	Parent *string `json:"parent"`
+	PageID string   `json:"pageId"`
+	Title  *string  `json:"title"`
+	Source *string  `json:"source"`
+	Parent *string  `json:"parent"`
+	Tags   []string `json:"tags"`
 }
 
 // A refusal the visitor caused carries the message it should show, so it comes
@@ -72,6 +73,11 @@ func (h *Articles) createArticle(r *http.Request, loc *i18n.Localizer) (string, 
 	user := auth.FromContext(ctx)
 
 	if bad := h.mayCreate(r, name, user); bad != nil {
+		return field("error", loc.T(bad.key, bad.args...)), bad.status, nil
+	}
+	if bad, err := h.mayTagNew(r, current, name, user, input.Tags); err != nil {
+		return "", 0, err
+	} else if bad != nil {
 		return field("error", loc.T(bad.key, bad.args...)), bad.status, nil
 	}
 	if _, err := h.deps.DB.ArticleByName(ctx, siteID(ctx), name); err == nil {
@@ -173,6 +179,15 @@ func (h *Articles) writeNewArticle(r *http.Request, current *db.Site, name strin
 	}
 	if err := h.setParent(r, current, id, input, userID, at); err != nil {
 		return err
+	}
+	if len(input.Tags) > 0 {
+		allow, err := h.tagsCreatable(ctx, current.ID, category)
+		if err != nil {
+			return err
+		}
+		if _, _, err := h.deps.DB.SetArticleTags(ctx, siteID(ctx), id, input.Tags, allow, userID, at); err != nil {
+			return err
+		}
 	}
 	if user != nil {
 		return h.deps.DB.SubscribeToArticle(ctx, user.ID, id)

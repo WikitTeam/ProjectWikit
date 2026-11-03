@@ -1,0 +1,32 @@
+{{define "membership_quiz.html"}}
+{{template "form_error" .Error}}
+<form method="POST" action="{{esc .Action}}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+  <div class="widget-box narrow">
+    <div class="widget-title"><i class="fas fa-question-circle"></i><h5>{{t "admin.membership-quiz"}}</h5></div>
+    <div class="widget-content">
+      {{template "row_check" dict "n" "enabled" "k" "admin.f-quiz-enabled" "l" "admin.l-quiz-enabled" "v" .Quiz.Enabled}}
+      {{if .MayGrant}}
+      <div class="control-group">
+        <label class="control-label" for="id_role">{{t "admin.f-quiz-role"}}</label>
+        <div class="controls">
+          <select id="id_role" name="role" class="narrow-3">
+            <option value="">&mdash;</option>
+            {{range $.Roles}}<option value="{{.ID}}"{{if eq (deref $.Quiz.RoleID) .ID}} selected{{end}}>{{esc .Label}}</option>{{end}}
+          </select>
+        </div>
+      </div>
+      {{else}}
+      {{template "row_static" dict "k" "admin.f-quiz-role" "v" .RoleName}}
+      {{end}}
+      {{template "row_number" dict "n" "tries" "k" "admin.f-quiz-tries" "v" .Quiz.Tries}}
+      {{template "row_number" dict "n" "cooldown_hours" "k" "admin.f-quiz-cooldown" "v" .Quiz.CooldownHours}}
+      {{template "row_area" dict "n" "questions" "k" "admin.f-quiz-questions" "v" .Quiz.Questions "h" "admin.h-quiz-questions" "ph" (t "admin.ph-quiz-questions") "rows" 20}}
+      {{template "row_static" dict "k" "admin.f-quiz-count" "v" (printf "%d" .Questions)}}
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
+  </div>
+</form>
+{{end}}

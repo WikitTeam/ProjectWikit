@@ -183,7 +183,7 @@ func (h *Handler) userPosts(ctx context.Context, id int64, offset int) ([]userPo
 	for _, c := range categories {
 		ids = append(ids, c.ID)
 	}
-	found, err := h.deps.DB.UserPosts(ctx, id, ids, []int64{siteID(ctx)}, offset, activityPerPage)
+	found, err := h.deps.DB.UserPosts(ctx, id, ids, []int64{siteID(ctx)}, nil, nil, offset, activityPerPage)
 	if err != nil {
 		return nil, err
 	}

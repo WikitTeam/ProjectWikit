@@ -206,6 +206,80 @@ type Reactive struct {
 	Config   string
 }
 
+type ProfileField struct {
+	Key   string
+	Value string
+	Href  string
+}
+
+type ProfileSocial struct {
+	Name  string
+	Value string
+	Href  string
+	Icon  string
+	FA    string
+	Color string
+}
+
+type ProfilePage struct {
+	ArticleID int64
+	Title     string
+	URL       string
+	Site      string
+	At        time.Time
+	Pinned    bool
+}
+
+type ActivityCell struct {
+	Date  string
+	Count int
+	Level int
+	Blank bool
+}
+
+type ProfileActivity struct {
+	Weeks   [][]ActivityCell
+	Months  []ActivityMonth
+	Total   int
+	Summary string
+	From    string
+	To      string
+}
+
+type YearChoice struct {
+	Value  string
+	Label  string
+	Picked bool
+}
+
+type ActivityMonth struct {
+	Column int
+	Label  string
+}
+
+type ProfileStats struct {
+	Pages int
+	Score string
+	Edits int
+	Posts int
+}
+
+type ScoreTrend struct {
+	Path    string
+	Zero    float64
+	Max     string
+	Min     string
+	From    string
+	To      string
+	Current string
+}
+
+type SiteChoice struct {
+	Slug   string
+	Title  string
+	Picked bool
+}
+
 type Profile struct {
 	ID          int64
 	ProfileURL  string
@@ -216,6 +290,7 @@ type Profile struct {
 	SiteTitle   string
 
 	IsSelf           bool
+	Unread           Unread
 	CanDirectMessage bool
 	IsBlocked        bool
 	ActionsConfig    string
@@ -228,11 +303,25 @@ type Profile struct {
 	JoinedAt    time.Time
 	TimeZone    *time.Location
 
+	Fields   []ProfileField
+	Socials  []ProfileSocial
+	Activity *ProfileActivity
+	Stats    *ProfileStats
+	Trend    *ScoreTrend
+	Sites    []SiteChoice
+	Years    []YearChoice
+	Pins     []ProfilePage
+	Pages    []ProfilePage
+	PinLimit int
+	CSRF     string
+
 	Tab   string
 	Tabs  []ProfileTab
 	Roles []ProfileRoles
 	Edits ProfileFeed
 	Posts ProfileFeed
+
+	PagesFrom, PagesTo string
 }
 
 const (
@@ -247,7 +336,38 @@ const (
 	ProfileTabAbout = ""
 	ProfileTabEdits = "edits"
 	ProfileTabPosts = "posts"
+	ProfileTabPages = "pages"
 )
+
+type Unread struct {
+	Notices  int
+	Comments int
+	Messages int
+}
+
+type Mute struct {
+	ArticleID int64
+	ThreadID  int64
+	UserID    int64
+	Title     string
+	URL       string
+	Site      string
+}
+
+type ProfileLinkRow struct {
+	Platform string
+	Value    string
+}
+
+type PlatformChoice struct {
+	Key  string
+	Name string
+}
+
+type NotifyChoice struct {
+	Kind string
+	On   bool
+}
 
 type ProfileTab struct {
 	Label  string
@@ -264,6 +384,8 @@ type ProfileRoles struct {
 type ProfileFeed struct {
 	Items      []ProfileItem
 	Pagination string
+
+	Tab, From, To string
 }
 
 type ProfileFlag struct {
@@ -351,6 +473,16 @@ type ProfileEdit struct {
 
 	FullName string
 	Bio      string
+	Unread   Unread
+	Notify   []NotifyChoice
+	Mutes    []Mute
+
+	Fields    []ProfileField
+	Links     []ProfileLinkRow
+	Platforms []PlatformChoice
+	ShowPins  bool
+	ShowStats bool
+	ShowTrend bool
 
 	AdvancedEditor bool
 	Language       string
@@ -458,7 +590,9 @@ type profileEditView struct {
 func (v profileEditView) T(id string, args ...any) string { return v.r.loc.T(id, args...) }
 func (v profileEditView) Asset(name string) string        { return v.r.assets.URL(name) }
 func (v profileEditView) Initial() string                 { return initial(v.DisplayName) }
-func (v profileEditView) Nav() []ProfileTab               { return v.r.personalNav(v.ProfileURL, navEdit) }
+func (v profileEditView) Nav() []ProfileTab {
+	return v.r.personalNav(v.ProfileURL, navEdit, v.Unread)
+}
 
 func (v profileEditView) HoldNote() string {
 	email := escape.HTML(v.EmailHeld)
@@ -531,7 +665,7 @@ func (v profileView) Nav() []ProfileTab {
 	if !v.IsSelf {
 		return nil
 	}
-	return v.r.personalNav(v.ProfileURL, navProfile)
+	return v.r.personalNav(v.ProfileURL, navProfile, v.Unread)
 }
 
 const (
@@ -539,20 +673,28 @@ const (
 	navEdit    = "edit-profile"
 )
 
-func (r *Renderer) personalNav(profileURL, here string) []ProfileTab {
-	links := []struct{ key, url string }{
-		{navProfile, profileURL},
-		{navEdit, "/-/profile/edit"},
-		{"notifications", "/-/notifications"},
-		{"messages", "/-/messages"},
-		{"favourites", "/-/favourites"},
-		{"ratings", "/-/ratings"},
-		{"liked-posts", "/-/liked-posts"},
-		{"my-tickets", "/-/my-tickets"},
+func (r *Renderer) personalNav(profileURL, here string, unread Unread) []ProfileTab {
+	links := []struct {
+		key, url string
+		count    int
+	}{
+		{navProfile, profileURL, 0},
+		{navEdit, "/-/profile/edit", 0},
+		{"notifications", "/-/notifications", unread.Notices},
+		{"comments", "/-/notifications/comments", unread.Comments},
+		{"messages", "/-/messages", unread.Messages},
+		{"favourites", "/-/favourites", 0},
+		{"ratings", "/-/ratings", 0},
+		{"liked-posts", "/-/liked-posts", 0},
+		{"my-tickets", "/-/my-tickets", 0},
 	}
 	out := make([]ProfileTab, len(links))
 	for i, l := range links {
-		out[i] = ProfileTab{Label: r.loc.T("nav." + l.key), URL: l.url, Active: l.key == here}
+		label := r.loc.T("nav." + l.key)
+		if l.count > 0 {
+			label = r.loc.T("nav.with-count", "label", label, "count", l.count)
+		}
+		out[i] = ProfileTab{Label: label, URL: l.url, Active: l.key == here}
 	}
 	return out
 }

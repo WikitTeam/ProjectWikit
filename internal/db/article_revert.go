@@ -195,6 +195,12 @@ func (d *DB) RestoreArticleVotes(ctx context.Context, articleID int64, votes []R
 		if _, err := tx.Exec(ctx, qInsertVote, articleID, vote.UserID, vote.Rate, vote.Date, vote.RoleID); err != nil {
 			return fmt.Errorf("restore vote of %d: %w", vote.UserID, err)
 		}
+		// The drop above was recorded as withdrawals, so each vote that comes back
+		// is recorded too, or the history would end at nothing.
+		rate := vote.Rate
+		if _, err := tx.Exec(ctx, qInsertVoteEvent, articleID, vote.UserID, nil, &rate, time.Now().UTC()); err != nil {
+			return fmt.Errorf("record restored vote of %d: %w", vote.UserID, err)
+		}
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("commit votes of %d: %w", articleID, err)

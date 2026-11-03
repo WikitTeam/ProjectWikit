@@ -29,6 +29,40 @@ export interface SearchModuleResponse {
   total: number
 }
 
+export interface ForumResultItem {
+  title: string
+  post: string
+  where: string
+  url: string
+  excerpt: string
+  words: string[]
+  author: { name: string; url: string } | null
+  createdAt: string | null
+}
+
+export interface ForumSearchParams {
+  q: string
+  author: string
+  category: string
+  datefrom: string
+  dateto: string
+  offset: number
+}
+
+export async function searchForum(params: ForumSearchParams) {
+  return await callModule<{ results: ForumResultItem[]; hasMore: boolean }>({ module: 'search', method: 'forum', params })
+}
+
+export interface ForumPlace {
+  value: string
+  name: string
+  group: string
+}
+
+export async function forumPlaces() {
+  return (await callModule<{ places: ForumPlace[] }>({ module: 'search', method: 'forum_places', params: {} })).places
+}
+
 export async function searchModule(params: SearchModuleParams) {
   return await callModule<SearchModuleResponse>({ module: 'search', method: 'search', params })
 }

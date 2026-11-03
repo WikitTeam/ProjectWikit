@@ -26,6 +26,8 @@ type SiteChangeFilter struct {
 	HasUser    bool
 	UserIDs    []int64
 	WithSystem bool
+
+	From, Before *time.Time
 }
 
 type SiteChange struct {
@@ -73,6 +75,13 @@ func (f SiteChangeFilter) build(b *listBuilder) string {
 			or += " OR e.user_id IS NULL"
 		}
 		b.where = append(b.where, "("+or+")")
+	}
+
+	if f.From != nil {
+		b.where = append(b.where, "e.created_at >= "+b.arg(*f.From))
+	}
+	if f.Before != nil {
+		b.where = append(b.where, "e.created_at < "+b.arg(*f.Before))
 	}
 
 	sql := "FROM web_articlelogentry e\nJOIN web_article a ON a.id = e.article_id"

@@ -101,16 +101,26 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 		Grants      []grantGroup
 		Present     bool
 		HideToolbar bool
+		TagExempt   bool
 	}
 	byRole := map[int64]db.CategoryOverride{}
 	for _, one := range row.Overrides {
 		byRole[one.RoleID] = one
 	}
-	var hidden []int64
+	var hidden, exempt []int64
+	requiredTags := r.PostFormValue("required_tags")
 	if row.ID != 0 {
 		hidden, err = h.deps.DB.ToolbarHiddenRoles(ctx, row.ID)
 		if err != nil {
 			return err
+		}
+		var stored string
+		stored, exempt, err = h.deps.DB.TagRule(ctx, row.ID)
+		if err != nil {
+			return err
+		}
+		if r.Method != http.MethodPost {
+			requiredTags = stored
 		}
 	}
 	cells := make([]cell, 0, len(roleList))
@@ -121,21 +131,23 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 			Grants:      grantGroups(catalog, override.Allow, override.Deny),
 			Present:     len(override.Allow)+len(override.Deny) > 0,
 			HideToolbar: slices.Contains(hidden, one.ID),
+			TagExempt:   slices.Contains(exempt, one.ID),
 		})
 	}
 
 	return h.page(w, r, loc, loc.T("admin.page-categories"), "page_category_form.html", map[string]any{
-		"Category":    row,
-		"Cells":       cells,
-		"RatingModes": settingChoices(loc, "admin.rating-", categoryRatingModes, siteSetting(fallback.RatingMode, "updown")),
-		"TagModes":    settingChoices(loc, "admin.tagmode-", categoryTagModes, siteSetting(fallback.CreateTags, db.CreateTagsDisabled)),
-		"Themes":      themes,
-		"FollowTheme": loc.T("admin.setting-follow", "mode", followTheme),
-		"MayGrant":    granted.Has(perms.ManagePermissions),
-		"CSRF":        csrf.Issue(w, r),
-		"Error":       problem,
-		"Action":      Prefix + pageCategorySlug + "/" + rest,
-		"Back":        Prefix + pageCategorySlug + "/",
+		"Category":     row,
+		"Cells":        cells,
+		"RequiredTags": requiredTags,
+		"RatingModes":  settingChoices(loc, "admin.rating-", categoryRatingModes, siteSetting(fallback.RatingMode, "updown")),
+		"TagModes":     settingChoices(loc, "admin.tagmode-", categoryTagModes, siteSetting(fallback.CreateTags, db.CreateTagsDisabled)),
+		"Themes":       themes,
+		"FollowTheme":  loc.T("admin.setting-follow", "mode", followTheme),
+		"MayGrant":     granted.Has(perms.ManagePermissions),
+		"CSRF":         csrf.Issue(w, r),
+		"Error":        problem,
+		"Action":       Prefix + pageCategorySlug + "/" + rest,
+		"Back":         Prefix + pageCategorySlug + "/",
 	})
 }
 
@@ -198,10 +210,6 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	if err != nil {
 		return err
 	}
-	if !granted.Has(perms.ManagePermissions) {
-		redirect(w, Prefix+pageCategorySlug+"/")
-		return nil
-	}
 	if row.ID == 0 {
 		found, err := h.deps.DB.AdminCategories(ctx, siteID(ctx))
 		if err != nil {
@@ -212,6 +220,20 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 				row.ID = one.ID
 			}
 		}
+	}
+	// Exemptions are a permission matter and follow the overrides below. Anyone
+	// who may edit the category may still change the groups.
+	_, exempt, err := h.deps.DB.TagRule(ctx, row.ID)
+	if err != nil {
+		return err
+	}
+	if !granted.Has(perms.ManagePermissions) {
+		if err := h.deps.DB.SaveTagRule(ctx, row.ID, r.PostFormValue("required_tags"), exempt); err != nil {
+			return err
+		}
+		h.noteID(r, did, pageCategorySlug, row.ID, row.Name)
+		redirect(w, Prefix+pageCategorySlug+"/")
+		return nil
 	}
 	roleList, err := h.deps.DB.AllRoles(ctx, siteID(ctx))
 	if err != nil {
@@ -224,9 +246,13 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 	catalog = pageScoped(catalog)
 	var overrides []db.CategoryOverride
 	var hidden []int64
+	exempt = nil
 	for _, one := range roleList {
 		if r.PostFormValue("hide_toolbar_"+strconv.FormatInt(one.ID, 10)) != "" {
 			hidden = append(hidden, one.ID)
+		}
+		if r.PostFormValue("tag_exempt_"+strconv.FormatInt(one.ID, 10)) != "" {
+			exempt = append(exempt, one.ID)
 		}
 		if r.PostFormValue("override_"+strconv.FormatInt(one.ID, 10)) == "" {
 			continue
@@ -251,6 +277,9 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 		return err
 	}
 	if err := h.deps.DB.SaveToolbarHiddenRoles(ctx, row.ID, hidden); err != nil {
+		return err
+	}
+	if err := h.deps.DB.SaveTagRule(ctx, row.ID, r.PostFormValue("required_tags"), exempt); err != nil {
 		return err
 	}
 	h.noteID(r, did, pageCategorySlug, row.ID, row.Name)

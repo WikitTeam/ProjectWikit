@@ -1,7 +1,8 @@
-import { t } from '~util/i18n'
 import { sprintf } from 'sprintf-js'
+import { t } from '~util/i18n'
 import { ModuleRateResponse, ratePage } from '../api/rate'
 import { showErrorModal } from '../util/wikidot-modal'
+import { noticeVote, starsVote } from './rate-notice'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
   e.preventDefault()
@@ -43,6 +44,7 @@ export function makeStarsRateModule(node: HTMLElement) {
     updateRating(number, votes, popularity, control, votesData)
     originalRateWidth = control.style.width
     window.postMessage({ type: 'rate_updated' })
+    noticeVote(votesData, starsVote)
   }
 
   rateWrapper.addEventListener('mousemove', e => {

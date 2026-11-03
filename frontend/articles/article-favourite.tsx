@@ -1,7 +1,7 @@
-import { t } from '~util/i18n'
 import * as React from 'react'
 import { useCallback, useState } from 'react'
 import styled from 'styled-components'
+import { t } from '~util/i18n'
 import { favouriteArticle, unfavouriteArticle } from '../api/favourites'
 import useConstCallback from '../util/const-callback'
 import WikidotModal from '../util/wikidot-modal'
@@ -10,6 +10,7 @@ interface Props {
   pageId: string
   favourites: number
   favourited: boolean
+  onChange: (favourites: number, favourited: boolean) => void
   onClose: () => void
 }
 
@@ -20,7 +21,7 @@ const Styles = styled.div`
   }
 `
 
-const ArticleFavourite: React.FC<Props> = ({ pageId, favourites: initialCount, favourited: initialMine, onClose }) => {
+const ArticleFavourite: React.FC<Props> = ({ pageId, favourites: initialCount, favourited: initialMine, onChange, onClose }) => {
   const [count, setCount] = useState(initialCount)
   const [mine, setMine] = useState(initialMine)
   const [saving, setSaving] = useState(false)
@@ -35,13 +36,14 @@ const ArticleFavourite: React.FC<Props> = ({ pageId, favourites: initialCount, f
         const result = mine ? await unfavouriteArticle(pageId) : await favouriteArticle(pageId)
         setMine(result.favourited)
         setCount(result.favourites)
+        onChange(result.favourites, result.favourited)
       } catch (err: any) {
         setError(err.error || t('articles.favourite.failed'))
       } finally {
         setSaving(false)
       }
     },
-    [mine, pageId, saving],
+    [mine, pageId, saving, onChange],
   )
 
   const onCancel = useConstCallback((e: React.MouseEvent) => {

@@ -81,6 +81,10 @@
           </select>
         </div>
       </div>
+      {{template "row_check" dict "n" "self_votes_forbidden" "k" "admin.f-self-votes" "l" "admin.l-self-votes" "v" .Site.SelfVotesForbidden}}
+      {{template "row_area" dict "n" "edit_forbidden_hint" "k" "admin.f-edit-forbidden-hint" "v" .Site.EditForbiddenHint "h" "admin.h-edit-forbidden-hint" "ph" (t "admin.ph-edit-forbidden-hint")}}
+      {{template "row_check" dict "n" "deletion_notice_enabled" "k" "admin.f-deletion-notice" "l" "admin.l-deletion-notice" "v" .Site.DeletionNoticeEnabled}}
+      {{template "row_area" dict "n" "deletion_notice" "k" "admin.f-deletion-notice-text" "v" .Site.DeletionNotice "h" "admin.h-deletion-notice-text" "ph" (t "deletion-notice-default")}}
     </div>
   </div>
 

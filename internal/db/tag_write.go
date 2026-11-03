@@ -238,3 +238,27 @@ func tagsMissingFrom(want, have []taggedName) []taggedName {
 	}
 	return out
 }
+
+var qTagExists = register("TagExists", `
+SELECT EXISTS (
+	SELECT 1 FROM web_tag t JOIN web_tagscategory c ON c.id = t.category_id
+	WHERE c.slug = $1 AND t.name = $2 AND c.site_id = $3
+)`)
+
+func (d *DB) UnknownTags(ctx context.Context, siteID int64, tags []string) ([]string, error) {
+	var out []string
+	for _, raw := range tags {
+		if strings.Contains(raw, " ") {
+			continue
+		}
+		category, name := splitTagName(strings.ToLower(raw))
+		var found bool
+		if err := d.pool.QueryRow(ctx, qTagExists, category, name, siteID).Scan(&found); err != nil {
+			return nil, fmt.Errorf("look up tag %s: %w", raw, err)
+		}
+		if !found && !slices.Contains(out, raw) {
+			out = append(out, raw)
+		}
+	}
+	return out, nil
+}

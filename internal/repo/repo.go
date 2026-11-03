@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/netip"
 	"strings"
 	"time"
@@ -188,13 +189,20 @@ func (r *Repository) CallAPI(pc *page.Context, name, method string, params map[s
 	return out, err
 }
 
+// Any failure stays inside the module's own block. Passing it up would fail the
+// whole render, and the reader would get an empty page with no hint why.
 func (r *Repository) RenderModule(pc *page.Context, name string, params map[string]string, body string) (string, error) {
-	html, err := module.Render(r.moduleEnv(pc), name, params, body)
+	env := r.moduleEnv(pc)
+	html, err := module.Render(env, name, params, body)
 	var moduleErr *module.Error
-	if errors.As(err, &moduleErr) {
+	switch {
+	case errors.As(err, &moduleErr):
 		return "", &callbacks.ModuleError{Message: moduleErr.Message}
+	case err != nil:
+		slog.Error("render module", "module", name, "err", err)
+		return "", &callbacks.ModuleError{Message: env.Text("module-failed", "name", name)}
 	}
-	return html, err
+	return html, nil
 }
 
 // The external: prefix never touches the database, wd: may only ever match an

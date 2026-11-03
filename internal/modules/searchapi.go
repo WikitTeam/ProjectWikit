@@ -19,6 +19,8 @@ import (
 func init() {
 	module.RegisterAPI("search", "search", searchAPI)
 	module.RegisterAPI("search", "suggest", suggestAPI)
+	module.RegisterAPI("search", "forum", forumSearchAPI)
+	module.RegisterAPI("search", "forum_places", forumPlacesAPI)
 }
 
 const (

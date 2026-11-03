@@ -1,8 +1,8 @@
-import { t } from '~util/i18n'
-import { attachHovertip } from '~util/hovertip'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { sprintf } from 'sprintf-js'
+import { attachHovertip } from '~util/hovertip'
+import { t } from '~util/i18n'
 import { NotificationSubscriptionData, subscribeToNotifications, unsubscribeFromNotifications } from '../api/notifications'
 import { RatingMode } from '../api/rate'
 import ArticleAuthorship from '../articles/article-authorship'
@@ -10,16 +10,17 @@ import ArticleBacklinksView from '../articles/article-backlinks'
 import ArticleChild from '../articles/article-child'
 import ArticleDelete from '../articles/article-delete'
 import ArticleEditor from '../articles/article-editor'
+import ArticleFavourite from '../articles/article-favourite'
 import ArticleFiles from '../articles/article-files'
 import ArticleHistory from '../articles/article-history'
 import ArticleLock from '../articles/article-lock'
 import ArticleParent from '../articles/article-parent'
-import ArticleFavourite from '../articles/article-favourite'
 import ArticleRating from '../articles/article-rating'
 import ArticleRename from '../articles/article-rename'
 import ArticleSource from '../articles/article-source'
 import ArticleTags from '../articles/article-tags'
 import useConstCallback from '../util/const-callback'
+import { showReportModal } from '../util/report-modal'
 import WikidotModal from '../util/wikidot-modal'
 
 interface Props {
@@ -48,6 +49,8 @@ interface Props {
   isWatching?: boolean
   favourites?: number
   isFavourited?: boolean
+  editForbiddenHint?: string
+  requiredTags?: string[][]
   preferences?: { [key: string]: any }
   pageInfo?: string
 }
@@ -99,6 +102,8 @@ const PageOptions: React.FC<Props> = ({
   ratingMode,
   favourites,
   isFavourited,
+  editForbiddenHint,
+  requiredTags,
   pathParams,
   canRate,
   canDelete,
@@ -121,14 +126,18 @@ const PageOptions: React.FC<Props> = ({
   const [extOptions, setExtOptions] = useState(false)
   const [isNewEditor, setIsNewEditor] = useState(false)
   const [isNowWatching, setIsNowWatching] = useState(isWatching)
+  const [favouriteCount, setFavouriteCount] = useState(favourites ?? 0)
+  const [isNowFavourited, setIsNowFavourited] = useState(Boolean(isFavourited))
   const [isSaving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showForbiddenHint, setShowForbiddenHint] = useState(false)
   const [onCancelNewEditor, setOnCancelNewEditor] = useState<() => void>()
 
   useEffect(() => {
     ;(window as any)._openNewEditor = (func?: () => void) => {
       if (!(optionsEnabled ? editable : canCreateHere)) {
-        setError(t('page-options.edit-forbidden'))
+        if (editForbiddenHint) setShowForbiddenHint(true)
+        else setError(t('page-options.edit-forbidden'))
         func?.()
         return
       }
@@ -325,8 +334,12 @@ const PageOptions: React.FC<Props> = ({
         return (
           <ArticleFavourite
             pageId={pageId}
-            favourites={favourites ?? 0}
-            favourited={Boolean(isFavourited)}
+            favourites={favouriteCount}
+            favourited={isNowFavourited}
+            onChange={(count, mine) => {
+              setFavouriteCount(count)
+              setIsNowFavourited(mine)
+            }}
             onClose={onCancelSubView}
           />
         )
@@ -374,6 +387,7 @@ const PageOptions: React.FC<Props> = ({
       <ArticleEditor
         pageId={pageId}
         isNew
+        requiredTags={requiredTags}
         pathParams={pathParams}
         useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
         onClose={onCancelSubView}
@@ -386,8 +400,30 @@ const PageOptions: React.FC<Props> = ({
   // fix as wikidot
   const info = pageInfo !== undefined ? <div id="page-info" dangerouslySetInnerHTML={{ __html: pageInfo }} /> : null
 
+  const notices = (
+    <>
+      {showForbiddenHint && editForbiddenHint && (
+        <WikidotModal buttons={[{ title: t('page-options.error-dismiss'), onClick: () => setShowForbiddenHint(false) }]}>
+          <div dangerouslySetInnerHTML={{ __html: editForbiddenHint }} />
+        </WikidotModal>
+      )}
+      {error && (
+        <WikidotModal buttons={[{ title: t('page-options.error-dismiss'), onClick: onCloseError }]} isError>
+          <p>
+            <strong>{t('page-options.error-label')}</strong> {error}
+          </p>
+        </WikidotModal>
+      )}
+    </>
+  )
+
   if (!optionsEnabled) {
-    return info
+    return (
+      <>
+        {info}
+        {notices}
+      </>
+    )
   }
 
   return (
@@ -405,6 +441,21 @@ const PageOptions: React.FC<Props> = ({
               {isNowWatching ? t('page-options.watch-stop') : t('page-options.watch-start')}
             </a>
           )}
+          {!pageId.startsWith('forum:') && (
+            <>
+              {' | '}
+              <a
+                href="#"
+                id="reportPage"
+                onClick={e => {
+                  e.preventDefault()
+                  showReportModal({ page: pageId }, t('report.page'))
+                }}
+              >
+                {t('report.action')}
+              </a>
+            </>
+          )}
         </div>
       )}
       {isSaving && (
@@ -412,13 +463,7 @@ const PageOptions: React.FC<Props> = ({
           <p>{t('page-options.saving')}</p>
         </WikidotModal>
       )}
-      {error && (
-        <WikidotModal buttons={[{ title: t('page-options.error-dismiss'), onClick: onCloseError }]} isError>
-          <p>
-            <strong>{t('page-options.error-label')}</strong> {error}
-          </p>
-        </WikidotModal>
-      )}
+      {notices}
       <div id="page-options-bottom" className="page-options-bottom">
         {editable && (
           <a id="edit-button" className="btn btn-default" href="#" onClick={onEdit}>
@@ -431,7 +476,7 @@ const PageOptions: React.FC<Props> = ({
           </a>
         )}
         <a id="favourite-button" className="btn btn-default" href="#" onClick={onFavourite}>
-          {t('page-options.favourite')} ({favourites ?? 0})
+          {t('page-options.favourite')} ({favouriteCount})
         </a>
         {tagable && (
           <a id="tags-button" className="btn btn-default" href="#" onClick={onTags}>

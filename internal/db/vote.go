@@ -71,6 +71,10 @@ DELETE FROM web_vote WHERE article_id = $1 AND user_id = $2`)
 	qInsertVote = register("InsertVote", `
 INSERT INTO web_vote (article_id, user_id, rate, date, role_id)
 VALUES ($1, $2, $3, $4, $5)`)
+
+	qInsertVoteEvent = register("InsertVoteEvent", `
+INSERT INTO pwikit_vote_event (article_id, user_id, old_rate, new_rate, at)
+VALUES ($1, NULLIF($2::bigint, 0), $3, $4, $5)`)
 )
 
 // The vote that was there comes back, since the action log records what
@@ -100,14 +104,28 @@ func (d *DB) ReplaceVote(ctx context.Context, articleID, userID int64, rate *flo
 			return nil, fmt.Errorf("insert vote: %w", err)
 		}
 	}
+	var before *float64
+	if old != nil {
+		before = &old.Rate
+	}
+	// The same vote cast again changes nothing, so it leaves no trace either.
+	if !sameRate(before, rate) {
+		if _, err := tx.Exec(ctx, qInsertVoteEvent, articleID, userID, before, rate, at); err != nil {
+			return nil, fmt.Errorf("record vote: %w", err)
+		}
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit vote: %w", err)
 	}
 	return old, nil
 }
 
+// Votes taken away in bulk are recorded as withdrawn, so the rating history
+// drops where the reset happened rather than rewriting the past.
 var qDeleteArticleVotes = register("DeleteArticleVotes", `
-DELETE FROM web_vote WHERE article_id = $1`)
+WITH gone AS (DELETE FROM web_vote WHERE article_id = $1 RETURNING article_id, user_id, rate)
+INSERT INTO pwikit_vote_event (article_id, user_id, old_rate, new_rate, at)
+SELECT article_id, user_id, rate, NULL, now() FROM gone`)
 
 func (d *DB) DeleteArticleVotes(ctx context.Context, articleID int64) error {
 	if _, err := d.pool.Exec(ctx, qDeleteArticleVotes, articleID); err != nil {
@@ -188,4 +206,11 @@ func (d *DB) AddArticleLogEntry(ctx context.Context, articleID int64, userID *in
 		return Revision{}, fmt.Errorf("commit log entry: %w", err)
 	}
 	return rev, nil
+}
+
+func sameRate(a, b *float64) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return *a == *b
 }

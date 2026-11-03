@@ -1,6 +1,7 @@
 import { t } from '~util/i18n'
 import { ModuleRateResponse, ratePage } from '../api/rate'
 import { showErrorModal } from '../util/wikidot-modal'
+import { noticeVote, upDownVote } from './rate-notice'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
   e.preventDefault()
@@ -37,6 +38,7 @@ export function makeUpDownRateModule(node: HTMLElement) {
   const callback = function (votesData: ModuleRateResponse) {
     updateRating(number, votesData)
     window.postMessage({ type: 'rate_updated' })
+    noticeVote(votesData, upDownVote)
   }
 
   rateup.addEventListener('click', e => onClick(e, pageId, 1).then(callback))

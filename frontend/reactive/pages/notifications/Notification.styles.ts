@@ -36,7 +36,9 @@ export const TypeMark = styled.div<{ unread?: boolean }>`
     vertical-align: middle;
   }
 
-  @media (max-width: 720px) { padding-left: 0; }
+  @media (max-width: 720px) {
+    padding-left: 0;
+  }
 `
 
 export const Body = styled.div`
@@ -51,7 +53,10 @@ export const SiteName = styled.div`
   a {
     color: inherit;
     text-decoration: none;
-    &:hover { text-decoration: underline; text-underline-offset: 3px; }
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
   }
 `
 
@@ -71,7 +76,10 @@ export const PostFrom = styled.div`
   a {
     color: ${({ theme }) => theme.foreground};
     text-decoration: none;
-    &:hover { text-decoration: underline; text-underline-offset: 3px; }
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
   }
 `
 
@@ -85,7 +93,9 @@ export const PostContent = styled.div`
   line-height: 1.5;
   word-break: break-word;
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: content-box;
   }
 `
@@ -98,7 +108,9 @@ export const PostName = styled.div`
     color: ${({ theme }) => theme.accent};
     text-decoration: underline;
     text-underline-offset: 3px;
-    &:hover { color: ${({ theme }) => theme.primary}; }
+    &:hover {
+      color: ${({ theme }) => theme.primary};
+    }
   }
 `
 
@@ -118,7 +130,10 @@ export const RevisionArticle = styled(RevisionField)`
   a {
     color: ${({ theme }) => theme.foreground};
     text-decoration: none;
-    &:hover { text-decoration: underline; text-underline-offset: 3px; }
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
   }
 `
 export const RevisionFlags = styled(RevisionField)`
@@ -154,5 +169,37 @@ export const NotificationDate = styled.div`
   @media (max-width: 720px) {
     text-align: left;
     padding-right: 0;
+  }
+`
+
+export const Clamp = styled.div<{ cut: boolean }>`
+  max-height: 14em;
+  overflow: hidden;
+  ${({ cut }) => (cut ? 'mask-image: linear-gradient(to bottom, #000 75%, transparent);' : '')}
+`
+
+export const ReadMore = styled.a`
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 13px;
+`
+
+export const MuteRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 6px;
+`
+
+export const Mute = styled.a`
+  display: inline-block;
+  font-size: 12px;
+  color: ${({ theme }) => theme.uiForeground};
+  opacity: 0.6;
+  &:hover {
+    opacity: 1;
+  }
+  &[aria-disabled='true'] {
+    pointer-events: none;
   }
 `

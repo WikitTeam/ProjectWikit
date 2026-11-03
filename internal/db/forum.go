@@ -609,6 +609,8 @@ JOIN web_forumthread t ON t.id = p.thread_id
 LEFT JOIN web_article a ON a.id = t.article_id
 WHERE p.author_id = $1
   AND (t.category_id = ANY($2) OR (t.article_id IS NOT NULL AND t.site_id = ANY($3)))
+  AND ($6::timestamptz IS NULL OR p.created_at >= $6)
+  AND ($7::timestamptz IS NULL OR p.created_at < $7)
 ORDER BY p.created_at DESC
 OFFSET $4 LIMIT $5`)
 
@@ -617,20 +619,22 @@ SELECT count(*)
 FROM web_forumpost p
 JOIN web_forumthread t ON t.id = p.thread_id
 WHERE p.author_id = $1
-  AND (t.category_id = ANY($2) OR (t.article_id IS NOT NULL AND t.site_id = ANY($3)))`)
+  AND (t.category_id = ANY($2) OR (t.article_id IS NOT NULL AND t.site_id = ANY($3)))
+  AND ($4::timestamptz IS NULL OR p.created_at >= $4)
+  AND ($5::timestamptz IS NULL OR p.created_at < $5)`)
 
-func (d *DB) UserPostCount(ctx context.Context, authorID int64, categoryIDs, commentSites []int64) (int, error) {
+func (d *DB) UserPostCount(ctx context.Context, authorID int64, categoryIDs, commentSites []int64, from, before *time.Time) (int, error) {
 	var n int
-	if err := d.pool.QueryRow(ctx, qUserPostCount, authorID, categoryIDs, commentSites).Scan(&n); err != nil {
+	if err := d.pool.QueryRow(ctx, qUserPostCount, authorID, categoryIDs, commentSites, from, before).Scan(&n); err != nil {
 		return 0, fmt.Errorf("count posts of user %d: %w", authorID, err)
 	}
 	return n, nil
 }
 
 func (d *DB) UserPosts(ctx context.Context, authorID int64, categoryIDs, commentSites []int64,
-	offset, limit int) ([]UserPost, error) {
+	from, before *time.Time, offset, limit int) ([]UserPost, error) {
 
-	rows, err := d.pool.Query(ctx, qUserPosts, authorID, categoryIDs, commentSites, offset, limit)
+	rows, err := d.pool.Query(ctx, qUserPosts, authorID, categoryIDs, commentSites, offset, limit, from, before)
 	if err != nil {
 		return nil, fmt.Errorf("query posts of user %d: %w", authorID, err)
 	}

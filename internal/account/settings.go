@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,8 @@ const (
 	passwordPath = "/-/profile/password"
 	namePath     = "/-/profile/name"
 	devicesPath  = "/-/profile/devices"
+	mutesPath    = "/-/profile/mutes"
+	pinsPath     = "/-/profile/pins"
 )
 
 const RenameCooldown = 30 * 24 * time.Hour
@@ -35,7 +38,7 @@ var outcomes = []string{
 	"email-invalid", "email-same", "email-needs-password",
 	"password-changed", "password-wrong", "password-unusable", "password-mismatch", "password-weak",
 	"name-changed", "name-cooldown", "name-taken", "name-invalid",
-	"email-hold-cancelled", "devices-ended", "devices-others-ended", "devices-gone",
+	"email-hold-cancelled", "devices-ended", "devices-others-ended", "devices-gone", "mute-removed",
 }
 
 type SettingsHandler struct {
@@ -94,6 +97,11 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		outcome, err = h.password(w, r, loc, user)
 	case namePath:
 		outcome, err = h.name(r, user)
+	case mutesPath:
+		outcome, err = h.unmute(r, user)
+	case pinsPath:
+		h.pin(w, r, user)
+		return
 	default:
 		h.deps.notFound(w, r)
 		return
@@ -256,4 +264,33 @@ func (h *SettingsHandler) cancelHold(ctx context.Context, user *db.User) (string
 		return "", err
 	}
 	return "email-hold-cancelled", nil
+}
+
+func (h *SettingsHandler) unmute(r *http.Request, user *db.User) (string, error) {
+	read := func(name string) *int64 {
+		if id, err := strconv.ParseInt(r.PostFormValue(name), 10, 64); err == nil && id > 0 {
+			return &id
+		}
+		return nil
+	}
+	article, thread, muted := read("article_id"), read("thread_id"), read("user_id")
+	if article == nil && thread == nil && muted == nil {
+		return "", nil
+	}
+	return "mute-removed", h.deps.DB.Unmute(r.Context(), user.ID, article, thread, muted)
+}
+
+// The pin form sits on the profile, so the reader goes back there rather than
+// to the settings. Only a profile path is honoured as the way back.
+func (h *SettingsHandler) pin(w http.ResponseWriter, r *http.Request, user *db.User) {
+	back := r.PostFormValue("back")
+	if !strings.HasPrefix(back, "/-/users/") || strings.ContainsAny(back, "\\\r\n") {
+		back = profilePath
+	}
+	if id, err := strconv.ParseInt(r.PostFormValue("article_id"), 10, 64); err == nil {
+		if err := h.deps.DB.Pin(r.Context(), user.ID, id, r.PostFormValue("on") == "1"); err != nil {
+			h.deps.logger().Error("pin a page", "user", user.ID, "err", err)
+		}
+	}
+	redirect(w, back, http.StatusSeeOther)
 }

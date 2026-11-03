@@ -1,4 +1,7 @@
 import React from 'react'
+import { setLanguage } from '~util/i18n'
+import { renderTo } from '~util/react-render-into'
+import { showErrorModal } from '~util/wikidot-modal'
 import './articles/auto-resize-iframe'
 import { makeButtons } from './articles/buttons'
 import { makeCodeBlock } from './articles/codeblock'
@@ -8,34 +11,32 @@ import { makeFootnote } from './articles/footnote'
 import { makeInterwiki } from './articles/interwiki'
 import { makeLightbox } from './articles/lightbox'
 import { makeListPages } from './articles/list-pages'
+import { makeNewPageModule } from './articles/newpage'
 import { makeStarsRateModule } from './articles/rate-stars'
 import { makeUpDownRateModule } from './articles/rate-updown'
-import { makeNewPageModule } from './articles/newpage'
 import { makeRefForm } from './articles/ref-form'
 import { makeSiteChanges } from './articles/site-changes'
 import { makeTabView } from './articles/tabview'
 import { makeTOC } from './articles/toc'
+import { makeTopBar } from './articles/top-bar'
 import { makeWantedPages } from './articles/wanted-pages'
+import AdminSusUsers from './entrypoints/admin-sus-users'
 import ForumNewPost from './entrypoints/forum-new-post'
 import ForumNewThread from './entrypoints/forum-new-thread'
-import PostLikes from './forum/post-likes'
 import ForumPostOptions from './entrypoints/forum-post-options'
 import ForumThreadOptions from './entrypoints/forum-thread-options'
 import { attachApiMessageListener } from './entrypoints/messages-api-interface'
 import Page404 from './entrypoints/page-404'
 import PageLoginStatus from './entrypoints/page-login-status'
 import PageOptions from './entrypoints/page-options'
+import { attachProfileActivity } from './entrypoints/profile-activity'
 import SearchModule from './entrypoints/search'
 import { attachUserActions } from './entrypoints/user-actions'
+import PostLikes from './forum/post-likes'
 import { makeRecentPosts } from './forum/recent-posts-pagination'
 import { makeForumThread } from './forum/thread-pagination'
 import ReactivePage from './reactive/router'
 import { makePasswordToggle } from './util/password'
-import { makeTopBar } from './articles/top-bar'
-import AdminSusUsers from './entrypoints/admin-sus-users'
-import { renderTo } from '~util/react-render-into'
-import { showErrorModal } from '~util/wikidot-modal'
-import { setLanguage } from '~util/i18n'
 
 // The page already declares its language for the browser, so the bundle reads
 // the same attribute instead of being told a second time.
@@ -82,13 +83,16 @@ window.addEventListener('DOMContentLoaded', () => {
   document
     .querySelectorAll('.w-forum-new-thread')
     .forEach((node: HTMLElement) => renderTo(node, <ForumNewThread {...JSON.parse(node.dataset.config!)} />))
-  document.querySelectorAll('.w-forum-new-post').forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config!)} />))
+  document
+    .querySelectorAll('.w-forum-new-post')
+    .forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config!)} />))
   document
     .querySelectorAll('.w-forum-thread-options')
     .forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config!)} />))
 
   makePasswordToggle()
   attachUserActions()
+  attachProfileActivity()
   makeTopBar()
   makeSignupClosed()
 

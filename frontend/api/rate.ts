@@ -10,6 +10,8 @@ export interface ModuleRateResponse {
 
   popularity: number
   mode: RatingMode
+  previousVote?: number | null
+  vote?: number | null
 }
 
 export interface ModuleRateVote {
@@ -26,6 +28,7 @@ export interface ModuleRateVotesResponse {
   mode: RatingMode
   votes: Array<ModuleRateVote>
   popularity: number
+  trend?: Array<[number, number]>
 }
 
 export interface ModuleRateRequest {

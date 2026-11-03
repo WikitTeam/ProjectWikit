@@ -148,6 +148,12 @@
             <label class="label" for="id_full_name">{{.T "profile.name"}}</label>
             <input type="text" name="full_name" id="id_full_name" value="{{esc .FullName}}" maxlength="150">
           </div>
+          {{range .Fields}}
+          <div class="form-row">
+            <label class="label" for="id_field_{{.Key}}">{{$.T (printf "profile.field-%s" .Key)}}</label>
+            <input type="text" name="field_{{.Key}}" id="id_field_{{.Key}}" value="{{esc .Value}}" maxlength="200">
+          </div>
+          {{end}}
           <div class="form-row">
             <label class="label" for="id_bio">{{.T "profile.bio"}}<span class="hint">{{.T "profile.bio-hint"}}</span></label>
             <textarea name="bio" id="id_bio" rows="6">{{esc .Bio}}</textarea>
@@ -172,6 +178,45 @@
               {{.T "profile.advanced-editor"}}<span class="hint">{{.T "profile.advanced-editor-hint"}}</span>
             </label>
           </div>
+          <fieldset class="form-row profile-extras">
+            <legend class="label">{{.T "profile.links"}}</legend>
+            {{range .Links}}
+            {{$picked := .Platform}}
+            <div class="pair">
+              <select name="link_platform" aria-label="{{$.T "profile.link-platform"}}">
+                <option value="">{{$.T "profile.link-platform"}}</option>
+                {{range $.Platforms}}<option value="{{esc .Key}}"{{if eq .Key $picked}} selected{{end}}>{{esc .Name}}</option>{{end}}
+              </select>
+              <input type="text" name="link_value" value="{{esc .Value}}" maxlength="200" placeholder="{{$.T "profile.link-value"}}" aria-label="{{$.T "profile.link-value"}}">
+            </div>
+            {{end}}
+          </fieldset>
+          <fieldset class="form-row notify-choices">
+            <legend class="label">{{.T "profile.home"}}</legend>
+            <label for="id_show_pins">
+              <input type="checkbox" name="show_pins" id="id_show_pins" value="1"{{if .ShowPins}} checked{{end}}>
+              {{.T "profile.show-pins"}}
+            </label>
+            <label for="id_show_stats">
+              <input type="checkbox" name="show_stats" id="id_show_stats" value="1"{{if .ShowStats}} checked{{end}}>
+              {{.T "profile.show-stats"}}
+            </label>
+            <label for="id_show_trend">
+              <input type="checkbox" name="show_trend" id="id_show_trend" value="1"{{if .ShowTrend}} checked{{end}}>
+              {{.T "profile.show-trend"}}
+            </label>
+          </fieldset>
+          {{with .Notify}}
+          <fieldset class="form-row notify-choices">
+            <legend class="label">{{$.T "profile.notify"}}<span class="hint">{{$.T "profile.notify-hint"}}</span></legend>
+            {{range .}}
+            <label for="id_notify_{{.Kind}}">
+              <input type="checkbox" name="notify_{{.Kind}}" id="id_notify_{{.Kind}}" value="1"{{if .On}} checked{{end}}>
+              {{$.T (printf "profile.notify-%s" .Kind)}}
+            </label>
+            {{end}}
+          </fieldset>
+          {{end}}
         </div>
 
         <button class="btn-primary" type="submit">{{.T "profile.save"}}</button>
@@ -181,6 +226,24 @@
         </div>
 
       </form>
+      {{with .Mutes}}
+      <section class="mute-list">
+        <h3>{{$.T "profile.mutes"}}</h3>
+        <p class="hint">{{$.T "profile.mutes-hint"}}</p>
+        <ul>
+          {{range .}}
+          <li>
+            <a href="{{esc .URL}}">{{esc .Title}}</a>{{if .Site}}<span class="mute-site">{{esc .Site}}</span>{{end}}
+            <form method="post" action="/-/profile/mutes">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+              {{if .ArticleID}}<input type="hidden" name="article_id" value="{{.ArticleID}}">{{else if .ThreadID}}<input type="hidden" name="thread_id" value="{{.ThreadID}}">{{else}}<input type="hidden" name="user_id" value="{{.UserID}}">{{end}}
+              <button type="submit" class="btn-ghost">{{$.T "profile.unmute"}}</button>
+            </form>
+          </li>
+          {{end}}
+        </ul>
+      </section>
+      {{end}}
       {{end}}
 
     </main>

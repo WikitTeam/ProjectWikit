@@ -211,9 +211,13 @@ func (d *DB) SaveAdminUser(ctx context.Context, siteID int64, u AdminUserRow, bu
 }
 
 var qResetUserVotes = register("ResetUserVotes", `
-DELETE FROM web_vote v
-USING web_article a
-WHERE a.id = v.article_id AND v.user_id = $1 AND a.site_id = $2`)
+WITH gone AS (
+	DELETE FROM web_vote v
+	USING web_article a
+	WHERE a.id = v.article_id AND v.user_id = $1 AND a.site_id = $2
+	RETURNING v.article_id, v.user_id, v.rate)
+INSERT INTO pwikit_vote_event (article_id, user_id, old_rate, new_rate, at)
+SELECT article_id, user_id, rate, NULL, now() FROM gone`)
 
 func (d *DB) ResetUserVotes(ctx context.Context, siteID, userID int64) (int64, error) {
 	tag, err := d.pool.Exec(ctx, qResetUserVotes, userID, siteID)

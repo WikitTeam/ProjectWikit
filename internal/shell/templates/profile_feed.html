@@ -1,6 +1,16 @@
 {{define "profile_feed.html"}}
       <section class="profile-section">
         {{if .Label}}<span class="label">{{esc .Label}}</span>{{end}}
+        {{if .Feed.Tab}}
+        <form class="feed-dates" method="get">
+          <input type="hidden" name="tab" value="{{esc .Feed.Tab}}">
+          <input type="date" name="from" value="{{esc .Feed.From}}" aria-label="{{$.View.T "profile.from"}}">
+          <span class="sep">&ndash;</span>
+          <input type="date" name="to" value="{{esc .Feed.To}}" aria-label="{{$.View.T "profile.to"}}">
+          <button type="submit" class="btn-ghost">{{$.View.T "profile.filter"}}</button>
+          {{if or .Feed.From .Feed.To}}<a class="clear" href="?tab={{esc .Feed.Tab}}">{{$.View.T "profile.filter-clear"}}</a>{{end}}
+        </form>
+        {{end}}
         {{if .Feed.Items}}
         <ul class="feed">
           {{range .Feed.Items}}

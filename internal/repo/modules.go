@@ -9,6 +9,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/pageconfig"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
+	"github.com/WikitTeam/ProjectWikit/internal/quiz"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
@@ -507,4 +508,28 @@ func (m moduleData) AddFavourite(articleID, userID int64) error {
 
 func (m moduleData) RemoveFavourite(articleID, userID int64) error {
 	return m.repo.db.RemoveFavourite(m.repo.ctx, articleID, userID)
+}
+
+func (m moduleData) MembershipQuiz() (db.MembershipQuiz, error) {
+	return m.repo.db.MembershipQuiz(m.repo.ctx, m.repo.siteID())
+}
+
+func (m moduleData) QuizAttempts(userID int64) ([]quiz.Attempt, error) {
+	return m.repo.db.QuizAttempts(m.repo.ctx, m.repo.siteID(), userID)
+}
+
+func (m moduleData) SearchForum(f db.ForumSearchFilter, offset, limit int) ([]db.ForumSearchHit, error) {
+	return m.repo.db.SearchForum(m.repo.ctx, m.repo.siteID(), f, offset, limit)
+}
+
+func (m moduleData) WithoutMutes(threadID *int64, actorID *int64, readers []int64) ([]int64, error) {
+	return m.repo.db.WithoutMuted(m.repo.ctx, readers, nil, threadID, actorID)
+}
+
+func (m moduleData) RatingTrend(articleID int64, average bool) ([]db.TrendPoint, error) {
+	return m.repo.db.RatingTrend(m.repo.ctx, m.repo.siteID(), articleID, average)
+}
+
+func (m moduleData) AuthorRank(categories, negate, exclude, hidden []string, offset, limit int) ([]db.AuthorRankRow, error) {
+	return m.repo.db.AuthorRank(m.repo.ctx, m.repo.siteID(), categories, negate, exclude, hidden, offset, limit)
 }

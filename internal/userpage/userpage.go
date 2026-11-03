@@ -7,12 +7,14 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/changelog"
+	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
@@ -26,6 +28,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/social"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
@@ -74,7 +77,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := h.page(r, name)
+	if r.URL.Query().Get(dayParam) != "" {
+		h.serveDay(w, r, name)
+		return
+	}
+	token, fresh := csrf.Token(r)
+	body, err := h.page(r, name, token)
 	if err != nil {
 		h.log().Error("render profile", "path", r.URL.Path, "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -85,6 +93,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Only the owner's own view carries a form, so nobody else is handed a token.
+	if fresh && strings.Contains(body, token) {
+		csrf.SetCookie(w, r, token)
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if r.Method != http.MethodHead {
@@ -92,7 +104,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) page(r *http.Request, name string) (string, error) {
+func (h *Handler) page(r *http.Request, name, token string) (string, error) {
 	ctx := r.Context()
 	current := site.FromContext(ctx)
 	if current == nil {
@@ -112,6 +124,9 @@ func (h *Handler) page(r *http.Request, name string) (string, error) {
 	data, err := h.data(r, loc, current, profile, viewer)
 	if err != nil {
 		return "", err
+	}
+	if data.IsSelf {
+		data.CSRF = token
 	}
 	render := shell.New(loc, h.deps.Assets)
 	content, err := render.Profile(data)
@@ -207,16 +222,40 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		data.ActionsConfig = config
 	}
 	data.IsSelf = viewer != nil && viewer.ID == profile.ID
+	if data.IsSelf {
+		if data.Unread, err = unreadOf(ctx, h.deps.DB, viewer.ID); err != nil {
+			return shell.Profile{}, err
+		}
+	}
 
 	data.Tab = tabOf(r)
 	data.Tabs = tabs(r, loc, data.Tab)
+	data.PinLimit = db.MaxPins
+	if err := h.extras(ctx, profile, &data); err != nil {
+		return shell.Profile{}, err
+	}
 
+	span, from, to := windowOf(r, site.Zone(ctx))
 	switch data.Tab {
 	case shell.ProfileTabEdits:
-		data.Edits, err = h.edits(r, loc, current, profile, viewer)
+		data.Edits, err = h.edits(r, loc, current, profile, viewer, span)
+		data.Edits.Tab, data.Edits.From, data.Edits.To = data.Tab, from, to
 	case shell.ProfileTabPosts:
-		data.Posts, err = h.posts(r, loc, current, profile, viewer)
+		data.Posts, err = h.posts(r, loc, current, profile, viewer, span, true)
+		data.Posts.Tab, data.Posts.From, data.Posts.To = data.Tab, from, to
+	case shell.ProfileTabPages:
+		data.Pages, err = h.pages(ctx, current, profile, viewer, false, span)
+		data.PagesFrom, data.PagesTo = from, to
 	default:
+		if h.showsPins(ctx, profile.ID) {
+			data.Pins, err = h.pages(ctx, current, profile, viewer, true, window{})
+		}
+		if err == nil && h.showsStats(ctx, profile.ID) {
+			err = h.activity(r, loc, current, profile, viewer, &data)
+		}
+		if err != nil {
+			return shell.Profile{}, err
+		}
 		data.Roles, err = h.roles(ctx, current, profile)
 		if err == nil && profile.Bio != "" {
 			data.BioHTML, err = h.bio(r, loc, current, profile, viewer)
@@ -238,7 +277,7 @@ const (
 
 func tabOf(r *http.Request) string {
 	switch tab := r.URL.Query().Get(tabParam); tab {
-	case shell.ProfileTabEdits, shell.ProfileTabPosts:
+	case shell.ProfileTabEdits, shell.ProfileTabPosts, shell.ProfileTabPages:
 		return tab
 	}
 	return shell.ProfileTabAbout
@@ -247,6 +286,7 @@ func tabOf(r *http.Request) string {
 func tabs(r *http.Request, loc *i18n.Localizer, active string) []shell.ProfileTab {
 	all := []struct{ tab, label string }{
 		{shell.ProfileTabAbout, "profile.tab-about"},
+		{shell.ProfileTabPages, "profile.tab-pages"},
 		{shell.ProfileTabEdits, "profile.tab-edits"},
 		{shell.ProfileTabPosts, "profile.tab-posts"},
 	}
@@ -296,7 +336,7 @@ func (s *siteSet) href(one *db.Site, path string) string {
 // The history is read through the viewer's permissions rather than the profile
 // owner's, so a page one visitor may not see stays off the other's profile.
 func (h *Handler) edits(r *http.Request, loc *i18n.Localizer, current *db.Site,
-	profile *db.Profile, viewer *db.User) (shell.ProfileFeed, error) {
+	profile *db.Profile, viewer *db.User, span window) (shell.ProfileFeed, error) {
 
 	ctx := r.Context()
 	sites, err := h.siteSet(ctx, current)
@@ -315,21 +355,28 @@ func (h *Handler) edits(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		HiddenBySite: hidden,
 		HasUser:      true,
 		UserIDs:      []int64{profile.ID},
+		From:         span.from,
+		Before:       span.before,
 	}
-	total, err := h.deps.DB.SiteChangeCount(ctx, filter)
+	if span.site != nil {
+		filter.AllSites, filter.SiteID, filter.Hidden = false, *span.site, hidden[*span.site]
+	}
+	offset, limit := 0, span.limit
+	feed := shell.ProfileFeed{}
+	if limit == 0 {
+		total, err := h.deps.DB.SiteChangeCount(ctx, filter)
+		if err != nil {
+			return shell.ProfileFeed{}, err
+		}
+		page, pages := pageOf(r, editsParam, total)
+		offset, limit = (page-1)*historyPerPage, historyPerPage
+		feed.Pagination = listpages.PaginationLinks(loc, pageHref(r, editsParam), page, pages)
+	}
+	changes, err := h.deps.DB.SiteChanges(ctx, filter, offset, limit)
 	if err != nil {
 		return shell.ProfileFeed{}, err
 	}
-	page, pages := pageOf(r, editsParam, total)
-	changes, err := h.deps.DB.SiteChanges(ctx, filter, (page-1)*historyPerPage, historyPerPage)
-	if err != nil {
-		return shell.ProfileFeed{}, err
-	}
-
-	feed := shell.ProfileFeed{
-		Items:      make([]shell.ProfileItem, 0, len(changes)),
-		Pagination: listpages.PaginationLinks(loc, pageHref(r, editsParam), page, pages),
-	}
+	feed.Items = make([]shell.ProfileItem, 0, len(changes))
 	users := func(ids []int64) ([]db.User, error) { return h.deps.DB.UsersByIDs(ctx, ids) }
 	for _, c := range changes {
 		entry, err := changelog.Of(loc, users, c)
@@ -359,7 +406,7 @@ func profileFlags(flags []changelog.Flag) []shell.ProfileFlag {
 }
 
 func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, current *db.Site,
-	profile *db.Profile, viewer *db.User) (shell.ProfileFeed, error) {
+	profile *db.Profile, viewer *db.User, span window, withContent bool) (shell.ProfileFeed, error) {
 
 	ctx := r.Context()
 	sites, err := h.siteSet(ctx, current)
@@ -371,6 +418,9 @@ func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	var ids, commentSites []int64
 	for i := range sites.all {
 		one := &sites.all[i]
+		if span.site != nil && one.ID != *span.site {
+			continue
+		}
 		subject, err := repo.NewPermsOn(ctx, h.deps.DB, one).Subject(viewer, now)
 		if err != nil {
 			return shell.ProfileFeed{}, err
@@ -392,15 +442,33 @@ func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		}
 	}
 
-	total, err := h.deps.DB.UserPostCount(ctx, profile.ID, ids, commentSites)
+	offset, limit := 0, span.limit
+	feed := shell.ProfileFeed{}
+	if limit == 0 {
+		total, err := h.deps.DB.UserPostCount(ctx, profile.ID, ids, commentSites, span.from, span.before)
+		if err != nil {
+			return shell.ProfileFeed{}, err
+		}
+		page, pages := pageOf(r, postsParam, total)
+		offset, limit = (page-1)*historyPerPage, historyPerPage
+		feed.Pagination = listpages.PaginationLinks(loc, pageHref(r, postsParam), page, pages)
+	}
+	posts, err := h.deps.DB.UserPosts(ctx, profile.ID, ids, commentSites, span.from, span.before, offset, limit)
 	if err != nil {
 		return shell.ProfileFeed{}, err
 	}
-	page, pages := pageOf(r, postsParam, total)
-	posts, err := h.deps.DB.UserPosts(ctx, profile.ID, ids, commentSites,
-		(page-1)*historyPerPage, historyPerPage)
-	if err != nil {
-		return shell.ProfileFeed{}, err
+	feed.Items = make([]shell.ProfileItem, 0, len(posts))
+	if !withContent {
+		for _, p := range posts {
+			on := sites.of(p.SiteID)
+			feed.Items = append(feed.Items, shell.ProfileItem{
+				URL:   sites.href(on, threadURL(p.ThreadID, threadName(p))+"#post-"+strconv.FormatInt(p.ID, 10)),
+				Title: threadName(p),
+				Site:  on.Title,
+				At:    p.CreatedAt,
+			})
+		}
+		return feed, nil
 	}
 
 	postIDs := make([]int64, 0, len(posts))
@@ -412,10 +480,6 @@ func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		return shell.ProfileFeed{}, err
 	}
 
-	feed := shell.ProfileFeed{
-		Items:      make([]shell.ProfileItem, 0, len(posts)),
-		Pagination: listpages.PaginationLinks(loc, pageHref(r, postsParam), page, pages),
-	}
 	envs := map[int64]*pagerender.Env{}
 	for _, p := range posts {
 		on := sites.of(p.SiteID)
@@ -599,4 +663,73 @@ func siteID(ctx context.Context) int64 {
 		return current.ID
 	}
 	return 0
+}
+
+const (
+	profileSection = "profile"
+	showPinsName   = "show_pins"
+	pagesListed    = 200
+)
+
+func (h *Handler) showsPins(ctx context.Context, userID int64) bool {
+	raw, err := h.deps.DB.UserPreference(ctx, userID, profileSection, showPinsName)
+	return err != nil || raw != "False"
+}
+
+func (h *Handler) extras(ctx context.Context, profile *db.Profile, data *shell.Profile) error {
+	fields, links, err := h.deps.DB.ProfileExtras(ctx, profile.ID)
+	if err != nil {
+		return err
+	}
+	for _, f := range fields {
+		one := shell.ProfileField{Key: f.Label, Value: f.Value}
+		if f.Label == "website" {
+			website, _ := social.Find("website")
+			one.Href = social.Href(website, f.Value)
+		}
+		data.Fields = append(data.Fields, one)
+	}
+	for _, l := range links {
+		p, ok := social.Find(l.Platform)
+		if !ok {
+			p, _ = social.Find("other")
+		}
+		one := shell.ProfileSocial{Name: p.Name, Value: l.Value, Href: social.Href(p, l.Value), FA: p.FA, Color: p.Color}
+		if p.Icon != "" {
+			one.Icon = h.deps.Assets.URL("images/social/" + p.Icon + ".svg")
+		}
+		data.Socials = append(data.Socials, one)
+	}
+	return nil
+}
+
+// Pages are read through the viewer's permissions, the same as the history, so
+// a page in a category they may not see stays off the list.
+func (h *Handler) pages(ctx context.Context, current *db.Site, profile *db.Profile, viewer *db.User, pinned bool, span window) ([]shell.ProfilePage, error) {
+	found, err := h.deps.DB.AuthoredPages(ctx, profile.ID, pinned, span.from, span.before, pagesListed)
+	if err != nil {
+		return nil, err
+	}
+	sites, err := h.siteSet(ctx, current)
+	if err != nil {
+		return nil, err
+	}
+	hidden := map[int64][]string{}
+	out := make([]shell.ProfilePage, 0, len(found))
+	for _, p := range found {
+		on := sites.of(p.SiteID)
+		if _, ok := hidden[on.ID]; !ok {
+			if hidden[on.ID], err = repo.HiddenCategoriesOn(ctx, h.deps.DB, on, viewer); err != nil {
+				return nil, err
+			}
+		}
+		if slices.Contains(hidden[on.ID], p.Category) {
+			continue
+		}
+		out = append(out, shell.ProfilePage{
+			ArticleID: p.ArticleID, Title: p.Title, URL: sites.href(on, p.Path),
+			Site: on.Title, At: p.CreatedAt, Pinned: p.Pinned,
+		})
+	}
+	return out, nil
 }

@@ -1,6 +1,7 @@
 package userpage
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -22,6 +23,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/social"
 )
 
 const EditPrefix = "/-/profile/edit"
@@ -139,9 +141,43 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	if err := h.deps.DB.UpdateProfile(r.Context(), viewer.ID, first, last, bio, avatar, wanted); err != nil {
 		return "", err
 	}
-	return "", h.deps.DB.SetUserPreference(r.Context(), viewer.ID,
+	if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID,
 		pageconfig.PreferenceSection, pageconfig.PreferenceAdvancedSourceEditor,
-		pageconfig.PreferenceValue(r.PostFormValue("advanced_editor") != ""))
+		pageconfig.PreferenceValue(r.PostFormValue("advanced_editor") != "")); err != nil {
+		return "", err
+	}
+	if err := h.deps.DB.SaveProfileExtras(r.Context(), viewer.ID, profileFields(r), profileLinks(r)); err != nil {
+		return "", err
+	}
+	if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, profileSection, showPinsName,
+		pageconfig.PreferenceValue(r.PostFormValue("show_pins") != "")); err != nil {
+		return "", err
+	}
+	for _, name := range []string{showStatsName, showTrendName} {
+		if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, profileSection, name,
+			pageconfig.PreferenceValue(r.PostFormValue(name) != "")); err != nil {
+			return "", err
+		}
+	}
+	for _, kind := range db.MutableKinds {
+		on := pageconfig.PreferenceValue(r.PostFormValue("notify_"+kind) != "")
+		if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, db.NotifySection, kind, on); err != nil {
+			return "", err
+		}
+	}
+	return "", nil
+}
+
+func (h *EditHandler) notifyChoices(ctx context.Context, userID int64) ([]shell.NotifyChoice, error) {
+	out := make([]shell.NotifyChoice, 0, len(db.MutableKinds))
+	for _, kind := range db.MutableKinds {
+		raw, err := h.deps.DB.UserPreference(ctx, userID, db.NotifySection, kind)
+		if err != nil && !errors.Is(err, db.ErrNotFound) {
+			return nil, err
+		}
+		out = append(out, shell.NotifyChoice{Kind: kind, On: raw != "False"})
+	}
+	return out, nil
 }
 
 func (h *EditHandler) avatar(r *http.Request, loc *i18n.Localizer, viewer *db.User) (*string, string, error) {
@@ -262,7 +298,79 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		return "", err
 	}
 
+	unread, err := unreadOf(r.Context(), h.deps.DB, viewer.ID)
+	if err != nil {
+		return "", err
+	}
+	notify, err := h.notifyChoices(r.Context(), viewer.ID)
+	if err != nil {
+		return "", err
+	}
+	muted, err := h.deps.DB.Mutes(r.Context(), viewer.ID)
+	if err != nil {
+		return "", err
+	}
+	mutes := make([]shell.Mute, len(muted))
+	for i, m := range muted {
+		mutes[i] = shell.Mute{Title: m.Title, URL: "//" + m.SiteDomain + m.Path, Site: m.SiteTitle}
+		if m.ArticleID != nil {
+			mutes[i].ArticleID = *m.ArticleID
+		}
+		if m.ThreadID != nil {
+			mutes[i].ThreadID = *m.ThreadID
+		}
+		if m.UserID != nil {
+			mutes[i].UserID = *m.UserID
+		}
+	}
+	fields, links, err := h.deps.DB.ProfileExtras(r.Context(), viewer.ID)
+	if err != nil {
+		return "", err
+	}
+	stored := make(map[string]string, len(fields))
+	for _, f := range fields {
+		stored[f.Label] = f.Value
+	}
+	editFields := make([]shell.ProfileField, 0, len(db.ProfileFieldKeys))
+	for _, key := range db.ProfileFieldKeys {
+		editFields = append(editFields, shell.ProfileField{Key: key, Value: stored[key]})
+	}
+	editLinks := make([]shell.ProfileLinkRow, 0, len(links)+2)
+	for _, l := range links {
+		editLinks = append(editLinks, shell.ProfileLinkRow{Platform: l.Platform, Value: l.Value})
+	}
+	editLinks = append(editLinks, shell.ProfileLinkRow{}, shell.ProfileLinkRow{})
+	platforms := make([]shell.PlatformChoice, 0, len(social.Platforms))
+	for _, p := range social.Platforms {
+		name := p.Name
+		switch p.Key {
+		case "email", "website", "other":
+			name = loc.T("profile.platform-" + p.Key)
+		}
+		platforms = append(platforms, shell.PlatformChoice{Key: p.Key, Name: name})
+	}
+	showPins, err := h.deps.DB.UserPreference(r.Context(), viewer.ID, profileSection, showPinsName)
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return "", err
+	}
+	showStats, err := h.deps.DB.UserPreference(r.Context(), viewer.ID, profileSection, showStatsName)
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return "", err
+	}
+	showTrend, err := h.deps.DB.UserPreference(r.Context(), viewer.ID, profileSection, showTrendName)
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return "", err
+	}
 	data := shell.ProfileEdit{
+		Fields:         editFields,
+		Links:          editLinks,
+		Platforms:      platforms,
+		ShowPins:       showPins != "False",
+		ShowStats:      showStats != "False",
+		ShowTrend:      showTrend == "True",
+		Mutes:          mutes,
+		Unread:         unread,
+		Notify:         notify,
 		AuthIcon:       authIcon(current),
 		SiteTitle:      siteTitle(current),
 		DisplayName:    displayName(profile),
@@ -344,4 +452,43 @@ func deviceName(loc *i18n.Localizer, ua string) string {
 		return a.System
 	}
 	return loc.T("profile.device-unknown")
+}
+
+const (
+	maxProfileLinks = 12
+	maxValueRunes   = 200
+)
+
+func clipRunes(s string, n int) string {
+	s = strings.TrimSpace(s)
+	if r := []rune(s); len(r) > n {
+		return string(r[:n])
+	}
+	return s
+}
+
+func profileFields(r *http.Request) []db.ProfileField {
+	var out []db.ProfileField
+	for _, key := range db.ProfileFieldKeys {
+		if value := clipRunes(r.PostFormValue("field_"+key), maxValueRunes); value != "" {
+			out = append(out, db.ProfileField{Label: key, Value: value})
+		}
+	}
+	return out
+}
+
+func profileLinks(r *http.Request) []db.ProfileLink {
+	platforms, values := r.PostForm["link_platform"], r.PostForm["link_value"]
+	var out []db.ProfileLink
+	for i := range platforms {
+		if i >= len(values) || len(out) == maxProfileLinks {
+			break
+		}
+		value := clipRunes(values[i], maxValueRunes)
+		if _, ok := social.Find(platforms[i]); !ok || value == "" {
+			continue
+		}
+		out = append(out, db.ProfileLink{Platform: platforms[i], Value: value})
+	}
+	return out
 }

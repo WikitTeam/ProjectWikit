@@ -153,5 +153,9 @@ func tellTheLikedAuthor(env module.Env, post *db.ForumThreadPost) error {
 	if err != nil {
 		return err
 	}
-	return env.Data.SendNotification(db.NotifyPostLike, meta, []int64{*post.AuthorID})
+	readers, err := env.Data.WithoutMutes(nil, actorOf(env), []int64{*post.AuthorID})
+	if err != nil {
+		return err
+	}
+	return env.Data.SendNotification(db.NotifyPostLike, meta, readers)
 }

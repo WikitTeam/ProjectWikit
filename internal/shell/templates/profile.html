@@ -31,6 +31,16 @@
             
           </div>
           {{if .Subtitle}}<div class="meta">{{esc .Subtitle}}</div>{{end}}
+          {{if .Socials}}
+          <div class="socials">
+            {{range .Socials}}
+            <a class="social" {{if .Href}}href="{{esc .Href}}" target="_blank" rel="noopener me"{{else}}href="#" data-copy="{{esc .Value}}" data-copied="{{$.T "profile.copied"}}"{{end}} style="--brand: {{esc .Color}}" title="{{if .Name}}{{esc .Name}}: {{end}}{{esc .Value}}">
+              {{if .Icon}}<span class="social-icon" style="--icon: url('{{esc .Icon}}')" aria-hidden="true"></span>{{else}}<i class="{{esc .FA}}" aria-hidden="true"></i>{{end}}
+              <span class="social-value">{{esc .Value}}</span>
+            </a>
+            {{end}}
+          </div>
+          {{end}}
         </div>
         <div class="actions">
           {{if .IsSelf}}
@@ -38,10 +48,11 @@
           {{end}}
           {{if .CanDirectMessage}}
             <a class="btn-ghost" href="/-/messages/{{.ID}}">{{.T "profile.send-message"}}</a>
-            <span id="user-actions-container" data-config='{{.ActionsConfig}}'>
+            <span id="user-actions-container" data-config='{{.ActionsConfig}}' data-site-title="{{esc .SiteTitle}}">
               <a class="btn-ghost block-button" href="javascript:;" data-action="toggle-block">
                 <span class="block-label">{{if .IsBlocked}}{{.T "profile.unblock"}}{{else}}{{.T "profile.block"}}{{end}}</span>
               </a>
+              <a class="btn-ghost report-button" href="javascript:;" data-action="report">{{.T "profile.report"}}</a>
             </span>
           {{end}}
         </div>
@@ -55,7 +66,57 @@
       {{template "profile_feed.html" (feed $ "" .Edits (.T "profile.no-edits"))}}
       {{else if eq .Tab "posts"}}
       {{template "profile_feed.html" (feed $ "" .Posts (.T "profile.no-posts"))}}
+      {{else if eq .Tab "pages"}}
+      <section class="profile-section">
+        <form class="feed-dates" method="get">
+          <input type="hidden" name="tab" value="pages">
+          <input type="date" name="from" value="{{esc .PagesFrom}}" aria-label="{{.T "profile.from"}}">
+          <span class="sep">&ndash;</span>
+          <input type="date" name="to" value="{{esc .PagesTo}}" aria-label="{{.T "profile.to"}}">
+          <button type="submit" class="btn-ghost">{{.T "profile.filter"}}</button>
+          {{if or .PagesFrom .PagesTo}}<a class="clear" href="?tab=pages">{{.T "profile.filter-clear"}}</a>{{end}}
+        </form>
+        {{if .Pages}}
+        {{if .CSRF}}<p class="pin-hint">{{.T "profile.pin-hint" "count" .PinLimit}}</p>{{end}}
+        <ul class="feed pages">
+          {{range .Pages}}
+          <li>
+            <span class="what-line">
+              <a class="what" href="{{esc .URL}}">{{esc .Title}}</a>
+              {{if .Pinned}}<span class="pin-mark">{{$.T "profile.pinned"}}</span>{{end}}
+            </span>
+            <span class="when">{{$.ODate .At}}</span>
+            <span class="from">{{esc .Site}}</span>
+            {{if $.CSRF}}
+            <form class="pin-form" method="post" action="/-/profile/pins">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+              <input type="hidden" name="article_id" value="{{.ArticleID}}">
+              <input type="hidden" name="on" value="{{if .Pinned}}0{{else}}1{{end}}">
+              <input type="hidden" name="back" value="{{esc $.ProfileURL}}?tab=pages">
+              <button type="submit" class="btn-link">{{if .Pinned}}{{$.T "profile.unpin"}}{{else}}{{$.T "profile.pin"}}{{end}}</button>
+            </form>
+            {{end}}
+          </li>
+          {{end}}
+        </ul>
+        {{else}}
+        <div class="empty">{{.T "profile.no-pages"}}</div>
+        {{end}}
+      </section>
       {{else}}
+      {{if .Pins}}
+      <section class="profile-section">
+        <span class="label">{{.T "profile.pinned"}}</span>
+        <ul class="pins">
+          {{range .Pins}}
+          <li>
+            <a class="pin-title" href="{{esc .URL}}">{{esc .Title}}</a>
+            <span class="pin-meta"><span>{{esc .Site}}</span><span>{{$.ODate .At}}</span></span>
+          </li>
+          {{end}}
+        </ul>
+      </section>
+      {{end}}
       <dl class="dl">
         {{if .FromWikidot}}
           <dt>{{.T "profile.account-state"}}</dt><dd>{{.T "profile.imported"}}</dd>
@@ -65,6 +126,9 @@
         {{end}}
         {{if .FullName}}
           <dt>{{.T "profile.name"}}</dt><dd>{{esc .FullName}}</dd>
+        {{end}}
+        {{range .Fields}}
+          <dt>{{$.T (printf "profile.field-%s" .Key)}}</dt><dd>{{if .Href}}<a href="{{esc .Href}}" target="_blank" rel="noopener me">{{esc .Value}}</a>{{else}}{{esc .Value}}{{end}}</dd>
         {{end}}
         {{if .Bio}}
           <dt>{{.T "profile.bio"}}</dt><dd>{{.BioHTML}}</dd>
@@ -88,10 +152,72 @@
         </ul>
       </section>
       {{end}}
+      {{with .Stats}}
+      <section class="profile-section activity">
+        <div class="activity-head">
+          <span class="label">{{$.T "profile.activity"}}</span>
+          <form class="activity-site" method="get">
+            <select name="year" aria-label="{{$.T "profile.activity-year-pick"}}" onchange="this.form.submit()">
+              {{range $.Years}}<option value="{{esc .Value}}"{{if .Picked}} selected{{end}}>{{esc .Label}}</option>{{end}}
+            </select>
+            <select name="site" aria-label="{{$.T "profile.activity-site"}}" onchange="this.form.submit()">
+              {{range $.Sites}}<option value="{{esc .Slug}}"{{if .Picked}} selected{{end}}>{{esc .Title}}</option>{{end}}
+            </select>
+            <noscript><button type="submit" class="btn-ghost">{{$.T "profile.activity-go"}}</button></noscript>
+          </form>
+        </div>
+        <dl class="stats">
+          <div><dt>{{$.T "profile.stat-pages"}}</dt><dd>{{.Pages}}</dd></div>
+          <div><dt>{{$.T "profile.stat-score"}}</dt><dd>{{esc .Score}}</dd></div>
+          <div><dt>{{$.T "profile.stat-edits"}}</dt><dd>{{.Edits}}</dd></div>
+          <div><dt>{{$.T "profile.stat-posts"}}</dt><dd>{{.Posts}}</dd></div>
+        </dl>
+        {{with $.Activity}}
+        <div class="heatmap" aria-label="{{esc .Summary}}" data-days="{{esc $.ProfileURL}}">
+          <div class="heatmap-months">{{range .Months}}<span style="grid-column: {{.Column}} / span 4">{{esc .Label}}</span>{{end}}</div>
+          <div class="heatmap-grid">
+            {{range .Weeks}}<div class="heatmap-week">{{range .}}{{if .Blank}}<i class="blank"></i>{{else}}<i class="l{{.Level}}" title="{{$.T "profile.activity-day" "date" .Date "count" .Count}}"{{if .Count}} data-day="{{.Date}}" tabindex="0" role="button"{{end}}></i>{{end}}{{end}}</div>{{end}}
+          </div>
+          <div class="heatmap-foot">
+            <span>{{esc .Summary}}</span>
+            <span class="heatmap-scale">{{$.T "profile.activity-less"}}<i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i>{{$.T "profile.activity-more"}}</span>
+          </div>
+        </div>
+        <div class="activity-day" hidden></div>
+        {{end}}
+        {{with $.Trend}}
+        <figure class="score-trend">
+          <figcaption>{{$.T "profile.score-trend" "value" .Current}}</figcaption>
+          <svg viewBox="0 0 600 120" role="img" aria-label="{{$.T "profile.score-trend" "value" .Current}}">
+            <line x1="4" x2="556" y1="{{printf "%.1f" .Zero}}" y2="{{printf "%.1f" .Zero}}" class="zero"></line>
+            <path d="{{.Path}}"></path>
+            <text x="562" y="12">{{esc .Max}}</text>
+            <text x="562" y="104">{{esc .Min}}</text>
+            <text x="4" y="116">{{esc .From}}</text>
+            <text x="556" y="116" text-anchor="end">{{esc .To}}</text>
+          </svg>
+        </figure>
+        {{end}}
+      </section>
+      {{end}}
       {{end}}
 
     </main>
 
   </div>
 </div>
+<script>
+document.querySelectorAll('.socials [data-copy]').forEach(function (a) {
+  a.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (!navigator.clipboard) { return; }
+    navigator.clipboard.writeText(a.dataset.copy).then(function () {
+      var value = a.querySelector('.social-value');
+      var was = value.textContent;
+      value.textContent = a.dataset.copied;
+      setTimeout(function () { value.textContent = was; }, 1200);
+    });
+  });
+});
+</script>
 {{end}}

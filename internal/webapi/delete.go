@@ -44,6 +44,11 @@ func (h *Articles) remove(r *http.Request, loc *i18n.Localizer, name string) (st
 		return "", 0, errForbidden
 	}
 
+	// The source only exists until the delete below, so a notice that fails to
+	// go out stops the delete rather than leaving the author with nothing.
+	if err := h.noticeDeletion(ctx, loc, current, user, article); err != nil {
+		return "", 0, err
+	}
 	if err := h.deps.DB.DeleteArticle(ctx, siteID(ctx), article.ID, article.FullName()); err != nil {
 		return "", 0, err
 	}

@@ -19,6 +19,36 @@ func (d *DB) UnreadNotifications(ctx context.Context, userID int64) (int, error)
 	return n, nil
 }
 
+type Unread struct {
+	Notices  int
+	Comments int
+	Messages int
+}
+
+func (u Unread) Total() int { return u.Notices + u.Comments + u.Messages }
+
+// Direct messages are counted from the messages themselves. Older ones also left
+// a notification behind, which is why that kind is left out here.
+var qUnreadByGroup = register("UnreadByGroup", `
+SELECT count(*) FILTER (WHERE n.type <> ALL($2::text[]) AND n.type <> 'direct_message'),
+       count(*) FILTER (WHERE n.type = ANY($2::text[]))
+FROM web_usernotificationmapping m
+JOIN web_usernotification n ON n.id = m.notification_id
+WHERE m.recipient_id = $1 AND m.is_viewed = false`)
+
+func (d *DB) UnreadCounts(ctx context.Context, userID int64) (Unread, error) {
+	var u Unread
+	if err := d.pool.QueryRow(ctx, qUnreadByGroup, userID, CommentKinds).Scan(&u.Notices, &u.Comments); err != nil {
+		return u, fmt.Errorf("count unread notifications of user %d: %w", userID, err)
+	}
+	messages, err := d.UnreadMessages(ctx, userID)
+	if err != nil {
+		return u, err
+	}
+	u.Messages = messages
+	return u, nil
+}
+
 type Notification struct {
 	ID         int64
 	Type       string
@@ -119,4 +149,29 @@ func (d *DB) DeleteAllNotifications(ctx context.Context, userID int64, kinds []s
 		return 0, fmt.Errorf("clear notifications of user %d: %w", userID, err)
 	}
 	return tag.RowsAffected(), nil
+}
+
+var qNotificationOf = register("NotificationOf", `
+SELECT n.id, n.type, n.meta, n.created_at, m.is_viewed,
+       coalesce(s.id, 0), coalesce(s.title, ''), coalesce(s.domain, '')
+FROM web_usernotificationmapping m
+JOIN web_usernotification n ON n.id = m.notification_id
+LEFT JOIN web_site s ON s.id = n.site_id
+WHERE m.recipient_id = $1 AND n.id = $2`)
+
+func (d *DB) NotificationOf(ctx context.Context, userID, id int64) ([]Notification, error) {
+	rows, err := d.pool.Query(ctx, qNotificationOf, userID, id)
+	if err != nil {
+		return nil, fmt.Errorf("read notification %d of user %d: %w", id, userID, err)
+	}
+	defer rows.Close()
+	var out []Notification
+	for rows.Next() {
+		var n Notification
+		if err := rows.Scan(&n.ID, &n.Type, &n.Meta, &n.CreatedAt, &n.IsViewed, &n.SiteID, &n.SiteTitle, &n.SiteDomain); err != nil {
+			return nil, fmt.Errorf("scan notification %d: %w", id, err)
+		}
+		out = append(out, n)
+	}
+	return out, rows.Err()
 }

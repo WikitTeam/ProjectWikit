@@ -167,6 +167,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
 		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Updates: board, Log: log,
 		Mirrors: mirror.NewRunner(conn, wikidotsrc.New(mirrorPerSite, mirrorTotal)),
+		Engine:  engine, Icons: icons,
 	}, next)
 	if err != nil {
 		return nil, err

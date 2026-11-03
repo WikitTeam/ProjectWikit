@@ -291,6 +291,13 @@ func (e *editor) retag() (*refusal, error) {
 	if !e.may(perms.TagArticles) {
 		return ptr(refuse("api-forbidden", http.StatusForbidden)), nil
 	}
+	groups, err := e.handler.requiredTags(e.req.Context(), e.site.ID, e.article.Category, e.subject)
+	if err != nil {
+		return nil, err
+	}
+	if bad := missingTagsRefusal(groups, tags); bad != nil {
+		return bad, nil
+	}
 	allow, err := e.mayCreateTags()
 	if err != nil {
 		return nil, err
@@ -307,16 +314,7 @@ func (e *editor) retag() (*refusal, error) {
 }
 
 func (e *editor) mayCreateTags() (bool, error) {
-	ctx := e.req.Context()
-	siteMode, err := e.handler.deps.DB.SiteCanCreateTags(ctx, e.site.ID)
-	if err != nil && !errors.Is(err, db.ErrNotFound) {
-		return false, err
-	}
-	own, err := e.handler.deps.DB.CategoryCanCreateTags(ctx, siteID(ctx), e.article.Category)
-	if err != nil && !errors.Is(err, db.ErrNotFound) {
-		return false, err
-	}
-	return db.CreatingTagsAllowed(siteMode, own), nil
+	return e.handler.tagsCreatable(e.req.Context(), e.site.ID, e.article.Category)
 }
 
 func (e *editor) reparent() (*refusal, error) {

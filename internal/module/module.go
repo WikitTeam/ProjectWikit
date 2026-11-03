@@ -12,6 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/quiz"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
@@ -109,6 +110,11 @@ type Data interface {
 	RoleByRef(ref string) (*roles.Role, error)
 	ArticleHasAuthor(articleID, userID int64) (bool, error)
 	RolesByUser(id int64) ([]roles.Role, error)
+	MembershipQuiz() (db.MembershipQuiz, error)
+	AuthorRank(categories, negate, exclude, hidden []string, offset, limit int) ([]db.AuthorRankRow, error)
+	RatingTrend(articleID int64, average bool) ([]db.TrendPoint, error)
+	SearchForum(f db.ForumSearchFilter, offset, limit int) ([]db.ForumSearchHit, error)
+	QuizAttempts(userID int64) ([]quiz.Attempt, error)
 
 	PostLikeCounts(postIDs []int64) (map[int64]int, error)
 	PostsLikedBy(userID int64, postIDs []int64) (map[int64]bool, error)
@@ -133,6 +139,7 @@ type Data interface {
 	UpdateForumThread(threadID int64, e db.ForumThreadEdit) error
 	DeleteForumPost(postID int64) error
 	SendNotification(kind, meta string, recipients []int64) error
+	WithoutMutes(threadID *int64, actorID *int64, readers []int64) ([]int64, error)
 	ThreadSubscribers(threadID int64) ([]int64, error)
 	SubscribeToThread(userID, threadID int64) error
 	ActiveUsersByNames(names []string) ([]db.User, error)

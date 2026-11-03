@@ -86,7 +86,11 @@ func (h *Articles) revisionReaders(r *http.Request, article *db.Article, editor 
 			out = append(out, id)
 		}
 	}
-	return out, nil
+	var actor *int64
+	if editor != nil {
+		actor = &editor.ID
+	}
+	return h.deps.DB.WithoutMuted(ctx, out, &article.ID, nil, actor)
 }
 
 func (h *Articles) seen(r *http.Request, user *db.User) error {

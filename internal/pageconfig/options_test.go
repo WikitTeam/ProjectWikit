@@ -261,3 +261,20 @@ func TestOptionsOfMissingPageHasNoCommentThread(t *testing.T) {
 		t.Errorf("Options(missing page) = %q, want it to carry \"commentThread\": null", got)
 	}
 }
+
+func TestOptionsEditForbiddenHint(t *testing.T) {
+	plain, err := Options{PageID: "main", NormalizedName: "main"}.JSON()
+	if err != nil {
+		t.Fatalf("JSON() err = %v, want nil", err)
+	}
+	if strings.Contains(plain, "editForbiddenHint") {
+		t.Errorf("Options{}.JSON() = %q, want no editForbiddenHint", plain)
+	}
+	hinted, err := Options{PageID: "main", NormalizedName: "main", EditForbiddenHint: "<p>read the guide</p>"}.JSON()
+	if err != nil {
+		t.Fatalf("JSON() err = %v, want nil", err)
+	}
+	if !strings.Contains(hinted, `"editForbiddenHint": "<p>read the guide</p>"`) {
+		t.Errorf("Options{EditForbiddenHint}.JSON() = %q, want the hint", hinted)
+	}
+}

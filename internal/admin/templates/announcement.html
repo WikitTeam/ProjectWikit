@@ -1,0 +1,70 @@
+{{define "announcement.html"}}
+{{template "form_error" .Error}}
+{{if .Sent}}<div class="alert alert-success">{{t "admin.announcement-sent"}}</div>{{end}}
+<div class="widget-box narrow">
+  <div class="widget-title"><i class="fas fa-bullhorn"></i><h5>{{t "admin.announcement-new"}}</h5></div>
+  <div class="widget-content">
+    <form method="POST" action="{{esc .Action}}" data-announcement>
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+      {{template "row_text" dict "n" "title" "k" "admin.f-announcement-title" "v" .Title "w" "narrow-5"}}
+      {{template "row_area" dict "n" "body" "k" "admin.f-announcement-body" "v" .Body "h" "admin.h-announcement-body"}}
+      {{if .Instance}}
+      <div class="control-group">
+        <span class="control-label">{{t "admin.f-announcement-scope"}}</span>
+        <div class="controls">
+          <label class="radio"><input type="radio" name="scope" value="site"{{if not .Wide}} checked{{end}}> {{t "admin.announcement-scope-site"}}</label>
+          <label class="radio"><input type="radio" name="scope" value="instance"{{if .Wide}} checked{{end}}> {{t "admin.announcement-scope-instance"}}</label>
+        </div>
+      </div>
+      {{else}}
+      {{template "row_static" dict "k" "admin.f-announcement-scope" "v" (t "admin.announcement-scope-site")}}
+      {{end}}
+      {{with .Preview}}<input type="hidden" name="checked" value="{{esc .Checked}}">{{end}}
+      <div class="form-actions">
+        <button type="submit" name="preview" value="1" class="btn"><i class="fas fa-eye"></i>{{t "admin.announcement-preview"}}</button>
+        {{if .Preview}}<button type="submit" name="send" value="1" class="btn btn-primary" data-send><i class="fas fa-paper-plane"></i>{{t "admin.announcement-send"}}</button>{{end}}
+      </div>
+    </form>
+  </div>
+</div>
+{{with .Preview}}
+<div class="widget-box narrow announcement-preview">
+  <div class="widget-title"><i class="fas fa-eye"></i><h5>{{t "admin.announcement-preview"}}</h5></div>
+  <div class="widget-content">
+    {{if .Title}}<h4>{{esc .Title}}</h4>{{end}}
+    <div class="announcement-body">{{.HTML}}</div>
+    <p class="hint">{{t "admin.h-announcement-preview"}}</p>
+  </div>
+</div>
+{{end}}
+<script>
+(function () {
+  var form = document.querySelector('form[data-announcement]');
+  var send = form && form.querySelector('[data-send]');
+  if (!send) { return; }
+  function stale() { send.disabled = true; }
+  form.addEventListener('input', stale);
+  form.addEventListener('change', stale);
+})();
+</script>
+{{if .History}}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>{{t "admin.f-announcement-title"}}</th>
+      <th>{{t "admin.f-announcement-scope"}}</th>
+      <th>{{t "admin.announcement-by"}}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .History}}
+    <tr>
+      <td><a href="{{esc $.Base}}{{.ID}}">{{if .Title}}{{esc .Title}}{{else}}{{t "admin.announcement-untitled"}}{{end}}</a></td>
+      <td>{{if .Instance}}<span class="state strong">{{t "admin.announcement-instance"}}</span>{{else}}{{t "admin.announcement-site"}}{{end}}</td>
+      <td><span class="printuser">{{esc .Author}}</span> <span class="stamp">{{when .SentAt}}</span></td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{end}}

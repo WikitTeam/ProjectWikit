@@ -1,11 +1,8 @@
-import { t } from '~util/i18n'
 import * as React from 'react'
-import WikidotModal, {
-  addUnmanagedModal,
-  removeUnmanagedModal,
-  showErrorModal,
-} from '~util/wikidot-modal'
 import { blockUser, unblockUser } from '~api/messages'
+import { t } from '~util/i18n'
+import { showReportModal } from '~util/report-modal'
+import WikidotModal, { addUnmanagedModal, removeUnmanagedModal, showErrorModal } from '~util/wikidot-modal'
 
 interface ContainerConfig {
   userId: number
@@ -48,6 +45,11 @@ export function attachUserActions() {
     return
   }
 
+  container.querySelector<HTMLAnchorElement>('[data-action="report"]')?.addEventListener('click', e => {
+    e.preventDefault()
+    showReportModal({ user_id: cfg.userId }, t('report.user'))
+  })
+
   const blockLink = container.querySelector<HTMLAnchorElement>('[data-action="toggle-block"]')
   if (!blockLink) return
 
@@ -72,9 +74,7 @@ export function attachUserActions() {
   blockLink.addEventListener('click', e => {
     e.preventDefault()
     e.stopPropagation()
-    const text = currentBlocked
-      ? t('user-actions.confirm-unblock')
-      : t('user-actions.confirm-block')
+    const text = currentBlocked ? t('user-actions.confirm-unblock') : t('user-actions.confirm-block')
     showConfirmModal(text, runToggle)
   })
 }

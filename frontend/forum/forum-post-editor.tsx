@@ -1,11 +1,12 @@
-import { t } from '~util/i18n'
 import { Editor, Monaco } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { t } from '~util/i18n'
 import { fetchForumPost, previewForumPost } from '../api/forum'
 import { fetchAllUsers } from '../api/user'
+import EditorToolbar, { monacoTarget, textareaTarget } from '../components/editor-toolbar'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
@@ -80,6 +81,9 @@ const ForumPostEditor: React.FC<Props> = ({
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const toolbarTarget = () =>
+    useAdvancedEditor ? monacoTarget(editorRef.current, monacoRef.current) : textareaTarget(textareaRef.current, onSourceChange)
 
   const monacoOptions: editor.IStandaloneEditorConstructionOptions = {
     minimap: { enabled: false },
@@ -332,12 +336,12 @@ const ForumPostEditor: React.FC<Props> = ({
             )}
           </tbody>
         </table>
-        {/* 当前不支持此功能，但为了BHL需要添加空div */}
-        <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
+        <EditorToolbar target={toolbarTarget} disabled={loading || saving} />
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
           {!useAdvancedEditor && (
             <textarea
               id="np-text"
+              ref={textareaRef}
               className="form-control"
               value={source}
               onChange={e => onSourceChange(e.target.value)}

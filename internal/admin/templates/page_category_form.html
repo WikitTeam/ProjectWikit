@@ -35,6 +35,7 @@
       </div>
       {{template "row_text" dict "n" "nav_top" "k" "admin.f-nav-top" "v" .Category.NavTop "w" "narrow-3" "h" "admin.h-nav-top" "ph" "nav:top"}}
       {{template "row_text" dict "n" "nav_side" "k" "admin.f-nav-side" "v" .Category.NavSide "w" "narrow-3" "h" "admin.h-nav-side" "ph" "nav:side"}}
+      {{template "row_area" dict "n" "required_tags" "k" "admin.f-required-tags" "v" .RequiredTags "h" "admin.h-required-tags"}}
     </div>
   </div>
 
@@ -53,6 +54,12 @@
           <span class="control-label">{{t "admin.f-bottom-toolbar"}}</span>
           <div class="controls">
             <label class="checkbox"><input type="checkbox" name="hide_toolbar_{{$rid}}" value="1"{{if .HideToolbar}} checked{{end}}> {{t "admin.l-hide-toolbar"}}</label>
+          </div>
+        </div>
+        <div class="control-group">
+          <span class="control-label">{{t "admin.f-required-tags"}}</span>
+          <div class="controls">
+            <label class="checkbox"><input type="checkbox" name="tag_exempt_{{$rid}}" value="1"{{if .TagExempt}} checked{{end}}> {{t "admin.l-tag-exempt"}}</label>
           </div>
         </div>
         <div class="control-group">

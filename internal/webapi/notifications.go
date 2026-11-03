@@ -15,7 +15,10 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
-const NotificationsPath = "/pw-api/notifications"
+const (
+	NotificationsPath     = "/pw-api/notifications"
+	NotificationsMutePath = "/pw-api/notifications/mute"
+)
 
 const defaultNotificationPage = 10
 
@@ -33,6 +36,8 @@ var notificationKinds = []string{
 	db.NotifyUpdateRolledBack,
 	db.NotifyNewTicket,
 	db.NotifyTicketResult,
+	db.NotifyPageDeleted,
+	db.NotifyAnnouncement,
 }
 
 type Notifications struct {
@@ -47,7 +52,7 @@ func NewNotifications(d Deps, next http.Handler) *Notifications {
 }
 
 func (h *Notifications) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != NotificationsPath {
+	if r.URL.Path != NotificationsPath && r.URL.Path != NotificationsMutePath {
 		h.next.ServeHTTP(w, r)
 		return
 	}
@@ -58,6 +63,10 @@ func (h *Notifications) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.URL.Path == NotificationsMutePath {
+		h.mute(w, r, loc, user)
+		return
+	}
 	switch r.Method {
 	case http.MethodGet:
 		h.list(w, r, loc, user)
@@ -92,7 +101,18 @@ func (h *Notifications) list(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	}
 	unread := query.Get("unread") == "true" || query.Get("unread") == "1"
 
-	found, err := h.deps.DB.NotificationsOf(ctx, user.ID, cursor, unread, kinds, limit)
+	var found []db.Notification
+	var err error
+	if raw := query.Get("id"); raw != "" {
+		id, parseErr := strconv.ParseInt(raw, 10, 64)
+		if parseErr != nil {
+			writeJSON(w, http.StatusBadRequest, field("error", loc.T("api-bad-request")))
+			return
+		}
+		found, err = h.deps.DB.NotificationOf(ctx, user.ID, id)
+	} else {
+		found, err = h.deps.DB.NotificationsOf(ctx, user.ID, cursor, unread, kinds, limit)
+	}
 	if err != nil {
 		h.deps.log().Error("list notifications", "err", err)
 		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
@@ -195,10 +215,19 @@ func (h *Notifications) clear(w http.ResponseWriter, r *http.Request, loc *i18n.
 	writeJSON(w, http.StatusOK, body)
 }
 
+// Direct messages have their own page, so none of the groups reach the ones
+// older messages left behind.
 func wantedKinds(raw string) ([]string, bool) {
 	raw = strings.TrimSpace(raw)
-	if raw == "" || raw == "all" {
-		return nil, true
+	switch raw {
+	case "", "all":
+		return kindsWhere(func(kind string) bool { return kind != db.NotifyDirectMessage }), true
+	case "notices":
+		return kindsWhere(func(kind string) bool {
+			return kind != db.NotifyDirectMessage && !slices.Contains(db.CommentKinds, kind)
+		}), true
+	case "comments":
+		return slices.Clone(db.CommentKinds), true
 	}
 	var out []string
 	for _, one := range strings.Split(raw, ",") {
@@ -238,4 +267,72 @@ func notificationJSON(one db.Notification, current *db.Site, scheme string) (wik
 		out = append(out, wikijson.Field{Key: key, Value: fromJSON(fields[key])})
 	}
 	return out, nil
+}
+
+func kindsWhere(keep func(string) bool) []string {
+	var out []string
+	for _, kind := range notificationKinds {
+		if keep(kind) {
+			out = append(out, kind)
+		}
+	}
+	return out
+}
+
+type muteRequest struct {
+	ArticleID int64 `json:"article_id"`
+	ThreadID  int64 `json:"thread_id"`
+	UserID    int64 `json:"user_id"`
+}
+
+func (m muteRequest) targets() int {
+	n := 0
+	for _, id := range []int64{m.ArticleID, m.ThreadID, m.UserID} {
+		if id != 0 {
+			n++
+		}
+	}
+	return n
+}
+
+func (h *Notifications) mute(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, user *db.User) {
+	ctx := r.Context()
+	current := site.FromContext(ctx)
+	if current == nil || (r.Method != http.MethodPost && r.Method != http.MethodDelete) {
+		writeJSON(w, http.StatusBadRequest, field("error", loc.T("api-bad-request")))
+		return
+	}
+	if err := csrf.Verify(r, []string{current.Domain}); err != nil {
+		refuseCSRF(w, r, loc)
+		return
+	}
+	raw, err := readBody(r)
+	var input muteRequest
+	if err != nil || json.Unmarshal(raw, &input) != nil || input.targets() != 1 || input.UserID == user.ID {
+		writeJSON(w, http.StatusBadRequest, field("error", loc.T("api-bad-request")))
+		return
+	}
+	switch {
+	case r.Method == http.MethodDelete:
+		err = h.deps.DB.Unmute(ctx, user.ID, nonZero(input.ArticleID), nonZero(input.ThreadID), nonZero(input.UserID))
+	case input.ArticleID != 0:
+		err = h.deps.DB.MuteArticle(ctx, user.ID, input.ArticleID)
+	case input.ThreadID != 0:
+		err = h.deps.DB.MuteThread(ctx, user.ID, input.ThreadID)
+	default:
+		err = h.deps.DB.MuteUser(ctx, user.ID, input.UserID)
+	}
+	if err != nil {
+		h.deps.log().Error("mute", "user", user.ID, "err", err)
+		writeJSON(w, http.StatusInternalServerError, field("error", loc.T("api-internal-error")))
+		return
+	}
+	writeJSON(w, http.StatusOK, field("status", "ok"))
+}
+
+func nonZero(id int64) *int64 {
+	if id == 0 {
+		return nil
+	}
+	return &id
 }

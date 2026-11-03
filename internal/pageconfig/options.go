@@ -28,6 +28,9 @@ type Options struct {
 	Favourites      int
 	IsFavourited    bool
 	Preferences     Preferences
+
+	EditForbiddenHint string
+	RequiredTags      [][]string
 }
 
 // Preferences is every preference the registry carries, which today is one. The
@@ -52,7 +55,7 @@ func PreferenceValue(on bool) string {
 }
 
 func (o Options) JSON() (string, error) {
-	return wikijson.Marshal(wikijson.Object{
+	out := wikijson.Object{
 		{Key: "optionsEnabled", Value: o.HasArticle && !o.HideToolbar},
 		{Key: "editable", Value: o.Perms.Has(perms.EditArticles)},
 		{Key: "lockable", Value: o.Perms.Has(perms.LockArticles)},
@@ -80,7 +83,22 @@ func (o Options) JSON() (string, error) {
 		{Key: "isWatching", Value: o.IsWatching},
 		{Key: "favourites", Value: o.Favourites},
 		{Key: "isFavourited", Value: o.IsFavourited},
-	})
+	}
+	if o.EditForbiddenHint != "" {
+		out = append(out, wikijson.Field{Key: "editForbiddenHint", Value: o.EditForbiddenHint})
+	}
+	if len(o.RequiredTags) > 0 {
+		groups := make(wikijson.Array, len(o.RequiredTags))
+		for i, group := range o.RequiredTags {
+			tags := make(wikijson.Array, len(group))
+			for j, tag := range group {
+				tags[j] = tag
+			}
+			groups[i] = tags
+		}
+		out = append(out, wikijson.Field{Key: "requiredTags", Value: groups})
+	}
+	return wikijson.Marshal(out)
 }
 
 // Linking the thread directly is what wikidot does. A page whose thread was

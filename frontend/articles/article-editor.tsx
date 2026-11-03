@@ -1,11 +1,12 @@
-import { t } from '~util/i18n'
 import { Editor } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { t } from '~util/i18n'
 import { ArticleFormField, buildArticleFormSource, createArticle, fetchArticle, fetchArticleForm, updateArticle } from '../api/articles'
 import { makePreview } from '../api/preview'
+import EditorToolbar, { monacoTarget, textareaTarget } from '../components/editor-toolbar'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import { removeMessage, showPreviewMessage } from '../util/wikidot-message'
@@ -21,6 +22,7 @@ interface Props {
   previewTitleElement?: HTMLElement | (() => HTMLElement)
   previewBodyElement?: HTMLElement | (() => HTMLElement)
   previewStyleElements?: () => HTMLStyleElement[]
+  requiredTags?: string[][]
 }
 
 function guessTitle(pageId: string) {
@@ -61,6 +63,14 @@ function getElement(e?: HTMLElement | (() => HTMLElement | undefined)) {
 }
 
 const Styles = styled.div`
+  .w-required-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
   .editor-area {
     position: relative;
 
@@ -98,8 +108,12 @@ const ArticleEditor: React.FC<Props> = ({
   previewTitleElement,
   previewBodyElement,
   previewStyleElements,
+  requiredTags,
 }) => {
   const [title, setTitle] = useState('')
+  const [pickedTags, setPickedTags] = useState<string[]>([])
+  const [extraTags, setExtraTags] = useState('')
+  const askTags = Boolean(isNew && requiredTags && requiredTags.length > 0)
   const [source, setSource] = useState('')
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(false)
@@ -119,6 +133,9 @@ const ArticleEditor: React.FC<Props> = ({
 
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const toolbarTarget = () =>
+    useAdvancedEditor ? monacoTarget(editorRef.current, monacoRef.current) : textareaTarget(textareaRef.current, onSourceChange)
 
   const monacoOptions: editor.IStandaloneEditorConstructionOptions = {
     wordWrap: 'on',
@@ -209,12 +226,24 @@ const ArticleEditor: React.FC<Props> = ({
       return
     }
 
+    const tags = askTags ? Array.from(new Set([...pickedTags, ...extraTags.split(/\s+/).filter(Boolean)])) : undefined
+    if (askTags) {
+      const missing = requiredTags!.filter(group => !group.some(tag => tags!.includes(tag)))
+      if (missing.length > 0) {
+        setSaving(false)
+        setFatalError(false)
+        setError(t('articles.editor.tags-missing', { groups: missing.map(group => `[${group.join(' / ')}]`).join(' ') }))
+        return
+      }
+    }
+
     const input = {
       pageId: pageId,
       title: title,
       source: built,
       comment: comment,
       parent: pathParams?.['parent'],
+      tags,
     }
 
     if (isNew) {
@@ -392,15 +421,49 @@ const ArticleEditor: React.FC<Props> = ({
                 />
               </td>
             </tr>
+            {askTags &&
+              requiredTags!.map((group, i) => (
+                <tr key={i} className="w-required-tags">
+                  <td>{i === 0 ? t('articles.editor.required-tags-label') : ''}</td>
+                  <td>
+                    {group.map(tag => (
+                      <label key={tag} className="w-required-tag">
+                        <input
+                          type="checkbox"
+                          checked={pickedTags.includes(tag)}
+                          disabled={loading || saving}
+                          onChange={e => setPickedTags(e.target.checked ? [...pickedTags, tag] : pickedTags.filter(one => one !== tag))}
+                        />
+                        {tag}
+                      </label>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            {askTags && (
+              <tr>
+                <td>{t('articles.editor.other-tags-label')}</td>
+                <td>
+                  <input
+                    type="text"
+                    value={extraTags}
+                    onChange={e => setExtraTags(e.target.value)}
+                    size={35}
+                    disabled={loading || saving}
+                    placeholder={t('articles.editor.other-tags-placeholder')}
+                  />
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {/* This is not supported right now but we have to add empty div for BHL */}
-        <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
+        {!formFields && <EditorToolbar target={toolbarTarget} disabled={loading || saving} />}
         <div className={`editor-area ${loading ? 'loading' : ''}`}>
           {formFields && <ArticleFormFields fields={formFields} values={formValues} disabled={loading || saving} onChange={onFormChange} />}
           {!formFields && !useAdvancedEditor && (
             <textarea
               id="edit-page-textarea"
+              ref={textareaRef}
               value={source}
               onChange={e => onSourceChange(e.target.value)}
               name="source"

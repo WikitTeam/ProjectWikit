@@ -619,7 +619,7 @@ func (h *Handler) loginStatus(req *request) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		count, err := h.deps.DB.UnreadNotifications(req.ctx, req.user.ID)
+		unread, err := h.deps.DB.UnreadCounts(req.ctx, req.user.ID)
 		if err != nil {
 			return "", err
 		}
@@ -628,7 +628,8 @@ func (h *Handler) loginStatus(req *request) (string, error) {
 			return "", err
 		}
 		status.Roles = userRoles
-		status.NotificationCount = count
+		status.NotificationCount = unread.Total()
+		status.Unread = unread
 		status.CanEditArticles = perms.Resolve(subject, nil).Has(perms.EditArticles)
 		status.SiteSuperuser = subject.Superuser
 	}
@@ -658,6 +659,13 @@ func (h *Handler) options(req *request) (string, error) {
 	}
 	options.CanCreateTags = db.CreatingTagsAllowed(siteTags, categoryTags)
 
+	if !req.perms.Has(perms.EditArticles) || !req.perms.Has(perms.CreateArticles) {
+		options.EditForbiddenHint, err = h.editForbiddenHint(req)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	if req.user != nil {
 		raw, err := h.deps.DB.UserPreference(req.ctx, req.user.ID,
 			pageconfig.PreferenceSection, pageconfig.PreferenceAdvancedSourceEditor)
@@ -665,6 +673,23 @@ func (h *Handler) options(req *request) (string, error) {
 			return "", err
 		}
 		options.Preferences.AdvancedSourceEditor = pageconfig.PreferenceEnabled(raw)
+	}
+
+	if req.article == nil && req.perms.Has(perms.CreateArticles) {
+		subject, err := h.subject(req)
+		if err != nil {
+			return "", err
+		}
+		if !subject.Superuser {
+			roleIDs := make([]int64, len(subject.Roles))
+			for i, role := range subject.Roles {
+				roleIDs[i] = role.ID
+			}
+			options.RequiredTags, err = h.deps.DB.RequiredTags(req.ctx, req.site.ID, category, roleIDs)
+			if err != nil {
+				return "", err
+			}
+		}
 	}
 
 	if req.article != nil {
@@ -702,6 +727,38 @@ func (h *Handler) options(req *request) (string, error) {
 		}
 	}
 	return options.JSON()
+}
+
+// Nearly every reader lacks the right to edit, so the hint is rendered once per
+// wording rather than once per page view.
+func (h *Handler) editForbiddenHint(req *request) (string, error) {
+	source := strings.TrimSpace(req.site.EditForbiddenHint)
+	if source == "" {
+		return "", nil
+	}
+	h.hintsMu.Lock()
+	cached, ok := h.hints[req.site.ID]
+	h.hintsMu.Unlock()
+	if ok && cached.source == source {
+		return cached.html, nil
+	}
+
+	env := h.env(req)
+	info, err := env.PageInfo(nil)
+	if err != nil {
+		return "", err
+	}
+	out, err := env.HTML(source, info, env.Callbacks(nil, page.NewContext(nil, nil, nil, nil)), renderer.ModeSystem)
+	if err != nil {
+		return "", err
+	}
+	h.hintsMu.Lock()
+	if h.hints == nil {
+		h.hints = map[int64]renderedHint{}
+	}
+	h.hints[req.site.ID] = renderedHint{source: source, html: out.Body}
+	h.hintsMu.Unlock()
+	return out.Body, nil
 }
 
 func (h *Handler) rating(req *request) (page.Rating, error) {

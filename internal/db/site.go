@@ -42,13 +42,19 @@ type Site struct {
 	Language               string
 	TimeZone               string
 	LanguageFollowsVisitor bool
+
+	SelfVotesForbidden    bool
+	EditForbiddenHint     string
+	DeletionNoticeEnabled bool
+	DeletionNotice        string
 }
 
 var qSiteByHost = register("SiteByHost", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help, welcome_message, signup_open,
        membership_password_enabled, membership_password, membership_password_role_id, application_role_id,
-       default_role_id, verified_role_id, email_policy, language, time_zone, language_follows_visitor
+       default_role_id, verified_role_id, email_policy, language, time_zone, language_follows_visitor,
+       self_votes_forbidden, edit_forbidden_hint, deletion_notice_enabled, deletion_notice
 FROM web_site
 WHERE lower(domain) = $1 OR lower(media_domain) = $1
 ORDER BY id
@@ -60,14 +66,16 @@ func scanSite(row pgx.Row, s *Site) error {
 		&s.Icon, &s.ThemeID, &s.SystemThemeID,
 		&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp, &s.Welcome, &s.SignupOpen,
 		&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID, &s.ApplicationRoleID,
-		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language, &s.TimeZone, &s.LanguageFollowsVisitor)
+		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language, &s.TimeZone, &s.LanguageFollowsVisitor,
+		&s.SelfVotesForbidden, &s.EditForbiddenHint, &s.DeletionNoticeEnabled, &s.DeletionNotice)
 }
 
 var qSiteBySlug = register("SiteBySlug", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help, welcome_message, signup_open,
        membership_password_enabled, membership_password, membership_password_role_id, application_role_id,
-       default_role_id, verified_role_id, email_policy, language, time_zone, language_follows_visitor
+       default_role_id, verified_role_id, email_policy, language, time_zone, language_follows_visitor,
+       self_votes_forbidden, edit_forbidden_hint, deletion_notice_enabled, deletion_notice
 FROM web_site
 WHERE slug = $1`)
 
@@ -77,7 +85,8 @@ var qSites = register("Sites", `
 SELECT id, slug, title, headline, domain, media_domain, home_page, COALESCE(icon, ''), active_theme_id,
        system_theme_id, COALESCE(auth_icon, ''), footer_license, signup_notice, password_help, welcome_message, signup_open,
        membership_password_enabled, membership_password, membership_password_role_id, application_role_id,
-       default_role_id, verified_role_id, email_policy, language, time_zone, language_follows_visitor
+       default_role_id, verified_role_id, email_policy, language, time_zone, language_follows_visitor,
+       self_votes_forbidden, edit_forbidden_hint, deletion_notice_enabled, deletion_notice
 FROM web_site
 ORDER BY id`)
 

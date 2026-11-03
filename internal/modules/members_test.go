@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
@@ -108,8 +109,8 @@ func TestMembersPerPageIsCapped(t *testing.T) {
 	if _, err := renderMembers(env, map[string]string{"perpage": "9000"}, "%%number%%"); err != nil {
 		t.Fatalf("renderMembers() err = %v, want nil", err)
 	}
-	if data.limit != maxMembersPerPage {
-		t.Errorf("Members() limit = %d, want %d", data.limit, maxMembersPerPage)
+	if data.limit != listpages.MaxPerPage {
+		t.Errorf("Members() limit = %d, want %d", data.limit, listpages.MaxPerPage)
 	}
 }
 

@@ -299,6 +299,15 @@
   background: var(--s-bg);
 }
 
+.w-search-place {
+  appearance: auto;
+  cursor: pointer;
+}
+
+.w-search-place.is-empty {
+  color: var(--s-muted);
+}
+
 .w-search-dates {
   display: flex;
   align-items: center;
@@ -365,6 +374,105 @@
 
 .w-search-result-title:hover {
   text-decoration: underline;
+}
+
+/* The switch sits on the input's top edge, so the picked scope reads as part of the box. */
+.w-search-switch {
+  display: flex;
+  margin-bottom: -1.5px;
+}
+
+.w-search-switch-item {
+  position: relative;
+  padding: 7px 16px 8px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--s-muted);
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-bottom: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.w-search-switch-item:hover {
+  color: var(--s-ink);
+}
+
+.w-search-switch-item[aria-selected='true'] {
+  z-index: 1;
+  color: var(--s-ink);
+  font-weight: 600;
+  background: var(--s-bg);
+  border-color: var(--s-border-strong);
+  box-shadow: inset 0 2px 0 var(--s-accent);
+}
+
+.w-search-switch-item:focus-visible {
+  outline: 2px solid var(--s-accent);
+  outline-offset: -2px;
+}
+
+.w-search-posts {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.w-search-post {
+  padding: 14px 2px;
+  border-top: 1px solid var(--s-border);
+}
+
+.w-search-post:first-child {
+  border-top: 0;
+}
+
+.w-search-post-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.w-search-post-where {
+  font-size: 12px;
+  color: var(--s-muted);
+}
+
+.w-search-post-thread {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--s-ink) !important;
+  text-decoration: none;
+}
+
+.w-search-post-thread:hover {
+  text-decoration: underline;
+}
+
+.w-search-post-body {
+  margin: 8px 0 0;
+  padding: 2px 0 2px 12px;
+  border-left: 2px solid var(--s-border-strong);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--s-soft);
+}
+
+.w-search-post-name {
+  display: block;
+  color: var(--s-ink);
+  font-weight: 600;
+}
+
+.w-search-post-by {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--s-muted);
 }
 
 .w-search-result-excerpt {

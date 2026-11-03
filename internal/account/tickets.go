@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -12,14 +13,16 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/quiz"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
 const (
-	TicketPath     = "/-/tickets/submit"
-	MembershipPath = "/-/membership/password"
+	TicketPath         = "/-/tickets/submit"
+	MembershipPath     = "/-/membership/password"
+	MembershipQuizPath = "/-/membership/quiz"
 )
 
 const (
@@ -61,6 +64,8 @@ func (h *TicketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.submit(w, r)
 	case MembershipPath:
 		h.membership(w, r, current)
+	case MembershipQuizPath:
+		h.membershipQuiz(w, r, current)
 	default:
 		h.deps.notFound(w, r)
 	}
@@ -153,4 +158,58 @@ func clip(value string, max int) string {
 		return value
 	}
 	return string(runes[:max])
+}
+
+// The quiz is graded here against the questions as they stand now, whatever
+// order the reader saw them in.
+func (h *TicketHandler) membershipQuiz(w http.ResponseWriter, r *http.Request, current *db.Site) {
+	ctx := r.Context()
+	user := auth.FromContext(ctx)
+	setting, err := h.deps.DB.MembershipQuiz(ctx, current.ID)
+	if err != nil {
+		h.deps.logger().Error("read membership quiz", "site", current.ID, "err", err)
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+	questions := quiz.Parse(setting.Questions)
+	if user == nil || !setting.Enabled || setting.RoleID == nil || len(questions) == 0 {
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+	attempts, err := h.deps.DB.QuizAttempts(ctx, current.ID, user.ID)
+	if err != nil {
+		h.deps.logger().Error("read quiz attempts", "user", user.ID, "err", err)
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+	now := time.Now().UTC()
+	if left, _ := quiz.State(attempts, setting.Tries, quiz.Hours(setting.CooldownHours), now); left == 0 {
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+
+	answers := map[int][]int{}
+	for i := range questions {
+		for _, raw := range r.PostForm["q"+strconv.Itoa(i)] {
+			if n, err := strconv.Atoi(raw); err == nil {
+				answers[i] = append(answers[i], n)
+			}
+		}
+	}
+	passed := quiz.Passed(questions, answers)
+	if err := h.deps.DB.AddQuizAttempt(ctx, current.ID, user.ID, now, passed); err != nil {
+		h.deps.logger().Error("record quiz attempt", "user", user.ID, "err", err)
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+	if !passed {
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+	if err := h.deps.DB.GrantRole(ctx, current.ID, user.ID, *setting.RoleID); err != nil {
+		h.deps.logger().Error("grant membership", "user", user.ID, "err", err)
+		back(w, r, "membership-quiz", "failed")
+		return
+	}
+	back(w, r, "membership-quiz", "ok")
 }

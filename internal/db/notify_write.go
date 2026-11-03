@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 )
 
@@ -17,9 +18,24 @@ const (
 	NotifyReleaseAvailable   = "release_available"
 	NotifyUpdateRolledBack   = "update_rolled_back"
 	NotifyNewTicket          = "new_ticket"
+	NotifyPageDeleted        = "page_deleted"
 )
 
+// Every kind outside these, bar direct messages, is a notice.
+var CommentKinds = []string{NotifyNewPostReply, NotifyNewThreadPost, NotifyForumMention, NotifyPostLike}
+
+// A deletion notice carries the only copy of the source, and tickets and
+// welcomes need to be seen, so none of those can be turned off.
+var MutableKinds = []string{NotifyNewArticleRevision, NotifyNewPostReply, NotifyNewThreadPost, NotifyForumMention, NotifyPostLike}
+
+const NotifySection = "notify"
+
 var (
+	qMutedRecipients = register("MutedRecipients", `
+SELECT instance_id
+FROM dynamic_preferences_users_userpreferencemodel
+WHERE section = 'notify' AND name = $1 AND raw_value = 'False' AND instance_id = ANY($2::bigint[])`)
+
 	qInsertNotification = register("InsertNotification", `
 INSERT INTO web_usernotification (type, meta, created_at, site_id)
 VALUES ($1, $2, $3, NULLIF($4::bigint, 0))
@@ -34,8 +50,9 @@ FROM unnest($2::bigint[]) AS recipient`)
 // The notification and the rows naming its readers go in together, so nobody
 // ends up with a notification that reaches no one.
 func (d *DB) SendNotification(ctx context.Context, siteID int64, kind, meta string, recipients []int64, at time.Time) error {
-	if len(recipients) == 0 {
-		return nil
+	recipients, err := d.withoutMuted(ctx, kind, recipients)
+	if err != nil || len(recipients) == 0 {
+		return err
 	}
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
@@ -222,4 +239,33 @@ func (d *DB) UnsubscribeFromThread(ctx context.Context, userID, threadID int64) 
 		return false, fmt.Errorf("unsubscribe %d from thread %d: %w", userID, threadID, err)
 	}
 	return tag.RowsAffected() > 0, nil
+}
+
+func (d *DB) withoutMuted(ctx context.Context, kind string, recipients []int64) ([]int64, error) {
+	if len(recipients) == 0 || !slices.Contains(MutableKinds, kind) {
+		return recipients, nil
+	}
+	rows, err := d.pool.Query(ctx, qMutedRecipients, kind, recipients)
+	if err != nil {
+		return nil, fmt.Errorf("read who muted %s: %w", kind, err)
+	}
+	defer rows.Close()
+	muted := map[int64]bool{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan who muted %s: %w", kind, err)
+		}
+		muted[id] = true
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	out := make([]int64, 0, len(recipients))
+	for _, id := range recipients {
+		if !muted[id] {
+			out = append(out, id)
+		}
+	}
+	return out, nil
 }
