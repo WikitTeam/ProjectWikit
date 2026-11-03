@@ -72,6 +72,7 @@ type pageStack struct {
 	fileAPI       http.Handler
 	systemMissing http.Handler
 	unresolved    http.Handler
+	resolve       func(http.Handler) http.Handler
 	close         func()
 }
 
@@ -193,6 +194,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	negotiate := lang.Middleware(bundle)
 	banned := ipban.Middleware(ipban.Deps{DB: conn, Trust: trust, Bundle: bundle, Assets: static.NewAssets(assets), Log: log})
 	resolved := func(h http.Handler) http.Handler { return resolver.Middleware(negotiate(banned(h))) }
+	stack.resolve = resolved
 	stack.login = resolved(stack.login)
 	stack.logout = resolved(stack.logout)
 	stack.signup = resolved(stack.signup)

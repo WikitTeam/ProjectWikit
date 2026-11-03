@@ -24,6 +24,14 @@ type File struct {
 	Analytics Analytics `toml:"analytics"`
 	Update    Update    `toml:"update"`
 	Wikidot   Wikidot   `toml:"wikidot"`
+	Mounts    []Mount   `toml:"mount"`
+}
+
+type Mount struct {
+	Path        string `toml:"path"`
+	Upstream    string `toml:"upstream"`
+	StripPrefix bool   `toml:"strip_prefix"`
+	SecretFile  string `toml:"secret_file"`
 }
 
 type Update struct {
@@ -127,6 +135,14 @@ func checked(f File, meta toml.MetaData, path string) (File, error) {
 		sort.Strings(keys)
 		return File{}, fmt.Errorf("%s has settings pwikit does not know: %s", path, strings.Join(keys, ", "))
 	}
+	for _, m := range f.Mounts {
+		if m.Path == "" || m.Upstream == "" || m.SecretFile == "" {
+			return File{}, fmt.Errorf("%s has a [[mount]] without path, upstream or secret_file", path)
+		}
+		if strings.ContainsAny(m.SecretFile, `/\`) {
+			return File{}, fmt.Errorf("%s sets mount secret_file %q; it takes a file name in the secrets folder", path, m.SecretFile)
+		}
+	}
 	if e := f.Mail.Engine; e != "" && e != EngineSMTP && e != EngineConsole {
 		return File{}, fmt.Errorf("%s sets mail.engine to %q; it takes %q or %q", path, e, EngineSMTP, EngineConsole)
 	}
@@ -229,6 +245,15 @@ const Template = `# Settings for pwikit. A line starting with # is an example an
 # message_subject = ""
 # message_body = """
 # """
+
+# Another program on this machine that answers a path of its own. pwikit forwards
+# the requests and signs who the reader is in the X-Pwikit-User header, with the
+# key in the secrets folder under secret_file. Add one [[mount]] per program.
+# [[mount]]
+# path = "/app/"
+# upstream = "http://127.0.0.1:8100"
+# strip_prefix = false
+# secret_file = "mount-app.key"
 `
 
 func readInherited(raw string) ([]byte, error) {

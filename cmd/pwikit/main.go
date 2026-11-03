@@ -32,6 +32,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
+	"github.com/WikitTeam/ProjectWikit/internal/mount"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/pgbundle"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
@@ -468,6 +469,22 @@ func serve(ctx context.Context, args []string) (err error) {
 		sitemap.Path:                    sitemaps,
 		sitemap.RobotsPath:              sitemaps,
 		"/":                             articles,
+	}
+
+	for _, m := range cfg.Mounts {
+		secret, err := secretfile.Ensure(p.Secrets(), m.SecretFile)
+		if err != nil {
+			return err
+		}
+		proxy, err := mount.New(mount.Config{Path: m.Path, Upstream: m.Upstream, StripPrefix: m.StripPrefix, Secret: secret}, log)
+		if err != nil {
+			return err
+		}
+		if _, taken := goHandlers[m.Path]; taken {
+			return fmt.Errorf("mount path %q is a path pwikit answers itself", m.Path)
+		}
+		goHandlers[m.Path] = site.NewHostRules(conn, listenPort(*o.listen), stack.resolve(proxy), stack.unresolved)
+		log.Info("mount", "path", m.Path, "upstream", m.Upstream)
 	}
 
 	mux, err := routing.New(goHandlers)

@@ -40,7 +40,7 @@ func TestLoadTemplateIsEmpty(t *testing.T) {
 func TestLoadTemplateWithEveryLineUncommented(t *testing.T) {
 	var lines []string
 	for _, line := range strings.Split(Template, "\n") {
-		if strings.HasPrefix(line, "# ") && strings.Contains(line, " = ") {
+		if strings.HasPrefix(line, "# ") && (strings.Contains(line, " = ") || strings.HasPrefix(line, "# [[")) {
 			line = strings.TrimPrefix(line, "# ")
 		}
 		lines = append(lines, line)
