@@ -17,12 +17,13 @@ import (
 )
 
 func serviceUsage() {
-	fmt.Fprint(os.Stderr, `Usage: pwikit service <install|uninstall|start|stop|status|print> [options] [-- serve options]
+	fmt.Fprint(os.Stderr, `Usage: pwikit service <install|uninstall|start|stop|restart|status|print> [options] [-- serve options]
 
   install    start pwikit whenever the machine boots, and start it now
   uninstall  stop pwikit and no longer start it at boot
   start      start the installed service
   stop       stop the installed service
+  restart    stop the installed service and start it again
   status     show whether the installed service is running
   print      show what install would register, without registering it
 
@@ -47,7 +48,7 @@ func serviceCommand(args []string) error {
 		sub = args[0]
 	}
 	switch sub {
-	case "install", "uninstall", "start", "stop", "status", "print":
+	case "install", "uninstall", "start", "stop", "restart", "status", "print":
 	default:
 		serviceUsage()
 		return errors.New("unknown service subcommand")
@@ -89,6 +90,11 @@ func serviceCommand(args []string) error {
 		return service.Start(*name)
 	case "stop":
 		return service.Stop(*name)
+	case "restart":
+		if err := service.Stop(*name); err != nil {
+			return err
+		}
+		return service.Start(*name)
 	case "status":
 		return service.Status(*name)
 	}
