@@ -72,6 +72,30 @@ func TestNewForwardsSignedReader(t *testing.T) {
 	if id.ID != 7 || id.Username != "alice" || id.Site != "demo" {
 		t.Errorf("identity = %+v, want id 7 alice on demo", id)
 	}
+	if id.Superuser {
+		t.Errorf("identity.Superuser = true, want false")
+	}
+}
+
+func TestNewMarksSuperuser(t *testing.T) {
+	srv, got := upstream(t)
+	h, err := New(Config{Path: "/app/", Upstream: srv.URL, Secret: "k"}, quiet())
+	if err != nil {
+		t.Fatalf("New() err = %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/app/", nil)
+	ctx := auth.NewContext(req.Context(), &db.User{ID: 1, Username: "root", IsSuperuser: true})
+	h.ServeHTTP(httptest.NewRecorder(), req.WithContext(ctx))
+
+	body, _, _ := strings.Cut(got.user, ".")
+	raw, _ := base64.RawURLEncoding.DecodeString(body)
+	var id identity
+	if err := json.Unmarshal(raw, &id); err != nil {
+		t.Fatalf("decode user header err = %v", err)
+	}
+	if !id.Superuser {
+		t.Errorf("identity.Superuser = false, want true")
+	}
 }
 
 func TestNewAnonymousHasNoUser(t *testing.T) {

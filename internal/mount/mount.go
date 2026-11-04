@@ -39,11 +39,12 @@ type Config struct {
 }
 
 type identity struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Site     string `json:"site"`
-	Expires  int64  `json:"exp"`
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	Name      string `json:"name"`
+	Site      string `json:"site"`
+	Superuser bool   `json:"superuser,omitempty"`
+	Expires   int64  `json:"exp"`
 }
 
 func New(c Config, log *slog.Logger) (http.Handler, error) {
@@ -107,7 +108,13 @@ func sign(secret string, r *http.Request) string {
 	if user == nil {
 		return ""
 	}
-	id := identity{ID: user.ID, Username: user.Username, Name: user.DisplayLabel(), Expires: time.Now().Add(userFor).Unix()}
+	id := identity{
+		ID:        user.ID,
+		Username:  user.Username,
+		Name:      user.DisplayLabel(),
+		Superuser: user.IsSuperuser,
+		Expires:   time.Now().Add(userFor).Unix(),
+	}
 	if current := site.FromContext(r.Context()); current != nil {
 		id.Site = current.Slug
 	}
