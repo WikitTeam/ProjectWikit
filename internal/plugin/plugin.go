@@ -64,6 +64,7 @@ type Manifest struct {
 	Permissions  []string     `json:"permissions"`
 	AllowedHosts []string     `json:"allowed_hosts"`
 	ProfileTitle string       `json:"profile_title"`
+	ProfileBadge bool         `json:"profile_badge"`
 	MemoryPages  uint32       `json:"memory_pages"`
 	TimeoutMS    int          `json:"timeout_ms"`
 }

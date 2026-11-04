@@ -23,6 +23,7 @@ type moduleCall struct {
 	Body   string            `json:"body"`
 	Site   string            `json:"site"`
 	Page   string            `json:"page,omitempty"`
+	PageID int64             `json:"page_id,omitempty"`
 	User   *userJSON         `json:"user"`
 }
 
@@ -40,6 +41,7 @@ func (h *Host) RenderModule(env module.Env, name string, params map[string]strin
 	call := moduleCall{Module: name, Params: params, Body: body, Site: env.Site.Slug}
 	if env.Page != nil && env.Page.Article != nil {
 		call.Page = env.Page.Article.FullName()
+		call.PageID = env.Page.Article.ID
 	}
 	if env.User != nil {
 		call.User = &userJSON{ID: env.User.ID, Username: env.User.Username}
@@ -137,18 +139,31 @@ func (h *Host) ProfileSections(ctx context.Context, site *db.Site, owner, viewer
 	var out []module.ProfileSection
 	for _, name := range names {
 		p := h.plugins[name]
-		if p == nil || p.ProfileTitle == "" {
+		if p == nil {
 			continue
 		}
-		body, err := h.call(ctx, p, &callInfo{plugin: p.Name, site: site}, "profile", input)
-		if err != nil {
-			h.log.Error("plugin profile", "plugin", p.Name, "err", err)
-			continue
+		if p.ProfileBadge {
+			if body := h.profileCall(ctx, p, site, "badge", input); body != "" {
+				out = append(out, module.ProfileSection{Plugin: p.Name, Body: body, Badge: true})
+			}
 		}
-		if len(body) == 0 || len(body) > mostOutputBytes {
-			continue
+		if p.ProfileTitle != "" {
+			if body := h.profileCall(ctx, p, site, "profile", input); body != "" {
+				out = append(out, module.ProfileSection{Plugin: p.Name, Title: p.ProfileTitle, Body: body})
+			}
 		}
-		out = append(out, module.ProfileSection{Plugin: p.Name, Title: p.ProfileTitle, Body: string(body)})
 	}
 	return out
+}
+
+func (h *Host) profileCall(ctx context.Context, p *Plugin, site *db.Site, export string, input []byte) string {
+	body, err := h.call(ctx, p, &callInfo{plugin: p.Name, site: site}, export, input)
+	if err != nil {
+		h.log.Error("plugin profile", "plugin", p.Name, "export", export, "err", err)
+		return ""
+	}
+	if len(body) > mostOutputBytes {
+		return ""
+	}
+	return string(body)
 }

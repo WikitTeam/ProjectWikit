@@ -26,9 +26,8 @@
         </div>
         <div class="id">
           <div class="name">
-            
-              {{esc .DisplayName}}
-            
+            <span>{{esc .DisplayName}}</span>
+            {{range .PluginBadges}}<span class="plugin-badge">{{.HTML}}</span>{{end}}
           </div>
           {{if .Subtitle}}<div class="meta">{{esc .Subtitle}}</div>{{end}}
           {{if .Socials}}

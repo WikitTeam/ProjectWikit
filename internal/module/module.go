@@ -205,6 +205,7 @@ type ProfileSection struct {
 	Plugin string
 	Title  string
 	Body   string
+	Badge  bool
 }
 
 func Emit(site *db.Site, event string, payload map[string]any) {

@@ -215,25 +215,28 @@ func signed(v float64) string {
 }
 
 func (h *Handler) pluginSections(r *http.Request, loc *i18n.Localizer, current *db.Site,
-	profile *db.Profile, viewer *db.User) ([]shell.PluginSection, error) {
+	profile *db.Profile, viewer *db.User) (badges, sections []shell.PluginSection, err error) {
 
 	if module.Plugins == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 	ctx := r.Context()
 	found := module.Plugins.ProfileSections(ctx, current, &db.User{ID: profile.ID, Username: profile.Username}, viewer)
 	if len(found) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	env := pagerender.Deps{DB: h.deps.DB, Engine: h.deps.Engine, Icons: h.deps.Icons}.Env(ctx, loc, current, viewer)
-	out := make([]shell.PluginSection, 0, len(found))
 	for _, f := range found {
 		html, err := env.Message(f.Body)
 		if err != nil {
 			h.log().Error("render plugin profile block", "plugin", f.Plugin, "err", err)
 			continue
 		}
-		out = append(out, shell.PluginSection{Title: f.Title, HTML: html})
+		if f.Badge {
+			badges = append(badges, shell.PluginSection{HTML: html})
+		} else {
+			sections = append(sections, shell.PluginSection{Title: f.Title, HTML: html})
+		}
 	}
-	return out, nil
+	return badges, sections, nil
 }

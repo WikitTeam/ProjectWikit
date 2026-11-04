@@ -426,6 +426,10 @@ body.wikit-page .system-content .content form label.label {
   line-height: 1.15;
 }
 .wikit-scope .profile-head .actions { display: flex; gap: 8px; }
+.wikit-scope .profile-head .id .name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.wikit-scope .profile-head .plugin-badge { display: inline-flex; font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.wikit-scope .profile-head .plugin-badge p { margin: 0; }
+.wikit-scope .profile-head .plugin-badge img { display: block; height: 76px; width: auto; }
 
 .wikit-scope .profile-form { max-width: 560px; display: flex; flex-direction: column; gap: 18px; }
 .wikit-scope .form-row .hint { margin-left: 8px; text-transform: none; letter-spacing: 0; }

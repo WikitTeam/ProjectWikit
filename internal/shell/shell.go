@@ -324,6 +324,7 @@ type Profile struct {
 	PagesFrom, PagesTo string
 
 	PluginSections []PluginSection
+	PluginBadges   []PluginSection
 }
 
 const (
