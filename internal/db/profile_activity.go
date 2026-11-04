@@ -13,9 +13,11 @@ type ActivityDay struct {
 }
 
 // Hidden lists site:category pairs the reader may not see. Edits and votes on
-// pages there are left out. Days are the site's own calendar days.
+// pages there are left out. Counts come back in quarter hours rather than days,
+// because a bundled PostgreSQL may not know the site's zone by name. Every zone's
+// offset is a whole number of quarter hours, so no bucket straddles midnight.
 var qActivityDays = register("ActivityDays", `
-SELECT (x.at AT TIME ZONE $4)::date, count(*)
+SELECT date_bin('15 minutes', x.at, TIMESTAMPTZ '2000-01-01 00:00:00+00'), count(*)
 FROM (
 	SELECT l.created_at AS at, a.site_id, a.category::text AS category
 	FROM web_articlelogentry l JOIN web_article a ON a.id = l.article_id
@@ -30,25 +32,35 @@ FROM (
 	WHERE p.author_id = $1 AND p.created_at >= $2
 ) x
 WHERE ($3::bigint IS NULL OR x.site_id = $3)
-  AND (x.category IS NULL OR NOT (x.site_id::text || ':' || x.category = ANY(coalesce($5::text[], '{}'))))
+  AND (x.category IS NULL OR NOT (x.site_id::text || ':' || x.category = ANY(coalesce($4::text[], '{}'))))
 GROUP BY 1
 ORDER BY 1`)
 
-func (d *DB) ActivityDays(ctx context.Context, userID int64, siteID *int64, since time.Time, zone string, hidden []string) ([]ActivityDay, error) {
-	rows, err := d.pool.Query(ctx, qActivityDays, userID, since, siteID, zone, hidden)
+func (d *DB) ActivityDays(ctx context.Context, userID int64, siteID *int64, since time.Time, zone *time.Location, hidden []string) ([]ActivityDay, error) {
+	rows, err := d.pool.Query(ctx, qActivityDays, userID, since, siteID, hidden)
 	if err != nil {
 		return nil, fmt.Errorf("read activity of %d: %w", userID, err)
 	}
 	defer rows.Close()
-	var out []ActivityDay
+	counts := map[time.Time]int{}
 	for rows.Next() {
-		var a ActivityDay
-		if err := rows.Scan(&a.Day, &a.Count); err != nil {
+		var at time.Time
+		var n int
+		if err := rows.Scan(&at, &n); err != nil {
 			return nil, err
 		}
-		out = append(out, a)
+		y, m, day := at.In(zone).Date()
+		counts[time.Date(y, m, day, 0, 0, 0, 0, time.UTC)] += n
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	out := make([]ActivityDay, 0, len(counts))
+	for day, n := range counts {
+		out = append(out, ActivityDay{Day: day, Count: n})
+	}
+	slices.SortFunc(out, func(a, b ActivityDay) int { return a.Day.Compare(b.Day) })
+	return out, nil
 }
 
 type AuthorStats struct {

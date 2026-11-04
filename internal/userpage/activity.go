@@ -93,7 +93,7 @@ func (h *Handler) activity(r *http.Request, loc *i18n.Localizer, current *db.Sit
 			end = dec
 		}
 	}
-	days, err := h.deps.DB.ActivityDays(ctx, profile.ID, scope, first, zone.String(), hidden)
+	days, err := h.deps.DB.ActivityDays(ctx, profile.ID, scope, first, zone, hidden)
 	if err != nil {
 		return err
 	}
