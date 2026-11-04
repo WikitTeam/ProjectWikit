@@ -430,6 +430,7 @@
   "notifications.item.view-conversation": "View conversation",
   "notifications.item.view-own-tickets": "View my tickets",
   "notifications.item.view-post": "View post",
+  "notifications.item.open-link": "View",
   "notifications.item.view-ticket": "Review",
   "notifications.kind-all": "All",
   "notifications.kind-forum_mention": "Mentions",

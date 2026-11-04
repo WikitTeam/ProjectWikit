@@ -26,6 +26,7 @@ const defaultNotificationPage = 10
 // know is refused rather than quietly widened to everything.
 var notificationKinds = []string{
 	db.NotifyWelcome,
+	db.NotifyExternal,
 	db.NotifyNewPostReply,
 	db.NotifyNewThreadPost,
 	db.NotifyNewArticleRevision,

@@ -19,6 +19,7 @@ const (
 	NotifyUpdateRolledBack   = "update_rolled_back"
 	NotifyNewTicket          = "new_ticket"
 	NotifyPageDeleted        = "page_deleted"
+	NotifyExternal           = "external"
 )
 
 // Every kind outside these, bar direct messages, is a notice.
@@ -26,7 +27,7 @@ var CommentKinds = []string{NotifyNewPostReply, NotifyNewThreadPost, NotifyForum
 
 // A deletion notice carries the only copy of the source, and tickets and
 // welcomes need to be seen, so none of those can be turned off.
-var MutableKinds = []string{NotifyNewArticleRevision, NotifyNewPostReply, NotifyNewThreadPost, NotifyForumMention, NotifyPostLike}
+var MutableKinds = []string{NotifyNewArticleRevision, NotifyNewPostReply, NotifyNewThreadPost, NotifyForumMention, NotifyPostLike, NotifyExternal}
 
 const NotifySection = "notify"
 

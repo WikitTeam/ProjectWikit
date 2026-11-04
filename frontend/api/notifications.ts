@@ -127,7 +127,16 @@ interface NotificationPageDeleted extends BaseNotification {
   message: string
 }
 
+interface NotificationExternal extends BaseNotification {
+  type: 'external'
+  title: string
+  message: string
+  link: string
+  from: string
+}
+
 export type Notification =
+  | NotificationExternal
   | NotificationNewPostReply
   | NotificationNewThreadPost
   | NotificationWelcome

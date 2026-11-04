@@ -1289,5 +1289,6 @@
   "profile.filter": "Filter",
   "profile.filter-clear": "Clear",
   "admin.plugin-description": "Description",
-  "admin.plugin-no-description": "No description"
+  "admin.plugin-no-description": "No description",
+  "profile.notify-external": "Notices from programs mounted on this site"
 }

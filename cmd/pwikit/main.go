@@ -471,6 +471,7 @@ func serve(ctx context.Context, args []string) (err error) {
 		"/":                             articles,
 	}
 
+	mountSecrets := map[string]string{}
 	for _, m := range cfg.Mounts {
 		secret, err := secretfile.Ensure(p.Secrets(), m.SecretFile)
 		if err != nil {
@@ -484,7 +485,11 @@ func serve(ctx context.Context, args []string) (err error) {
 			return fmt.Errorf("mount path %q is a path pwikit answers itself", m.Path)
 		}
 		goHandlers[m.Path] = site.NewHostRules(conn, listenPort(*o.listen), stack.resolve(proxy), stack.unresolved)
+		mountSecrets[m.Path] = secret
 		log.Info("mount", "path", m.Path, "upstream", m.Upstream)
+	}
+	if len(mountSecrets) > 0 {
+		goHandlers[mount.NotifyPath] = site.NewHostRules(conn, listenPort(*o.listen), mount.NotifyHandler(mountSecrets, conn), notFound)
 	}
 
 	mux, err := routing.New(goHandlers)

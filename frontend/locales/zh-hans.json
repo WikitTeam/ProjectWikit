@@ -430,6 +430,7 @@
   "notifications.item.view-conversation": "查看会话",
   "notifications.item.view-own-tickets": "查看我提交的工单",
   "notifications.item.view-post": "查看消息",
+  "notifications.item.open-link": "查看",
   "notifications.item.view-ticket": "前往处理",
   "notifications.kind-all": "全部",
   "notifications.kind-forum_mention": "提及",

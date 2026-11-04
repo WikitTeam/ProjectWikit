@@ -174,6 +174,22 @@ const Notification: React.FC<Props> = ({ notification, full }) => {
           </Styled.PostContent>
         </>
       )
+    } else if (notification.type === 'external') {
+      return (
+        <>
+          <Styled.TypeName>{notification.title}</Styled.TypeName>
+          {notification.message && (
+            <Styled.PostContent>
+              <div dangerouslySetInnerHTML={{ __html: notification.message }} />
+            </Styled.PostContent>
+          )}
+          {notification.link && (
+            <Styled.PostName>
+              <a href={base + notification.link}>{t('notifications.item.open-link')}</a>
+            </Styled.PostName>
+          )}
+        </>
+      )
     } else if (notification.type === 'page_deleted') {
       return (
         <>
