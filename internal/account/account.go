@@ -72,7 +72,7 @@ func redirect(w http.ResponseWriter, location string, status int) {
 
 func destination(r *http.Request) string {
 	to := r.URL.Query().Get("to")
-	if to == "" || !strings.HasPrefix(to, "/") || strings.HasPrefix(to, "//") {
+	if to == "" || !strings.HasPrefix(to, "/") || strings.HasPrefix(to, "//") || strings.HasPrefix(to, "/\\") {
 		return homePath
 	}
 	return to
