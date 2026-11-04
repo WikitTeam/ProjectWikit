@@ -1290,5 +1290,5 @@
   "profile.filter-clear": "清除",
   "admin.plugin-description": "描述",
   "admin.plugin-no-description": "暂无描述",
-  "profile.notify-external": "挂载的程序发来的通知"
+  "profile.notify-external": "挂载的程序发送的通知"
 }
