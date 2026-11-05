@@ -73,6 +73,8 @@ const peopleQuery = scopeCTE + `,
        UNION SELECT reviewed_by_id FROM web_userticket WHERE site_id = (SELECT id FROM s)
        UNION SELECT user_id FROM pwikit_admin_log WHERE site_id = (SELECT id FROM s)
        UNION SELECT user_id FROM pwikit_bot_site WHERE site_id = (SELECT id FROM s)
+       UNION SELECT user_id FROM pwikit_vote_event WHERE article_id IN (SELECT id FROM art)
+       UNION SELECT user_id FROM pwikit_membership_quiz_attempt WHERE site_id = (SELECT id FROM s)
      )
 SELECT id FROM who WHERE id IS NOT NULL`
 
@@ -131,6 +133,14 @@ var rules = map[string]rule{
 	"pwikit_bot_site":        {owned, `site_id = (SELECT id FROM s)`, ""},
 	"pwikit_include_ref":     {owned, `site_id = (SELECT id FROM s)`, ""},
 
+	"pwikit_category_tag_rule":       {owned, `category_id IN (SELECT id FROM cat)`, ""},
+	"pwikit_category_tag_exempt":     {owned, `category_id IN (SELECT id FROM cat)`, ""},
+	"pwikit_membership_quiz":         {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_membership_quiz_attempt": {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_vote_event":              {owned, `article_id IN (SELECT id FROM art)`, ""},
+	"pwikit_plugin_site":             {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_plugin_kv":               {owned, `site_id = (SELECT id FROM s)`, ""},
+
 	// A subscription can hang off an article or off a forum thread, and the
 	// thread need not belong to an article.
 	"web_usernotificationsubscription": {owned,
@@ -169,6 +179,10 @@ var rules = map[string]rule{
 	"pwikit_include_mirror":                     {left, "", "mirrored pages of other wikis are an instance cache, fetched again on demand"},
 	"pwikit_claim_code":                         {left, "", "a pending claim code is spent within minutes and tied to no site"},
 	"pwikit_site_superuser":                     {left, "", "whoever runs the instance a site lands on decides who administers it"},
+	"pwikit_notify_mute":                        {left, "", "what someone muted is their own choice and follows them across every site"},
+	"pwikit_profile_field":                      {left, "", "a profile follows the person across every site"},
+	"pwikit_profile_link":                       {left, "", "a profile follows the person across every site"},
+	"pwikit_profile_pin":                        {left, "", "a profile follows the person across every site"},
 }
 
 // An empty return means the table does not travel.
