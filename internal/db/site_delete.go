@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/jackc/pgx/v5"
@@ -102,19 +103,82 @@ func (d *DB) DeleteSite(ctx context.Context, slug string) ([]string, error) {
 	}
 	sort.Strings(tables)
 	tables = append(tables, "web_site")
+
+	// A notice with no site shows on every site, so the site's notices go
+	// rather than lose their site.
+	for _, stmt := range []string{
+		`DELETE FROM web_usernotification WHERE site_id = (SELECT id FROM s)`,
+		`UPDATE web_externallink SET to_site_id = NULL WHERE to_site_id = (SELECT id FROM s)`,
+	} {
+		if _, err := tx.Exec(ctx, stmt); err != nil {
+			return nil, fmt.Errorf("let go of the site: %w", err)
+		}
+	}
+	emptied, err := clearPointers(ctx, tx, tables)
+	if err != nil {
+		return nil, err
+	}
 	for _, name := range tables {
 		if _, err := tx.Exec(ctx, `DELETE FROM `+QuoteName(name)+` WHERE `+rules[name].where); err != nil {
 			return nil, fmt.Errorf("delete from %s: %w", name, err)
 		}
 	}
 
-	if err := clearDangling(ctx, tx, tables); err != nil {
+	touched := append(append(slices.Clone(tables), "web_usernotification"), emptied...)
+	if err := clearDangling(ctx, tx, touched); err != nil {
 		return nil, err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit site deletion: %w", err)
 	}
 	return media, nil
+}
+
+var qBlockingKeys = `
+SELECT c.conrelid::regclass::text, a.attname, c.confrelid::regclass::text, pa.attname, NOT a.attnotnull
+FROM pg_constraint c
+JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+JOIN pg_attribute pa ON pa.attrelid = c.confrelid AND pa.attnum = c.confkey[1]
+WHERE c.contype = 'f' AND array_length(c.conkey, 1) = 1 AND c.confdeltype IN ('a', 'r')
+  AND NOT c.condeferrable
+  AND c.confrelid::regclass::text = ANY($1) AND NOT c.conrelid::regclass::text = ANY($1)`
+
+// A key that is checked at once would stop the deletion halfway, so whatever
+// outside the site points at its rows lets go first.
+func clearPointers(ctx context.Context, tx pgx.Tx, tables []string) ([]string, error) {
+	rows, err := tx.Query(ctx, qBlockingKeys, tables)
+	if err != nil {
+		return nil, err
+	}
+	type key struct {
+		child, col, parent, pcol string
+		nullable                 bool
+	}
+	keys, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (key, error) {
+		var k key
+		err := row.Scan(&k.child, &k.col, &k.parent, &k.pcol, &k.nullable)
+		return k, err
+	})
+	if err != nil {
+		return nil, err
+	}
+	var emptied []string
+	for _, k := range keys {
+		hit := ` WHERE ` + QuoteName(k.col) + ` IN (SELECT ` + QuoteName(k.pcol) + ` FROM ` + k.parent +
+			` WHERE ` + rules[k.parent].where + `)`
+		stmt := `DELETE FROM ` + k.child + hit
+		if k.nullable {
+			stmt = `UPDATE ` + k.child + ` SET ` + QuoteName(k.col) + ` = NULL` + hit
+		} else if k.child == "web_user" {
+			return nil, fmt.Errorf("an account still needs %s.%s; nothing was deleted", k.child, k.col)
+		} else {
+			emptied = append(emptied, k.child)
+		}
+		if _, err := tx.Exec(ctx, stmt); err != nil {
+			return nil, fmt.Errorf("let go of %s.%s: %w", k.child, k.col, err)
+		}
+	}
+	return emptied, nil
 }
 
 // Keys the database cascades by itself are left to it. The rest are followed
