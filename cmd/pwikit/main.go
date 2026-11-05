@@ -169,7 +169,7 @@ func usage() {
 Commands:
   serve       start the HTTP server
   createsite  create the site this database serves
-  site        list the sites in this database or point one at another domain
+  site        list, rebind or delete the sites in this database
   admin       create an administrator or give an account every right
   user        merge two accounts, or delete imported accounts no site uses
   backup      write, check, list or put back a backup
@@ -852,21 +852,25 @@ func siteCommand(args []string) error {
 	if len(args) > 0 {
 		sub = args[0]
 	}
-	if sub != "list" && sub != "rebind" {
-		fmt.Fprint(os.Stderr, `Usage: pwikit site <list|rebind> [options]
+	if sub != "list" && sub != "rebind" && sub != "delete" {
+		fmt.Fprint(os.Stderr, `Usage: pwikit site <list|rebind|delete> [options]
 
   list    print the slug and the two domains of every site
   rebind  point a site at another domain, for when the stored one cannot be reached
+  delete  delete a site and everything on it, after offering a backup
 
 Options for rebind:
   -slug          site to rebind
   -domain        domain the pages are served on
   -media-domain  domain the uploaded files are served on; defaults to -domain
+
+Options for delete:
+  -slug          site to delete
 `)
 		return errors.New("unknown site subcommand")
 	}
 	fs := flag.NewFlagSet("site "+sub, flag.ContinueOnError)
-	slug := fs.String("slug", "", "site to rebind")
+	slug := fs.String("slug", "", "site to rebind or delete")
 	domain := fs.String("domain", "", "domain the pages are served on")
 	mediaDomain := fs.String("media-domain", "", "domain the uploaded files are served on; defaults to -domain")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
@@ -892,6 +896,9 @@ Options for rebind:
 
 	if sub == "list" {
 		return listSites(ctx, conn)
+	}
+	if sub == "delete" {
+		return deleteSite(ctx, conn, dsn, *dataDir, *slug)
 	}
 	return rebindSite(ctx, conn, *slug, *domain, *mediaDomain)
 }
