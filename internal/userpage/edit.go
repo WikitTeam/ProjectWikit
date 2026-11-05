@@ -83,6 +83,9 @@ func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.deps.logger().Error("save profile", "user", viewer.ID, "err", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
+		case problem == "" && r.PostFormValue("section") == shell.SettingsTabNotify:
+			redirect(w, EditPrefix+"?tab="+shell.SettingsTabNotify+"&saved=1", http.StatusSeeOther)
+			return
 		case problem == "":
 			redirect(w, EditPrefix+"?saved=1", http.StatusSeeOther)
 			return
@@ -127,6 +130,16 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		return loc.T("profile.error-avatar-size"), nil
 	}
 
+	if r.PostFormValue("section") == shell.SettingsTabNotify {
+		for _, kind := range db.MutableKinds {
+			on := pageconfig.PreferenceValue(r.PostFormValue("notify_"+kind) != "")
+			if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, db.NotifySection, kind, on); err != nil {
+				return "", err
+			}
+		}
+		return "", nil
+	}
+
 	avatar, problem, err := h.avatar(r, loc, viewer)
 	if problem != "" || err != nil {
 		return problem, err
@@ -146,7 +159,7 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 		pageconfig.PreferenceValue(r.PostFormValue("advanced_editor") != "")); err != nil {
 		return "", err
 	}
-	if err := h.deps.DB.SaveProfileExtras(r.Context(), viewer.ID, profileFields(r), profileLinks(r)); err != nil {
+	if err := h.deps.DB.SaveProfileExtras(r.Context(), viewer.ID, social.FieldsFrom(r.PostForm), social.LinksFrom(r.PostForm)); err != nil {
 		return "", err
 	}
 	if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, profileSection, showPinsName,
@@ -156,12 +169,6 @@ func (h *EditHandler) handle(w http.ResponseWriter, r *http.Request, loc *i18n.L
 	for _, name := range []string{showStatsName, showTrendName} {
 		if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, profileSection, name,
 			pageconfig.PreferenceValue(r.PostFormValue(name) != "")); err != nil {
-			return "", err
-		}
-	}
-	for _, kind := range db.MutableKinds {
-		on := pageconfig.PreferenceValue(r.PostFormValue("notify_"+kind) != "")
-		if err := h.deps.DB.SetUserPreference(r.Context(), viewer.ID, db.NotifySection, kind, on); err != nil {
 			return "", err
 		}
 	}
@@ -245,6 +252,7 @@ var settingsTabList = []struct{ tab, label string }{
 	{shell.SettingsTabEmail, "profile.tab-email"},
 	{shell.SettingsTabPassword, "profile.tab-password"},
 	{shell.SettingsTabName, "profile.tab-name"},
+	{shell.SettingsTabNotify, "profile.tab-notify"},
 	{shell.SettingsTabDevices, "profile.tab-devices"},
 }
 
@@ -335,11 +343,11 @@ func (h *EditHandler) page(r *http.Request, loc *i18n.Localizer, current *db.Sit
 	for _, key := range db.ProfileFieldKeys {
 		editFields = append(editFields, shell.ProfileField{Key: key, Value: stored[key]})
 	}
-	editLinks := make([]shell.ProfileLinkRow, 0, len(links)+2)
+	editLinks := make([]shell.ProfileLinkRow, 0, len(links)+1)
 	for _, l := range links {
 		editLinks = append(editLinks, shell.ProfileLinkRow{Platform: l.Platform, Value: l.Value})
 	}
-	editLinks = append(editLinks, shell.ProfileLinkRow{}, shell.ProfileLinkRow{})
+	editLinks = append(editLinks, shell.ProfileLinkRow{})
 	platforms := make([]shell.PlatformChoice, 0, len(social.Platforms))
 	for _, p := range social.Platforms {
 		name := p.Name
@@ -454,41 +462,3 @@ func deviceName(loc *i18n.Localizer, ua string) string {
 	return loc.T("profile.device-unknown")
 }
 
-const (
-	maxProfileLinks = 12
-	maxValueRunes   = 200
-)
-
-func clipRunes(s string, n int) string {
-	s = strings.TrimSpace(s)
-	if r := []rune(s); len(r) > n {
-		return string(r[:n])
-	}
-	return s
-}
-
-func profileFields(r *http.Request) []db.ProfileField {
-	var out []db.ProfileField
-	for _, key := range db.ProfileFieldKeys {
-		if value := clipRunes(r.PostFormValue("field_"+key), maxValueRunes); value != "" {
-			out = append(out, db.ProfileField{Label: key, Value: value})
-		}
-	}
-	return out
-}
-
-func profileLinks(r *http.Request) []db.ProfileLink {
-	platforms, values := r.PostForm["link_platform"], r.PostForm["link_value"]
-	var out []db.ProfileLink
-	for i := range platforms {
-		if i >= len(values) || len(out) == maxProfileLinks {
-			break
-		}
-		value := clipRunes(values[i], maxValueRunes)
-		if _, ok := social.Find(platforms[i]); !ok || value == "" {
-			continue
-		}
-		out = append(out, db.ProfileLink{Platform: platforms[i], Value: value})
-	}
-	return out
-}

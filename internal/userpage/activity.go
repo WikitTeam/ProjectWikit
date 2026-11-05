@@ -78,7 +78,15 @@ func (h *Handler) activity(r *http.Request, loc *i18n.Localizer, current *db.Sit
 	end := today
 	first := today.AddDate(0, 0, -7*(activityWeeks-1)-int(today.Weekday()))
 	year, _ := strconv.Atoi(r.URL.Query().Get(yearParam))
+	// Imported accounts join long after the history brought in with them.
 	joined := profile.DateJoined.In(zone).Year()
+	earliest, err := h.deps.DB.FirstActivity(ctx, profile.ID)
+	if err != nil {
+		return err
+	}
+	if !earliest.IsZero() {
+		joined = min(joined, earliest.In(zone).Year())
+	}
 	if year < joined || year > today.Year() {
 		year = 0
 	}

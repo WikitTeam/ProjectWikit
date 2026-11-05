@@ -322,6 +322,7 @@ type Profile struct {
 	Posts ProfileFeed
 
 	PagesFrom, PagesTo string
+	PagesPagination    string
 
 	PluginSections []PluginSection
 	PluginBadges   []PluginSection
@@ -333,6 +334,7 @@ const (
 	SettingsTabPassword = "password"
 	SettingsTabName     = "name"
 	SettingsTabDevices  = "devices"
+	SettingsTabNotify   = "notify"
 )
 
 const (

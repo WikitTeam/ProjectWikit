@@ -63,6 +63,24 @@ func (d *DB) ActivityDays(ctx context.Context, userID int64, siteID *int64, sinc
 	return out, nil
 }
 
+var qFirstActivity = register("FirstActivity", `
+SELECT least(
+	(SELECT min(created_at) FROM web_articlelogentry WHERE user_id = $1),
+	(SELECT min(at) FROM pwikit_vote_event WHERE user_id = $1 AND new_rate IS NOT NULL),
+	(SELECT min(created_at) FROM web_forumpost WHERE author_id = $1))`)
+
+// Zero means the person has done nothing yet.
+func (d *DB) FirstActivity(ctx context.Context, userID int64) (time.Time, error) {
+	var at *time.Time
+	if err := d.pool.QueryRow(ctx, qFirstActivity, userID).Scan(&at); err != nil {
+		return time.Time{}, fmt.Errorf("read first activity of %d: %w", userID, err)
+	}
+	if at == nil {
+		return time.Time{}, nil
+	}
+	return *at, nil
+}
+
 type AuthorStats struct {
 	Pages int
 	Score float64

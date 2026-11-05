@@ -129,6 +129,46 @@
         </div>
         <button class="btn-primary" type="submit"{{if not .CanRename}} disabled{{end}}>{{.T "profile.name-submit"}}</button>
       </form>
+      {{else if eq .Tab "notify"}}
+      <form method="post" enctype="multipart/form-data" class="profile-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <input type="hidden" name="section" value="notify">
+        {{if .Saved}}
+        <div class="action-inline"><span class="dot"></span><span class="meta">{{.T "profile.saved"}}</span></div>
+        {{end}}
+        <div class="form-block">
+          {{with .Notify}}
+          <fieldset class="form-row notify-choices">
+            <legend class="label">{{$.T "profile.notify"}}<span class="hint">{{$.T "profile.notify-hint"}}</span></legend>
+            {{range .}}
+            <label for="id_notify_{{.Kind}}">
+              <input type="checkbox" name="notify_{{.Kind}}" id="id_notify_{{.Kind}}" value="1"{{if .On}} checked{{end}}>
+              {{$.T (printf "profile.notify-%s" .Kind)}}
+            </label>
+            {{end}}
+          </fieldset>
+          {{end}}
+        </div>
+        <button class="btn-primary" type="submit">{{.T "profile.save"}}</button>
+      </form>
+      {{with .Mutes}}
+      <section class="mute-list">
+        <h3>{{$.T "profile.mutes"}}</h3>
+        <p class="hint">{{$.T "profile.mutes-hint"}}</p>
+        <ul>
+          {{range .}}
+          <li>
+            <a href="{{esc .URL}}">{{esc .Title}}</a>{{if .Site}}<span class="mute-site">{{esc .Site}}</span>{{end}}
+            <form method="post" action="/-/profile/mutes">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
+              {{if .ArticleID}}<input type="hidden" name="article_id" value="{{.ArticleID}}">{{else if .ThreadID}}<input type="hidden" name="thread_id" value="{{.ThreadID}}">{{else}}<input type="hidden" name="user_id" value="{{.UserID}}">{{end}}
+              <button type="submit" class="btn-ghost">{{$.T "profile.unmute"}}</button>
+            </form>
+          </li>
+          {{end}}
+        </ul>
+      </section>
+      {{end}}
       {{else}}
       <form method="post" enctype="multipart/form-data" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
@@ -178,7 +218,7 @@
               {{.T "profile.advanced-editor"}}<span class="hint">{{.T "profile.advanced-editor-hint"}}</span>
             </label>
           </div>
-          <fieldset class="form-row profile-extras">
+          <fieldset class="form-row profile-extras" id="profile-links">
             <legend class="label">{{.T "profile.links"}}</legend>
             {{range .Links}}
             {{$picked := .Platform}}
@@ -190,6 +230,7 @@
               <input type="text" name="link_value" value="{{esc .Value}}" maxlength="200" placeholder="{{$.T "profile.link-value"}}" aria-label="{{$.T "profile.link-value"}}">
             </div>
             {{end}}
+            <button type="button" class="btn-ghost link-add" title="{{.T "profile.link-add"}}" aria-label="{{.T "profile.link-add"}}">+</button>
           </fieldset>
           <fieldset class="form-row notify-choices">
             <legend class="label">{{.T "profile.home"}}</legend>
@@ -206,17 +247,6 @@
               {{.T "profile.show-trend"}}
             </label>
           </fieldset>
-          {{with .Notify}}
-          <fieldset class="form-row notify-choices">
-            <legend class="label">{{$.T "profile.notify"}}<span class="hint">{{$.T "profile.notify-hint"}}</span></legend>
-            {{range .}}
-            <label for="id_notify_{{.Kind}}">
-              <input type="checkbox" name="notify_{{.Kind}}" id="id_notify_{{.Kind}}" value="1"{{if .On}} checked{{end}}>
-              {{$.T (printf "profile.notify-%s" .Kind)}}
-            </label>
-            {{end}}
-          </fieldset>
-          {{end}}
         </div>
 
         <button class="btn-primary" type="submit">{{.T "profile.save"}}</button>
@@ -226,24 +256,6 @@
         </div>
 
       </form>
-      {{with .Mutes}}
-      <section class="mute-list">
-        <h3>{{$.T "profile.mutes"}}</h3>
-        <p class="hint">{{$.T "profile.mutes-hint"}}</p>
-        <ul>
-          {{range .}}
-          <li>
-            <a href="{{esc .URL}}">{{esc .Title}}</a>{{if .Site}}<span class="mute-site">{{esc .Site}}</span>{{end}}
-            <form method="post" action="/-/profile/mutes">
-              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
-              {{if .ArticleID}}<input type="hidden" name="article_id" value="{{.ArticleID}}">{{else if .ThreadID}}<input type="hidden" name="thread_id" value="{{.ThreadID}}">{{else}}<input type="hidden" name="user_id" value="{{.UserID}}">{{end}}
-              <button type="submit" class="btn-ghost">{{$.T "profile.unmute"}}</button>
-            </form>
-          </li>
-          {{end}}
-        </ul>
-      </section>
-      {{end}}
       {{end}}
 
     </main>
@@ -251,4 +263,23 @@
   </div>
 </div>
 {{template "browser_zone"}}
+<script>
+(function () {
+    const box = document.getElementById('profile-links');
+    if (!box) return;
+    const add = box.querySelector('.link-add');
+    const max = 12;
+    const sync = () => { add.hidden = box.querySelectorAll('.pair').length >= max; };
+    add.addEventListener('click', function () {
+        const rows = box.querySelectorAll('.pair');
+        const row = rows[rows.length - 1].cloneNode(true);
+        row.querySelector('select').value = '';
+        row.querySelector('input').value = '';
+        box.insertBefore(row, add);
+        row.querySelector('select').focus();
+        sync();
+    });
+    sync();
+})();
+</script>
 {{end}}

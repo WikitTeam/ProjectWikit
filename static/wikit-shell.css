@@ -832,6 +832,7 @@ body.wikit-page .system-container:has(.auth-shell) .site-footer a:focus-visible 
 .wikit-scope .app-shell fieldset.profile-extras + fieldset.profile-extras { border-top: 1px solid var(--rule); }
 .wikit-scope .app-shell .profile-extras legend { float: left; width: 100%; padding: 0; margin: 0 0 4px; font-size: 13px; font-weight: 600; line-height: 1; }
 .wikit-scope .app-shell .profile-extras .pair { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 5fr); gap: 8px; }
+.wikit-scope .app-shell .profile-extras .link-add { min-width: 32px; padding: 2px 10px; font-size: 16px; line-height: 1.4; }
 body.wikit-page .system-content .content .app-shell .profile-extras .pair input,
 body.wikit-page .system-content .content .app-shell .profile-extras .pair select {
   width: 100%;

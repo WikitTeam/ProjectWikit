@@ -17,6 +17,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/social"
 	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 )
 
@@ -201,8 +202,16 @@ func (h *Handler) userForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		lastLogin = seen.Login
 		lastAddress = seen.Address
 	}
+	fields, links, err := h.profileExtras(ctx, row.ID)
+	if err != nil {
+		return err
+	}
 	return h.page(w, r, loc, loc.T("admin.users"), "user_form.html", map[string]any{
 		"User":         row,
+		"Fields":       fields,
+		"Links":        links,
+		"Platforms":    platformChoices(loc),
+		"MaxLinks":     social.MaxLinks,
 		"Now":          time.Now(),
 		"Zone":         site.Zone(ctx),
 		"ZoneName":     site.Zone(ctx).String(),
@@ -347,6 +356,11 @@ func (h *Handler) saveUser(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 	if err != nil {
 		return err
 	}
+	if maySuper {
+		if err := h.deps.DB.SaveProfileExtras(ctx, stored.ID, social.FieldsFrom(r.PostForm), social.LinksFrom(r.PostForm)); err != nil {
+			return err
+		}
+	}
 	if here && !stored.IsSuperuser {
 		on := r.PostFormValue("site_superuser") != ""
 		changed, err := h.deps.DB.SetSiteSuperuser(ctx, siteID(ctx), stored.ID, on, mine.ID, time.Now())
@@ -382,6 +396,38 @@ const (
 	saidHoldSent      = "hold-sent"
 	saidHoldCancelled = "hold-cancelled"
 )
+
+type profileFieldRow struct{ Key, Value string }
+
+func platformChoices(loc *i18n.Localizer) []profileFieldRow {
+	out := make([]profileFieldRow, 0, len(social.Platforms))
+	for _, p := range social.Platforms {
+		name := p.Name
+		switch p.Key {
+		case "email", "website", "other":
+			name = loc.T("profile.platform-" + p.Key)
+		}
+		out = append(out, profileFieldRow{Key: p.Key, Value: name})
+	}
+	return out
+}
+
+// One blank link row is always offered so a first link can be typed in.
+func (h *Handler) profileExtras(ctx context.Context, userID int64) ([]profileFieldRow, []db.ProfileLink, error) {
+	fields, links, err := h.deps.DB.ProfileExtras(ctx, userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	stored := make(map[string]string, len(fields))
+	for _, f := range fields {
+		stored[f.Label] = f.Value
+	}
+	rows := make([]profileFieldRow, 0, len(db.ProfileFieldKeys))
+	for _, key := range db.ProfileFieldKeys {
+		rows = append(rows, profileFieldRow{Key: key, Value: stored[key]})
+	}
+	return rows, append(links, db.ProfileLink{}), nil
+}
 
 func userDone(loc *i18n.Localizer, said string) string {
 	switch said {

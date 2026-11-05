@@ -244,7 +244,11 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		data.Posts, err = h.posts(r, loc, current, profile, viewer, span, true)
 		data.Posts.Tab, data.Posts.From, data.Posts.To = data.Tab, from, to
 	case shell.ProfileTabPages:
-		data.Pages, err = h.pages(ctx, current, profile, viewer, false, span)
+		var all []shell.ProfilePage
+		all, err = h.pages(ctx, current, profile, viewer, false, span)
+		page, pages := pageOf(r, pagesParam, len(all))
+		data.Pages = all[min(len(all), (page-1)*historyPerPage):min(len(all), page*historyPerPage)]
+		data.PagesPagination = listpages.PaginationLinks(loc, pageHref(r, pagesParam), page, pages)
 		data.PagesFrom, data.PagesTo = from, to
 	default:
 		if h.showsPins(ctx, profile.ID) {
@@ -276,6 +280,7 @@ const (
 	tabParam   = "tab"
 	editsParam = "edits"
 	postsParam = "posts"
+	pagesParam = "pages"
 )
 
 func tabOf(r *http.Request) string {
@@ -671,7 +676,7 @@ func siteID(ctx context.Context) int64 {
 const (
 	profileSection = "profile"
 	showPinsName   = "show_pins"
-	pagesListed    = 200
+	pagesListed    = 2000
 )
 
 func (h *Handler) showsPins(ctx context.Context, userID int64) bool {

@@ -23,12 +23,32 @@
       </div>
       {{end}}
       {{template "row_area" dict "n" "bio" "k" "admin.f-bio" "v" .User.Bio}}
+      {{range .Fields}}
+      {{template "row_text" dict "n" (printf "field_%s" .Key) "k" (printf "profile.field-%s" .Key) "v" .Value "w" "narrow-4"}}
+      {{end}}
+      <div class="control-group" id="profile-links" data-max="{{.MaxLinks}}">
+        <span class="control-label">{{t "profile.links"}}</span>
+        <div class="controls">
+          {{range .Links}}
+          {{$picked := .Platform}}
+          <div class="link-pair">
+            <select name="link_platform" aria-label="{{t "profile.link-platform"}}" class="narrow-2">
+              <option value="">{{t "profile.link-platform"}}</option>
+              {{range $.Platforms}}<option value="{{esc .Key}}"{{if eq .Key $picked}} selected{{end}}>{{esc .Value}}</option>{{end}}
+            </select>
+            <input type="text" name="link_value" value="{{esc .Value}}" maxlength="200" class="narrow-4" placeholder="{{t "profile.link-value"}}" aria-label="{{t "profile.link-value"}}">
+          </div>
+          {{end}}
+          <button type="button" class="btn link-add" title="{{t "profile.link-add"}}" aria-label="{{t "profile.link-add"}}">+</button>
+        </div>
+      </div>
       {{else}}
       {{template "row_static" dict "k" "admin.f-username" "v" .User.Username}}
       {{template "row_static" dict "k" "admin.f-wikidot-username" "v" .User.WikidotUsername}}
       {{template "row_static" dict "k" "admin.f-display-name" "v" .User.DisplayName}}
       {{if .SeeEmail}}{{template "row_static" dict "k" "admin.f-email" "v" .User.Email}}{{end}}
       {{template "row_static" dict "k" "admin.f-bio" "v" .User.Bio}}
+      {{range .Fields}}{{template "row_static" dict "k" (printf "profile.field-%s" .Key) "v" .Value}}{{end}}
       {{end}}
       {{template "row_static" dict "k" "admin.f-user-type" "v" .User.Type}}
       {{template "row_static" dict "k" "admin.f-rank" "v" (printf "%d" .User.OperationIndex)}}
@@ -128,4 +148,23 @@
     {{if .MayReset}}<a class="btn btn-danger pull-right" href="{{esc .ResetVotes}}"><i class="fas fa-trash"></i>{{t "admin.reset-votes"}}</a>{{end}}
   </div>
 </form>
+<script>
+(function () {
+    const box = document.getElementById('profile-links');
+    if (!box) return;
+    const add = box.querySelector('.link-add');
+    const max = Number(box.dataset.max);
+    const sync = () => { add.hidden = box.querySelectorAll('.link-pair').length >= max; };
+    add.addEventListener('click', function () {
+        const rows = box.querySelectorAll('.link-pair');
+        const row = rows[rows.length - 1].cloneNode(true);
+        row.querySelector('select').value = '';
+        row.querySelector('input').value = '';
+        add.before(row);
+        row.querySelector('select').focus();
+        sync();
+    });
+    sync();
+})();
+</script>
 {{end}}

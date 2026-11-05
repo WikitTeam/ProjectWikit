@@ -38,7 +38,7 @@ var outcomes = []string{
 	"email-invalid", "email-same", "email-needs-password",
 	"password-changed", "password-wrong", "password-unusable", "password-mismatch", "password-weak",
 	"name-changed", "name-cooldown", "name-taken", "name-invalid",
-	"email-hold-cancelled", "devices-ended", "devices-others-ended", "devices-gone", "mute-removed",
+	"email-hold-cancelled", "devices-ended", "devices-others-ended", "devices-gone", "notify-unmuted",
 }
 
 type SettingsHandler struct {
@@ -277,7 +277,7 @@ func (h *SettingsHandler) unmute(r *http.Request, user *db.User) (string, error)
 	if article == nil && thread == nil && muted == nil {
 		return "", nil
 	}
-	return "mute-removed", h.deps.DB.Unmute(r.Context(), user.ID, article, thread, muted)
+	return "notify-unmuted", h.deps.DB.Unmute(r.Context(), user.ID, article, thread, muted)
 }
 
 // The pin form sits on the profile, so the reader goes back there rather than
