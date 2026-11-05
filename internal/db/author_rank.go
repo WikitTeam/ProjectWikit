@@ -13,6 +13,15 @@ type AuthorRankRow struct {
 	Total  int
 }
 
+type AuthorRankFilter struct {
+	Categories     []string
+	SkipCategories []string
+	Tags           []string
+	Negate         []string
+	Exclude        []string
+	Hidden         []string
+}
+
 // A page's score is the sum of its votes. Pages carrying one of the negated
 // tags count against it the other way round, and pages carrying an excluded tag
 // do not count at all. Neither changes the rating the page itself shows.
@@ -33,6 +42,9 @@ pages AS (
 	WHERE a.site_id = $1
 	  AND (cardinality($2::text[]) = 0 OR a.category::text = ANY($2::text[]))
 	  AND NOT (a.category::text = ANY($5::text[]))
+	  AND NOT (a.category::text = ANY($8::text[]))
+	  AND (cardinality($9::text[]) = 0
+	       OR EXISTS (SELECT 1 FROM tagged g WHERE g.article_id = a.id AND g.tag = ANY($9::text[])))
 ),
 ranked AS (
 	SELECT aa.user_id,
@@ -48,14 +60,15 @@ FROM ranked
 ORDER BY score DESC, pages DESC, user_id
 OFFSET $6 LIMIT $7`)
 
-func (d *DB) AuthorRank(ctx context.Context, siteID int64, categories, negate, exclude, hidden []string, offset, limit int) ([]AuthorRankRow, error) {
+func (d *DB) AuthorRank(ctx context.Context, siteID int64, f AuthorRankFilter, offset, limit int) ([]AuthorRankRow, error) {
 	nonNil := func(s []string) []string {
 		if s == nil {
 			return []string{}
 		}
 		return s
 	}
-	rows, err := d.pool.Query(ctx, qAuthorRank, siteID, nonNil(categories), nonNil(negate), nonNil(exclude), nonNil(hidden), offset, limit)
+	rows, err := d.pool.Query(ctx, qAuthorRank, siteID, nonNil(f.Categories), nonNil(f.Negate), nonNil(f.Exclude),
+		nonNil(f.Hidden), offset, limit, nonNil(f.SkipCategories), nonNil(f.Tags))
 	if err != nil {
 		return nil, fmt.Errorf("rank authors of site %d: %w", siteID, err)
 	}

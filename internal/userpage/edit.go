@@ -461,4 +461,3 @@ func deviceName(loc *i18n.Localizer, ua string) string {
 	}
 	return loc.T("profile.device-unknown")
 }
-

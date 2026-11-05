@@ -32,9 +32,14 @@ func renderAuthorRank(env module.Env, params map[string]string, _ string) (strin
 	if err != nil {
 		return "", err
 	}
+	filter := db.AuthorRankFilter{Negate: splitList(params["negate"], true), Exclude: splitList(params["exclude"], true), Hidden: hidden}
+	// Written the way ListPages takes them, a leading - leaves the name out.
+	filter.Categories, filter.SkipCategories = splitSigned(params["category"], false)
+	var skipTags []string
+	filter.Tags, skipTags = splitSigned(params["tags"], true)
+	filter.Exclude = append(filter.Exclude, skipTags...)
 	query := func(page int) ([]db.AuthorRankRow, error) {
-		return env.Data.AuthorRank(splitList(params["category"], false), splitList(params["negate"], true),
-			splitList(params["exclude"], true), hidden, (page-1)*perPage, perPage)
+		return env.Data.AuthorRank(filter, (page-1)*perPage, perPage)
 	}
 	rows, err := query(current)
 	if err != nil {
@@ -91,6 +96,25 @@ func splitList(raw string, tags bool) []string {
 		out = append(out, one)
 	}
 	return out
+}
+
+func splitSigned(raw string, tags bool) (keep, skip []string) {
+	for _, one := range splitList(raw, false) {
+		out := &keep
+		if rest, ok := strings.CutPrefix(one, "-"); ok {
+			one, out = rest, &skip
+		} else {
+			one = strings.TrimPrefix(one, "+")
+		}
+		if one == "" {
+			continue
+		}
+		if tags {
+			one = db.TagFullName(one)
+		}
+		*out = append(*out, one)
+	}
+	return keep, skip
 }
 
 func signedScore(v float64) string {

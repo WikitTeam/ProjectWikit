@@ -112,7 +112,7 @@ type Data interface {
 	ArticleHasAuthor(articleID, userID int64) (bool, error)
 	RolesByUser(id int64) ([]roles.Role, error)
 	MembershipQuiz() (db.MembershipQuiz, error)
-	AuthorRank(categories, negate, exclude, hidden []string, offset, limit int) ([]db.AuthorRankRow, error)
+	AuthorRank(f db.AuthorRankFilter, offset, limit int) ([]db.AuthorRankRow, error)
 	RatingTrend(articleID int64, average bool) ([]db.TrendPoint, error)
 	SearchForum(f db.ForumSearchFilter, offset, limit int) ([]db.ForumSearchHit, error)
 	QuizAttempts(userID int64) ([]quiz.Attempt, error)
