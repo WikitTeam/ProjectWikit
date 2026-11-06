@@ -11,6 +11,8 @@ type AuthorRankRow struct {
 	Pages  int
 	Place  int
 	Total  int
+	// Place repeats on ties, so Pos is what finds the page a row is on.
+	Pos int
 }
 
 type AuthorRankFilter struct {
@@ -55,12 +57,29 @@ ranked AS (
 	WHERE NOT p.excluded
 	GROUP BY aa.user_id
 )
-SELECT user_id, score, pages, rank() OVER (ORDER BY score DESC), count(*) OVER ()
-FROM ranked
-ORDER BY score DESC, pages DESC, user_id
+SELECT user_id, score, pages, place, total, pos FROM (
+	SELECT user_id, score, pages, rank() OVER (ORDER BY score DESC) AS place, count(*) OVER () AS total,
+	       row_number() OVER (ORDER BY score DESC, pages DESC, user_id) AS pos
+	FROM ranked
+) r
+WHERE $10::bigint IS NULL OR user_id = $10
+ORDER BY pos
 OFFSET $6 LIMIT $7`)
 
 func (d *DB) AuthorRank(ctx context.Context, siteID int64, f AuthorRankFilter, offset, limit int) ([]AuthorRankRow, error) {
+	return d.authorRank(ctx, siteID, f, nil, offset, limit)
+}
+
+// Nil means the author has no page that counts.
+func (d *DB) AuthorRankOf(ctx context.Context, siteID int64, f AuthorRankFilter, userID int64) (*AuthorRankRow, error) {
+	rows, err := d.authorRank(ctx, siteID, f, &userID, 0, 1)
+	if err != nil || len(rows) == 0 {
+		return nil, err
+	}
+	return &rows[0], nil
+}
+
+func (d *DB) authorRank(ctx context.Context, siteID int64, f AuthorRankFilter, userID *int64, offset, limit int) ([]AuthorRankRow, error) {
 	nonNil := func(s []string) []string {
 		if s == nil {
 			return []string{}
@@ -68,7 +87,7 @@ func (d *DB) AuthorRank(ctx context.Context, siteID int64, f AuthorRankFilter, o
 		return s
 	}
 	rows, err := d.pool.Query(ctx, qAuthorRank, siteID, nonNil(f.Categories), nonNil(f.Negate), nonNil(f.Exclude),
-		nonNil(f.Hidden), offset, limit, nonNil(f.SkipCategories), nonNil(f.Tags))
+		nonNil(f.Hidden), offset, limit, nonNil(f.SkipCategories), nonNil(f.Tags), userID)
 	if err != nil {
 		return nil, fmt.Errorf("rank authors of site %d: %w", siteID, err)
 	}
@@ -76,7 +95,7 @@ func (d *DB) AuthorRank(ctx context.Context, siteID int64, f AuthorRankFilter, o
 	var out []AuthorRankRow
 	for rows.Next() {
 		var r AuthorRankRow
-		if err := rows.Scan(&r.UserID, &r.Score, &r.Pages, &r.Place, &r.Total); err != nil {
+		if err := rows.Scan(&r.UserID, &r.Score, &r.Pages, &r.Place, &r.Total, &r.Pos); err != nil {
 			return nil, err
 		}
 		out = append(out, r)

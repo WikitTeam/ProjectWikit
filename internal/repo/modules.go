@@ -533,3 +533,7 @@ func (m moduleData) RatingTrend(articleID int64, average bool) ([]db.TrendPoint,
 func (m moduleData) AuthorRank(f db.AuthorRankFilter, offset, limit int) ([]db.AuthorRankRow, error) {
 	return m.repo.db.AuthorRank(m.repo.ctx, m.repo.siteID(), f, offset, limit)
 }
+
+func (m moduleData) AuthorRankOf(f db.AuthorRankFilter, userID int64) (*db.AuthorRankRow, error) {
+	return m.repo.db.AuthorRankOf(m.repo.ctx, m.repo.siteID(), f, userID)
+}

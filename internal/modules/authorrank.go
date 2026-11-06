@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
+	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/wikinum"
 )
 
@@ -15,7 +17,14 @@ func init() { module.Register("authorrank", renderAuthorRank) }
 
 const authorRankDefault = 50
 
-func renderAuthorRank(env module.Env, params map[string]string, _ string) (string, error) {
+func renderAuthorRank(env module.Env, params map[string]string, body string) (string, error) {
+	if env.Render == nil || env.Data == nil {
+		return "", &module.Error{Message: env.Text("module-failed", "name", "authorrank")}
+	}
+	pc := env.Page
+	if pc == nil {
+		pc = page.NewContext(nil, nil, nil, env.User)
+	}
 	perPage := authorRankDefault
 	for _, key := range []string{"limit", "perpage"} {
 		if n, err := strconv.Atoi(strings.TrimSpace(params[key])); err == nil && n > 0 {
@@ -23,10 +32,8 @@ func renderAuthorRank(env module.Env, params map[string]string, _ string) (strin
 		}
 	}
 	current := 1
-	if env.Page != nil {
-		if n, err := wikinum.Int(env.Page.PathParams.Get("p")); err == nil && n > 1 {
-			current = n
-		}
+	if n, err := wikinum.Int(pc.PathParams.Get("p")); err == nil && n > 1 {
+		current = n
 	}
 	hidden, err := env.Data.HiddenCategories(env.User)
 	if err != nil {
@@ -38,6 +45,7 @@ func renderAuthorRank(env module.Env, params map[string]string, _ string) (strin
 	var skipTags []string
 	filter.Tags, skipTags = splitSigned(params["tags"], true)
 	filter.Exclude = append(filter.Exclude, skipTags...)
+
 	query := func(page int) ([]db.AuthorRankRow, error) {
 		return env.Data.AuthorRank(filter, (page-1)*perPage, perPage)
 	}
@@ -56,35 +64,169 @@ func renderAuthorRank(env module.Env, params map[string]string, _ string) (strin
 			}
 		}
 	}
-	if len(rows) == 0 {
-		return `<div class="w-author-rank-empty">` + escape.HTML(env.Text("module-authorrank-empty")) + "</div>", nil
+	total := 0
+	if len(rows) > 0 {
+		total = rows[0].Total
 	}
 
-	var b strings.Builder
-	b.WriteString("<div class=\"w-author-rank\">\n<table class=\"wiki-content-table\">\n<tr>")
-	for _, key := range []string{"rank", "author", "score", "pages"} {
-		b.WriteString("<th>" + escape.HTML(env.Text("module-authorrank-"+key)) + "</th>")
+	chips := map[string]string{}
+	chip := func(token string, id int64) (string, error) {
+		if _, done := chips[token]; !done {
+			html, err := env.Data.RenderUserByID(&id)
+			if err != nil {
+				return "", err
+			}
+			chips[token] = html
+		}
+		return token, nil
 	}
-	b.WriteString("</tr>\n")
-	for _, row := range rows {
-		id := row.UserID
-		user, err := env.Data.RenderUserByID(&id)
-		if err != nil {
+
+	var picked *db.User
+	var pickedRow *db.AuthorRankRow
+	if name := strings.TrimSpace(params["user"]); name != "" {
+		if picked, err = userByEitherName(env, name); err != nil {
 			return "", err
 		}
-		b.WriteString("<tr><td>" + strconv.Itoa(row.Place) + "</td><td>" + user + "</td><td>" +
-			escape.HTML(signedScore(row.Score)) + "</td><td>" + strconv.Itoa(row.Pages) + "</td></tr>\n")
+		if picked == nil {
+			return `<div class="w-author-rank-empty">` + escape.HTML(env.Text("user-not-found", "name", name)) + "</div>", nil
+		}
+		if pickedRow, err = env.Data.AuthorRankOf(filter, picked.ID); err != nil {
+			return "", err
+		}
 	}
-	b.WriteString("</table>")
-	basePath := "#"
-	if env.Page != nil && env.Page.Article != nil {
-		basePath = listpages.BasePath(env.Page.Article.FullName(), env.Page.PathParams)
+	shared := func(key string) (string, bool, error) {
+		switch key {
+		case "total":
+			return strconv.Itoa(total), true, nil
+		case "user_ranked":
+			return strconv.FormatBool(pickedRow != nil), picked != nil, nil
+		case "user_linked":
+			if picked == nil {
+				return "", false, nil
+			}
+			token, err := chip(chipToken(0), picked.ID)
+			return token, true, err
+		case "user_rank", "user_score", "user_pages", "user_index":
+			if picked == nil {
+				return "", false, nil
+			}
+			if pickedRow == nil {
+				return "", true, nil
+			}
+			return rankValue(strings.TrimPrefix(key, "user_"), *pickedRow), true, nil
+		}
+		return "", false, nil
 	}
-	if pager := listpages.Pagination(env.Loc, basePath, current, (rows[0].Total+perPage-1)/perPage); pager != "" {
-		b.WriteString("\n" + pager)
+	var fillErr error
+	fill := func(source string, row *db.AuthorRankRow) string {
+		return page.ApplyTemplate(source, func(name string) (string, bool) {
+			key := strings.ToLower(strings.TrimSpace(name))
+			if row != nil {
+				switch key {
+				case "rank", "index", "score", "pages":
+					return rankValue(key, *row), true
+				case "is_user":
+					return strconv.FormatBool(picked != nil && row.UserID == picked.ID), true
+				case "author", "author_name":
+					user, err := env.Data.UserByID(row.UserID)
+					if err != nil {
+						fillErr = err
+						return "", true
+					}
+					if key == "author" {
+						return user.DisplayLabel(), true
+					}
+					return user.Username, true
+				case "author_linked":
+					token, err := chip(chipToken(row.Pos), row.UserID)
+					if err != nil {
+						fillErr = err
+					}
+					return token, true
+				}
+			}
+			value, ok, err := shared(key)
+			if err != nil {
+				fillErr = err
+			}
+			return value, ok
+		})
+	}
+
+	listRows := module.BoolParam(params, "rows", true)
+	if listRows && total == 0 {
+		return `<div class="w-author-rank-empty">` + escape.HTML(env.Text("module-authorrank-empty")) + "</div>", nil
+	}
+	prepend, appendix := params["prependline"], params["appendline"]
+	body = strings.TrimSpace(body)
+	if body == "" {
+		body = "||%%rank%%||%%author_linked%%||%%score%%||%%pages%%||"
+		if _, given := params["prependline"]; !given {
+			prepend = "||~ " + env.Text("module-authorrank-rank") + "||~ " + env.Text("module-authorrank-author") +
+				"||~ " + env.Text("module-authorrank-score") + "||~ " + env.Text("module-authorrank-pages") + "||"
+		}
+	}
+
+	var lines []string
+	if prepend != "" {
+		lines = append(lines, fill(prepend, nil))
+	}
+	if listRows {
+		for i := range rows {
+			lines = append(lines, fill(body, &rows[i]))
+		}
+	}
+	if appendix != "" {
+		lines = append(lines, fill(appendix, nil))
+	}
+	if fillErr != nil {
+		return "", fillErr
+	}
+	html, err := env.Render(strings.Join(lines, "\n"), pc)
+	if err != nil {
+		return "", err
+	}
+	html = putChipsBack(html, chips)
+
+	var b strings.Builder
+	b.WriteString("<div class=\"w-author-rank\">\n" + html)
+	if listRows {
+		basePath := "#"
+		if pc.Article != nil {
+			basePath = listpages.BasePath(pc.Article.FullName(), pc.PathParams)
+		}
+		if pager := listpages.Pagination(env.Loc, basePath, current, (total+perPage-1)/perPage); pager != "" {
+			b.WriteString("\n" + pager)
+		}
 	}
 	b.WriteString("\n</div>")
 	return b.String(), nil
+}
+
+func rankValue(key string, row db.AuthorRankRow) string {
+	switch key {
+	case "rank":
+		return strconv.Itoa(row.Place)
+	case "index":
+		return strconv.Itoa(row.Pos)
+	case "score":
+		return signedScore(row.Score)
+	}
+	return strconv.Itoa(row.Pages)
+}
+
+// A page that names a person may spell either the account or the shown name.
+func userByEitherName(env module.Env, name string) (*db.User, error) {
+	for _, lookup := range []func(string) (*db.User, error){env.Data.UserByUsername, env.Data.UserByDisplayName} {
+		user, err := lookup(name)
+		if err == nil {
+			return user, nil
+		}
+		if !errors.Is(err, db.ErrNotFound) {
+			return nil, err
+		}
+	}
+	return nil, nil
 }
 
 func splitList(raw string, tags bool) []string {
