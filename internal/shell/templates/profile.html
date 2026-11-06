@@ -25,21 +25,23 @@
           {{if .Avatar}}<img src="{{esc .Avatar}}" alt="{{esc .DisplayName}}">{{else}}{{esc .Initial}}{{end}}
         </div>
         <div class="id">
-          <div class="name">
-            <span>{{esc .DisplayName}}</span>
-            {{range .PluginBadges}}<span class="plugin-badge">{{.HTML}}</span>{{end}}
-          </div>
-          {{if .Subtitle}}<div class="meta">{{esc .Subtitle}}</div>{{end}}
-          {{if .Socials}}
-          <div class="socials">
-            {{range .Socials}}
-            <a class="social" {{if .Href}}href="{{esc .Href}}" target="_blank" rel="noopener me"{{else}}href="#" data-copy="{{esc .Value}}" data-copied="{{$.T "profile.copied"}}"{{end}} style="--brand: {{esc .Color}}" title="{{if .Name}}{{esc .Name}}: {{end}}{{esc .Value}}">
-              {{if .Icon}}<span class="social-icon" style="--icon: url('{{esc .Icon}}')" aria-hidden="true"></span>{{else}}<i class="{{esc .FA}}" aria-hidden="true"></i>{{end}}
-              <span class="social-value">{{esc .Value}}</span>
-            </a>
+          <div class="id-text">
+            <div class="name">
+              <span>{{esc .DisplayName}}</span>
+            </div>
+            {{if .Subtitle}}<div class="meta">{{esc .Subtitle}}</div>{{end}}
+            {{if .Socials}}
+            <div class="socials">
+              {{range .Socials}}
+              <a class="social" {{if .Href}}href="{{esc .Href}}" target="_blank" rel="noopener me"{{else}}href="#" data-copy="{{esc .Value}}" data-copied="{{$.T "profile.copied"}}"{{end}} style="--brand: {{esc .Color}}" title="{{if .Name}}{{esc .Name}}: {{end}}{{esc .Value}}">
+                {{if .Icon}}<span class="social-icon" style="--icon: url('{{esc .Icon}}')" aria-hidden="true"></span>{{else}}<i class="{{esc .FA}}" aria-hidden="true"></i>{{end}}
+                <span class="social-value">{{esc .Value}}</span>
+              </a>
+              {{end}}
+            </div>
             {{end}}
           </div>
-          {{end}}
+          {{range .PluginBadges}}<span class="plugin-badge">{{.HTML}}</span>{{end}}
         </div>
         <div class="actions">
           {{if .IsSelf}}

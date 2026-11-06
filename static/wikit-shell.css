@@ -418,7 +418,8 @@ body.wikit-page .system-content .content form label.label {
 .wikit-scope .profile-head .avatar-big img {
   width: 100%; height: 100%; object-fit: cover;
 }
-.wikit-scope .profile-head .id { display: flex; flex-direction: column; gap: 6px; }
+.wikit-scope .profile-head .id { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.wikit-scope .profile-head .id-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .wikit-scope .profile-head .id .name {
   font-size: 26px;
   font-weight: 500;
