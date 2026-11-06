@@ -28,6 +28,11 @@ func TestOutsideModules(t *testing.T) {
 		"x [[module Rate]] x [[module listpages]]x[[/module]]": "X [[module Rate]] X [[module listpages]]x[[/module]]",
 		"x [[module listpages]] x":                             "X [[module listpages]] X",
 		"x":                                                    "X",
+		"x [[module listpages a=\"[[#if x | y]]\"]]x[[/module]] x":           "X [[module listpages a=\"[[#if X | y]]\"]]x[[/module]] X",
+		"x [[module listpages a=\"q\\\"]]\"]]x[[/module]] x":                 "X [[module listpages a=\"q\\\"]]\"]]x[[/module]] X",
+		"x [[module listpages a=\"open]]x[[/module]] x":                      "X [[module listpages a=\"open]]x[[/module]] X",
+		"[[module listpages]]x[[module listpages]]x[[/module]]x[[/module]]x": "[[module listpages]]x[[module listpages]]x[[/module]]x[[/module]]X",
+		"[[module listpages]]x[[module Rate]]x[[/module]]x":                  "[[module listpages]]x[[module Rate]]x[[/module]]X",
 	}
 	for in, want := range cases {
 		if got := OutsideModules(in, hasBody, upper); got != want {
