@@ -432,6 +432,7 @@ body.wikit-page .system-content .content form label.label {
 .wikit-scope .profile-head .plugin-badge img { display: block; height: 76px; width: auto; }
 
 .wikit-scope .profile-form { max-width: 560px; display: flex; flex-direction: column; gap: 18px; }
+.wikit-scope .profile-form.profile-name { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
 .wikit-scope .form-row .hint { margin-left: 8px; text-transform: none; letter-spacing: 0; }
 .wikit-scope .form-row textarea { resize: vertical; line-height: 1.6; }
 .wikit-scope .avatar-row .avatar-pick { display: flex; align-items: center; gap: 14px; }

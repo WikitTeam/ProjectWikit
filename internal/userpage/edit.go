@@ -251,7 +251,6 @@ var settingsTabList = []struct{ tab, label string }{
 	{shell.SettingsTabBasic, "profile.tab-basic"},
 	{shell.SettingsTabEmail, "profile.tab-email"},
 	{shell.SettingsTabPassword, "profile.tab-password"},
-	{shell.SettingsTabName, "profile.tab-name"},
 	{shell.SettingsTabNotify, "profile.tab-notify"},
 	{shell.SettingsTabDevices, "profile.tab-devices"},
 }

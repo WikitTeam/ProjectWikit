@@ -332,7 +332,6 @@ const (
 	SettingsTabBasic    = ""
 	SettingsTabEmail    = "email"
 	SettingsTabPassword = "password"
-	SettingsTabName     = "name"
 	SettingsTabDevices  = "devices"
 	SettingsTabNotify   = "notify"
 )

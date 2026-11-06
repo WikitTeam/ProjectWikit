@@ -29,7 +29,7 @@ func TestSettingsTab(t *testing.T) {
 		{"?saved=1", shell.SettingsTabBasic},
 		{"?tab=password", shell.SettingsTabPassword},
 		{"?said=email-sent", shell.SettingsTabEmail},
-		{"?said=name-cooldown", shell.SettingsTabName},
+		{"?said=name-cooldown", shell.SettingsTabBasic},
 		{"?said=password-wrong", shell.SettingsTabPassword},
 		{"?said=unknown-thing", shell.SettingsTabBasic},
 		{"?tab=elsewhere", shell.SettingsTabBasic},

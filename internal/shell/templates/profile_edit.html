@@ -118,17 +118,6 @@
         <p class="meta">{{.T "profile.device-none"}}</p>
         {{end}}
       </div>
-      {{else if eq .Tab "name"}}
-      <form method="post" action="/-/profile/name" class="profile-form">
-        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
-        <div class="form-block">
-          <div class="form-row">
-            <label class="label" for="id_display_name">{{.T "profile.name-new"}}<span class="hint">{{.T "profile.name-hint"}}</span></label>
-            <input type="text" name="display_name" id="id_display_name" value="{{esc .DisplayName}}" maxlength="50" required{{if not .CanRename}} disabled{{end}}>
-          </div>
-        </div>
-        <button class="btn-primary" type="submit"{{if not .CanRename}} disabled{{end}}>{{.T "profile.name-submit"}}</button>
-      </form>
       {{else if eq .Tab "notify"}}
       <form method="post" enctype="multipart/form-data" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
@@ -170,6 +159,16 @@
       </section>
       {{end}}
       {{else}}
+      <form method="post" action="/-/profile/name" class="profile-form profile-name">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <div class="form-block">
+          <div class="form-row">
+            <label class="label" for="id_display_name">{{.T "profile.name-new"}}<span class="hint">{{.T "profile.name-hint"}}</span></label>
+            <input type="text" name="display_name" id="id_display_name" value="{{esc .DisplayName}}" maxlength="50" required{{if not .CanRename}} disabled{{end}}>
+          </div>
+        </div>
+        <button class="btn-primary" type="submit"{{if not .CanRename}} disabled{{end}}>{{.T "profile.name-submit"}}</button>
+      </form>
       <form method="post" enctype="multipart/form-data" class="profile-form">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
 
