@@ -58,17 +58,25 @@ func (h *Handler) activity(r *http.Request, loc *i18n.Localizer, current *db.Sit
 		}
 	}
 
+	active, err := h.deps.DB.ActiveSites(ctx, profile.ID)
+	if err != nil {
+		return err
+	}
 	wanted := r.URL.Query().Get(siteParam)
 	var scope *int64
-	data.Sites = append(data.Sites, shell.SiteChoice{Title: loc.T("profile.all-sites"), Picked: wanted == ""})
+	data.Sites = append(data.Sites, shell.SiteChoice{Title: loc.T("profile.all-sites")})
 	for i := range sites.all {
 		one := &sites.all[i]
+		if !active[one.ID] {
+			continue
+		}
 		picked := one.Slug == wanted
 		if picked {
 			scope = &one.ID
 		}
 		data.Sites = append(data.Sites, shell.SiteChoice{Slug: one.Slug, Title: one.Title, Picked: picked})
 	}
+	data.Sites[0].Picked = scope == nil
 
 	zone := site.Zone(ctx)
 	today := time.Now().In(zone)

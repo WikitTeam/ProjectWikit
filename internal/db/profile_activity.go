@@ -81,6 +81,31 @@ func (d *DB) FirstActivity(ctx context.Context, userID int64) (time.Time, error)
 	return *at, nil
 }
 
+var qActiveSites = register("ActiveSites", `
+SELECT DISTINCT a.site_id FROM web_articlelogentry l JOIN web_article a ON a.id = l.article_id WHERE l.user_id = $1
+UNION
+SELECT DISTINCT a.site_id FROM pwikit_vote_event e JOIN web_article a ON a.id = e.article_id
+WHERE e.user_id = $1 AND e.new_rate IS NOT NULL
+UNION
+SELECT DISTINCT t.site_id FROM web_forumpost p JOIN web_forumthread t ON t.id = p.thread_id WHERE p.author_id = $1`)
+
+func (d *DB) ActiveSites(ctx context.Context, userID int64) (map[int64]bool, error) {
+	rows, err := d.pool.Query(ctx, qActiveSites, userID)
+	if err != nil {
+		return nil, fmt.Errorf("read active sites of %d: %w", userID, err)
+	}
+	defer rows.Close()
+	out := map[int64]bool{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out[id] = true
+	}
+	return out, rows.Err()
+}
+
 type AuthorStats struct {
 	Pages int
 	Score float64
