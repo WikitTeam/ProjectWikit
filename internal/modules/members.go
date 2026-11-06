@@ -59,6 +59,20 @@ func renderMembers(env module.Env, params map[string]string, body string) (strin
 		rows = append(rows, filled)
 	}
 
+	counts := func(source string) string {
+		return page.ApplyTemplate(source, func(name string) (string, bool) {
+			if strings.ToLower(strings.TrimSpace(name)) == "total" {
+				return strconv.Itoa(total), true
+			}
+			return "", false
+		})
+	}
+	if prepend := params["prependline"]; prepend != "" {
+		rows = append([]string{counts(prepend)}, rows...)
+	}
+	if appendix := params["appendline"]; appendix != "" {
+		rows = append(rows, counts(appendix))
+	}
 	html, err := env.Render(strings.Join(rows, "\n"), pc)
 	if err != nil {
 		return "", err

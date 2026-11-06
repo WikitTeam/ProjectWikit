@@ -205,3 +205,15 @@ func TestMembersPagerLinksToTheHostPage(t *testing.T) {
 		t.Errorf("renderMembers() = %q, want it to contain %q", got, want)
 	}
 }
+
+func TestMembersHeaderAndFooter(t *testing.T) {
+	data := &memberData{all: someMembers(2)}
+	params := map[string]string{"prependline": "||~ Who||", "appendline": "%%total%% in all"}
+	got, err := renderMembers(membersEnv(t, data), params, "||%%name%%||")
+	if err != nil {
+		t.Fatalf("renderMembers() err = %v, want nil", err)
+	}
+	if want := "||~ Who||\n||user1||\n||user2||\n2 in all"; !strings.Contains(got, want) {
+		t.Errorf("renderMembers() = %q, want it to contain %q", got, want)
+	}
+}
