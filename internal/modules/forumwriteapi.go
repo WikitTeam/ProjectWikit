@@ -114,7 +114,11 @@ func forumThreadSubmit(env module.Env, params map[string]string) (wikijson.Objec
 	if err != nil {
 		return nil, err
 	}
-	if !perms.Resolve(subject, nil).Has(perms.CreateForumThreads) {
+	granted, err := categoryGrants(env, subject, category)
+	if err != nil {
+		return nil, err
+	}
+	if !granted.Has(perms.CreateForumThreads) {
 		return nil, &module.Error{Message: env.Text("module-forumthread-cannot-create")}
 	}
 

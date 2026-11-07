@@ -116,32 +116,29 @@ func forumStartItems(env module.Env, rows []db.ForumSection) ([]forumStartSectio
 	if err != nil {
 		return nil, err
 	}
-	// A forum category carries no overrides of its own, so the answer cannot
-	// differ between them.
-	viewCategories := perms.Resolve(subject, nil).Has(perms.ViewForumCategories)
+	sitewide := perms.Resolve(subject, nil)
 
 	var out []forumStartSection
 	for i := range rows {
-		object := env.Data.ForumSectionObject(&rows[i])
-		if !perms.Resolve(subject, object).Has(perms.ViewForumSections) {
+		granted := perms.Resolve(subject, env.Data.ForumSectionObject(&rows[i]))
+		if !granted.Has(perms.ViewForumSections) {
 			continue
 		}
+		grants := map[int64]perms.Set{rows[i].ID: granted}
 		item := forumStartSection{
 			name:        rows[i].Name,
 			description: rows[i].Description,
 			url:         forumSectionURL(rows[i].ID, rows[i].Name),
 		}
-		if viewCategories {
-			for _, category := range categories {
-				if category.SectionID != rows[i].ID {
-					continue
-				}
-				row, err := forumStartRow(env, category)
-				if err != nil {
-					return nil, err
-				}
-				item.categories = append(item.categories, row)
+		for _, category := range categories {
+			if category.SectionID != rows[i].ID || !categoryAllows(grants, sitewide, &category, perms.ViewForumCategories) {
+				continue
 			}
+			row, err := forumStartRow(env, category)
+			if err != nil {
+				return nil, err
+			}
+			item.categories = append(item.categories, row)
 		}
 		if len(item.categories) != 0 {
 			out = append(out, item)

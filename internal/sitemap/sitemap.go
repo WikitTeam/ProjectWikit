@@ -142,16 +142,11 @@ func (h *Handler) entries(ctx context.Context, current *db.Site, base string) ([
 	return out, nil
 }
 
-// A hidden section is still readable, but listing it would undo the hiding.
 func (h *Handler) readableSections(ctx context.Context, current *db.Site) ([]int64, error) {
 	resolver := repo.NewPermsOn(ctx, h.db, current)
 	subject, err := resolver.Subject(nil, time.Now())
 	if err != nil {
 		return nil, err
-	}
-	sitewide := perms.Resolve(subject, nil)
-	if !sitewide.Has(perms.ViewForumCategories) || !sitewide.Has(perms.ViewForumThreads) {
-		return nil, nil
 	}
 	sections, err := h.db.ForumSections(ctx, current.ID)
 	if err != nil {
@@ -160,7 +155,8 @@ func (h *Handler) readableSections(ctx context.Context, current *db.Site) ([]int
 	var out []int64
 	for i := range sections {
 		s := &sections[i]
-		if s.IsHidden || !perms.Resolve(subject, resolver.ForumSection(s)).Has(perms.ViewForumSections) {
+		granted := perms.Resolve(subject, resolver.ForumSection(s))
+		if !s.IsIndexed || !granted.Has(perms.ViewForumThreads) {
 			continue
 		}
 		out = append(out, s.ID)

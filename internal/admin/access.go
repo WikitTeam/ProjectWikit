@@ -248,6 +248,15 @@ func (h *Handler) threadTarget(ctx context.Context, thread *db.ForumThread) (*ac
 			t.article = article
 		}
 	}
+	if thread.ArticleID == nil && thread.CategoryID != nil {
+		category, err := h.deps.DB.ForumCategory(ctx, siteID(ctx), *thread.CategoryID)
+		if err != nil {
+			return nil, ignoreMissing(err)
+		}
+		if t.section, err = h.deps.DB.ForumSection(ctx, siteID(ctx), category.SectionID); err != nil {
+			return nil, ignoreMissing(err)
+		}
+	}
 	return t, nil
 }
 
@@ -329,6 +338,15 @@ func (x *explainer) categoryName() string {
 	return escape.HTML(x.target.category)
 }
 
+// An override sits on the page category or on the forum section the target
+// falls under, and the wording names whichever one it is.
+func (x *explainer) overrideScope() (suffix, name string) {
+	if x.target != nil && x.target.category == "" && x.target.section != nil {
+		return "-section", escape.HTML(x.target.section.Name)
+	}
+	return "", x.categoryName()
+}
+
 func (x *explainer) perm(name string) string { return escape.HTML(x.loc.T("admin.perm-" + name)) }
 
 func (x *explainer) until(at *time.Time, plain, timed string, args ...any) string {
@@ -355,15 +373,15 @@ func (x *explainer) cause(c perms.Cause) string {
 	case perms.ReasonRoleDeny:
 		return t("admin.why-role-deny", "role", x.roleName(c.RoleID))
 	case perms.ReasonOverrideAllow:
-		return t("admin.why-override-allow", "role", x.roleName(c.RoleID), "category", x.categoryName())
+		suffix, scope := x.overrideScope()
+		return t("admin.why-override-allow"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)
 	case perms.ReasonOverrideDeny:
-		return t("admin.why-override-deny", "role", x.roleName(c.RoleID), "category", x.categoryName())
+		suffix, scope := x.overrideScope()
+		return t("admin.why-override-deny"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)
 	case perms.ReasonPageLocked:
 		return t("admin.why-page-locked", "perm", x.perm(perms.LockArticles))
 	case perms.ReasonPageAuthor:
 		return t("admin.why-page-author")
-	case perms.ReasonHiddenSection:
-		return t("admin.why-hidden-section", "perm", x.perm(perms.ViewHiddenForumSections))
 	case perms.ReasonThreadAuthor:
 		return t("admin.why-thread-author")
 	case perms.ReasonThreadLocked:
@@ -397,8 +415,11 @@ func (x *explainer) fix(c perms.Cause, name string) fix {
 	case perms.ReasonRoleDeny:
 		return fix{Text: t("admin.fix-role-deny", "role", x.roleName(c.RoleID)), Href: x.roleHref(c.RoleID), Link: t("admin.fix-open-role")}
 	case perms.ReasonOverrideDeny:
-		f := fix{Text: t("admin.fix-override-deny", "role", x.roleName(c.RoleID), "category", x.categoryName())}
-		if x.target != nil {
+		suffix, scope := x.overrideScope()
+		f := fix{Text: t("admin.fix-override-deny"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)}
+		if suffix != "" {
+			f.Href, f.Link = Prefix+sectionSlug+"/"+strconv.FormatInt(x.target.section.ID, 10), t("admin.fix-open-section")
+		} else if x.target != nil {
 			if id, ok := x.cats[x.target.category]; ok {
 				f.Href, f.Link = Prefix+pageCategorySlug+"/"+strconv.FormatInt(id, 10), t("admin.fix-open-category")
 			}
@@ -406,8 +427,6 @@ func (x *explainer) fix(c perms.Cause, name string) fix {
 		return f
 	case perms.ReasonPageLocked:
 		return fix{Text: t("admin.fix-page-locked", "perm", x.perm(perms.LockArticles))}
-	case perms.ReasonHiddenSection:
-		return fix{Text: t("admin.fix-hidden-section", "perm", x.perm(perms.ViewHiddenForumSections)), Href: Prefix + sectionSlug + "/", Link: t("admin.forum-sections")}
 	case perms.ReasonThreadLocked:
 		return fix{Text: t("admin.fix-thread-locked", "perm", x.perm(perms.LockForumThreads))}
 	case perms.ReasonUnverified:
@@ -751,6 +770,10 @@ func (x *explainer) whatFacts(object *perms.Object) []fact {
 		}
 		out = append(out, fact{Label: t("admin.access-category"), Value: t("admin.access-overrides", "category", value, "n", overrides)})
 	}
+	if target.category == "" && target.section != nil {
+		value := `<a href="` + escape.HTML(Prefix+sectionSlug+"/"+strconv.FormatInt(target.section.ID, 10)) + `">` + escape.HTML(target.section.Name) + `</a>`
+		out = append(out, fact{Label: t("admin.access-section"), Value: t("admin.access-overrides", "category", value, "n", len(target.section.Overrides))})
+	}
 	switch target.kind {
 	case "page":
 		out = append(out, fact{Label: t("admin.access-locked"), Value: yesNo(x.loc, target.article.Locked), Tone: map[bool]string{true: "deny"}[target.article.Locked]})
@@ -761,8 +784,6 @@ func (x *explainer) whatFacts(object *perms.Object) []fact {
 		if !wikidot.NameAllowed(target.name) {
 			out = append(out, fact{Label: t("admin.access-note"), Value: t("admin.access-bad-name"), Tone: "deny"})
 		}
-	case "section":
-		out = append(out, fact{Label: t("admin.access-hidden"), Value: yesNo(x.loc, target.section.IsHiddenForUsers)})
 	case "thread", "post":
 		out = append(out, fact{Label: t("admin.access-locked"), Value: yesNo(x.loc, target.thread.IsLocked), Tone: map[bool]string{true: "deny"}[target.thread.IsLocked]})
 		if x.user != nil && object != nil {

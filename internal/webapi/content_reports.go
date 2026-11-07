@@ -162,7 +162,11 @@ func reportRecord(name, body string, at time.Time) wikijson.Object {
 // A post in a page's discussion follows the page, the rest follow the forum.
 func postVisible(r *http.Request, perm *repo.Perms, subject perms.Subject, user *db.User, thread *db.ForumThread, d *db.DB) (bool, error) {
 	if thread.ArticleID == nil {
-		granted := perms.Resolve(subject, nil)
+		object, err := perm.ForumThread(thread, user)
+		if err != nil {
+			return false, err
+		}
+		granted := perms.Resolve(subject, object)
 		return granted.Has(perms.ViewForumThreads) && granted.Has(perms.ViewForumPosts), nil
 	}
 	article, err := d.ArticleByID(r.Context(), siteID(r.Context()), *thread.ArticleID)

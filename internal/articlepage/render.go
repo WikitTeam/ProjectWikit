@@ -44,6 +44,7 @@ type body struct {
 	updatedAt time.Time
 	styles    []string
 	redirect  string
+	noIndex   bool
 }
 
 func (h *Handler) render(req *request) (*result, error) {
@@ -165,6 +166,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 		styles:    pc.ComputedStyles,
 		redirect:  pc.RedirectTo,
 		image:     pc.OGImage,
+		noIndex:   pc.NoIndex,
 	}
 	if pc.OGDescription != "" {
 		out.excerpt = pc.OGDescription
@@ -516,7 +518,7 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 		OGDescription:     out.excerpt,
 		OGImage:           out.image,
 		OGURL:             canonical,
-		NoIndex:           !indexed,
+		NoIndex:           !indexed || out.noIndex,
 		GoogleTagID:       h.deps.GoogleTagID,
 		ThemeURL:          theme,
 		ComputedStyles:    out.styles,

@@ -433,17 +433,30 @@ func (h *Handler) posts(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		if err != nil {
 			return shell.ProfileFeed{}, err
 		}
-		if !perms.Resolve(subject, nil).Has(perms.ViewForumCategories) {
-			continue
+		resolver := repo.NewPermsOn(ctx, h.deps.DB, one)
+		sections, err := h.deps.DB.ForumSections(ctx, one.ID)
+		if err != nil {
+			return shell.ProfileFeed{}, err
 		}
+		readable := map[int64]bool{}
+		for i := range sections {
+			granted := perms.Resolve(subject, resolver.ForumSection(&sections[i]))
+			readable[sections[i].ID] = granted.Has(perms.ViewForumThreads) && granted.Has(perms.ViewForumPosts)
+		}
+		sitewide := perms.Resolve(subject, nil).Has(perms.ViewForumCategories)
 		categories, err := h.deps.DB.ForumCategories(ctx, one.ID)
 		if err != nil {
 			return shell.ProfileFeed{}, err
 		}
 		comments := false
 		for _, c := range categories {
-			ids = append(ids, c.ID)
-			comments = comments || c.IsForComments
+			if c.IsForComments {
+				comments = comments || sitewide
+				continue
+			}
+			if readable[c.SectionID] {
+				ids = append(ids, c.ID)
+			}
 		}
 		if comments {
 			commentSites = append(commentSites, one.ID)

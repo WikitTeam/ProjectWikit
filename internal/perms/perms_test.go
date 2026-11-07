@@ -25,12 +25,11 @@ type overrideSpec struct {
 }
 
 type objectSpec struct {
-	Kind           string         `json:"kind"`
-	Overrides      []overrideSpec `json:"overrides"`
-	Locked         bool           `json:"locked"`
-	Author         bool           `json:"author"`
-	HiddenForUsers bool           `json:"hidden_for_users"`
-	ThreadAuthor   bool           `json:"thread_author"`
+	Kind         string         `json:"kind"`
+	Overrides    []overrideSpec `json:"overrides"`
+	Locked       bool           `json:"locked"`
+	Author       bool           `json:"author"`
+	ThreadAuthor bool           `json:"thread_author"`
 }
 
 type userSpec struct {
@@ -53,7 +52,7 @@ var queried = []string{
 	ViewForumPosts, CreateForumPosts, EditForumPosts, DeleteForumPosts,
 	ViewForumThreads, CreateForumThreads, EditForumThreads, PinForumThreads,
 	LockForumThreads, MoveForumThreads, ViewForumSections,
-	ViewHiddenForumSections, ViewForumCategories,
+	ViewForumCategories,
 }
 
 var baseRoles = []roleSpec{
@@ -176,26 +175,24 @@ var scenarios = []scenario{
 		Object: &objectSpec{Kind: "forum_section"},
 	},
 	{
-		Name:   "a section hidden for users takes browsing away",
-		Roles:  baseRoles,
-		User:   userSpec{Kind: "normal"},
-		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
+		Name:  "a section override takes browsing away",
+		Roles: baseRoles,
+		User:  userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "forum_section", Overrides: []overrideSpec{
+			{Role: "everyone", Restrictions: []string{ViewForumSections, ViewForumThreads}},
+		}},
 	},
 	{
-		Name:   "a hidden section keeps browsing for whoever may see hidden ones",
-		Roles:  withRoles(roleSpec{Slug: "moderator", Permissions: []string{ViewHiddenForumSections}}),
-		User:   userSpec{Kind: "normal", Roles: []string{"moderator"}},
-		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
-	},
-	{
-		Name:   "a hidden section takes nothing from someone who could not browse anyway",
-		Roles:  []roleSpec{{Slug: "everyone"}, {Slug: "registered"}},
-		User:   userSpec{Kind: "normal"},
-		Object: &objectSpec{Kind: "forum_section", HiddenForUsers: true},
+		Name:  "a section override hands a role what it lacks site-wide",
+		Roles: withRoles(roleSpec{Slug: "moderator"}),
+		User:  userSpec{Kind: "normal", Roles: []string{"moderator"}},
+		Object: &objectSpec{Kind: "forum_section", Overrides: []overrideSpec{
+			{Role: "moderator", Permissions: []string{CreateForumThreads}},
+		}},
 	},
 	{
 		Name:   "a forum category answers as if there were no object",
-		Roles:  withRoles(roleSpec{Slug: "moderator", Permissions: []string{ViewHiddenForumSections}}),
+		Roles:  withRoles(roleSpec{Slug: "moderator", Permissions: []string{CreateForumThreads}}),
 		User:   userSpec{Kind: "normal", Roles: []string{"moderator"}},
 		Object: &objectSpec{Kind: "forum_category"},
 	},
@@ -325,10 +322,9 @@ func (s scenario) object() *Object {
 		return nil
 	}
 	o := &Object{
-		Kind:           objectKinds[s.Object.Kind],
-		Locked:         s.Object.Kind != "category" && s.Object.Locked,
-		Author:         s.Object.Kind != "category" && s.Object.Author,
-		HiddenForUsers: s.Object.HiddenForUsers,
+		Kind:   objectKinds[s.Object.Kind],
+		Locked: s.Object.Kind != "category" && s.Object.Locked,
+		Author: s.Object.Kind != "category" && s.Object.Author,
 	}
 	if o.Kind == KindForumPost {
 		o.Thread = &Object{Kind: KindForumThread, Locked: s.Object.Locked, Author: s.Object.ThreadAuthor}

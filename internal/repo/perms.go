@@ -186,16 +186,25 @@ func (p *Perms) Category(name string) (*perms.Object, error) {
 	return &perms.Object{Overrides: overrides}, nil
 }
 
-// The forum models sit outside the per-role override table, so nothing but the
-// hidden flag reaches the answer.
 func (p *Perms) ForumSection(s *db.ForumSection) *perms.Object {
-	return &perms.Object{Kind: perms.KindForumSection, HiddenForUsers: s.IsHiddenForUsers}
+	return &perms.Object{Kind: perms.KindForumSection, Overrides: s.Overrides}
 }
 
-// A thread reads its role overrides through the article it comments on, so a
-// thread of its own carries none.
+// A comment thread reads its overrides through the category of the page it is
+// under, and a thread of its own through its forum section.
 func (p *Perms) ForumThread(t *db.ForumThread, u *db.User) (*perms.Object, error) {
 	object := &perms.Object{Kind: perms.KindForumThread, Locked: t.IsLocked}
+	if t.ArticleID == nil && t.CategoryID != nil {
+		category, err := p.db.ForumCategory(p.ctx, p.siteID(), *t.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		found, err := p.db.ForumSectionOverrides(p.ctx, p.siteID(), []int64{category.SectionID})
+		if err != nil {
+			return nil, err
+		}
+		object.Overrides = found[category.SectionID]
+	}
 	if t.ArticleID != nil {
 		article, err := p.db.ArticleByID(p.ctx, p.siteID(), *t.ArticleID)
 		if err != nil {
@@ -215,6 +224,9 @@ func (p *Perms) ForumThread(t *db.ForumThread, u *db.User) (*perms.Object, error
 
 func (p *Perms) ForumPost(post *db.ForumThreadPost, thread *perms.Object, u *db.User) *perms.Object {
 	object := &perms.Object{Kind: perms.KindForumPost, Thread: thread}
+	if thread != nil {
+		object.Overrides = thread.Overrides
+	}
 	if u != nil && post.AuthorID != nil {
 		object.Author = *post.AuthorID == u.ID
 	}

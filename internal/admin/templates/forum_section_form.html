@@ -9,9 +9,55 @@
       {{template "row_area" dict "n" "description" "k" "admin.f-description" "v" .Section.Description}}
       {{template "row_number" dict "n" "order" "k" "admin.f-order" "v" .Section.Order}}
       {{template "row_check" dict "n" "is_hidden" "k" "admin.f-hidden" "l" "admin.l-section-hidden" "v" .Section.IsHidden}}
-      {{template "row_check" dict "n" "is_hidden_for_users" "k" "admin.f-staff-only" "l" "admin.l-section-staff-only" "v" .Section.IsHiddenForUser}}
-      {{template "save_row" dict "back" .Back "del" .Section.ID}}
+      {{template "row_check" dict "n" "is_indexed" "k" "admin.f-indexed" "l" "admin.l-indexed-forum" "v" .Section.IsIndexed}}
     </div>
   </div>
+
+  {{if .MayGrant}}
+  <div class="widget-box" data-tabs>
+    <div class="widget-title"><i class="fas fa-key"></i><h5>{{t "admin.permissions"}}</h5></div>
+    <div class="widget-content">
+      <p class="hint">{{t "admin.h-section-permissions"}}</p>
+      <ul class="nav nav-pills role-tabs">
+        {{range $i, $c := .Cells}}<li{{if eq $i 0}} class="active"{{end}}><a href="#role-{{.Role.ID}}" data-tab="role-{{.Role.ID}}"{{if .Present}} class="overridden"{{end}}>{{esc .Role.Label}}</a></li>{{end}}
+      </ul>
+      {{range $i, $c := .Cells}}
+      {{$rid := .Role.ID}}
+      <div id="role-{{$rid}}" data-tab-panel="role-{{$rid}}"{{if $i}} hidden{{end}}>
+        <div class="control-group">
+          <span class="control-label">{{t "admin.f-override"}}</span>
+          <div class="controls">
+            <label class="checkbox"><input type="checkbox" name="override_{{$rid}}" value="1" data-reveals="matrix-{{$rid}}" data-mark="role-{{$rid}}"{{if .Present}} checked{{end}}> {{t "admin.l-override"}}</label>
+          </div>
+        </div>
+        <table id="matrix-{{$rid}}" class="table table-condensed perm-matrix"{{if not .Present}} hidden{{end}}>
+          <thead>
+            <tr>
+              <th>{{t "admin.f-permission"}}</th>
+              <th class="opt">{{t "admin.perm-allow"}}</th>
+              <th class="opt">{{t "admin.perm-inherit"}}</th>
+              <th class="opt">{{t "admin.perm-deny"}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Grants}}
+            {{range .Rows}}
+            <tr>
+              <td>{{enum "admin.perm-" .Name}}<span class="perm-code">{{esc .Name}}</span></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
+            </tr>
+            {{end}}
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+
+  {{template "save_row" dict "back" .Back "del" .Section.ID}}
 </form>
 {{end}}

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -42,6 +43,14 @@ func forumSearchAPI(env module.Env, params map[string]string) (wikijson.Object, 
 		}
 		filter.CategoryID = &id
 	}
+	subject, err := env.Data.Subject(env.User)
+	if err != nil {
+		return nil, err
+	}
+	if filter.Sections, err = searchableSections(env, subject); err != nil {
+		return nil, err
+	}
+
 	if len(filter.Words) == 0 && filter.AuthorID == nil && filter.From == nil && filter.To == nil &&
 		filter.CategoryID == nil && !filter.Comments {
 		return nothing, nil
@@ -59,15 +68,9 @@ func forumSearchAPI(env module.Env, params map[string]string) (wikijson.Object, 
 	more := len(hits) > searchLimit
 	hits = hits[:min(len(hits), searchLimit)]
 
-	subject, err := env.Data.Subject(env.User)
-	if err != nil {
-		return nil, err
-	}
-	site := perms.Resolve(subject, nil)
-	forum := site.Has(perms.ViewForumThreads) && site.Has(perms.ViewForumPosts)
 	out := wikijson.Array{}
 	for _, hit := range hits {
-		visible, err := forumHitVisible(env, subject, forum, hit)
+		visible, err := forumHitVisible(env, subject, hit)
 		if err != nil {
 			return nil, err
 		}
@@ -94,11 +97,27 @@ func forumSearchAPI(env module.Env, params map[string]string) (wikijson.Object, 
 	return wikijson.Object{{Key: "results", Value: out}, {Key: "hasMore", Value: more}}, nil
 }
 
+func searchableSections(env module.Env, subject perms.Subject) ([]int64, error) {
+	sections, err := env.Data.ForumSections()
+	if err != nil {
+		return nil, err
+	}
+	out := []int64{}
+	for i := range sections {
+		granted := perms.Resolve(subject, env.Data.ForumSectionObject(&sections[i]))
+		if sections[i].IsIndexed && granted.Has(perms.ViewForumThreads) && granted.Has(perms.ViewForumPosts) {
+			out = append(out, sections[i].ID)
+		}
+	}
+	return out, nil
+}
+
 // A page's discussion follows the page, so a reader who may not see the page
-// does not see what was said about it either.
-func forumHitVisible(env module.Env, subject perms.Subject, forum bool, hit db.ForumSearchHit) (bool, error) {
+// does not see what was said about it either. A thread of its own was already
+// kept to the sections the reader may search.
+func forumHitVisible(env module.Env, subject perms.Subject, hit db.ForumSearchHit) (bool, error) {
 	if hit.ArticleID == nil {
-		return forum, nil
+		return true, nil
 	}
 	article, err := env.Data.ArticleByID(*hit.ArticleID)
 	if err != nil || article == nil {
@@ -120,17 +139,17 @@ func forumPlacesAPI(env module.Env, _ map[string]string) (wikijson.Object, error
 	if err != nil {
 		return nil, err
 	}
-	granted := perms.Resolve(subject, nil)
-	if !granted.Has(perms.ViewForumThreads) {
-		return wikijson.Object{{Key: "places", Value: out}}, nil
-	}
 	sections, err := env.Data.ForumSections()
+	if err != nil {
+		return nil, err
+	}
+	searchable, err := searchableSections(env, subject)
 	if err != nil {
 		return nil, err
 	}
 	names := map[int64]string{}
 	for _, s := range sections {
-		if !s.IsHidden {
+		if slices.Contains(searchable, s.ID) {
 			names[s.ID] = s.Name
 		}
 	}

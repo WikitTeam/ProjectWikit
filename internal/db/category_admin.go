@@ -200,16 +200,23 @@ WHERE c.app_label = 'web' AND c.model = 'roles' AND p.codename = ANY($2)`)
 )
 
 func (d *DB) SaveCategoryOverrides(ctx context.Context, categoryID int64, list []CategoryOverride) error {
+	return d.saveOverrides(ctx, overrideLinks{ids: qCategoryOverrideIDs, drop: qDropCategoryLinks, link: qLinkCategoryOverride},
+		"category", categoryID, list)
+}
+
+type overrideLinks struct{ ids, drop, link string }
+
+func (d *DB) saveOverrides(ctx context.Context, links overrideLinks, what string, ownerID int64, list []CategoryOverride) error {
 	tx, err := d.pool.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("begin saving the overrides of category %d: %w", categoryID, err)
+		return fmt.Errorf("begin saving the overrides of %s %d: %w", what, ownerID, err)
 	}
 	defer tx.Rollback(context.WithoutCancel(ctx))
 
 	var existing []int64
-	rows, err := tx.Query(ctx, qCategoryOverrideIDs, categoryID)
+	rows, err := tx.Query(ctx, links.ids, ownerID)
 	if err != nil {
-		return fmt.Errorf("read the overrides of category %d: %w", categoryID, err)
+		return fmt.Errorf("read the overrides of %s %d: %w", what, ownerID, err)
 	}
 	for rows.Next() {
 		var id int64
@@ -224,13 +231,13 @@ func (d *DB) SaveCategoryOverrides(ctx context.Context, categoryID int64, list [
 		return err
 	}
 
-	if _, err := tx.Exec(ctx, qDropCategoryLinks, categoryID); err != nil {
+	if _, err := tx.Exec(ctx, links.drop, ownerID); err != nil {
 		return err
 	}
 	if len(existing) > 0 {
 		for _, statement := range []string{qDropOverrideGrants, qDropOverrideDenies, qDropOverrides} {
 			if _, err := tx.Exec(ctx, statement, existing); err != nil {
-				return fmt.Errorf("clear the overrides of category %d: %w", categoryID, err)
+				return fmt.Errorf("clear the overrides of %s %d: %w", what, ownerID, err)
 			}
 		}
 	}
@@ -240,7 +247,7 @@ func (d *DB) SaveCategoryOverrides(ctx context.Context, categoryID int64, list [
 		if err := tx.QueryRow(ctx, qInsertOverride, one.RoleID).Scan(&id); err != nil {
 			return fmt.Errorf("create an override for role %d: %w", one.RoleID, err)
 		}
-		if _, err := tx.Exec(ctx, qLinkCategoryOverride, categoryID, id); err != nil {
+		if _, err := tx.Exec(ctx, links.link, ownerID, id); err != nil {
 			return err
 		}
 		if len(one.Allow) > 0 {

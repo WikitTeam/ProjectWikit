@@ -63,8 +63,11 @@ func renderForumCategory(env module.Env, _ map[string]string, _ string) (string,
 	if err != nil {
 		return "", err
 	}
-	sitewide := perms.Resolve(subject, nil)
-	if !sitewide.Has(perms.ViewForumCategories) {
+	granted, err := categoryGrants(env, subject, category)
+	if err != nil {
+		return "", err
+	}
+	if !granted.Has(perms.ViewForumCategories) {
 		return "", &module.Error{Message: env.Text("module-forumcategory-forbidden")}
 	}
 	setTitle(env, env.Text("module-forum-title-named", "name", category.Name))
@@ -72,7 +75,7 @@ func renderForumCategory(env module.Env, _ map[string]string, _ string) (string,
 	view := forumCategoryView{
 		category:  *category,
 		byStart:   path.Get("sort") == "start",
-		canCreate: sitewide.Has(perms.CreateForumThreads),
+		canCreate: granted.Has(perms.CreateForumThreads),
 	}
 	if view.counts, err = env.Data.ForumCategoryCounts(category.ID); err != nil {
 		return "", err

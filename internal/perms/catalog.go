@@ -33,7 +33,6 @@ var Catalog = []Group{
 		"lock_forum_threads",
 		"move_forum_threads",
 		"view_forum_sections",
-		"view_hidden_forum_sections",
 		"view_forum_categories",
 	}},
 	{Key: "social", Names: []string{

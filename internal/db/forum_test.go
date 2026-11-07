@@ -31,13 +31,13 @@ func TestForumSectionsComeBackInOrder(t *testing.T) {
 	}
 
 	want := []struct {
-		name           string
-		hidden         bool
-		hiddenForUsers bool
+		name    string
+		hidden  bool
+		indexed bool
 	}{
-		{"Probe Open", false, false},
-		{"Probe Hidden", true, false},
-		{"Probe Staff", false, true},
+		{"Probe Open", false, true},
+		{"Probe Hidden", true, true},
+		{"Probe Staff", true, false},
 	}
 	if len(sections) != len(want) {
 		t.Fatalf("len(ForumSections()) = %d, want %d", len(sections), len(want))
@@ -49,8 +49,8 @@ func TestForumSectionsComeBackInOrder(t *testing.T) {
 		if sections[i].IsHidden != w.hidden {
 			t.Errorf("ForumSections()[%d].IsHidden = %t, want %t", i, sections[i].IsHidden, w.hidden)
 		}
-		if sections[i].IsHiddenForUsers != w.hiddenForUsers {
-			t.Errorf("ForumSections()[%d].IsHiddenForUsers = %t, want %t", i, sections[i].IsHiddenForUsers, w.hiddenForUsers)
+		if sections[i].IsIndexed != w.indexed {
+			t.Errorf("ForumSections()[%d].IsIndexed = %t, want %t", i, sections[i].IsIndexed, w.indexed)
 		}
 	}
 }

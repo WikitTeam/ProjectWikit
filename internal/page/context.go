@@ -25,6 +25,7 @@ type Context struct {
 	Title      string
 	Status     int
 	RedirectTo string
+	NoIndex    bool
 
 	Depth int
 
@@ -58,6 +59,7 @@ func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams PathP
 	clone.Depth = c.Depth + 1
 	clone.Status = c.Status
 	clone.RedirectTo = c.RedirectTo
+	clone.NoIndex = c.NoIndex
 	clone.Title = c.Title
 	clone.CSRF = c.CSRF
 	clone.OnlyModules = c.OnlyModules
@@ -70,6 +72,7 @@ func (c *Context) CloneWith(article, sourceArticle *db.Article, pathParams PathP
 func (c *Context) Merge(other *Context) {
 	c.Status = other.Status
 	c.RedirectTo = other.RedirectTo
+	c.NoIndex = c.NoIndex || other.NoIndex
 	c.ComputedStyles = append(c.ComputedStyles, other.ComputedStyles...)
 	c.Title = other.Title
 }

@@ -9,17 +9,19 @@ import (
 )
 
 type ForumSectionRow struct {
-	ID              int64
-	Name            string
-	Description     string
-	Order           int
-	IsHidden        bool
-	IsHiddenForUser bool
-	Categories      int
+	ID          int64
+	Name        string
+	Description string
+	Order       int
+	IsHidden    bool
+	IsIndexed   bool
+	Categories  int
+
+	Overrides []CategoryOverride
 }
 
 var qAdminForumSections = register("AdminForumSections", `
-SELECT s.id, s.name, s.description, s."order", s.is_hidden, s.is_hidden_for_users,
+SELECT s.id, s.name, s.description, s."order", s.is_hidden, s.is_indexed,
        (SELECT count(*) FROM web_forumcategory c WHERE c.section_id = s.id)
 FROM web_forumsection s WHERE s.site_id = $1 ORDER BY s."order", s.id`)
 
@@ -33,7 +35,7 @@ func (d *DB) AdminForumSections(ctx context.Context, siteID int64) ([]ForumSecti
 	var out []ForumSectionRow
 	for rows.Next() {
 		var s ForumSectionRow
-		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Order, &s.IsHidden, &s.IsHiddenForUser, &s.Categories); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.Order, &s.IsHidden, &s.IsIndexed, &s.Categories); err != nil {
 			return nil, err
 		}
 		out = append(out, s)
@@ -42,55 +44,93 @@ func (d *DB) AdminForumSections(ctx context.Context, siteID int64) ([]ForumSecti
 }
 
 var qAdminForumSection = register("AdminForumSection", `
-SELECT id, name, description, "order", is_hidden, is_hidden_for_users
+SELECT id, name, description, "order", is_hidden, is_indexed
 FROM web_forumsection WHERE id = $1 AND site_id = $2`)
 
 func (d *DB) AdminForumSection(ctx context.Context, siteID, id int64) (ForumSectionRow, error) {
 	var s ForumSectionRow
 	err := d.pool.QueryRow(ctx, qAdminForumSection, id, siteID).
-		Scan(&s.ID, &s.Name, &s.Description, &s.Order, &s.IsHidden, &s.IsHiddenForUser)
+		Scan(&s.ID, &s.Name, &s.Description, &s.Order, &s.IsHidden, &s.IsIndexed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ForumSectionRow{}, ErrNotFound
 	}
 	if err != nil {
 		return ForumSectionRow{}, fmt.Errorf("read forum section %d: %w", id, err)
 	}
-	return s, nil
+	s.Overrides, err = d.adminSectionOverrides(ctx, siteID, s.ID)
+	return s, err
 }
 
 var (
 	qInsertForumSection = register("InsertForumSection", `
-INSERT INTO web_forumsection (name, description, "order", is_hidden, is_hidden_for_users, site_id)
+INSERT INTO web_forumsection (name, description, "order", is_hidden, is_indexed, site_id)
 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`)
 
 	qUpdateForumSection = register("UpdateForumSection", `
-UPDATE web_forumsection SET name=$2, description=$3, "order"=$4, is_hidden=$5, is_hidden_for_users=$6
+UPDATE web_forumsection SET name=$2, description=$3, "order"=$4, is_hidden=$5, is_indexed=$6
 WHERE id=$1 AND site_id=$7`)
 
 	qDeleteForumSection = register("DeleteForumSection", `DELETE FROM web_forumsection WHERE id = $1 AND site_id = $2`)
 )
 
-func (d *DB) SaveForumSection(ctx context.Context, siteID int64, s ForumSectionRow) error {
+func (d *DB) SaveForumSection(ctx context.Context, siteID int64, s ForumSectionRow) (int64, error) {
 	if s.ID == 0 {
-		var id int64
-		err := d.pool.QueryRow(ctx, qInsertForumSection, s.Name, s.Description, s.Order, s.IsHidden, s.IsHiddenForUser, siteID).Scan(&id)
-		if err != nil {
-			return fmt.Errorf("create forum section %q: %w", s.Name, err)
+		if err := d.pool.QueryRow(ctx, qInsertForumSection, s.Name, s.Description, s.Order, s.IsHidden, s.IsIndexed, siteID).Scan(&s.ID); err != nil {
+			return 0, fmt.Errorf("create forum section %q: %w", s.Name, err)
 		}
-		return nil
+		return s.ID, nil
 	}
-	_, err := d.pool.Exec(ctx, qUpdateForumSection, s.ID, s.Name, s.Description, s.Order, s.IsHidden, s.IsHiddenForUser, siteID)
+	tag, err := d.pool.Exec(ctx, qUpdateForumSection, s.ID, s.Name, s.Description, s.Order, s.IsHidden, s.IsIndexed, siteID)
 	if err != nil {
-		return fmt.Errorf("update forum section %d: %w", s.ID, err)
+		return 0, fmt.Errorf("update forum section %d: %w", s.ID, err)
 	}
-	return nil
+	if tag.RowsAffected() == 0 {
+		return 0, ErrNotFound
+	}
+	return s.ID, nil
 }
 
+// The overrides go in the same step as the section, so a section that cannot
+// be deleted because categories remain keeps its permissions.
 func (d *DB) DeleteForumSection(ctx context.Context, siteID, id int64) error {
-	if _, err := d.pool.Exec(ctx, qDeleteForumSection, id, siteID); err != nil {
+	tx, err := d.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin deleting forum section %d: %w", id, err)
+	}
+	defer tx.Rollback(context.WithoutCancel(ctx))
+
+	var overrides []int64
+	rows, err := tx.Query(ctx, qSectionOverrideIDs, id)
+	if err != nil {
+		return fmt.Errorf("read the overrides of forum section %d: %w", id, err)
+	}
+	for rows.Next() {
+		var one int64
+		if err := rows.Scan(&one); err != nil {
+			rows.Close()
+			return err
+		}
+		overrides = append(overrides, one)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	tag, err := tx.Exec(ctx, qDeleteForumSection, id, siteID)
+	if err != nil {
 		return fmt.Errorf("delete forum section %d: %w", id, err)
 	}
-	return nil
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	if len(overrides) > 0 {
+		for _, statement := range []string{qDropOverrideGrants, qDropOverrideDenies, qDropOverrides} {
+			if _, err := tx.Exec(ctx, statement, overrides); err != nil {
+				return fmt.Errorf("clear the overrides of forum section %d: %w", id, err)
+			}
+		}
+	}
+	return tx.Commit(ctx)
 }
 
 type ForumCategoryRow struct {

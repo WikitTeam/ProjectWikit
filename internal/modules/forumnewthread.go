@@ -33,7 +33,11 @@ func renderForumNewThread(env module.Env, _ map[string]string, _ string) (string
 	if err != nil {
 		return "", err
 	}
-	if !perms.Resolve(subject, nil).Has(perms.CreateForumThreads) {
+	granted, err := categoryGrants(env, subject, category)
+	if err != nil {
+		return "", err
+	}
+	if !granted.Has(perms.CreateForumThreads) {
 		return "", &module.Error{Message: env.Text("module-forumnewthread-forbidden")}
 	}
 

@@ -33,11 +33,19 @@ func (d *forumData) Subject(*db.User) (perms.Subject, error) {
 	}
 	return perms.Subject{
 		Anonymous: true,
-		Roles:     []perms.Role{{Permissions: []string{perms.ViewForumCategories}}},
+		Roles:     []perms.Role{{Permissions: []string{perms.ViewForumCategories, perms.ViewForumThreads}}},
 	}, nil
 }
 
 func (d *forumData) ForumCategories() ([]db.ForumCategory, error) { return d.categories, nil }
+
+func (d *forumData) ForumSections() ([]db.ForumSection, error) {
+	return []db.ForumSection{{IsIndexed: true}}, nil
+}
+
+func (d *forumData) ForumSectionObject(s *db.ForumSection) *perms.Object {
+	return &perms.Object{Kind: perms.KindForumSection, Overrides: s.Overrides}
+}
 
 func (d *forumData) ForumThreadsInCategories(ids []int64, offset, limit int) ([]db.ForumThread, error) {
 	d.askedIDs, d.askedOffset, d.askedLimit = ids, offset, limit

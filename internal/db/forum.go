@@ -7,14 +7,17 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 )
 
 type ForumSection struct {
-	ID               int64
-	Name             string
-	Description      string
-	IsHidden         bool
-	IsHiddenForUsers bool
+	ID          int64
+	Name        string
+	Description string
+	IsHidden    bool
+	IsIndexed   bool
+	Overrides   []perms.Override
 }
 
 type ForumCategory struct {
@@ -42,7 +45,7 @@ type ForumCounts struct {
 	Posts   int
 }
 
-const forumSectionColumns = `id, name, description, is_hidden, is_hidden_for_users`
+const forumSectionColumns = `id, name, description, is_hidden, is_indexed`
 
 var qForumSections = register("ForumSections", `
 SELECT `+forumSectionColumns+`
@@ -60,12 +63,16 @@ func (d *DB) ForumSections(ctx context.Context, siteID int64) ([]ForumSection, e
 	var out []ForumSection
 	for rows.Next() {
 		var s ForumSection
-		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.IsHidden, &s.IsHiddenForUsers); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Description, &s.IsHidden, &s.IsIndexed); err != nil {
 			return nil, fmt.Errorf("scan forum section: %w", err)
 		}
 		out = append(out, s)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	return out, d.withSectionOverrides(ctx, siteID, out)
 }
 
 var qForumSection = register("ForumSection", `
@@ -76,14 +83,18 @@ WHERE id = $1 AND site_id = $2`)
 func (d *DB) ForumSection(ctx context.Context, siteID, id int64) (*ForumSection, error) {
 	var s ForumSection
 	err := d.pool.QueryRow(ctx, qForumSection, id, siteID).Scan(
-		&s.ID, &s.Name, &s.Description, &s.IsHidden, &s.IsHiddenForUsers)
+		&s.ID, &s.Name, &s.Description, &s.IsHidden, &s.IsIndexed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query forum section %d: %w", id, err)
 	}
-	return &s, nil
+	one := []ForumSection{s}
+	if err := d.withSectionOverrides(ctx, siteID, one); err != nil {
+		return nil, err
+	}
+	return &one[0], nil
 }
 
 var qForumCategories = register("ForumCategories", `

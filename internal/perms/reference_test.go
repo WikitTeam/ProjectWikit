@@ -74,9 +74,6 @@ func refOverride(allow, deny map[string]bool, overrides []Override, roleID int64
 func refObject(granted map[string]bool, o *Object, s Subject) {
 	switch o.Kind {
 	case KindForumSection:
-		if o.HiddenForUsers && granted[ViewForumSections] && !granted[ViewHiddenForumSections] {
-			delete(granted, ViewForumSections)
-		}
 		return
 	case KindForumThread:
 		refThread(granted, o, s)
@@ -175,10 +172,9 @@ func randomObject(r *rand.Rand, roles int) *Object {
 		return nil
 	}
 	o := &Object{
-		Kind:           Kind(r.Intn(4)),
-		Locked:         r.Intn(3) == 0,
-		Author:         r.Intn(3) == 0,
-		HiddenForUsers: r.Intn(2) == 0,
+		Kind:   Kind(r.Intn(4)),
+		Locked: r.Intn(3) == 0,
+		Author: r.Intn(3) == 0,
 	}
 	for i := 0; i < r.Intn(4); i++ {
 		o.Overrides = append(o.Overrides, Override{RoleID: int64(1 + r.Intn(roles+1)), Permissions: randomNames(r), Restrictions: sparseNames(r)})

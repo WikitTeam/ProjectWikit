@@ -24,7 +24,6 @@
     "lock_forum_threads",
     "move_forum_threads",
     "view_forum_sections",
-    "view_hidden_forum_sections",
     "view_forum_categories"
   ],
   "scenarios": [
@@ -115,7 +114,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -166,7 +164,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -227,7 +224,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -285,7 +281,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -352,7 +347,6 @@
         ],
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -411,7 +405,6 @@
         ],
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -470,7 +463,6 @@
         ],
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -536,7 +528,6 @@
         ],
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -595,7 +586,6 @@
         ],
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -646,7 +636,6 @@
         "overrides": null,
         "locked": true,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -705,7 +694,6 @@
         "overrides": null,
         "locked": true,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -756,7 +744,6 @@
         "overrides": null,
         "locked": false,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -807,7 +794,6 @@
         "overrides": null,
         "locked": true,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -858,7 +844,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -907,7 +892,6 @@
         "overrides": null,
         "locked": true,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -956,7 +940,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1005,12 +988,11 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
     {
-      "name": "a section hidden for users takes browsing away",
+      "name": "a section override takes browsing away",
       "roles": [
         {
           "slug": "everyone",
@@ -1051,15 +1033,23 @@
       },
       "object": {
         "kind": "forum_section",
-        "overrides": null,
+        "overrides": [
+          {
+            "role": "everyone",
+            "permissions": null,
+            "restrictions": [
+              "view_forum_sections",
+              "view_forum_threads"
+            ]
+          }
+        ],
         "locked": false,
         "author": false,
-        "hidden_for_users": true,
         "thread_author": false
       }
     },
     {
-      "name": "a hidden section keeps browsing for whoever may see hidden ones",
+      "name": "a section override hands a role what it lacks site-wide",
       "roles": [
         {
           "slug": "everyone",
@@ -1094,9 +1084,7 @@
         },
         {
           "slug": "moderator",
-          "permissions": [
-            "view_hidden_forum_sections"
-          ],
+          "permissions": null,
           "restrictions": null
         }
       ],
@@ -1109,38 +1097,17 @@
       },
       "object": {
         "kind": "forum_section",
-        "overrides": null,
+        "overrides": [
+          {
+            "role": "moderator",
+            "permissions": [
+              "create_forum_threads"
+            ],
+            "restrictions": null
+          }
+        ],
         "locked": false,
         "author": false,
-        "hidden_for_users": true,
-        "thread_author": false
-      }
-    },
-    {
-      "name": "a hidden section takes nothing from someone who could not browse anyway",
-      "roles": [
-        {
-          "slug": "everyone",
-          "permissions": null,
-          "restrictions": null
-        },
-        {
-          "slug": "registered",
-          "permissions": null,
-          "restrictions": null
-        }
-      ],
-      "user": {
-        "kind": "normal",
-        "roles": null,
-        "forum_barred": false
-      },
-      "object": {
-        "kind": "forum_section",
-        "overrides": null,
-        "locked": false,
-        "author": false,
-        "hidden_for_users": true,
         "thread_author": false
       }
     },
@@ -1181,7 +1148,7 @@
         {
           "slug": "moderator",
           "permissions": [
-            "view_hidden_forum_sections"
+            "create_forum_threads"
           ],
           "restrictions": null
         }
@@ -1198,7 +1165,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1247,7 +1213,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1296,7 +1261,6 @@
         "overrides": null,
         "locked": false,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1345,7 +1309,6 @@
         "overrides": null,
         "locked": true,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1394,7 +1357,6 @@
         "overrides": null,
         "locked": true,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1452,7 +1414,6 @@
         "overrides": null,
         "locked": true,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1501,7 +1462,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1550,7 +1510,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1582,7 +1541,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1631,7 +1589,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1680,7 +1637,6 @@
         "overrides": null,
         "locked": false,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1710,7 +1666,6 @@
         "overrides": null,
         "locked": false,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1759,7 +1714,6 @@
         "overrides": null,
         "locked": true,
         "author": true,
-        "hidden_for_users": false,
         "thread_author": false
       }
     },
@@ -1808,7 +1762,6 @@
         "overrides": null,
         "locked": false,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": true
       }
     },
@@ -1857,7 +1810,6 @@
         "overrides": null,
         "locked": true,
         "author": false,
-        "hidden_for_users": false,
         "thread_author": false
       }
     }

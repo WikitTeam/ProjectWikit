@@ -143,9 +143,16 @@ func recentPostsCategories(env module.Env, path page.PathParams, subject perms.S
 	if err != nil {
 		return nil, nil, err
 	}
-	visible := all
-	if !perms.Resolve(subject, nil).Has(perms.ViewForumCategories) {
-		visible = nil
+	grants, err := sectionGrants(env, subject)
+	if err != nil {
+		return nil, nil, err
+	}
+	sitewide := perms.Resolve(subject, nil)
+	var visible []db.ForumCategory
+	for i := range all {
+		if categoryAllows(grants, sitewide, &all[i], perms.ViewForumCategories, perms.ViewForumThreads, perms.ViewForumPosts) {
+			visible = append(visible, all[i])
+		}
 	}
 
 	asked := path.Get("c")

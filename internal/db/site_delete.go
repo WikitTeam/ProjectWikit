@@ -44,7 +44,9 @@ var deleteScope = []struct{ name, query string }{
 	{"thr", `SELECT id FROM web_forumthread WHERE site_id = (SELECT id FROM s)`},
 	{"pst", `SELECT id FROM web_forumpost WHERE thread_id IN (SELECT id FROM thr)`},
 	{"ovr", `SELECT rolepermissionsoverride_id AS id FROM web_category_permissions_override
-             WHERE category_id IN (SELECT id FROM cat)`},
+             WHERE category_id IN (SELECT id FROM cat)
+             UNION SELECT rolepermissionsoverride_id FROM web_forumsection_permissions_override
+             WHERE forumsection_id IN (SELECT id FROM sec)`},
 }
 
 var qDanglingKeys = `

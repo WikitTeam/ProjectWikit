@@ -48,7 +48,6 @@ const (
 	ReasonOverrideDeny  Reason = "override-deny"
 	ReasonPageLocked    Reason = "page-locked"
 	ReasonPageAuthor    Reason = "page-author"
-	ReasonHiddenSection Reason = "hidden-section"
 	ReasonThreadAuthor  Reason = "thread-author"
 	ReasonThreadLocked  Reason = "thread-locked"
 	ReasonPostAuthor    Reason = "post-author"
@@ -332,10 +331,6 @@ func effectOf(v Value) Effect {
 func (e *evaluator) object(o *Object, name string, v bool, d *Decision) bool {
 	switch o.Kind {
 	case KindForumSection:
-		if name == ViewForumSections && o.HiddenForUsers && !e.held(ViewHiddenForumSections) {
-			d.add(StepObject, Cause{Reason: ReasonHiddenSection, Effect: EffectDeny})
-			return false
-		}
 		return v
 	case KindForumThread:
 		return e.thread(o, name, v, d)

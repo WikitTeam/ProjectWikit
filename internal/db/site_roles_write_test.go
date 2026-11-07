@@ -158,8 +158,7 @@ func TestCreateSiteGivesMemberItsPermissions(t *testing.T) {
 		perms.TagArticles, perms.MoveArticles, perms.ManageArticleFiles, perms.DeleteArticles,
 		perms.CommentArticles, perms.ViewArticleComments,
 		perms.ViewForumPosts, perms.CreateForumPosts, perms.EditForumPosts,
-		perms.ViewForumThreads, perms.ViewForumSections, perms.ViewHiddenForumSections,
-		perms.ViewForumCategories,
+		perms.ViewForumThreads, perms.ViewForumSections, perms.ViewForumCategories,
 		perms.SendDirectMessage,
 	})
 	if !slices.Equal(got["member"].permissions, want) {

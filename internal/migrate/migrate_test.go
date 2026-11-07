@@ -396,7 +396,7 @@ var catalog = []string{
 	perms.ViewForumPosts, perms.CreateForumPosts, perms.EditForumPosts, perms.DeleteForumPosts,
 	perms.ViewForumThreads, perms.CreateForumThreads, perms.EditForumThreads,
 	perms.PinForumThreads, perms.LockForumThreads, perms.MoveForumThreads,
-	perms.ViewForumSections, perms.ViewHiddenForumSections, perms.ViewForumCategories,
+	perms.ViewForumSections, perms.ViewForumCategories,
 	perms.ViewVotesTimestamp, perms.SendDirectMessage, perms.ViewUserReports,
 	perms.ViewSensitiveInfo, perms.ManageUsers,
 }

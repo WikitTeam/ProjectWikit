@@ -18,19 +18,18 @@ const (
 	ViewArticleComments  = "view_article_comments"
 	ManageArticleAuthors = "manage_article_authors"
 
-	ViewForumPosts          = "view_forum_posts"
-	CreateForumPosts        = "create_forum_posts"
-	EditForumPosts          = "edit_forum_posts"
-	DeleteForumPosts        = "delete_forum_posts"
-	ViewForumThreads        = "view_forum_threads"
-	CreateForumThreads      = "create_forum_threads"
-	EditForumThreads        = "edit_forum_threads"
-	PinForumThreads         = "pin_forum_threads"
-	LockForumThreads        = "lock_forum_threads"
-	MoveForumThreads        = "move_forum_threads"
-	ViewForumSections       = "view_forum_sections"
-	ViewHiddenForumSections = "view_hidden_forum_sections"
-	ViewForumCategories     = "view_forum_categories"
+	ViewForumPosts      = "view_forum_posts"
+	CreateForumPosts    = "create_forum_posts"
+	EditForumPosts      = "edit_forum_posts"
+	DeleteForumPosts    = "delete_forum_posts"
+	ViewForumThreads    = "view_forum_threads"
+	CreateForumThreads  = "create_forum_threads"
+	EditForumThreads    = "edit_forum_threads"
+	PinForumThreads     = "pin_forum_threads"
+	LockForumThreads    = "lock_forum_threads"
+	MoveForumThreads    = "move_forum_threads"
+	ViewForumSections   = "view_forum_sections"
+	ViewForumCategories = "view_forum_categories"
 
 	ViewVotesTimestamp = "view_votes_timestamp"
 
@@ -182,8 +181,6 @@ type Object struct {
 
 	Locked bool
 	Author bool
-
-	HiddenForUsers bool
 
 	Thread *Object
 }

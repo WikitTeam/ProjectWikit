@@ -300,6 +300,31 @@ func (h *Handler) lint(ctx context.Context, x *explainer) ([]finding, error) {
 			}
 		}
 	}
+	sections, err := h.deps.DB.ForumSections(ctx, siteID(ctx))
+	if err != nil {
+		return nil, err
+	}
+	for i := range sections {
+		section := &sections[i]
+		x.target = &accessTarget{section: section}
+		href := Prefix + sectionSlug + "/" + strconv.FormatInt(section.ID, 10)
+		_, scope := x.overrideScope()
+		seen := map[int64]int{}
+		for _, o := range section.Overrides {
+			seen[o.RoleID]++
+			if seen[o.RoleID] > 1 {
+				continue
+			}
+			if denied := live(o.Restrictions); slices.Contains(builtinRoles, slugOf[o.RoleID]) && len(denied) > 0 {
+				findings = append(findings, finding{RoleID: o.RoleID, Tone: "deny", Text: t("admin.lint-override-shared-deny-section", "role", x.roleName(o.RoleID), "section", scope, "perms", names(denied)), Href: href, Link: t("admin.fix-open-section")})
+			}
+		}
+		for id, n := range seen {
+			if n > 1 {
+				findings = append(findings, finding{RoleID: id, Tone: "warn", Text: t("admin.lint-override-duplicate-section", "role", x.roleName(id), "section", scope, "n", n), Href: href, Link: t("admin.fix-open-section")})
+			}
+		}
+	}
 	x.target = nil
 
 	if x.site.DefaultRoleID == nil {

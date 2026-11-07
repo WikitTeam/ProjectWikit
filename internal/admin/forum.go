@@ -32,11 +32,11 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 			return nil
 		}
 		row := db.ForumSectionRow{
-			Name:            strings.TrimSpace(r.PostFormValue("name")),
-			Description:     r.PostFormValue("description"),
-			Order:           atoi(r.PostFormValue("order")),
-			IsHidden:        r.PostFormValue("is_hidden") != "",
-			IsHiddenForUser: r.PostFormValue("is_hidden_for_users") != "",
+			Name:        strings.TrimSpace(r.PostFormValue("name")),
+			Description: r.PostFormValue("description"),
+			Order:       atoi(r.PostFormValue("order")),
+			IsHidden:    r.PostFormValue("is_hidden") != "",
+			IsIndexed:   r.PostFormValue("is_indexed") != "",
 		}
 		if rest != "new" {
 			id, err := strconv.ParseInt(rest, 10, 64)
@@ -47,7 +47,12 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 			row.ID = id
 		}
 		if r.PostFormValue("delete") != "" && row.ID != 0 {
-			if err := h.deps.DB.DeleteForumSection(ctx, siteID(ctx), row.ID); err != nil {
+			err := h.deps.DB.DeleteForumSection(ctx, siteID(ctx), row.ID)
+			if errors.Is(err, db.ErrNotFound) {
+				notFound(w)
+				return nil
+			}
+			if err != nil {
 				return err
 			}
 			h.noteID(r, db.AdminDeleted, sectionSlug, row.ID, row.Name)
@@ -61,8 +66,27 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 		if row.ID == 0 {
 			did = db.AdminCreated
 		}
-		if err := h.deps.DB.SaveForumSection(ctx, siteID(ctx), row); err != nil {
+		id, err := h.deps.DB.SaveForumSection(ctx, siteID(ctx), row)
+		if errors.Is(err, db.ErrNotFound) {
+			notFound(w)
+			return nil
+		}
+		if err != nil {
 			return err
+		}
+		row.ID = id
+		granted, _, err := h.access(ctx)
+		if err != nil {
+			return err
+		}
+		if granted.Has(perms.ManagePermissions) {
+			overrides, err := h.postedOverrides(r, sectionScoped)
+			if err != nil {
+				return err
+			}
+			if err := h.deps.DB.SaveForumSectionOverrides(ctx, row.ID, overrides); err != nil {
+				return err
+			}
 		}
 		h.noteID(r, did, sectionSlug, row.ID, row.Name)
 		redirect(w, Prefix+sectionSlug+"/")
@@ -84,7 +108,8 @@ func (h *Handler) forumSections(w http.ResponseWriter, r *http.Request, loc *i18
 }
 
 func (h *Handler) forumSectionForm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer, rest, problem string) error {
-	row := db.ForumSectionRow{}
+	ctx := r.Context()
+	row := db.ForumSectionRow{IsIndexed: true}
 	if rest != "new" {
 		id, err := strconv.ParseInt(rest, 10, 64)
 		if err != nil {
@@ -100,12 +125,22 @@ func (h *Handler) forumSectionForm(w http.ResponseWriter, r *http.Request, loc *
 			return err
 		}
 	}
+	cells, err := h.overrideCells(ctx, sectionScoped, row.Overrides)
+	if err != nil {
+		return err
+	}
+	granted, _, err := h.access(ctx)
+	if err != nil {
+		return err
+	}
 	return h.page(w, r, loc, loc.T("admin.forum-sections"), "forum_section_form.html", map[string]any{
-		"Section": row,
-		"CSRF":    csrf.Issue(w, r),
-		"Error":   problem,
-		"Action":  Prefix + sectionSlug + "/" + rest,
-		"Back":    Prefix + sectionSlug + "/",
+		"Section":  row,
+		"Cells":    cells,
+		"MayGrant": granted.Has(perms.ManagePermissions),
+		"CSRF":     csrf.Issue(w, r),
+		"Error":    problem,
+		"Action":   Prefix + sectionSlug + "/" + rest,
+		"Back":     Prefix + sectionSlug + "/",
 	})
 }
 

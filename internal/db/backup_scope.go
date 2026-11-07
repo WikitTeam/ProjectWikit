@@ -44,7 +44,9 @@ WITH s AS (SELECT id FROM web_site WHERE slug = $1),
      thr AS (SELECT id FROM web_forumthread WHERE site_id = (SELECT id FROM s)),
      pst AS (SELECT id FROM web_forumpost WHERE thread_id IN (SELECT id FROM thr)),
      ovr AS (SELECT rolepermissionsoverride_id AS id FROM web_category_permissions_override
-             WHERE category_id IN (SELECT id FROM cat))
+             WHERE category_id IN (SELECT id FROM cat)
+             UNION SELECT rolepermissionsoverride_id FROM web_forumsection_permissions_override
+             WHERE forumsection_id IN (SELECT id FROM sec))
 `
 
 // peopleQuery gathers every account the exported rows point at. Nothing decides
@@ -116,12 +118,13 @@ var rules = map[string]rule{
 	"web_rolepermissionsoverride_restrictions": {owned,
 		`rolepermissionsoverride_id IN (SELECT id FROM ovr)`, ""},
 
-	"web_forumsection":     {owned, `site_id = (SELECT id FROM s)`, ""},
-	"web_forumcategory":    {owned, `section_id IN (SELECT id FROM sec)`, ""},
-	"web_forumthread":      {owned, `site_id = (SELECT id FROM s)`, ""},
-	"web_forumpost":        {owned, `thread_id IN (SELECT id FROM thr)`, ""},
-	"web_forumpostversion": {owned, `post_id IN (SELECT id FROM pst)`, ""},
-	"web_forumpostlike":    {owned, `post_id IN (SELECT id FROM pst)`, ""},
+	"web_forumsection":                      {owned, `site_id = (SELECT id FROM s)`, ""},
+	"web_forumsection_permissions_override": {owned, `forumsection_id IN (SELECT id FROM sec)`, ""},
+	"web_forumcategory":                     {owned, `section_id IN (SELECT id FROM sec)`, ""},
+	"web_forumthread":                       {owned, `site_id = (SELECT id FROM s)`, ""},
+	"web_forumpost":                         {owned, `thread_id IN (SELECT id FROM thr)`, ""},
+	"web_forumpostversion":                  {owned, `post_id IN (SELECT id FROM pst)`, ""},
+	"web_forumpostlike":                     {owned, `post_id IN (SELECT id FROM pst)`, ""},
 
 	"web_invitelink":   {owned, `site_id = (SELECT id FROM s)`, ""},
 	"web_userreport":   {owned, `site_id = (SELECT id FROM s)`, ""},

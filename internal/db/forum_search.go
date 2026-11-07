@@ -26,6 +26,9 @@ type ForumSearchFilter struct {
 	From, To   *time.Time
 	CategoryID *int64
 	Comments   bool
+
+	// A thread of its own matches only inside these sections, even by CategoryID.
+	Sections []int64
 }
 
 // Every word has to turn up somewhere in the post, its title or its thread's
@@ -35,6 +38,7 @@ SELECT p.id, p.name, p.created_at, p.author_id, t.id, t.name, coalesce(c.name, a
 FROM web_forumpost p
 JOIN web_forumthread t ON t.id = p.thread_id
 LEFT JOIN web_forumcategory c ON c.id = t.category_id
+LEFT JOIN web_forumsection s ON s.id = c.section_id
 LEFT JOIN web_article a ON a.id = t.article_id
 JOIN LATERAL (SELECT source FROM web_forumpostversion WHERE post_id = p.id ORDER BY created_at DESC, id DESC LIMIT 1) v ON true
 WHERE t.site_id = $1
@@ -46,6 +50,7 @@ WHERE t.site_id = $1
   AND ($7::timestamptz IS NULL OR p.created_at <= $7)
   AND ($8::bigint IS NULL OR t.category_id = $8)
   AND (NOT $9 OR t.article_id IS NOT NULL)
+  AND (t.article_id IS NOT NULL OR s.id = ANY($10))
 ORDER BY p.created_at DESC, p.id DESC
 OFFSET $3 LIMIT $4`)
 
@@ -56,8 +61,12 @@ func (d *DB) SearchForum(ctx context.Context, siteID int64, f ForumSearchFilter,
 	for i, w := range f.Words {
 		escaped[i] = likeEscaper.Replace(w)
 	}
+	sections := f.Sections
+	if sections == nil {
+		sections = []int64{}
+	}
 	rows, err := d.pool.Query(ctx, qSearchForum, siteID, escaped, offset, limit,
-		f.AuthorID, f.From, f.To, f.CategoryID, f.Comments)
+		f.AuthorID, f.From, f.To, f.CategoryID, f.Comments, sections)
 	if err != nil {
 		return nil, fmt.Errorf("search the forum of site %d: %w", siteID, err)
 	}

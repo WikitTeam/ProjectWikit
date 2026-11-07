@@ -69,9 +69,11 @@ func frontForumItems(env module.Env, ids []int64, params map[string]string) ([]f
 	if err != nil {
 		return nil, err
 	}
-	if !perms.Resolve(subject, nil).Has(perms.ViewForumCategories) {
-		return nil, nil
+	grants, err := sectionGrants(env, subject)
+	if err != nil {
+		return nil, err
 	}
+	sitewide := perms.Resolve(subject, nil)
 
 	categories, err := env.Data.ForumCategories()
 	if err != nil {
@@ -79,7 +81,9 @@ func frontForumItems(env module.Env, ids []int64, params map[string]string) ([]f
 	}
 	byID := make(map[int64]*db.ForumCategory, len(categories))
 	for i := range categories {
-		byID[categories[i].ID] = &categories[i]
+		if categoryAllows(grants, sitewide, &categories[i], perms.ViewForumCategories, perms.ViewForumThreads) {
+			byID[categories[i].ID] = &categories[i]
+		}
 	}
 	wanted := make([]int64, 0, len(ids))
 	for _, id := range ids {

@@ -4,8 +4,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
+	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/timezone"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
@@ -83,4 +85,42 @@ func setStatus(env module.Env, code int) {
 	if env.Page != nil {
 		env.Page.Status = code
 	}
+}
+
+func sectionGrants(env module.Env, subject perms.Subject) (map[int64]perms.Set, error) {
+	sections, err := env.Data.ForumSections()
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[int64]perms.Set, len(sections))
+	for i := range sections {
+		out[sections[i].ID] = perms.Resolve(subject, env.Data.ForumSectionObject(&sections[i]))
+	}
+	return out, nil
+}
+
+// A category answers with the overrides of its section. The one holding page
+// comments answers site-wide, since each comment thread follows its own page.
+func categoryAllows(grants map[int64]perms.Set, sitewide perms.Set, c *db.ForumCategory, names ...string) bool {
+	granted := sitewide
+	if !c.IsForComments {
+		granted = grants[c.SectionID]
+	}
+	for _, name := range names {
+		if !granted.Has(name) {
+			return false
+		}
+	}
+	return true
+}
+
+func categoryGrants(env module.Env, subject perms.Subject, c *db.ForumCategory) (perms.Set, error) {
+	if c.IsForComments {
+		return perms.Resolve(subject, nil), nil
+	}
+	section, err := env.Data.ForumSection(c.SectionID)
+	if err != nil {
+		return perms.Set{}, err
+	}
+	return perms.Resolve(subject, env.Data.ForumSectionObject(section)), nil
 }

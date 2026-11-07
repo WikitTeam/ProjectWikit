@@ -173,6 +173,9 @@ func forumThreadCategory(env module.Env, view *forumThreadView, subject perms.Su
 	if err != nil {
 		return err
 	}
+	if view.thread.ArticleID == nil && env.Page != nil && !section.IsIndexed {
+		env.Page.NoIndex = true
+	}
 	view.sectionName = section.Name
 	view.sectionURL = forumSectionURL(section.ID, section.Name)
 	view.categoryURL = forumCategoryURL(view.category.ID, view.category.Name)
