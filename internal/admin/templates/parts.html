@@ -78,6 +78,7 @@
   <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i>{{t "admin.save"}}</button>
   {{if .back}}<a class="btn" href="{{esc .back}}">{{t "admin.back-to-list"}}</a>{{end}}
   {{if .access}}<a class="btn" href="{{esc .access}}"><i class="fas fa-stethoscope"></i>{{t "admin.access-check-role"}}</a>{{end}}
+  {{if .reset}}<button type="submit" name="reset" value="1" class="btn" data-confirm="{{t "admin.confirm-reset-role"}}" data-confirm-ok="{{t "admin.confirm-ok"}}" data-confirm-cancel="{{t "admin.cancel"}}"><i class="fas fa-undo"></i>{{t "admin.reset-role"}}</button>{{end}}
   {{if .del}}<button type="submit" name="delete" value="1" class="btn btn-danger pull-right"><i class="fas fa-trash"></i>{{t "admin.delete"}}</button>{{end}}
 </div>
 {{end}}

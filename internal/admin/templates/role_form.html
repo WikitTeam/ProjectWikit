@@ -1,4 +1,5 @@
 {{define "role_form.html"}}
+{{if .Builtin}}<div class="alert">{{t (printf "admin.role-about-%s" .Role.Slug)}}</div>{{end}}
 {{template "form_error" .Error}}
 {{if .Warnings}}
 <div class="alert alert-block role-warnings">
@@ -114,6 +115,6 @@
   </div>
   {{end}}
 
-  {{template "save_row" dict "back" .Back "del" (and .Role.ID (not .Builtin)) "access" (and .Role.ID .Access)}}
+  {{template "save_row" dict "back" .Back "del" (and .Role.ID (not .Builtin)) "access" (and .Role.ID .Access) "reset" (and .Builtin .MayGrant)}}
 </form>
 {{end}}

@@ -243,6 +243,18 @@
       });
     });
   });
+  document.querySelectorAll('button[data-confirm]').forEach(function (button) {
+    var asked = false;
+    button.addEventListener('click', function (e) {
+      if (asked) { return; }
+      e.preventDefault();
+      ask(button, function (keep) {
+        if (!keep) { return; }
+        asked = true;
+        button.click();
+      });
+    });
+  });
   document.querySelectorAll('form[data-confirm-unless]').forEach(function (form) {
     var asked = false;
     form.addEventListener('submit', function (e) {

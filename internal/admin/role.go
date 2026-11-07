@@ -234,6 +234,24 @@ func (h *Handler) saveRole(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		return nil
 	}
 
+	if r.PostFormValue("reset") != "" && builtin {
+		granted, _, err := h.access(ctx)
+		if err != nil {
+			return err
+		}
+		if !granted.Has(perms.ManagePermissions) {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return nil
+		}
+		stored.Allow, stored.Deny = db.BuiltinPermissions(stored.Slug), nil
+		if _, err := h.deps.DB.SaveRole(ctx, siteID(ctx), stored, true); err != nil {
+			return err
+		}
+		h.noteID(r, db.AdminChanged, roleSlug, stored.ID, stored.Slug)
+		redirect(w, Prefix+roleSlug+"/"+strconv.FormatInt(stored.ID, 10))
+		return nil
+	}
+
 	next := stored
 	next.Slug = strings.TrimSpace(r.PostFormValue("slug"))
 	if builtin {

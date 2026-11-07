@@ -60,6 +60,16 @@ var builtInRoles = []siteRole{
 	}},
 }
 
+// Resetting everyone or registered goes back to what a new site gives them.
+func BuiltinPermissions(slug string) []string {
+	for _, role := range builtInRoles {
+		if role.slug == slug {
+			return slices.Clone(role.permissions)
+		}
+	}
+	return nil
+}
+
 var starterRoles = []siteRole{
 	{slug: "admin", index: 0, staff: true, profile: "status", permissions: catalogNames()},
 	{slug: "member", index: 1, profile: "status", permissions: without(

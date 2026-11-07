@@ -7,7 +7,7 @@
   <tbody>
     {{range .Roles}}
     <tr>
-      <td><a href="{{esc $.Base}}{{.ID}}">{{if .Name}}{{esc .Name}}{{else}}{{esc .Slug}}{{end}}</a>{{if index $.Warnings .ID}} <i class="fas fa-exclamation-triangle role-flag" title="{{t "admin.role-flag"}}"></i>{{end}}</td>
+      <td><a href="{{esc $.Base}}{{.ID}}">{{if .Name}}{{esc .Name}}{{else}}{{esc .Slug}}{{end}}</a>{{if index $.Builtin .ID}} <span class="muted">{{t (printf "admin.role-note-%s" .Slug)}}</span>{{end}}{{if index $.Warnings .ID}} <i class="fas fa-exclamation-triangle role-flag" title="{{t "admin.role-flag"}}"></i>{{end}}</td>
       <td class="stamp">{{esc .Slug}}</td>
       <td class="num">{{.Index}}</td>
       <td>{{template "yes" .IsStaff}}</td>
