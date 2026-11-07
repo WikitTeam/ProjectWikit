@@ -22,6 +22,7 @@ type overrideSpec struct {
 	Role         string   `json:"role"`
 	Permissions  []string `json:"permissions"`
 	Restrictions []string `json:"restrictions"`
+	Withheld     []string `json:"withheld"`
 }
 
 type objectSpec struct {
@@ -183,6 +184,34 @@ var scenarios = []scenario{
 		}},
 	},
 	{
+		Name:  "a withheld grant leaves room for another role to allow",
+		Roles: withRoles(roleSpec{Slug: "moderator"}),
+		User:  userSpec{Kind: "normal", Roles: []string{"moderator"}},
+		Object: &objectSpec{Kind: "category", Overrides: []overrideSpec{
+			{Role: "everyone", Withheld: []string{ViewArticles}},
+			{Role: "registered", Withheld: []string{ViewArticles}},
+			{Role: "moderator", Permissions: []string{ViewArticles}},
+		}},
+	},
+	{
+		Name:  "a withheld grant takes it from whoever has nothing else",
+		Roles: withRoles(roleSpec{Slug: "moderator"}),
+		User:  userSpec{Kind: "normal"},
+		Object: &objectSpec{Kind: "category", Overrides: []overrideSpec{
+			{Role: "everyone", Withheld: []string{ViewArticles}},
+			{Role: "registered", Withheld: []string{ViewArticles}},
+			{Role: "moderator", Permissions: []string{ViewArticles}},
+		}},
+	},
+	{
+		Name:  "a withheld grant does not lift another role's refusal",
+		Roles: withRoles(roleSpec{Slug: "muted", Restrictions: []string{ViewArticles}}),
+		User:  userSpec{Kind: "normal", Roles: []string{"muted"}},
+		Object: &objectSpec{Kind: "category", Overrides: []overrideSpec{
+			{Role: "everyone", Withheld: []string{ViewArticles}},
+		}},
+	},
+	{
 		Name:  "a section override hands a role what it lacks site-wide",
 		Roles: withRoles(roleSpec{Slug: "moderator"}),
 		User:  userSpec{Kind: "normal", Roles: []string{"moderator"}},
@@ -330,7 +359,7 @@ func (s scenario) object() *Object {
 		o.Thread = &Object{Kind: KindForumThread, Locked: s.Object.Locked, Author: s.Object.ThreadAuthor}
 	}
 	for _, spec := range s.Object.Overrides {
-		o.Overrides = append(o.Overrides, Override{RoleID: s.roleID(spec.Role), Permissions: spec.Permissions, Restrictions: spec.Restrictions})
+		o.Overrides = append(o.Overrides, Override{RoleID: s.roleID(spec.Role), Permissions: spec.Permissions, Restrictions: spec.Restrictions, Withheld: spec.Withheld})
 	}
 	return o
 }

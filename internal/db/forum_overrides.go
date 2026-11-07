@@ -8,19 +8,12 @@ import (
 )
 
 var qForumSectionOverrides = register("ForumSectionOverrides", `
-SELECT spo.forumsection_id, o.id, o.role_id, op.codename, op.restricted
+SELECT spo.forumsection_id, o.id, o.role_id, p.codename, x.effect
 FROM web_forumsection s
 JOIN web_forumsection_permissions_override spo ON spo.forumsection_id = s.id
 JOIN web_rolepermissionsoverride o ON o.id = spo.rolepermissionsoverride_id
-LEFT JOIN (
-    SELECT x.rolepermissionsoverride_id AS override_id, p.codename, false AS restricted
-    FROM web_rolepermissionsoverride_permissions x
-    JOIN auth_permission p ON p.id = x.permission_id
-    UNION ALL
-    SELECT x.rolepermissionsoverride_id, p.codename, true
-    FROM web_rolepermissionsoverride_restrictions x
-    JOIN auth_permission p ON p.id = x.permission_id
-) op ON op.override_id = o.id
+LEFT JOIN (`+overrideEntries+`) x ON x.override_id = o.id
+LEFT JOIN auth_permission p ON p.id = x.permission_id
 WHERE s.site_id = $1 AND s.id = ANY($2)
 ORDER BY spo.forumsection_id, o.id`)
 
@@ -38,9 +31,8 @@ func (d *DB) ForumSectionOverrides(ctx context.Context, siteID int64, sectionIDs
 	var current int64
 	for rows.Next() {
 		var section, id, roleID int64
-		var codename *string
-		var restricted *bool
-		if err := rows.Scan(&section, &id, &roleID, &codename, &restricted); err != nil {
+		var codename, effect *string
+		if err := rows.Scan(&section, &id, &roleID, &codename, &effect); err != nil {
 			return nil, fmt.Errorf("scan permission override of forum section: %w", err)
 		}
 		list := out[section]
@@ -48,14 +40,7 @@ func (d *DB) ForumSectionOverrides(ctx context.Context, siteID int64, sectionIDs
 			list = append(list, perms.Override{RoleID: roleID})
 			current = id
 		}
-		if codename != nil {
-			last := &list[len(list)-1]
-			if *restricted {
-				last.Restrictions = append(last.Restrictions, *codename)
-			} else {
-				last.Permissions = append(last.Permissions, *codename)
-			}
-		}
+		addOverrideEntry(&list[len(list)-1], codename, effect)
 		out[section] = list
 	}
 	if err := rows.Err(); err != nil {
@@ -80,18 +65,12 @@ func (d *DB) withSectionOverrides(ctx context.Context, siteID int64, sections []
 }
 
 var qAdminForumSectionOverrides = register("AdminForumSectionOverrides", `
-SELECT o.role_id, coalesce(nullif(r.name, ''), r.slug), p.codename, x.restricted
+SELECT o.role_id, coalesce(nullif(r.name, ''), r.slug), p.codename, x.effect
 FROM web_forumsection_permissions_override spo
 JOIN web_forumsection s ON s.id = spo.forumsection_id
 JOIN web_rolepermissionsoverride o ON o.id = spo.rolepermissionsoverride_id
 JOIN web_role r ON r.id = o.role_id
-LEFT JOIN (
-    SELECT rolepermissionsoverride_id AS override_id, permission_id, false AS restricted
-    FROM web_rolepermissionsoverride_permissions
-    UNION ALL
-    SELECT rolepermissionsoverride_id, permission_id, true
-    FROM web_rolepermissionsoverride_restrictions
-) x ON x.override_id = o.id
+LEFT JOIN (`+overrideEntries+`) x ON x.override_id = o.id
 LEFT JOIN auth_permission p ON p.id = x.permission_id
 WHERE spo.forumsection_id = $1 AND s.site_id = $2
 ORDER BY r.index, o.role_id`)
@@ -108,9 +87,8 @@ func (d *DB) adminSectionOverrides(ctx context.Context, siteID, sectionID int64)
 	for rows.Next() {
 		var roleID int64
 		var roleName string
-		var codename *string
-		var restricted *bool
-		if err := rows.Scan(&roleID, &roleName, &codename, &restricted); err != nil {
+		var codename, effect *string
+		if err := rows.Scan(&roleID, &roleName, &codename, &effect); err != nil {
 			return nil, err
 		}
 		i, ok := at[roleID]
@@ -119,14 +97,7 @@ func (d *DB) adminSectionOverrides(ctx context.Context, siteID, sectionID int64)
 			at[roleID] = i
 			out = append(out, CategoryOverride{RoleID: roleID, RoleName: roleName})
 		}
-		if codename == nil || restricted == nil {
-			continue
-		}
-		if *restricted {
-			out[i].Deny = append(out[i].Deny, *codename)
-		} else {
-			out[i].Allow = append(out[i].Allow, *codename)
-		}
+		out[i].add(codename, effect)
 	}
 	return out, rows.Err()
 }

@@ -342,7 +342,8 @@
             "permissions": [
               "delete_articles"
             ],
-            "restrictions": null
+            "restrictions": null,
+            "withheld": null
           }
         ],
         "locked": false,
@@ -400,7 +401,8 @@
             "permissions": [
               "delete_articles"
             ],
-            "restrictions": null
+            "restrictions": null,
+            "withheld": null
           }
         ],
         "locked": false,
@@ -458,7 +460,8 @@
             "permissions": null,
             "restrictions": [
               "view_articles"
-            ]
+            ],
+            "withheld": null
           }
         ],
         "locked": false,
@@ -523,7 +526,8 @@
             "permissions": null,
             "restrictions": [
               "view_articles"
-            ]
+            ],
+            "withheld": null
           }
         ],
         "locked": false,
@@ -581,7 +585,8 @@
             "permissions": [
               "delete_articles"
             ],
-            "restrictions": null
+            "restrictions": null,
+            "withheld": null
           }
         ],
         "locked": false,
@@ -1040,6 +1045,231 @@
             "restrictions": [
               "view_forum_sections",
               "view_forum_threads"
+            ],
+            "withheld": null
+          }
+        ],
+        "locked": false,
+        "author": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a withheld grant leaves room for another role to allow",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "moderator",
+          "permissions": null,
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "moderator"
+        ],
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "category",
+        "overrides": [
+          {
+            "role": "everyone",
+            "permissions": null,
+            "restrictions": null,
+            "withheld": [
+              "view_articles"
+            ]
+          },
+          {
+            "role": "registered",
+            "permissions": null,
+            "restrictions": null,
+            "withheld": [
+              "view_articles"
+            ]
+          },
+          {
+            "role": "moderator",
+            "permissions": [
+              "view_articles"
+            ],
+            "restrictions": null,
+            "withheld": null
+          }
+        ],
+        "locked": false,
+        "author": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a withheld grant takes it from whoever has nothing else",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "moderator",
+          "permissions": null,
+          "restrictions": null
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": null,
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "category",
+        "overrides": [
+          {
+            "role": "everyone",
+            "permissions": null,
+            "restrictions": null,
+            "withheld": [
+              "view_articles"
+            ]
+          },
+          {
+            "role": "registered",
+            "permissions": null,
+            "restrictions": null,
+            "withheld": [
+              "view_articles"
+            ]
+          },
+          {
+            "role": "moderator",
+            "permissions": [
+              "view_articles"
+            ],
+            "restrictions": null,
+            "withheld": null
+          }
+        ],
+        "locked": false,
+        "author": false,
+        "thread_author": false
+      }
+    },
+    {
+      "name": "a withheld grant does not lift another role's refusal",
+      "roles": [
+        {
+          "slug": "everyone",
+          "permissions": [
+            "view_articles",
+            "view_article_comments",
+            "view_forum_sections",
+            "view_forum_categories",
+            "view_forum_threads",
+            "view_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "registered",
+          "permissions": [
+            "comment_articles",
+            "rate_articles",
+            "create_forum_threads",
+            "create_forum_posts"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "editor",
+          "permissions": [
+            "edit_articles",
+            "tag_articles",
+            "move_articles"
+          ],
+          "restrictions": null
+        },
+        {
+          "slug": "muted",
+          "permissions": null,
+          "restrictions": [
+            "view_articles"
+          ]
+        }
+      ],
+      "user": {
+        "kind": "normal",
+        "roles": [
+          "muted"
+        ],
+        "forum_barred": false
+      },
+      "object": {
+        "kind": "category",
+        "overrides": [
+          {
+            "role": "everyone",
+            "permissions": null,
+            "restrictions": null,
+            "withheld": [
+              "view_articles"
             ]
           }
         ],
@@ -1103,7 +1333,8 @@
             "permissions": [
               "create_forum_threads"
             ],
-            "restrictions": null
+            "restrictions": null,
+            "withheld": null
           }
         ],
         "locked": false,

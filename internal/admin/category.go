@@ -129,8 +129,8 @@ func (h *Handler) pageCategoryForm(w http.ResponseWriter, r *http.Request, loc *
 		override := byRole[one.ID]
 		cells = append(cells, cell{
 			Role:        one,
-			Grants:      grantGroups(catalog, override.Allow, override.Deny),
-			Present:     len(override.Allow)+len(override.Deny) > 0,
+			Grants:      grantGroups(catalog, override.Allow, override.Deny, override.Withhold),
+			Present:     len(override.Allow)+len(override.Deny)+len(override.Withhold) > 0,
 			HideToolbar: slices.Contains(hidden, one.ID),
 			TagExempt:   slices.Contains(exempt, one.ID),
 		})
@@ -265,11 +265,13 @@ func (h *Handler) savePageCategory(w http.ResponseWriter, r *http.Request, loc *
 				next.Allow = append(next.Allow, name)
 			case "deny":
 				next.Deny = append(next.Deny, name)
+			case "withhold":
+				next.Withhold = append(next.Withhold, name)
 			}
 		}
 		// Ticking the box only opens the table, so a role left on inherit
 		// throughout has nothing to store.
-		if len(next.Allow)+len(next.Deny) == 0 {
+		if len(next.Allow)+len(next.Deny)+len(next.Withhold) == 0 {
 			continue
 		}
 		overrides = append(overrides, next)

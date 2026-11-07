@@ -27,6 +27,21 @@ type CategoryOverride struct {
 	RoleName string
 	Allow    []string
 	Deny     []string
+	Withhold []string
+}
+
+func (o *CategoryOverride) add(codename, effect *string) {
+	if codename == nil || effect == nil {
+		return
+	}
+	switch *effect {
+	case "allow":
+		o.Allow = append(o.Allow, *codename)
+	case "deny":
+		o.Deny = append(o.Deny, *codename)
+	case "withhold":
+		o.Withhold = append(o.Withhold, *codename)
+	}
 }
 
 var qAdminCategories = register("AdminCategories", `
@@ -65,17 +80,11 @@ var qCategorySettings = register("CategorySettings", `
 SELECT rating_mode, can_user_create_tags FROM web_settings WHERE category_id = $1`)
 
 var qAdminCategoryOverrides = register("AdminCategoryOverrides", `
-SELECT o.role_id, coalesce(nullif(r.name, ''), r.slug), p.codename, x.restricted
+SELECT o.role_id, coalesce(nullif(r.name, ''), r.slug), p.codename, x.effect
 FROM web_category_permissions_override cpo
 JOIN web_rolepermissionsoverride o ON o.id = cpo.rolepermissionsoverride_id
 JOIN web_role r ON r.id = o.role_id
-LEFT JOIN (
-    SELECT rolepermissionsoverride_id AS override_id, permission_id, false AS restricted
-    FROM web_rolepermissionsoverride_permissions
-    UNION ALL
-    SELECT rolepermissionsoverride_id, permission_id, true
-    FROM web_rolepermissionsoverride_restrictions
-) x ON x.override_id = o.id
+LEFT JOIN (`+overrideEntries+`) x ON x.override_id = o.id
 LEFT JOIN auth_permission p ON p.id = x.permission_id
 WHERE cpo.category_id = $1
 ORDER BY r.index, o.role_id`)
@@ -111,38 +120,23 @@ func (d *DB) AdminCategory(ctx context.Context, siteID, id int64) (CategoryRow, 
 	}
 	defer rows.Close()
 
-	byRole := map[int64]*CategoryOverride{}
+	at := map[int64]int{}
 	for rows.Next() {
 		var roleID int64
 		var roleName string
-		var codename *string
-		var restricted *bool
-		if err := rows.Scan(&roleID, &roleName, &codename, &restricted); err != nil {
+		var codename, effect *string
+		if err := rows.Scan(&roleID, &roleName, &codename, &effect); err != nil {
 			return CategoryRow{}, err
 		}
-		one, ok := byRole[roleID]
+		i, ok := at[roleID]
 		if !ok {
-			one = &CategoryOverride{RoleID: roleID, RoleName: roleName}
-			byRole[roleID] = one
-			c.Overrides = append(c.Overrides, CategoryOverride{})
+			i = len(c.Overrides)
+			at[roleID] = i
+			c.Overrides = append(c.Overrides, CategoryOverride{RoleID: roleID, RoleName: roleName})
 		}
-		if codename == nil || restricted == nil {
-			continue
-		}
-		if *restricted {
-			one.Deny = append(one.Deny, *codename)
-		} else {
-			one.Allow = append(one.Allow, *codename)
-		}
+		c.Overrides[i].add(codename, effect)
 	}
-	if err := rows.Err(); err != nil {
-		return CategoryRow{}, err
-	}
-	c.Overrides = c.Overrides[:0]
-	for _, one := range byRole {
-		c.Overrides = append(c.Overrides, *one)
-	}
-	return c, nil
+	return c, rows.Err()
 }
 
 var (
@@ -193,7 +187,12 @@ INSERT INTO web_category_permissions_override (category_id, rolepermissionsoverr
 INSERT INTO web_rolepermissionsoverride_permissions (rolepermissionsoverride_id, permission_id)
 SELECT $1, p.id FROM auth_permission p JOIN django_content_type c ON c.id = p.content_type_id
 WHERE c.app_label = 'web' AND c.model = 'roles' AND p.codename = ANY($2)`)
-	qDenyOverride = register("DenyOverride", `
+	qWithholdOverride = register("WithholdOverride", `
+INSERT INTO pwikit_override_withheld (rolepermissionsoverride_id, permission_id)
+SELECT $1, p.id FROM auth_permission p JOIN django_content_type c ON c.id = p.content_type_id
+WHERE c.app_label = 'web' AND c.model = 'roles' AND p.codename = ANY($2)`)
+	qDropOverrideWithheld = register("DropOverrideWithheld", `DELETE FROM pwikit_override_withheld WHERE rolepermissionsoverride_id = ANY($1)`)
+	qDenyOverride         = register("DenyOverride", `
 INSERT INTO web_rolepermissionsoverride_restrictions (rolepermissionsoverride_id, permission_id)
 SELECT $1, p.id FROM auth_permission p JOIN django_content_type c ON c.id = p.content_type_id
 WHERE c.app_label = 'web' AND c.model = 'roles' AND p.codename = ANY($2)`)
@@ -235,7 +234,7 @@ func (d *DB) saveOverrides(ctx context.Context, links overrideLinks, what string
 		return err
 	}
 	if len(existing) > 0 {
-		for _, statement := range []string{qDropOverrideGrants, qDropOverrideDenies, qDropOverrides} {
+		for _, statement := range []string{qDropOverrideGrants, qDropOverrideDenies, qDropOverrideWithheld, qDropOverrides} {
 			if _, err := tx.Exec(ctx, statement, existing); err != nil {
 				return fmt.Errorf("clear the overrides of %s %d: %w", what, ownerID, err)
 			}
@@ -257,6 +256,11 @@ func (d *DB) saveOverrides(ctx context.Context, links overrideLinks, what string
 		}
 		if len(one.Deny) > 0 {
 			if _, err := tx.Exec(ctx, qDenyOverride, id, one.Deny); err != nil {
+				return err
+			}
+		}
+		if len(one.Withhold) > 0 {
+			if _, err := tx.Exec(ctx, qWithholdOverride, id, one.Withhold); err != nil {
 				return err
 			}
 		}

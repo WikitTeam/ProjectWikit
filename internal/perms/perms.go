@@ -149,6 +149,7 @@ type Override struct {
 	RoleID       int64
 	Permissions  []string
 	Restrictions []string
+	Withheld     []string
 }
 
 // Subject is the user asking. Roles arrive already assembled: the default role

@@ -124,7 +124,7 @@ func (d *DB) DeleteForumSection(ctx context.Context, siteID, id int64) error {
 		return ErrNotFound
 	}
 	if len(overrides) > 0 {
-		for _, statement := range []string{qDropOverrideGrants, qDropOverrideDenies, qDropOverrides} {
+		for _, statement := range []string{qDropOverrideGrants, qDropOverrideDenies, qDropOverrideWithheld, qDropOverrides} {
 			if _, err := tx.Exec(ctx, statement, overrides); err != nil {
 				return fmt.Errorf("clear the overrides of forum section %d: %w", id, err)
 			}

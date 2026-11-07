@@ -74,17 +74,19 @@
               <th>{{t "admin.f-permission"}}</th>
               <th class="opt">{{t "admin.perm-allow"}}</th>
               <th class="opt">{{t "admin.perm-inherit"}}</th>
+              <th class="opt">{{t "admin.perm-withhold"}}</th>
               <th class="opt">{{t "admin.perm-deny"}}</th>
             </tr>
           </thead>
           <tbody>
             {{range .Grants}}
-            <tr class="perm-group"><td colspan="4">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</td></tr>
+            <tr class="perm-group"><td colspan="5">{{if .Key}}{{t (printf "admin.perm-group-%s" .Key)}}{{else}}{{t "admin.perm-group-other"}}{{end}}</td></tr>
             {{range .Rows}}
             <tr>
               <td>{{enum "admin.perm-" .Name}}<span class="perm-code">{{esc .Name}}</span></td>
               <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="allow"{{if .Allow}} checked{{end}}></td>
-              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny)}} checked{{end}}></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value=""{{if and (not .Allow) (not .Deny) (not .Withhold)}} checked{{end}}></td>
+              <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="withhold"{{if .Withhold}} checked{{end}}></td>
               <td class="opt"><input type="radio" name="perm_{{$rid}}_{{esc .Name}}" value="deny"{{if .Deny}} checked{{end}}></td>
             </tr>
             {{end}}

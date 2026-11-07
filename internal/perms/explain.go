@@ -8,6 +8,9 @@ const (
 	Unset Value = iota
 	Allow
 	Deny
+	// Withhold only comes from an override. It takes back what the role grants
+	// there without refusing it for anyone else.
+	Withhold
 )
 
 type Step int
@@ -46,6 +49,7 @@ const (
 	ReasonRoleDeny      Reason = "role-deny"
 	ReasonOverrideAllow Reason = "override-allow"
 	ReasonOverrideDeny  Reason = "override-deny"
+	ReasonWithheld      Reason = "override-withheld"
 	ReasonPageLocked    Reason = "page-locked"
 	ReasonPageAuthor    Reason = "page-author"
 	ReasonThreadAuthor  Reason = "thread-author"
@@ -126,7 +130,13 @@ func (d Decision) Decisive() (StepResult, []StepResult) {
 		return s, nil
 	}
 	roles := d.Step(StepRoles)
-	if over := d.Step(StepOverrides); over.Effect == roles.Effect && (over.Effect == EffectAllow || over.Effect == EffectDeny) {
+	over := d.Step(StepOverrides)
+	if over.Effect == roles.Effect && (over.Effect == EffectAllow || over.Effect == EffectDeny) {
+		roles = over
+	}
+	// A grant taken back leaves the roles with nothing to say, so the override
+	// that took it is the cause.
+	if over.Effect == EffectDeny && roles.Effect == EffectNone {
 		roles = over
 	}
 	sequence := []StepResult{roles, d.Step(StepObject), d.Step(StepForum), d.Step(StepEmail), d.Step(StepSanctions)}
@@ -183,6 +193,11 @@ func prepare(s Subject, o *Object) *evaluator {
 			for _, override := range o.Overrides {
 				if override.RoleID == role.ID {
 					p.override = values(override.Permissions, override.Restrictions)
+					for _, name := range override.Withheld {
+						if p.override[name] == Unset {
+							p.override[name] = Withhold
+						}
+					}
 					p.hasOverride = true
 					break
 				}
@@ -302,7 +317,7 @@ func (e *evaluator) traceRoles(name string, held bool, d *Decision) {
 			continue
 		}
 		c := Cause{Reason: roleReason(rv.Override, true), Effect: EffectNone, RoleID: rv.RoleID}
-		if rv.Override == want {
+		if rv.Override == want || (rv.Override == Withhold && !held) {
 			c.Effect = effect
 		}
 		d.add(StepOverrides, c)
@@ -311,6 +326,8 @@ func (e *evaluator) traceRoles(name string, held bool, d *Decision) {
 
 func roleReason(v Value, override bool) Reason {
 	switch {
+	case v == Withhold:
+		return ReasonWithheld
 	case v == Allow && override:
 		return ReasonOverrideAllow
 	case v == Allow:

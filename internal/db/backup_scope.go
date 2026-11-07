@@ -115,6 +115,7 @@ var rules = map[string]rule{
 	"web_user_roles":                          {owned, `role_id IN (SELECT id FROM rol)`, ""},
 	"web_rolepermissionsoverride":             {owned, `id IN (SELECT id FROM ovr)`, ""},
 	"web_rolepermissionsoverride_permissions": {owned, `rolepermissionsoverride_id IN (SELECT id FROM ovr)`, ""},
+	"pwikit_override_withheld":                {owned, `rolepermissionsoverride_id IN (SELECT id FROM ovr)`, ""},
 	"web_rolepermissionsoverride_restrictions": {owned,
 		`rolepermissionsoverride_id IN (SELECT id FROM ovr)`, ""},
 

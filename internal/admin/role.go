@@ -177,7 +177,7 @@ func (h *Handler) roleForm(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 
 	return h.page(w, r, loc, loc.T("admin.roles"), "role_form.html", map[string]any{
 		"Role":         row,
-		"Grants":       grantGroups(catalog, row.Allow, row.Deny),
+		"Grants":       grantGroups(catalog, row.Allow, row.Deny, nil),
 		"Categories":   categories,
 		"InlineModes":  inlineModes,
 		"ProfileModes": profileModes,

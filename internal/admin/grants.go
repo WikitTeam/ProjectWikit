@@ -11,9 +11,10 @@ import (
 )
 
 type grantRow struct {
-	Name  string
-	Allow bool
-	Deny  bool
+	Name     string
+	Allow    bool
+	Deny     bool
+	Withhold bool
 }
 
 type grantGroup struct {
@@ -21,12 +22,13 @@ type grantGroup struct {
 	Rows []grantRow
 }
 
-func grantGroups(catalog, allow, deny []string) []grantGroup {
+func grantGroups(catalog, allow, deny, withhold []string) []grantGroup {
 	row := func(name string) grantRow {
 		return grantRow{
-			Name:  name,
-			Allow: slices.Contains(allow, name),
-			Deny:  slices.Contains(deny, name),
+			Name:     name,
+			Allow:    slices.Contains(allow, name),
+			Deny:     slices.Contains(deny, name),
+			Withhold: slices.Contains(withhold, name),
 		}
 	}
 	known := make(map[string]bool, len(catalog))
@@ -104,8 +106,8 @@ func (h *Handler) overrideCells(ctx context.Context, scope func([]string) []stri
 		override := byRole[one.ID]
 		cells = append(cells, overrideCell{
 			Role:    one,
-			Grants:  grantGroups(catalog, override.Allow, override.Deny),
-			Present: len(override.Allow)+len(override.Deny) > 0,
+			Grants:  grantGroups(catalog, override.Allow, override.Deny, override.Withhold),
+			Present: len(override.Allow)+len(override.Deny)+len(override.Withhold) > 0,
 		})
 	}
 	return cells, nil
@@ -135,9 +137,11 @@ func (h *Handler) postedOverrides(r *http.Request, scope func([]string) []string
 				next.Allow = append(next.Allow, name)
 			case "deny":
 				next.Deny = append(next.Deny, name)
+			case "withhold":
+				next.Withhold = append(next.Withhold, name)
 			}
 		}
-		if len(next.Allow)+len(next.Deny) > 0 {
+		if len(next.Allow)+len(next.Deny)+len(next.Withhold) > 0 {
 			out = append(out, next)
 		}
 	}

@@ -375,6 +375,9 @@ func (x *explainer) cause(c perms.Cause) string {
 	case perms.ReasonOverrideAllow:
 		suffix, scope := x.overrideScope()
 		return t("admin.why-override-allow"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)
+	case perms.ReasonWithheld:
+		suffix, scope := x.overrideScope()
+		return t("admin.why-override-withheld"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)
 	case perms.ReasonOverrideDeny:
 		suffix, scope := x.overrideScope()
 		return t("admin.why-override-deny"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)
@@ -414,7 +417,7 @@ func (x *explainer) fix(c perms.Cause, name string) fix {
 		return fix{Text: t("admin.fix-no-grant", "perm", x.perm(name)), Href: Prefix + roleSlug + "/", Link: t("admin.roles")}
 	case perms.ReasonRoleDeny:
 		return fix{Text: t("admin.fix-role-deny", "role", x.roleName(c.RoleID)), Href: x.roleHref(c.RoleID), Link: t("admin.fix-open-role")}
-	case perms.ReasonOverrideDeny:
+	case perms.ReasonOverrideDeny, perms.ReasonWithheld:
 		suffix, scope := x.overrideScope()
 		f := fix{Text: t("admin.fix-override-deny"+suffix, "role", x.roleName(c.RoleID), "category", scope, "section", scope)}
 		if suffix != "" {
@@ -488,6 +491,8 @@ func (x *explainer) value(v perms.Value) string {
 		return x.loc.T("admin.perm-allow")
 	case perms.Deny:
 		return x.loc.T("admin.perm-deny")
+	case perms.Withhold:
+		return x.loc.T("admin.perm-withhold")
 	}
 	return x.loc.T("admin.perm-inherit")
 }

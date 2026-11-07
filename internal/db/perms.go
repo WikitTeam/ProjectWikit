@@ -32,22 +32,40 @@ FROM web_role_restrictions rr
 JOIN auth_permission p ON p.id = rr.permission_id
 WHERE rr.role_id = ANY($1)`)
 
+// Every entry an override sets, named by what it does to the role there.
+const overrideEntries = `
+    SELECT rolepermissionsoverride_id AS override_id, permission_id, 'allow' AS effect
+    FROM web_rolepermissionsoverride_permissions
+    UNION ALL
+    SELECT rolepermissionsoverride_id, permission_id, 'deny'
+    FROM web_rolepermissionsoverride_restrictions
+    UNION ALL
+    SELECT rolepermissionsoverride_id, permission_id, 'withhold'
+    FROM pwikit_override_withheld`
+
+func addOverrideEntry(o *perms.Override, codename, effect *string) {
+	if codename == nil || effect == nil {
+		return
+	}
+	switch *effect {
+	case "allow":
+		o.Permissions = append(o.Permissions, *codename)
+	case "deny":
+		o.Restrictions = append(o.Restrictions, *codename)
+	case "withhold":
+		o.Withheld = append(o.Withheld, *codename)
+	}
+}
+
 // An override with no permissions at all still has to come back: it takes the
 // one slot its role reads, and the rows after it are never looked at.
 var qCategoryOverrides = register("CategoryOverrides", `
-SELECT o.id, o.role_id, op.codename, op.restricted
+SELECT o.id, o.role_id, p.codename, x.effect
 FROM web_category c
 JOIN web_category_permissions_override cpo ON cpo.category_id = c.id
 JOIN web_rolepermissionsoverride o ON o.id = cpo.rolepermissionsoverride_id
-LEFT JOIN (
-    SELECT x.rolepermissionsoverride_id AS override_id, p.codename, false AS restricted
-    FROM web_rolepermissionsoverride_permissions x
-    JOIN auth_permission p ON p.id = x.permission_id
-    UNION ALL
-    SELECT x.rolepermissionsoverride_id, p.codename, true
-    FROM web_rolepermissionsoverride_restrictions x
-    JOIN auth_permission p ON p.id = x.permission_id
-) op ON op.override_id = o.id
+LEFT JOIN (`+overrideEntries+`) x ON x.override_id = o.id
+LEFT JOIN auth_permission p ON p.id = x.permission_id
 WHERE c.site_id = $1 AND c.name = $2
 ORDER BY o.id`)
 
@@ -151,24 +169,15 @@ func (d *DB) CategoryOverrides(ctx context.Context, siteID int64, category strin
 	var current int64
 	for rows.Next() {
 		var id, roleID int64
-		var codename *string
-		var restricted *bool
-		if err := rows.Scan(&id, &roleID, &codename, &restricted); err != nil {
+		var codename, effect *string
+		if err := rows.Scan(&id, &roleID, &codename, &effect); err != nil {
 			return nil, fmt.Errorf("scan permission override of category %q: %w", category, err)
 		}
 		if len(out) == 0 || current != id {
 			out = append(out, perms.Override{RoleID: roleID})
 			current = id
 		}
-		if codename == nil {
-			continue
-		}
-		override := &out[len(out)-1]
-		if *restricted {
-			override.Restrictions = append(override.Restrictions, *codename)
-			continue
-		}
-		override.Permissions = append(override.Permissions, *codename)
+		addOverrideEntry(&out[len(out)-1], codename, effect)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("list permission overrides of category %q: %w", category, err)

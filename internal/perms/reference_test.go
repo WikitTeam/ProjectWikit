@@ -67,6 +67,12 @@ func refOverride(allow, deny map[string]bool, overrides []Override, roleID int64
 			delete(allow, name)
 			deny[name] = true
 		}
+		for _, name := range override.Withheld {
+			if !contains(override.Permissions, name) && !contains(override.Restrictions, name) {
+				delete(allow, name)
+				delete(deny, name)
+			}
+		}
 		return
 	}
 }
@@ -177,7 +183,7 @@ func randomObject(r *rand.Rand, roles int) *Object {
 		Author: r.Intn(3) == 0,
 	}
 	for i := 0; i < r.Intn(4); i++ {
-		o.Overrides = append(o.Overrides, Override{RoleID: int64(1 + r.Intn(roles+1)), Permissions: randomNames(r), Restrictions: sparseNames(r)})
+		o.Overrides = append(o.Overrides, Override{RoleID: int64(1 + r.Intn(roles+1)), Permissions: randomNames(r), Restrictions: sparseNames(r), Withheld: sparseNames(r)})
 	}
 	if o.Kind == KindForumPost && r.Intn(4) != 0 {
 		o.Thread = &Object{Kind: KindForumThread, Locked: r.Intn(3) == 0, Author: r.Intn(3) == 0, Overrides: o.Overrides}
@@ -211,4 +217,13 @@ func TestExplainMatchesResolve(t *testing.T) {
 			}
 		}
 	}
+}
+
+func contains(list []string, name string) bool {
+	for _, one := range list {
+		if one == name {
+			return true
+		}
+	}
+	return false
 }
