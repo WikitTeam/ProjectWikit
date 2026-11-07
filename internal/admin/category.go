@@ -35,6 +35,7 @@ func (h *Handler) pageCategories(w http.ResponseWriter, r *http.Request, loc *i1
 			"Categories": found,
 			"New":        Prefix + pageCategorySlug + "/new",
 			"Base":       Prefix + pageCategorySlug + "/",
+			"Pages":      Prefix + pageSlug + "/",
 		})
 	}
 	return h.pageCategoryForm(w, r, loc, rest, "")

@@ -9,7 +9,7 @@
     <tr>
       <td>{{if .ID}}<a href="{{esc $.Base}}{{.ID}}">{{esc .Name}}</a>{{else}}<a href="{{esc $.New}}?name={{urlq .Name}}">{{esc .Name}}</a>{{end}}</td>
       <td>{{template "yes" .IsIndexed}}</td>
-      <td class="num">{{.Articles}}</td>
+      <td class="num"><a href="{{esc $.Pages}}?c={{urlq .Name}}">{{.Articles}}</a></td>
     </tr>
     {{else}}
     <tr><td colspan="3" class="muted">{{t "admin.empty"}}</td></tr>
