@@ -8,7 +8,7 @@ require (
 	github.com/extism/go-sdk v1.7.1
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/klauspost/compress v1.20.3
-	github.com/tdewolff/minify/v2 v2.24.24
+	github.com/tdewolff/minify/v2 v2.24.25
 	github.com/tetratelabs/wazero v1.12.0
 	github.com/ulikunitz/xz v0.5.17
 	golang.org/x/crypto v0.58.0
