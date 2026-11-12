@@ -210,16 +210,49 @@ func scoreTrend(points []db.TrendPoint, zone *time.Location) *shell.ScoreTrend {
 	span := math.Max(float64(t1.Sub(t0)), 1)
 	x := func(at time.Time) float64 { return trendL + float64(at.Sub(t0))/span*(trendW-trendL-trendR) }
 	y := func(v float64) float64 { return trendTop + (1-(v-lo)/(hi-lo))*(trendH-trendTop-trendBot) }
-	var b strings.Builder
-	fmt.Fprintf(&b, "M%.1f,%.1f", x(points[0].At), y(points[0].Value))
-	for _, p := range points[1:] {
-		fmt.Fprintf(&b, " H%.1f V%.1f", x(p.At), y(p.Value))
+	pts := make([][2]float64, 0, len(points))
+	for _, p := range points {
+		pts = append(pts, [2]float64{x(p.At), y(p.Value)})
 	}
 	return &shell.ScoreTrend{
-		Path: b.String(), Zero: y(0), Max: signed(hi), Min: signed(lo),
+		Path: curve(pts), Zero: y(0), Max: signed(hi), Min: signed(lo),
 		From: t0.In(zone).Format(time.DateOnly), To: t1.In(zone).Format(time.DateOnly),
 		Current: signed(last.Value),
 	}
+}
+
+// The slopes are clamped so the curve never bulges past a point, which would
+// show a score the author never had.
+func curve(pts [][2]float64) string {
+	p := make([][2]float64, 0, len(pts))
+	for i, q := range pts {
+		if i == len(pts)-1 || pts[i+1][0] > q[0] {
+			p = append(p, q)
+		}
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "M%.1f,%.1f", p[0][0], p[0][1])
+	n := len(p)
+	if n < 2 {
+		return b.String()
+	}
+	d := make([]float64, n-1)
+	for i := range d {
+		d[i] = (p[i+1][1] - p[i][1]) / (p[i+1][0] - p[i][0])
+	}
+	m := make([]float64, n)
+	m[0], m[n-1] = d[0], d[n-2]
+	for i := 1; i < n-1; i++ {
+		if d[i-1]*d[i] > 0 {
+			m[i] = 3 * (d[i-1] + d[i]) / (2/d[i-1] + 2/d[i] + 4/(d[i-1]+d[i]))
+		}
+	}
+	for i := 0; i < n-1; i++ {
+		h := (p[i+1][0] - p[i][0]) / 3
+		fmt.Fprintf(&b, " C%.1f,%.1f %.1f,%.1f %.1f,%.1f",
+			p[i][0]+h, p[i][1]+m[i]*h, p[i+1][0]-h, p[i+1][1]-m[i+1]*h, p[i+1][0], p[i+1][1])
+	}
+	return b.String()
 }
 
 func signed(v float64) string {
