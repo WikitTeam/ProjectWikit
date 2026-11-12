@@ -1217,7 +1217,7 @@
   "module-membershipquiz-login": "请先登录后再答题。",
   "module-membershipquiz-member": "您已加入该身份组。",
   "module-membershipquiz-locked": "答题机会已用完，请于 {time} 后再试。",
-  "module-membershipquiz-tries": "全部答对即可入组。剩余机会：{count} 次。",
+  "module-membershipquiz-failed-left": "没有全部答对。剩余机会：{count} 次。",
   "module-membershipquiz-submit": "提交",
   "module-membership-quiz-ok": "全部答对，身份组已发放。",
   "module-membership-quiz-failed": "没有全部答对。",

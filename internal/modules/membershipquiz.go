@@ -35,7 +35,10 @@ func renderMembershipQuiz(env module.Env, _ map[string]string, _ string) (string
 	}
 
 	var b strings.Builder
-	b.WriteString(submittedNotice(env, pc, "membership-quiz"))
+	failed := pc.PathParams.Get("membership-quiz") == "failed"
+	if !failed {
+		b.WriteString(submittedNotice(env, pc, "membership-quiz"))
+	}
 	if env.User == nil {
 		b.WriteString(noticeBlock(env.Text("module-membershipquiz-login")))
 		return b.String(), nil
@@ -54,9 +57,13 @@ func renderMembershipQuiz(env module.Env, _ map[string]string, _ string) (string
 	}
 	left, until := quiz.State(attempts, q.Tries, quiz.Hours(q.CooldownHours), time.Now())
 	if left == 0 {
-		b.WriteString(noticeBlock(env.Text("module-membershipquiz-locked",
-			"time", until.In(siteZone(env)).Format("2006-01-02 15:04"))))
+		const mark = "\x00time\x00"
+		text := escape.HTML(env.Text("module-membershipquiz-locked", "time", mark))
+		b.WriteString(`<div class="error-block"><p>` + strings.Replace(text, mark, renderDate(env, until), 1) + "</p></div>\n")
 		return b.String(), nil
+	}
+	if failed {
+		b.WriteString(noticeBlock(env.Text("module-membershipquiz-failed-left", "count", left)))
 	}
 
 	source := ""
@@ -66,7 +73,6 @@ func renderMembershipQuiz(env module.Env, _ map[string]string, _ string) (string
 	b.WriteString(`<form class="w-membership-quiz" method="post" action="` + membershipQuizPath + `">` + "\n")
 	b.WriteString(hiddenField("csrfmiddlewaretoken", pc.CSRF))
 	b.WriteString(hiddenField("page", source))
-	b.WriteString(`<p class="w-membership-quiz-tries">` + escape.HTML(env.Text("module-membershipquiz-tries", "count", left)) + "</p>\n")
 	for n, qi := range shuffled(len(questions)) {
 		question := questions[qi]
 		kind := "radio"

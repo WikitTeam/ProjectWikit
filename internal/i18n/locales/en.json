@@ -1217,7 +1217,7 @@
   "module-membershipquiz-login": "Sign in to take the quiz.",
   "module-membershipquiz-member": "You already hold this role.",
   "module-membershipquiz-locked": "You have used all your tries. Try again after {time}.",
-  "module-membershipquiz-tries": "Answer everything correctly to join. Tries left: {count}.",
+  "module-membershipquiz-failed-left": "Not all answers were correct. Tries left: {count}.",
   "module-membershipquiz-submit": "Submit",
   "module-membership-quiz-ok": "All correct. Your role has been granted.",
   "module-membership-quiz-failed": "Not all answers were correct.",
