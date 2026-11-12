@@ -244,7 +244,9 @@ func curve(pts [][2]float64) string {
 	m[0], m[n-1] = d[0], d[n-2]
 	for i := 1; i < n-1; i++ {
 		if d[i-1]*d[i] > 0 {
-			m[i] = 3 * (d[i-1] + d[i]) / (2/d[i-1] + 2/d[i] + 4/(d[i-1]+d[i]))
+			h0, h1 := p[i][0]-p[i-1][0], p[i+1][0]-p[i][0]
+			mid := (d[i-1]*h1 + d[i]*h0) / (h0 + h1)
+			m[i] = math.Copysign(min(math.Abs(d[i-1]), math.Abs(d[i]), math.Abs(mid)/2)*2, d[i])
 		}
 	}
 	for i := 0; i < n-1; i++ {

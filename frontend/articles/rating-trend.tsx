@@ -61,7 +61,16 @@ const curve = (pts: Array<[number, number]>) => {
   const d: number[] = []
   for (let i = 0; i < n - 1; i++) d.push((p[i + 1][1] - p[i][1]) / (p[i + 1][0] - p[i][0]))
   const m: number[] = [d[0]]
-  for (let i = 1; i < n - 1; i++) m.push(d[i - 1] * d[i] <= 0 ? 0 : (3 * (d[i - 1] + d[i])) / (2 / d[i - 1] + 2 / d[i] + 4 / (d[i - 1] + d[i])))
+  for (let i = 1; i < n - 1; i++) {
+    if (d[i - 1] * d[i] <= 0) {
+      m.push(0)
+      continue
+    }
+    const h0 = p[i][0] - p[i - 1][0]
+    const h1 = p[i + 1][0] - p[i][0]
+    const mid = (d[i - 1] * h1 + d[i] * h0) / (h0 + h1)
+    m.push(Math.sign(d[i]) * 2 * Math.min(Math.abs(d[i - 1]), Math.abs(d[i]), Math.abs(mid) / 2))
+  }
   m.push(d[n - 2])
   let path = `M${p[0][0]},${p[0][1]}`
   for (let i = 0; i < n - 1; i++) {

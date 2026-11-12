@@ -1,6 +1,7 @@
 package userpage
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -37,5 +38,23 @@ func TestCurveDropsRepeatedX(t *testing.T) {
 	}
 	if strings.Contains(got, "NaN") || strings.Contains(got, "Inf") {
 		t.Errorf("curve() = %q, want finite numbers", got)
+	}
+}
+
+func TestCurveStaysBetweenItsPoints(t *testing.T) {
+	pts := [][2]float64{{0, 96}, {100, 85}, {100.05, 20}, {100.1, 80}, {400, 50}, {400.02, 10}, {600, 5}}
+	got := curve(pts)
+	for _, field := range strings.FieldsFunc(got, func(r rune) bool { return r == ' ' || r == 'M' || r == 'C' }) {
+		_, y, ok := strings.Cut(field, ",")
+		if !ok {
+			continue
+		}
+		v, err := strconv.ParseFloat(y, 64)
+		if err != nil {
+			t.Fatalf("curve() = %q, has unreadable y %q", got, y)
+		}
+		if v < 5 || v > 96 {
+			t.Errorf("curve() y = %v, want within 5..96", v)
+		}
 	}
 }
