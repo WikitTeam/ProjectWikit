@@ -77,6 +77,9 @@ jobs:
         working-directory: ftml-capi
         run: cargo build --release
 
+      - name: Prepare the ftml library for linking
+        run: go run ./tools/ftmllib -install
+
       - name: Build
         run: |
           go build ./...

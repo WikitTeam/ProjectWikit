@@ -27,7 +27,7 @@ func buildCommand(args []string) error {
 	version := fs.String("version", "", "release version, such as v1.0.0 or v0.0.0-dev.abc1234")
 	out := fs.String("out", "dist", "directory the package is written into")
 	skipFrontend := fs.Bool("skip-frontend", false, "use the page assets already in static/")
-	skipFtml := fs.Bool("skip-ftml", false, "use the ftml library already in ftml-capi/target/release")
+	skipFtml := fs.Bool("skip-ftml", false, "use the ftml library already in ftml-capi/lib")
 	skipPostgres := fs.Bool("skip-postgres", false, "use the PostgreSQL archive already in internal/pgbundle/archive")
 	toolchain := fs.String("cargo-toolchain", defaultToolchain(), "rustup toolchain the ftml library is built with; empty uses the default")
 	if err := fs.Parse(args); err != nil {
@@ -56,9 +56,9 @@ func buildCommand(args []string) error {
 		if err := buildFtml(*toolchain); err != nil {
 			return err
 		}
-	}
-	if err := step("ftml", ".", nil, "go", "run", "./tools/ftmllib", "-emit-metadata"); err != nil {
-		return err
+		if err := step("ftml", ".", nil, "go", "run", "./tools/ftmllib", "-install", "-toolchain", *toolchain); err != nil {
+			return err
+		}
 	}
 	if !*skipPostgres {
 		if err := step("postgres", ".", nil, "go", "run", "./tools/pgarchive"); err != nil {
@@ -114,7 +114,7 @@ func buildCommand(args []string) error {
 }
 
 func copyFtmlLibrary(out string) error {
-	meta, err := os.ReadFile(filepath.Join("ftml-capi", "target", "release", "libftml_capi.json"))
+	meta, err := os.ReadFile(filepath.Join("ftml-capi", "lib", "libftml_capi.json"))
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func copyFtmlLibrary(out string) error {
 	for _, name := range []string{"libftml_capi.a", "libftml_capi.json"} {
 		ext := filepath.Ext(name)
 		published := strings.TrimSuffix(name, ext) + "-" + described.Target + ext
-		if err := copyFile(filepath.Join("ftml-capi", "target", "release", name), filepath.Join(out, published), 0o644); err != nil {
+		if err := copyFile(filepath.Join("ftml-capi", "lib", name), filepath.Join(out, published), 0o644); err != nil {
 			return err
 		}
 	}

@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -20,7 +21,8 @@ import (
 const (
 	libraryName  = "libftml_capi.a"
 	metadataName = "libftml_capi.json"
-	defaultDir   = "ftml-capi/target/release"
+	defaultDir   = "ftml-capi/lib"
+	defaultBuilt = "ftml-capi/target/release"
 )
 
 type metadata struct {
@@ -42,7 +44,9 @@ func run(args []string) error {
 	dir := fs.String("dir", defaultDir, "directory holding the static library")
 	baseURL := fs.String("url", os.Getenv("PWIKIT_FTML_LIB_URL"), "base URL to download a missing library from")
 	target := fs.String("target", defaultTarget(), "target triple the library must be built for")
-	emit := fs.Bool("emit-metadata", false, "write metadata describing the library already in -dir")
+	install := fs.Bool("install", false, "copy the library cargo built in -from into -dir, ready to link, and describe it")
+	from := fs.String("from", defaultBuilt, "directory cargo writes the static library to")
+	toolchain := fs.String("toolchain", "", "rustup toolchain the library was built with; empty uses the default")
 	abi := fs.Int("abi", 0, "ABI version the build expects")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -58,7 +62,10 @@ func run(args []string) error {
 		*abi = v
 	}
 
-	if *emit {
+	if *install {
+		if err := installLibrary(*from, *dir, *toolchain); err != nil {
+			return err
+		}
 		return emitMetadata(*dir, *abi, *target)
 	}
 	return ensure(*dir, *baseURL, *target, *abi)
@@ -92,7 +99,7 @@ func ensure(dir, baseURL, target string, abi int) error {
 		}
 		if baseURL == "" {
 			return fmt.Errorf("%s is missing and no -url was given; build it with\n"+
-				"    cd ftml-capi && cargo build --release", libPath)
+				"    cd ftml-capi && cargo build --release && cd .. && go run ./tools/ftmllib -install", libPath)
 		}
 		if err := download(dir, baseURL, target); err != nil {
 			return err
@@ -131,7 +138,7 @@ func readMetadata(dir string) (metadata, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return meta, fmt.Errorf("%s is missing; run this tool with -emit-metadata after building the library", path)
+			return meta, fmt.Errorf("%s is missing; run this tool with -install after building the library", path)
 		}
 		return meta, err
 	}
@@ -158,6 +165,73 @@ func emitMetadata(dir string, abi int, target string) error {
 	}
 	fmt.Printf("wrote %s\n", path)
 	return nil
+}
+
+var bitcodeSections = []string{".llvmbc", ".llvmcmd", "__LLVM,__bitcode", "__LLVM,__cmdline"}
+
+func installLibrary(from, dir, toolchain string) error {
+	src := filepath.Join(from, libraryName)
+	if _, err := os.Stat(src); err != nil {
+		return fmt.Errorf("%w; build it with\n    cd ftml-capi && cargo build --release", err)
+	}
+	objcopy, err := findObjcopy(toolchain)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	dest := filepath.Join(dir, libraryName)
+	args := []string{}
+	for _, name := range bitcodeSections {
+		args = append(args, "--remove-section="+name)
+	}
+	args = append(args, src, dest)
+	cmd := exec.Command(objcopy, args...)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s %s: %w", objcopy, strings.Join(args, " "), err)
+	}
+	fmt.Printf("wrote %s\n", dest)
+	return nil
+}
+
+func findObjcopy(toolchain string) (string, error) {
+	if found, err := objcopyIn(toolchain); err == nil {
+		return found, nil
+	}
+	cmd := exec.Command("rustup", append(toolchainArg(toolchain), "component", "add", "llvm-tools")...)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("rustup component add llvm-tools: %w", err)
+	}
+	return objcopyIn(toolchain)
+}
+
+func objcopyIn(toolchain string) (string, error) {
+	out, err := exec.Command("rustc", append(toolchainArg(toolchain), "--print", "sysroot")...).Output()
+	if err != nil {
+		return "", fmt.Errorf("rustc --print sysroot: %w", err)
+	}
+	name := "llvm-objcopy"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	found, err := filepath.Glob(filepath.Join(strings.TrimSpace(string(out)), "lib", "rustlib", "*", "bin", name))
+	if err != nil {
+		return "", err
+	}
+	if len(found) == 0 {
+		return "", errors.New("llvm-objcopy is not in the Rust toolchain; run rustup component add llvm-tools")
+	}
+	return found[0], nil
+}
+
+func toolchainArg(toolchain string) []string {
+	if toolchain == "" {
+		return nil
+	}
+	return []string{"+" + toolchain}
 }
 
 func ftmlVersion() string {

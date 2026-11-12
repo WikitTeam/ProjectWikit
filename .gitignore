@@ -3,6 +3,7 @@
 *.log
 node_modules
 target
+/ftml-capi/lib/
 .env
 *.env
 /files

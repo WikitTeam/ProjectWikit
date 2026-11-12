@@ -13,7 +13,7 @@ COPY static/ /src/static/
 RUN yarn build
 
 FROM golang:1.26-bookworm AS build
-RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal -c llvm-tools
 ENV PATH=/root/.cargo/bin:$PATH
 WORKDIR /src
 COPY ftml/ ftml/
@@ -24,6 +24,7 @@ RUN go mod download
 COPY . .
 COPY --from=frontend /src/static/ static/
 COPY --from=frontend /src/frontend/node_modules/ frontend/node_modules/
+RUN go run ./tools/ftmllib -install
 ARG VERSION=v0.0.0-dev
 RUN CGO_ENABLED=1 go build -tags assets -trimpath \
       -ldflags "-s -w -X github.com/WikitTeam/ProjectWikit/internal/version.Release=${VERSION}" \

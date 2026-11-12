@@ -4,6 +4,7 @@ docs
 dist
 frontend/node_modules
 ftml-capi/target
+ftml-capi/lib
 ftml/target
 internal/pgbundle/archive
 files
