@@ -96,6 +96,12 @@
         </div>
         {{end}}
         <div class="page-header"><h1>{{esc .Title}}</h1></div>
+        <nav class="admin-toc" aria-label="{{.T "admin.toc"}}" hidden>
+          <details>
+            <summary class="admin-toc-title">{{.T "admin.toc"}}</summary>
+            <ol></ol>
+          </details>
+        </nav>
         {{.Body}}
       </div>
 
@@ -103,6 +109,24 @@
   </div>
 </div>
 <script>
+(function () {
+  var toc = document.querySelector('#sm-action-area .admin-toc');
+  if (!toc) { return; }
+  var heads = document.querySelectorAll('#sm-action-area .widget-title h5');
+  if (heads.length < 2) { return; }
+  var list = toc.querySelector('ol');
+  heads.forEach(function (h, i) {
+    var box = h.closest('.widget-box') || h.closest('.widget-title');
+    if (!box.id) { box.id = 'section-' + (i + 1); }
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = '#' + box.id;
+    a.textContent = h.textContent.trim();
+    li.appendChild(a);
+    list.appendChild(li);
+  });
+  toc.hidden = false;
+})();
 (function () {
   var boxes = document.querySelectorAll('#site-manager-menu .menu-box');
   if (!boxes.length) { return; }

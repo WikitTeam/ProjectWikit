@@ -563,3 +563,16 @@ body.admin .system-container { min-height: calc(100vh - 66px); }
 .admin-shell .search-results .search-none { margin: 6px 2px; font-size: 13px; color: var(--muted); }
 .admin-shell .link-pair { display: flex; gap: 6px; margin-bottom: 6px; }
 .admin-shell .link-pair select { width: auto; }
+
+.admin-shell .admin-toc {
+  display: inline-block; min-width: 220px; max-width: 100%;
+  margin: -10px 0 28px; padding: 10px 16px 10px 14px;
+  background: var(--well); border-left: 3px solid var(--ledger);
+}
+.admin-shell .admin-toc[hidden] { display: none; }
+.admin-shell .admin-toc-title { font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; user-select: none; }
+.admin-shell .admin-toc ol { margin: 4px 0 0 20px; padding: 0; }
+.admin-shell .admin-toc li { font-size: 14px; line-height: 1.7; }
+.admin-shell .admin-toc a { color: var(--signal); text-decoration: none; }
+.admin-shell .admin-toc a:hover { color: var(--ledger); text-decoration: underline; text-underline-offset: 3px; }
+.admin-shell .widget-box[id] { scroll-margin-top: 60px; }

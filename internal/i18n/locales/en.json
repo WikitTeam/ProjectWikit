@@ -570,6 +570,7 @@
   "admin.search": "Search",
   "admin.search-admin": "Search admin",
   "admin.search-none": "Nothing matches",
+  "admin.toc": "Contents",
   "admin.search-pages": "Page name or title",
   "admin.search-tags": "Tag name",
   "admin.search-users": "Username, display name or email",
