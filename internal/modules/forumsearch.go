@@ -147,26 +147,26 @@ func forumPlacesAPI(env module.Env, _ map[string]string) (wikijson.Object, error
 	if err != nil {
 		return nil, err
 	}
-	names := map[int64]string{}
-	for _, s := range sections {
-		if slices.Contains(searchable, s.ID) {
-			names[s.ID] = s.Name
-		}
-	}
 	categories, err := env.Data.ForumCategories()
 	if err != nil {
 		return nil, err
 	}
-	for _, c := range categories {
-		section, ok := names[c.SectionID]
-		if !ok || c.IsForComments {
+	// The picker groups neighbours that share a section, so categories have to
+	// come section by section or one section shows up as several groups.
+	for _, s := range sections {
+		if !slices.Contains(searchable, s.ID) {
 			continue
 		}
-		out = append(out, wikijson.Object{
-			{Key: "value", Value: strconv.FormatInt(c.ID, 10)},
-			{Key: "name", Value: c.Name},
-			{Key: "group", Value: section},
-		})
+		for _, c := range categories {
+			if c.SectionID != s.ID || c.IsForComments {
+				continue
+			}
+			out = append(out, wikijson.Object{
+				{Key: "value", Value: strconv.FormatInt(c.ID, 10)},
+				{Key: "name", Value: c.Name},
+				{Key: "group", Value: s.Name},
+			})
+		}
 	}
 	out = append(out, wikijson.Object{{Key: "value", Value: forumCommentsScope}, {Key: "name", Value: env.Text("search-forum-comments")}, {Key: "group", Value: ""}})
 	return wikijson.Object{{Key: "places", Value: out}}, nil
