@@ -54,6 +54,23 @@ const Styles = styled.figure`
   }
 `
 
+const curve = (pts: Array<[number, number]>) => {
+  const p = pts.filter((q, i) => i === pts.length - 1 || pts[i + 1][0] > q[0])
+  if (p.length < 2) return `M${p[0][0]},${p[0][1]}`
+  const n = p.length
+  const d: number[] = []
+  for (let i = 0; i < n - 1; i++) d.push((p[i + 1][1] - p[i][1]) / (p[i + 1][0] - p[i][0]))
+  const m: number[] = [d[0]]
+  for (let i = 1; i < n - 1; i++) m.push(d[i - 1] * d[i] <= 0 ? 0 : (3 * (d[i - 1] + d[i])) / (2 / d[i - 1] + 2 / d[i] + 4 / (d[i - 1] + d[i])))
+  m.push(d[n - 2])
+  let path = `M${p[0][0]},${p[0][1]}`
+  for (let i = 0; i < n - 1; i++) {
+    const h = (p[i + 1][0] - p[i][0]) / 3
+    path += ` C${p[i][0] + h},${p[i][1] + m[i] * h} ${p[i + 1][0] - h},${p[i + 1][1] - m[i + 1] * h} ${p[i + 1][0]},${p[i + 1][1]}`
+  }
+  return path
+}
+
 const show = (value: number, stars: boolean) => (stars ? value.toFixed(1) : value > 0 ? `+${value}` : String(value))
 
 const RatingTrend: React.FC<Props> = ({ points, stars }) => {
@@ -72,10 +89,7 @@ const RatingTrend: React.FC<Props> = ({ points, stars }) => {
     if (hi === lo) hi = lo + 1
     const x = (ts: number) => PAD.left + ((ts - t0) / Math.max(t1 - t0, 1)) * (W - PAD.left - PAD.right)
     const y = (v: number) => PAD.top + (1 - (v - lo) / (hi - lo)) * (H - PAD.top - PAD.bottom)
-    let path = `M${x(series[0][0])},${y(series[0][1])}`
-    for (let i = 1; i < series.length; i++) {
-      path += ` H${x(series[i][0])} V${y(series[i][1])}`
-    }
+    const path = curve(series.map(([ts, v]) => [x(ts), y(v)] as [number, number]))
     return { series, x, y, lo, hi, path, t0, t1 }
   }, [points, stars])
 
