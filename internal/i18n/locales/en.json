@@ -1219,6 +1219,7 @@
   "module-membershipquiz-locked": "You have used all your tries. Try again after {time}.",
   "module-membershipquiz-failed-left": "Not all answers were correct. Tries left: {count}.",
   "module-membershipquiz-submit": "Submit",
+  "module-notheme-scope": "scope must be site or all, not \"{scope}\".",
   "module-membership-quiz-ok": "All correct. Your role has been granted.",
   "module-membership-quiz-failed": "Not all answers were correct.",
   "admin.announcement-untitled": "(untitled)",

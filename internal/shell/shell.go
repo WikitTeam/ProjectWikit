@@ -72,6 +72,7 @@ type Data struct {
 	GoogleTagID string
 
 	ThemeURL       string
+	NoBaseStyle    bool
 	ComputedStyles []string
 
 	NavTop  string

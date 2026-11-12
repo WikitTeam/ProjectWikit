@@ -33,9 +33,18 @@ type Context struct {
 
 	AddCSS         string
 	ComputedStyles []string
+	DropTheme      ThemeDrop
 	OGDescription  string
 	OGImage        string
 }
+
+type ThemeDrop int
+
+const (
+	KeepTheme ThemeDrop = iota
+	DropSiteTheme
+	DropAllThemes
+)
 
 func NewContext(article, sourceArticle *db.Article, pathParams PathParams, user *db.User) *Context {
 	c := &Context{
@@ -74,5 +83,6 @@ func (c *Context) Merge(other *Context) {
 	c.RedirectTo = other.RedirectTo
 	c.NoIndex = c.NoIndex || other.NoIndex
 	c.ComputedStyles = append(c.ComputedStyles, other.ComputedStyles...)
+	c.DropTheme = max(c.DropTheme, other.DropTheme)
 	c.Title = other.Title
 }

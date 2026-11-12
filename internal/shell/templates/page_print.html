@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" type="text/css" href="{{esc (.Asset "fontawesome/css/all.css")}}">
 
-    <link rel="stylesheet" type="text/css" href="{{esc (.Asset "wikidot-base.css")}}">
+    {{if not .NoBaseStyle}}<link rel="stylesheet" type="text/css" href="{{esc (.Asset "wikidot-base.css")}}">{{end}}
     <link rel="stylesheet" type="text/css" href="{{esc (.Asset "app.css")}}">
     {{if .ThemeURL}}<link rel="stylesheet" type="text/css" href="{{esc .ThemeURL}}">{{end}}
     <style>

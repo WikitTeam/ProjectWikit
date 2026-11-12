@@ -40,6 +40,7 @@ var registry = map[string]Info{
 	"authorrank":           {Name: "authorrank", HasContent: true, ItemBody: true},
 	"newpage":              {Name: "newpage"},
 	"nextpage":             {Name: "nextpage", HasContent: true, ItemBody: true},
+	"notheme":              {Name: "notheme"},
 	"pagedescription":      {Name: "pagedescription", HasContent: true},
 	"pageimage":            {Name: "pageimage"},
 	"pagesbytag":           {Name: "pagesbytag"},

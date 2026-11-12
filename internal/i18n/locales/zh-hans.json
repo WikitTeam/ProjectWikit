@@ -1219,6 +1219,7 @@
   "module-membershipquiz-locked": "答题机会已用完，请于 {time} 后再试。",
   "module-membershipquiz-failed-left": "没有全部答对。剩余机会：{count} 次。",
   "module-membershipquiz-submit": "提交",
+  "module-notheme-scope": "scope 只能是 site 或 all，当前为“{scope}”。",
   "module-membership-quiz-ok": "全部答对，身份组已发放。",
   "module-membership-quiz-failed": "没有全部答对。",
   "admin.announcement-untitled": "（无标题）",

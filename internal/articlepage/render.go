@@ -45,6 +45,7 @@ type body struct {
 	styles    []string
 	redirect  string
 	noIndex   bool
+	dropTheme page.ThemeDrop
 }
 
 func (h *Handler) render(req *request) (*result, error) {
@@ -167,6 +168,7 @@ func (h *Handler) articleBody(req *request, canonical string) (body, error) {
 		redirect:  pc.RedirectTo,
 		image:     pc.OGImage,
 		noIndex:   pc.NoIndex,
+		dropTheme: pc.DropTheme,
 	}
 	if pc.OGDescription != "" {
 		out.excerpt = pc.OGDescription
@@ -520,7 +522,8 @@ func (h *Handler) shellData(req *request, out body, canonical, navTop, navSide s
 		OGURL:             canonical,
 		NoIndex:           !indexed || out.noIndex,
 		GoogleTagID:       h.deps.GoogleTagID,
-		ThemeURL:          theme,
+		ThemeURL:          keptTheme(theme, out.dropTheme),
+		NoBaseStyle:       out.dropTheme >= page.DropAllThemes,
 		ComputedStyles:    out.styles,
 		NavTop:            navTop,
 		NavSide:           navSide,
@@ -554,7 +557,8 @@ func (h *Handler) printData(req *request, out body, canonical string) (shell.Dat
 		License:        license,
 		OGURL:          canonical,
 		NoIndex:        true,
-		ThemeURL:       theme,
+		ThemeURL:       keptTheme(theme, out.dropTheme),
+		NoBaseStyle:    out.dropTheme >= page.DropAllThemes,
 		ComputedStyles: out.styles,
 		Title:          out.title,
 		Content:        out.html,
@@ -566,6 +570,13 @@ func documentTitle(title, siteTitle string) string {
 		return title + " - " + siteTitle
 	}
 	return title
+}
+
+func keptTheme(url string, drop page.ThemeDrop) string {
+	if drop >= page.DropSiteTheme {
+		return ""
+	}
+	return url
 }
 
 func (h *Handler) themeURL(req *request) (string, error) {
