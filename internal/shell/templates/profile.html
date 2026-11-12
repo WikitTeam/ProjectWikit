@@ -105,6 +105,29 @@
         <div class="empty">{{.T "profile.no-pages"}}</div>
         {{end}}
       </section>
+      {{else if .FolderAsked}}
+      <section class="profile-section">
+        {{with .OpenFolder}}
+        <span class="label">{{$.T "profile.favourite-folder" "name" .Name}}</span>
+        {{if .Pages}}
+        <ul class="feed pages">
+          {{range .Pages}}
+          <li>
+            <span class="what-line"><a class="what" href="{{esc .URL}}">{{esc .Title}}</a></span>
+            <span class="when">{{$.ODate .At}}</span>
+            <span class="from">{{esc .Site}}</span>
+          </li>
+          {{end}}
+        </ul>
+        {{$.FolderPagination}}
+        {{else}}
+        <div class="empty">{{$.T "profile.favourite-folder-empty"}}</div>
+        {{end}}
+        {{else}}
+        <div class="empty">{{.T "profile.favourite-folder-missing"}}</div>
+        {{end}}
+        <p class="folder-back"><a href="{{esc .ProfileURL}}">{{.T "profile.favourite-folder-back"}}</a></p>
+      </section>
       {{else}}
       {{if .Pins}}
       <section class="profile-section">
@@ -114,6 +137,19 @@
           <li>
             <a class="pin-title" href="{{esc .URL}}">{{esc .Title}}</a>
             <span class="pin-meta"><span>{{esc .Site}}</span><span>{{$.ODate .At}}</span></span>
+          </li>
+          {{end}}
+        </ul>
+      </section>
+      {{end}}
+      {{if .Folders}}
+      <section class="profile-section">
+        <span class="label">{{.T "profile.favourite-folders"}}</span>
+        <ul class="pins folders">
+          {{range .Folders}}
+          <li>
+            <a class="pin-title" href="{{esc .URL}}"><i class="fas fa-folder"></i> {{esc .Name}}</a>
+            <span class="pin-meta"><span>{{$.T "profile.favourite-folder-count" "count" .Count}}</span></span>
           </li>
           {{end}}
         </ul>

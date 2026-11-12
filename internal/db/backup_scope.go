@@ -187,6 +187,8 @@ var rules = map[string]rule{
 	"pwikit_profile_field":                      {left, "", "a profile follows the person across every site"},
 	"pwikit_profile_link":                       {left, "", "a profile follows the person across every site"},
 	"pwikit_profile_pin":                        {left, "", "a profile follows the person across every site"},
+	"pwikit_favourite_folder":                   {left, "", "favourite folders follow the person across every site"},
+	"pwikit_favourite_place":                    {left, "", "favourite folders follow the person across every site"},
 }
 
 // An empty return means the table does not travel.

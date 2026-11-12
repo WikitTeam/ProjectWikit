@@ -231,6 +231,14 @@ type ProfilePage struct {
 	Pinned    bool
 }
 
+type ProfileFolder struct {
+	Key   string
+	Name  string
+	URL   string
+	Count int
+	Pages []ProfilePage
+}
+
 type ActivityCell struct {
 	Date  string
 	Count int
@@ -312,9 +320,14 @@ type Profile struct {
 	Sites    []SiteChoice
 	Years    []YearChoice
 	Pins     []ProfilePage
-	Pages    []ProfilePage
-	PinLimit int
-	CSRF     string
+	Folders  []ProfileFolder
+
+	FolderAsked      bool
+	OpenFolder       *ProfileFolder
+	FolderPagination string
+	Pages            []ProfilePage
+	PinLimit         int
+	CSRF             string
 
 	Tab   string
 	Tabs  []ProfileTab

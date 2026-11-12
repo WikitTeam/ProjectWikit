@@ -254,6 +254,10 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 		if h.showsPins(ctx, profile.ID) {
 			data.Pins, err = h.pages(ctx, current, profile, viewer, true, window{})
 		}
+		if err == nil {
+			data.Folders, err = h.favouriteFolders(ctx, loc, current, profile, viewer, data.ProfileURL)
+			data.OpenFolder, data.FolderPagination, data.FolderAsked = openFolder(r, loc, data.Folders)
+		}
 		if err == nil && h.showsStats(ctx, profile.ID) {
 			err = h.activity(r, loc, current, profile, viewer, &data)
 		}

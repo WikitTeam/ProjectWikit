@@ -41,6 +41,9 @@ func (d *DB) AddFavourite(ctx context.Context, articleID, userID int64, at time.
 }
 
 var qRemoveFavourite = register("RemoveFavourite", `
+WITH gone AS (
+  DELETE FROM pwikit_favourite_place WHERE article_id = $1 AND user_id = $2
+)
 DELETE FROM web_articlefavourite WHERE article_id = $1 AND user_id = $2`)
 
 func (d *DB) RemoveFavourite(ctx context.Context, articleID, userID int64) error {
@@ -60,14 +63,15 @@ var qFavouritesOf = register("FavouritesOf", `
 SELECT a.site_id, `+prefixedArticleColumns+`, f.created_at
 FROM web_articlefavourite f
 JOIN web_article a ON a.id = f.article_id
-WHERE f.user_id = $1
+LEFT JOIN pwikit_favourite_place p ON p.user_id = f.user_id AND p.article_id = f.article_id
+WHERE f.user_id = $1 AND COALESCE(p.folder_id, 0) = $4
 ORDER BY f.created_at DESC, f.id DESC
 OFFSET $2 LIMIT $3`)
 
 // Only the owner ever reads this, so no permission filter runs here. Whoever
 // calls it has already established that the rows belong to the reader.
-func (d *DB) FavouritesOf(ctx context.Context, userID int64, offset, limit int) ([]Favourite, error) {
-	rows, err := d.pool.Query(ctx, qFavouritesOf, userID, offset, limit)
+func (d *DB) FavouritesOf(ctx context.Context, userID, folderID int64, offset, limit int) ([]Favourite, error) {
+	rows, err := d.pool.Query(ctx, qFavouritesOf, userID, offset, limit, folderID)
 	if err != nil {
 		return nil, fmt.Errorf("list favourites of user %d: %w", userID, err)
 	}
@@ -90,11 +94,14 @@ func (d *DB) FavouritesOf(ctx context.Context, userID int64, offset, limit int) 
 }
 
 var qFavouriteCountOf = register("FavouriteCountOf", `
-SELECT count(*) FROM web_articlefavourite WHERE user_id = $1`)
+SELECT count(*)
+FROM web_articlefavourite f
+LEFT JOIN pwikit_favourite_place p ON p.user_id = f.user_id AND p.article_id = f.article_id
+WHERE f.user_id = $1 AND COALESCE(p.folder_id, 0) = $2`)
 
-func (d *DB) FavouriteCountOf(ctx context.Context, userID int64) (int, error) {
+func (d *DB) FavouriteCountOf(ctx context.Context, userID, folderID int64) (int, error) {
 	var n int
-	if err := d.pool.QueryRow(ctx, qFavouriteCountOf, userID).Scan(&n); err != nil {
+	if err := d.pool.QueryRow(ctx, qFavouriteCountOf, userID, folderID).Scan(&n); err != nil {
 		return 0, fmt.Errorf("count favourites of user %d: %w", userID, err)
 	}
 	return n, nil
