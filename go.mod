@@ -7,7 +7,7 @@ require (
 	github.com/bodgit/sevenzip v1.6.5
 	github.com/extism/go-sdk v1.7.1
 	github.com/jackc/pgx/v5 v5.12.0
-	github.com/klauspost/compress v1.20.3
+	github.com/klauspost/compress v1.20.4
 	github.com/tdewolff/minify/v2 v2.24.25
 	github.com/tetratelabs/wazero v1.12.0
 	github.com/ulikunitz/xz v0.5.17
