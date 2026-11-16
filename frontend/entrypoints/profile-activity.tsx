@@ -2,6 +2,7 @@ import * as React from 'react'
 import { t } from '~util/i18n'
 import Loader from '~util/loader'
 import { renderTo, unmountFromRoot } from '~util/react-render-into'
+import RatingTrend from '../articles/rating-trend'
 
 interface DayItem {
   kind: 'edit' | 'vote' | 'post'
@@ -21,7 +22,53 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, t
   return node
 }
 
+function attachScoreTrend() {
+  const mount = document.querySelector<HTMLElement>('.score-trend-mount[data-points]')
+  if (!mount) return
+  let points: Array<[number, number]>
+  try {
+    points = JSON.parse(mount.dataset.points!)
+  } catch {
+    return
+  }
+  const caption = mount.dataset.caption || ''
+  mount.innerHTML = ''
+  renderTo(mount, <RatingTrend points={points} stars={false} caption={() => caption} wide />)
+}
+
+function attachPinPicker() {
+  const picker = document.querySelector<HTMLDetailsElement>('details.pin-picker')
+  const form = picker?.querySelector<HTMLFormElement>('.pin-picker-panel')
+  if (!picker || !form) return
+  const limit = Number(form.dataset.limit) || 0
+  const boxes = [...form.querySelectorAll<HTMLInputElement>('input[name="article_id"]')]
+
+  const cap = () => {
+    const full = limit > 0 && boxes.filter(b => b.checked).length >= limit
+    for (const box of boxes) box.disabled = full && !box.checked
+  }
+  cap()
+  form.addEventListener('change', cap)
+
+  form.querySelector<HTMLInputElement>('.pin-picker-filter')?.addEventListener('input', e => {
+    const wanted = (e.target as HTMLInputElement).value.trim().toLowerCase()
+    for (const box of boxes) {
+      const row = box.closest('li')!
+      row.hidden = wanted !== '' && !row.textContent!.toLowerCase().includes(wanted)
+    }
+  })
+
+  document.addEventListener('click', e => {
+    if (picker.open && !picker.contains(e.target as Node)) picker.open = false
+  })
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && picker.open) picker.open = false
+  })
+}
+
 export function attachProfileActivity() {
+  attachScoreTrend()
+  attachPinPicker()
   const heatmap = document.querySelector<HTMLElement>('.heatmap[data-days]')
   const panel = document.querySelector<HTMLElement>('.activity-day')
   if (!heatmap || !panel) return

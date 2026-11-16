@@ -253,6 +253,10 @@ func (h *Handler) data(r *http.Request, loc *i18n.Localizer, current *db.Site,
 	default:
 		if h.showsPins(ctx, profile.ID) {
 			data.Pins, err = h.pages(ctx, current, profile, viewer, true, window{})
+			if err == nil && data.IsSelf {
+				data.PinPicker = true
+				data.PinChoices, err = h.pages(ctx, current, profile, viewer, false, window{})
+			}
 		}
 		if err == nil {
 			data.Folders, err = h.favouriteFolders(ctx, loc, current, profile, viewer, data.ProfileURL)

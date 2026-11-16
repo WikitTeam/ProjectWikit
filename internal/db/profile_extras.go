@@ -58,13 +58,14 @@ WHERE aa.user_id = $1 AND ($2 = false OR EXISTS (SELECT 1 FROM pwikit_profile_pi
 ORDER BY a.created_at DESC, a.id DESC
 LIMIT $3`)
 
-	qPin = register("PinPage", `
+	qKeepPins = register("KeepPins", `
+DELETE FROM pwikit_profile_pin WHERE user_id = $1 AND NOT (article_id = ANY($2))`)
+	qAddPins = register("AddPins", `
 INSERT INTO pwikit_profile_pin (user_id, article_id, pinned_at)
-SELECT $1, $2, $3
-WHERE EXISTS (SELECT 1 FROM web_article_authors WHERE user_id = $1 AND article_id = $2)
-  AND (SELECT count(*) FROM pwikit_profile_pin WHERE user_id = $1) < $4
+SELECT $1, aa.article_id, $3
+FROM web_article_authors aa
+WHERE aa.user_id = $1 AND aa.article_id = ANY($2)
 ON CONFLICT DO NOTHING`)
-	qUnpin = register("UnpinPage", `DELETE FROM pwikit_profile_pin WHERE user_id = $1 AND article_id = $2`)
 )
 
 func (d *DB) ProfileExtras(ctx context.Context, userID int64) ([]ProfileField, []ProfileLink, error) {
@@ -140,16 +141,25 @@ func (d *DB) AuthoredPages(ctx context.Context, userID int64, pinnedOnly bool, f
 	return out, rows.Err()
 }
 
-// Pin only takes a page the user is an author of, and stops at MaxPins.
-func (d *DB) Pin(ctx context.Context, userID, articleID int64, on bool) error {
-	var err error
-	if on {
-		_, err = d.pool.Exec(ctx, qPin, userID, articleID, time.Now().UTC(), MaxPins)
-	} else {
-		_, err = d.pool.Exec(ctx, qUnpin, userID, articleID)
+// Pages pinned before keep their pin time, and anything past MaxPins or not
+// written by the user is left out.
+func (d *DB) SetPins(ctx context.Context, userID int64, articleIDs []int64) error {
+	if len(articleIDs) > MaxPins {
+		articleIDs = articleIDs[:MaxPins]
 	}
+	if articleIDs == nil {
+		articleIDs = []int64{}
+	}
+	tx, err := d.pool.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("pin %d for %d: %w", articleID, userID, err)
+		return fmt.Errorf("begin pins of %d: %w", userID, err)
 	}
-	return nil
+	defer tx.Rollback(context.WithoutCancel(ctx))
+	if _, err := tx.Exec(ctx, qKeepPins, userID, articleIDs); err != nil {
+		return fmt.Errorf("drop pins of %d: %w", userID, err)
+	}
+	if _, err := tx.Exec(ctx, qAddPins, userID, articleIDs, time.Now().UTC()); err != nil {
+		return fmt.Errorf("add pins of %d: %w", userID, err)
+	}
+	return tx.Commit(ctx)
 }

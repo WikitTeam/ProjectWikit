@@ -78,7 +78,6 @@
           {{if or .PagesFrom .PagesTo}}<a class="clear" href="?tab=pages">{{.T "profile.filter-clear"}}</a>{{end}}
         </form>
         {{if .Pages}}
-        {{if .CSRF}}<p class="pin-hint">{{.T "profile.pin-hint" "count" .PinLimit}}</p>{{end}}
         <ul class="feed pages">
           {{range .Pages}}
           <li>
@@ -88,15 +87,6 @@
             </span>
             <span class="when">{{$.ODate .At}}</span>
             <span class="from">{{esc .Site}}</span>
-            {{if $.CSRF}}
-            <form class="pin-form" method="post" action="/-/profile/pins">
-              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc $.CSRF}}">
-              <input type="hidden" name="article_id" value="{{.ArticleID}}">
-              <input type="hidden" name="on" value="{{if .Pinned}}0{{else}}1{{end}}">
-              <input type="hidden" name="back" value="{{esc $.ProfileURL}}?tab=pages">
-              <button type="submit" class="btn-link">{{if .Pinned}}{{$.T "profile.unpin"}}{{else}}{{$.T "profile.pin"}}{{end}}</button>
-            </form>
-            {{end}}
           </li>
           {{end}}
         </ul>
@@ -129,32 +119,6 @@
         <p class="folder-back"><a href="{{esc .ProfileURL}}">{{.T "profile.favourite-folder-back"}}</a></p>
       </section>
       {{else}}
-      {{if .Pins}}
-      <section class="profile-section">
-        <span class="label">{{.T "profile.pinned"}}</span>
-        <ul class="pins">
-          {{range .Pins}}
-          <li>
-            <a class="pin-title" href="{{esc .URL}}">{{esc .Title}}</a>
-            <span class="pin-meta"><span>{{esc .Site}}</span><span>{{$.ODate .At}}</span></span>
-          </li>
-          {{end}}
-        </ul>
-      </section>
-      {{end}}
-      {{if .Folders}}
-      <section class="profile-section">
-        <span class="label">{{.T "profile.favourite-folders"}}</span>
-        <ul class="pins folders">
-          {{range .Folders}}
-          <li>
-            <a class="pin-title" href="{{esc .URL}}"><i class="fas fa-folder"></i> {{esc .Name}}</a>
-            <span class="pin-meta"><span>{{$.T "profile.favourite-folder-count" "count" .Count}}</span></span>
-          </li>
-          {{end}}
-        </ul>
-      </section>
-      {{end}}
       <dl class="dl">
         {{if .FromWikidot}}
           <dt>{{.T "profile.account-state"}}</dt><dd>{{.T "profile.imported"}}</dd>
@@ -176,6 +140,60 @@
           {{.ODate .JoinedAt}}
         </dd>
       </dl>
+
+      {{if or .Pins .PinPicker}}
+      <section class="profile-section">
+        <div class="pins-head">
+          <span class="label">{{.T "profile.pinned"}}</span>
+          {{if .PinPicker}}
+          <details class="pin-picker">
+            <summary class="btn-ghost">{{.T "profile.pin-customize"}}</summary>
+            <form class="pin-picker-panel" method="post" action="/-/profile/pins" data-limit="{{.PinLimit}}">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+              <input type="hidden" name="back" value="{{esc .ProfileURL}}">
+              <p class="pin-picker-hint">{{.T "profile.pin-picker-hint" "count" .PinLimit}}</p>
+              {{if .PinChoices}}
+              <input type="search" class="pin-picker-filter" placeholder="{{.T "profile.pin-filter"}}" aria-label="{{.T "profile.pin-filter"}}">
+              <ul class="pin-picker-list">
+                {{range .PinChoices}}
+                <li><label><input type="checkbox" name="article_id" value="{{.ArticleID}}"{{if .Pinned}} checked{{end}}><span class="pin-picker-title">{{esc .Title}}</span><span class="pin-picker-site">{{esc .Site}}</span></label></li>
+                {{end}}
+              </ul>
+              <button class="btn-primary" type="submit">{{.T "profile.pin-save"}}</button>
+              {{else}}
+              <div class="empty">{{.T "profile.pin-nothing"}}</div>
+              {{end}}
+            </form>
+          </details>
+          {{end}}
+        </div>
+        {{if not .Pins}}
+        <div class="empty">{{.T "profile.pin-empty"}}</div>
+        {{else}}
+        <ul class="pins">
+          {{range .Pins}}
+          <li>
+            <a class="pin-title" href="{{esc .URL}}">{{esc .Title}}</a>
+            <span class="pin-meta"><span>{{esc .Site}}</span><span>{{$.ODate .At}}</span></span>
+          </li>
+          {{end}}
+        </ul>
+        {{end}}
+      </section>
+      {{end}}
+      {{if .Folders}}
+      <section class="profile-section">
+        <span class="label">{{.T "profile.favourite-folders"}}</span>
+        <ul class="pins folders">
+          {{range .Folders}}
+          <li>
+            <a class="pin-title" href="{{esc .URL}}"><i class="fas fa-folder"></i> {{esc .Name}}</a>
+            <span class="pin-meta"><span>{{$.T "profile.favourite-folder-count" "count" .Count}}</span></span>
+          </li>
+          {{end}}
+        </ul>
+      </section>
+      {{end}}
 
       {{if .Roles}}
       <section class="profile-section">
@@ -224,6 +242,7 @@
         <div class="activity-day" hidden></div>
         {{end}}
         {{with $.Trend}}
+        <div class="score-trend-mount" data-points="{{esc .Points}}" data-caption="{{$.T "profile.score-trend" "value" .Current}}">
         <figure class="score-trend">
           <figcaption>{{$.T "profile.score-trend" "value" .Current}}</figcaption>
           <svg viewBox="0 0 600 120" role="img" aria-label="{{$.T "profile.score-trend" "value" .Current}}">
@@ -235,6 +254,7 @@
             <text x="556" y="116" text-anchor="end">{{esc .To}}</text>
           </svg>
         </figure>
+        </div>
         {{end}}
       </section>
       {{end}}

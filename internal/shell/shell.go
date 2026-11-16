@@ -281,6 +281,7 @@ type ScoreTrend struct {
 	From    string
 	To      string
 	Current string
+	Points  string
 }
 
 type SiteChoice struct {
@@ -312,15 +313,17 @@ type Profile struct {
 	JoinedAt    time.Time
 	TimeZone    *time.Location
 
-	Fields   []ProfileField
-	Socials  []ProfileSocial
-	Activity *ProfileActivity
-	Stats    *ProfileStats
-	Trend    *ScoreTrend
-	Sites    []SiteChoice
-	Years    []YearChoice
-	Pins     []ProfilePage
-	Folders  []ProfileFolder
+	Fields     []ProfileField
+	Socials    []ProfileSocial
+	Activity   *ProfileActivity
+	Stats      *ProfileStats
+	Trend      *ScoreTrend
+	Sites      []SiteChoice
+	Years      []YearChoice
+	Pins       []ProfilePage
+	PinChoices []ProfilePage
+	PinPicker  bool
+	Folders    []ProfileFolder
 
 	FolderAsked      bool
 	OpenFolder       *ProfileFolder

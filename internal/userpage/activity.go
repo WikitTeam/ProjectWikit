@@ -2,6 +2,7 @@ package userpage
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -194,6 +195,11 @@ func scoreTrend(points []db.TrendPoint, zone *time.Location) *shell.ScoreTrend {
 	if len(points) < 2 {
 		return nil
 	}
+	raw := make([][2]float64, 0, len(points))
+	for _, p := range points {
+		raw = append(raw, [2]float64{float64(p.At.UnixMilli()), p.Value})
+	}
+	encoded, _ := json.Marshal(raw)
 	now := time.Now()
 	last := points[len(points)-1]
 	if now.After(last.At) {
@@ -217,7 +223,7 @@ func scoreTrend(points []db.TrendPoint, zone *time.Location) *shell.ScoreTrend {
 	return &shell.ScoreTrend{
 		Path: curve(pts), Zero: y(0), Max: signed(hi), Min: signed(lo),
 		From: t0.In(zone).Format(time.DateOnly), To: t1.In(zone).Format(time.DateOnly),
-		Current: signed(last.Value),
+		Current: signed(last.Value), Points: string(encoded),
 	}
 }
 

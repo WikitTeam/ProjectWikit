@@ -217,7 +217,12 @@ func (d *DB) AuthorScoreTrend(ctx context.Context, userID int64, siteID *int64, 
 		steps = append(steps, step{*first, rest})
 	}
 	slices.SortStableFunc(steps, func(a, b step) int { return a.at.Compare(b.at) })
-	out := []TrendPoint{{At: *first}}
+	start := *first
+	// Imported pages can carry votes dated before the page itself.
+	if len(steps) > 0 && steps[0].at.Before(start) {
+		start = steps[0].at
+	}
+	out := []TrendPoint{{At: start}}
 	var run float64
 	for _, s := range steps {
 		run += s.sum

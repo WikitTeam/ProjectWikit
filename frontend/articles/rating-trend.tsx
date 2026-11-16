@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { t } from '~util/i18n'
 import formatDate from '../util/date-format'
@@ -7,15 +7,16 @@ import formatDate from '../util/date-format'
 interface Props {
   points: Array<[number, number]>
   stars: boolean
+  caption?: (value: string) => string
+  wide?: boolean
 }
 
-const W = 600
 const H = 120
 const PAD = { top: 8, right: 44, bottom: 20, left: 4 }
 
-const Styles = styled.figure`
+const Styles = styled.figure<{ $wide?: boolean }>`
   margin: 12px 0 4px;
-  max-width: 600px;
+  max-width: ${p => (p.$wide ? 'none' : '600px')};
   color: inherit;
 
   figcaption {
@@ -29,8 +30,9 @@ const Styles = styled.figure`
   svg {
     display: block;
     width: 100%;
-    height: auto;
+    height: ${H}px;
     overflow: visible;
+    touch-action: pan-y;
   }
   .w-trend-axis {
     font-size: 11px;
@@ -82,9 +84,20 @@ const curve = (pts: Array<[number, number]>) => {
 
 const show = (value: number, stars: boolean) => (stars ? value.toFixed(1) : value > 0 ? `+${value}` : String(value))
 
-const RatingTrend: React.FC<Props> = ({ points, stars }) => {
+const RatingTrend: React.FC<Props> = ({ points, stars, caption, wide }) => {
   const [hover, setHover] = useState<number | null>(null)
+  const [W, setW] = useState(600)
   const box = useRef<SVGSVGElement>(null)
+
+  useEffect(() => {
+    const node = box.current
+    if (!node) return
+    const measure = () => setW(Math.max(200, Math.round(node.getBoundingClientRect().width)))
+    measure()
+    const watch = new ResizeObserver(measure)
+    watch.observe(node)
+    return () => watch.disconnect()
+  }, [])
 
   const geometry = useMemo(() => {
     if (points.length < 2) return null
@@ -100,13 +113,15 @@ const RatingTrend: React.FC<Props> = ({ points, stars }) => {
     const y = (v: number) => PAD.top + (1 - (v - lo) / (hi - lo)) * (H - PAD.top - PAD.bottom)
     const path = curve(series.map(([ts, v]) => [x(ts), y(v)] as [number, number]))
     return { series, x, y, lo, hi, path, t0, t1 }
-  }, [points, stars])
+  }, [points, stars, W])
 
   if (!geometry) return null
   const { series, x, y, lo, hi, path, t0, t1 } = geometry
   const current = series[series.length - 1][1]
 
-  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const label = (caption ?? (value => t('articles.rating.trend', { value })))(show(current, stars))
+
+  const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const rect = box.current!.getBoundingClientRect()
     const at = ((e.clientX - rect.left) / rect.width) * W
     let found = 0
@@ -117,16 +132,17 @@ const RatingTrend: React.FC<Props> = ({ points, stars }) => {
   }
 
   return (
-    <Styles className="w-rating-trend">
-      <figcaption>{t('articles.rating.trend', { value: show(current, stars) })}</figcaption>
+    <Styles className="w-rating-trend" $wide={wide}>
+      <figcaption>{label}</figcaption>
       <div className="w-trend-plot">
         <svg
           ref={box}
           viewBox={`0 0 ${W} ${H}`}
           role="img"
-          aria-label={t('articles.rating.trend', { value: show(current, stars) })}
-          onMouseMove={onMove}
-          onMouseLeave={() => setHover(null)}
+          aria-label={label}
+          onPointerMove={onMove}
+          onPointerDown={onMove}
+          onPointerLeave={e => e.pointerType === 'mouse' && setHover(null)}
         >
           {!stars && <line x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} stroke="currentColor" strokeOpacity={0.25} strokeDasharray="3 3" />}
           <path d={path} fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" />

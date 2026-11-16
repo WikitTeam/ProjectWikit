@@ -287,10 +287,14 @@ func (h *SettingsHandler) pin(w http.ResponseWriter, r *http.Request, user *db.U
 	if !strings.HasPrefix(back, "/-/users/") || strings.ContainsAny(back, "\\\r\n") {
 		back = profilePath
 	}
-	if id, err := strconv.ParseInt(r.PostFormValue("article_id"), 10, 64); err == nil {
-		if err := h.deps.DB.Pin(r.Context(), user.ID, id, r.PostFormValue("on") == "1"); err != nil {
-			h.deps.logger().Error("pin a page", "user", user.ID, "err", err)
+	var picked []int64
+	for _, raw := range r.PostForm["article_id"] {
+		if id, err := strconv.ParseInt(raw, 10, 64); err == nil && !slices.Contains(picked, id) {
+			picked = append(picked, id)
 		}
+	}
+	if err := h.deps.DB.SetPins(r.Context(), user.ID, picked); err != nil {
+		h.deps.logger().Error("pin pages", "user", user.ID, "err", err)
 	}
 	redirect(w, back, http.StatusSeeOther)
 }

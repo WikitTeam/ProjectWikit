@@ -822,12 +822,22 @@ body.wikit-page .system-container:has(.auth-shell) .site-footer a:focus-visible 
 .wikit-scope .pins .pin-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
 .wikit-scope .folder-back { margin: 20px 0 0; }
 
-.wikit-scope .pin-hint { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
 .wikit-scope .feed.pages li { position: relative; }
 .wikit-scope .feed .pin-mark { font-size: 11px; color: var(--signal); border: 1px solid var(--signal); border-radius: var(--rad-sm); padding: 0 5px; line-height: 16px; }
-.wikit-scope .feed .pin-form { margin: 0; }
-.wikit-scope .feed .pin-form .btn-link { padding: 0; border: 0; background: none; font-size: 12px; color: var(--muted); cursor: pointer; }
-.wikit-scope .feed .pin-form .btn-link:hover { color: var(--ink); text-decoration: underline; }
+.wikit-scope .pins-head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.wikit-scope .pins-head .label { margin: 0; }
+.wikit-scope .pin-picker summary { list-style: none; cursor: pointer; padding: 3px 10px; font-size: 13px; }
+.wikit-scope .pin-picker summary::-webkit-details-marker { display: none; }
+.wikit-scope .pin-picker-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: min(380px, 100%); display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #fff; border: 1px solid var(--rule); border-radius: var(--rad); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); }
+.wikit-scope .pin-picker-hint { margin: 0; font-size: 13px; color: var(--muted); }
+.wikit-scope .pin-picker-filter { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--rule); border-radius: var(--rad-sm); font-size: 13px; }
+.wikit-scope .pin-picker-list { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; border-top: 1px solid var(--rule); }
+.wikit-scope .pin-picker-list li { border-bottom: 1px solid var(--rule); }
+.wikit-scope form.pin-picker-panel .pin-picker-list li > label { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; margin: 0; padding: 7px 4px; font-size: 13px; font-weight: 400; cursor: pointer; }
+.wikit-scope form.pin-picker-panel .pin-picker-list li > label:hover { background: var(--well); }
+.wikit-scope .pin-picker-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wikit-scope .pin-picker-site { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.wikit-scope .pin-picker-list input:disabled + .pin-picker-title { color: var(--muted); }
 
 .wikit-scope .app-shell fieldset.profile-extras { margin: 0; border: 0; min-width: 0; }
 .wikit-scope .app-shell fieldset.profile-extras + .form-row,
@@ -872,11 +882,12 @@ body.wikit-page .system-content .content .app-shell .profile-extras .pair select
 }
 .wikit-scope .heatmap { overflow-x: auto; padding-bottom: 4px; }
 .wikit-scope .activity-site { display: flex; gap: 6px; }
-.wikit-scope .heatmap-months { display: grid; grid-auto-flow: column; grid-auto-columns: 13px; font-size: 11px; color: var(--muted); height: 16px; }
+.wikit-scope .heatmap-months { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(13px, 1fr); font-size: 11px; color: var(--muted); height: 16px; }
 .wikit-scope .heatmap-months span { white-space: nowrap; }
-.wikit-scope .heatmap-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 13px; }
-.wikit-scope .heatmap-week { display: grid; grid-template-rows: repeat(7, 13px); }
+.wikit-scope .heatmap-grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(13px, 1fr); }
+.wikit-scope .heatmap-week { display: grid; grid-template-rows: repeat(7, auto); row-gap: 3px; padding-right: 3px; }
 .wikit-scope .heatmap i { display: block; width: 10px; height: 10px; border-radius: 2px; background: var(--well); outline: 1px solid rgba(0, 0, 0, 0.04); outline-offset: -1px; }
+.wikit-scope .heatmap-week i { width: 100%; height: auto; aspect-ratio: 1; }
 .wikit-scope .heatmap i.blank { background: none; outline: 0; }
 .wikit-scope .heatmap i.l1 { background: #c6dbf7; }
 .wikit-scope .heatmap i.l2 { background: #86b1ee; }
@@ -887,7 +898,7 @@ body.wikit-page .system-content .content .app-shell .profile-extras .pair select
 .wikit-scope .heatmap-scale i { display: inline-block; margin: 0 1px; }
 .wikit-scope .score-trend { margin: 16px 0 0; }
 .wikit-scope .score-trend figcaption { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.wikit-scope .score-trend svg { display: block; width: 100%; max-width: 600px; height: auto; overflow: visible; }
+.wikit-scope .score-trend svg { display: block; width: 100%; height: auto; overflow: visible; }
 .wikit-scope .score-trend path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
 .wikit-scope .score-trend .zero { stroke: var(--ink); stroke-opacity: 0.25; stroke-dasharray: 3 3; }
 .wikit-scope .score-trend text { font-size: 11px; fill: var(--muted); }
