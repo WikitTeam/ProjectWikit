@@ -156,6 +156,7 @@ func importArchive(ctx context.Context, conn *db.DB, current *db.Site, found *ar
 	if err != nil {
 		return err
 	}
+	fmt.Printf("run `pwikit reindex -site %s` to make the imported pages searchable and record their links\n", current.Slug)
 	if steps.update {
 		done, err := archive.ApplyUpdate(ctx, conn, current.ID, found, from, opts)
 		fmt.Printf("updated %d pages with %d revisions, added %d ratings, %d attachments, "+

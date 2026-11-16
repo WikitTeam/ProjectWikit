@@ -38,7 +38,7 @@ func linkEnv(t *testing.T) (*Env, *db.Site) {
 func TestLinkFilesANamedSiteAgainstThatSite(t *testing.T) {
 	env, current := linkEnv(t)
 
-	got, err := env.link(":"+current.Slug+":Main", db.LinkInclude)
+	got, err := resolveLink(env.ctx, env.deps.DB, ":"+current.Slug+":Main", db.LinkInclude)
 	if err != nil {
 		t.Fatalf("link() err = %v, want nil", err)
 	}
@@ -53,7 +53,7 @@ func TestLinkFilesANamedSiteAgainstThatSite(t *testing.T) {
 func TestLinkLeavesAnUnknownSiteWhole(t *testing.T) {
 	env, _ := linkEnv(t)
 
-	got, err := env.link(":nosuchsite:main", db.LinkPlain)
+	got, err := resolveLink(env.ctx, env.deps.DB, ":nosuchsite:main", db.LinkPlain)
 	if err != nil {
 		t.Fatalf("link() err = %v, want nil", err)
 	}
@@ -68,7 +68,7 @@ func TestLinkLeavesAnUnknownSiteWhole(t *testing.T) {
 func TestLinkWithoutASiteStaysLocal(t *testing.T) {
 	env, _ := linkEnv(t)
 
-	got, err := env.link("Component:Box", db.LinkPlain)
+	got, err := resolveLink(env.ctx, env.deps.DB, "Component:Box", db.LinkPlain)
 	if err != nil {
 		t.Fatalf("link() err = %v, want nil", err)
 	}

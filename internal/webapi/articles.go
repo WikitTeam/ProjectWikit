@@ -178,25 +178,50 @@ func (h *Articles) links(r *http.Request, _ *i18n.Localizer, name string) (strin
 		kids = append(kids, linkRecord(children[i].FullName(), children[i].Title, true))
 	}
 
-	links, err := h.deps.DB.LinksTo(ctx, siteID(ctx), name)
+	here := siteID(ctx)
+	links, err := h.deps.DB.LinksTo(ctx, here, strings.ToLower(article.FullName()))
 	if err != nil {
 		return "", 0, err
 	}
-	refs := make([]string, 0, len(links))
+	refs := map[int64][]string{}
 	for _, link := range links {
-		refs = append(refs, strings.ToLower(link.From))
+		refs[link.FromSite] = append(refs[link.FromSite], strings.ToLower(link.From))
 	}
-	titles, err := h.deps.DB.ArticleTitles(ctx, siteID(ctx), refs)
-	if err != nil {
-		return "", 0, err
+	titles := map[int64]map[string]string{}
+	for site, names := range refs {
+		if titles[site], err = h.deps.DB.ArticleTitles(ctx, site, names); err != nil {
+			return "", 0, err
+		}
+	}
+	others := map[int64]*db.Site{}
+	if len(refs) > 1 || (len(refs) == 1 && refs[here] == nil) {
+		all, err := h.deps.DB.Sites(ctx)
+		if err != nil {
+			return "", 0, err
+		}
+		for i := range all {
+			others[all[i].ID] = &all[i]
+		}
 	}
 
 	includes, plain := wikijson.Array{}, wikijson.Array{}
 	for _, link := range links {
 		from := strings.ToLower(link.From)
-		record := linkRecord(from, from, false)
-		if title, ok := titles[from]; ok {
-			record = linkRecord(from, title, true)
+		title, exists := titles[link.FromSite][from]
+		if !exists {
+			title = from
+		}
+		record := linkRecord(from, title, exists)
+		// A page on another site is shown with that site's name and links to its
+		// own domain, since its name alone would point at a page here.
+		if link.FromSite != here {
+			other, ok := others[link.FromSite]
+			if !ok {
+				continue
+			}
+			record = append(record,
+				wikijson.Field{Key: "site", Value: other.Title},
+				wikijson.Field{Key: "url", Value: h.deps.Trust.Scheme(r) + "://" + other.Domain + "/" + from})
 		}
 		if link.Type == db.LinkInclude {
 			includes = append(includes, record)

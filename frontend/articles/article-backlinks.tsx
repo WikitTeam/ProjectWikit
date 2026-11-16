@@ -82,8 +82,8 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
           <ul>
             {data.links.map((x, i) => (
               <li key={i}>
-                <a href={`/${x.id}`} className={x.exists ? '' : 'newpage'}>
-                  {x.title || x.id} ({x.id})
+                <a href={x.url || `/${x.id}`} className={x.exists ? '' : 'newpage'}>
+                  {x.title || x.id} ({x.site ? `${x.site}: ${x.id}` : x.id})
                 </a>
               </li>
             ))}
@@ -96,8 +96,8 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
           <ul>
             {data.includes.map((x, i) => (
               <li key={i}>
-                <a href={`/${x.id}`} className={x.exists ? '' : 'newpage'}>
-                  {x.title || x.id} ({x.id})
+                <a href={x.url || `/${x.id}`} className={x.exists ? '' : 'newpage'}>
+                  {x.title || x.id} ({x.site ? `${x.site}: ${x.id}` : x.id})
                 </a>
               </li>
             ))}
@@ -110,8 +110,8 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
           <ul>
             {data.children.map((x, i) => (
               <li key={i}>
-                <a href={`/${x.id}`} className={x.exists ? '' : 'newpage'}>
-                  {x.title || x.id} ({x.id})
+                <a href={x.url || `/${x.id}`} className={x.exists ? '' : 'newpage'}>
+                  {x.title || x.id} ({x.site ? `${x.site}: ${x.id}` : x.id})
                 </a>
               </li>
             ))}

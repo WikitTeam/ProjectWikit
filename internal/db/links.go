@@ -11,14 +11,16 @@ const (
 )
 
 type ExternalLink struct {
-	From string
-	Type string
+	From     string
+	Type     string
+	FromSite int64
 }
 
 var qLinksTo = register("LinksTo", `
-SELECT link_from, link_type
+SELECT link_from, link_type, coalesce(from_site_id, $2)
 FROM web_externallink
-WHERE link_to = $1 AND to_site_id = $2`)
+WHERE link_to = $1 AND to_site_id = $2
+ORDER BY from_site_id IS DISTINCT FROM $2, from_site_id, link_from`)
 
 func (d *DB) LinksTo(ctx context.Context, siteID int64, fullName string) ([]ExternalLink, error) {
 	rows, err := d.pool.Query(ctx, qLinksTo, fullName, siteID)
@@ -30,7 +32,7 @@ func (d *DB) LinksTo(ctx context.Context, siteID int64, fullName string) ([]Exte
 	var out []ExternalLink
 	for rows.Next() {
 		var link ExternalLink
-		if err := rows.Scan(&link.From, &link.Type); err != nil {
+		if err := rows.Scan(&link.From, &link.Type, &link.FromSite); err != nil {
 			return nil, fmt.Errorf("scan link: %w", err)
 		}
 		out = append(out, link)

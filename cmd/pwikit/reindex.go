@@ -6,11 +6,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
+	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
@@ -130,6 +132,9 @@ func reindexSite(ctx context.Context, conn *db.DB, engine renderer.Renderer, sto
 		if err := conn.UpdateSearchIndex(ctx, article.ID, indexed, plaintext); err != nil {
 			return written, err
 		}
+		if err := relink(ctx, engine, store, loc, conn, current, article, source); err != nil {
+			return written, err
+		}
 		written++
 	}
 	return written, nil
@@ -138,19 +143,43 @@ func reindexSite(ctx context.Context, conn *db.DB, engine renderer.Renderer, sto
 func reindexText(ctx context.Context, engine renderer.Renderer, store cliRepository, loc *i18n.Localizer,
 	conn *db.DB, current *db.Site, article *db.Article, source string) (string, error) {
 
-	vars := page.NewVars(article, nil, repo.NewVarSource(ctx, conn, current), loc)
-	cb := callbacks.New(loc, store)
-	cb.SetSite(current.Slug)
-	cb.SetPageVars(vars)
-	cb.SetContext(page.NewContext(article, article, nil, nil))
-
-	info := renderer.PageInfo{
-		Page: article.Name, Category: article.Category,
-		Site: current.Slug, Domain: current.Domain, Title: article.Title,
-	}
+	vars, cb, info := reindexPass(ctx, store, loc, conn, current, article)
 	result, err := engine.RenderText(ctx, page.PreRender(source, vars), info, cb, renderer.ModeSystem)
 	if err != nil {
 		return "", err
 	}
 	return result.Body, nil
+}
+
+// Pages brought in by an import were never saved here, so this is the only
+// pass that records what they link to and include.
+func relink(ctx context.Context, engine renderer.Renderer, store cliRepository, loc *i18n.Localizer,
+	conn *db.DB, current *db.Site, article *db.Article, source string) error {
+
+	_, cb, info := reindexPass(ctx, store, loc, conn, current, article)
+	result, err := engine.CollectBacklinks(ctx, source, info, cb, renderer.ModeSystem)
+	// A page the engine cannot read keeps whatever links it already had.
+	if err != nil {
+		return nil
+	}
+	links, err := pagerender.ResolveLinks(ctx, conn, result)
+	if err != nil {
+		return err
+	}
+	return conn.ReplaceArticleLinks(ctx, current.ID, strings.ToLower(article.FullName()), links)
+}
+
+func reindexPass(ctx context.Context, store cliRepository, loc *i18n.Localizer, conn *db.DB,
+	current *db.Site, article *db.Article) (*page.Vars, *callbacks.Callbacks, renderer.PageInfo) {
+
+	vars := page.NewVars(article, nil, repo.NewVarSource(ctx, conn, current), loc)
+	cb := callbacks.New(loc, store)
+	cb.SetSite(current.Slug)
+	cb.SetPageVars(vars)
+	cb.SetContext(page.NewContext(article, article, nil, nil))
+	info := renderer.PageInfo{
+		Page: article.Name, Category: article.Category,
+		Site: current.Slug, Domain: current.Domain, Title: article.Title,
+	}
+	return vars, cb, info
 }

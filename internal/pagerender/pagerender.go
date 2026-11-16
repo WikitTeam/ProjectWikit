@@ -68,20 +68,24 @@ func (e *Env) Backlinks(source string, info renderer.PageInfo, cb *callbacks.Cal
 	if err != nil {
 		return nil, err
 	}
+	return ResolveLinks(e.ctx, e.deps.DB, result)
+}
+
+// A name that starts with another site's slug is stored against that site, so
+// the page it names lists this one among its backlinks.
+func ResolveLinks(ctx context.Context, conn *db.DB, result renderer.Result) ([]db.ArticleLink, error) {
 	links := make([]db.ArticleLink, 0, len(result.IncludedPages)+len(result.LinkedPages))
-	for _, name := range result.IncludedPages {
-		link, err := e.link(name, db.LinkInclude)
-		if err != nil {
-			return nil, err
+	for _, set := range []struct {
+		names []string
+		kind  string
+	}{{result.IncludedPages, db.LinkInclude}, {result.LinkedPages, db.LinkPlain}} {
+		for _, name := range set.names {
+			link, err := resolveLink(ctx, conn, name, set.kind)
+			if err != nil {
+				return nil, err
+			}
+			links = append(links, link)
 		}
-		links = append(links, link)
-	}
-	for _, name := range result.LinkedPages {
-		link, err := e.link(name, db.LinkPlain)
-		if err != nil {
-			return nil, err
-		}
-		links = append(links, link)
 	}
 	return links, nil
 }
@@ -187,13 +191,13 @@ func (e *Env) messageText(source string) (string, error) {
 
 // A reference naming another wiki is filed against that wiki, so renaming a page
 // there still reaches the pages here that pull it in.
-func (e *Env) link(name, kind string) (db.ArticleLink, error) {
+func resolveLink(ctx context.Context, conn *db.DB, name, kind string) (db.ArticleLink, error) {
 	slug, bare := wikidot.SplitSiteRef(name)
 	link := db.ArticleLink{To: strings.ToLower(name), Kind: kind}
 	if slug == "" {
 		return link, nil
 	}
-	other, err := e.deps.DB.SiteBySlug(e.ctx, slug)
+	other, err := conn.SiteBySlug(ctx, slug)
 	if errors.Is(err, db.ErrNotFound) {
 		return link, nil
 	}

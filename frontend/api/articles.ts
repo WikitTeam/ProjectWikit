@@ -127,6 +127,8 @@ export interface ArticleBacklink {
   id: string
   title: string
   exists: boolean
+  site?: string
+  url?: string
 }
 
 export interface ArticleBacklinks {
