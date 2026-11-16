@@ -145,6 +145,6 @@ export async function fetchArticleVotes(pageId: string): Promise<ModuleRateVotes
   return await wFetch<ModuleRateVotesResponse>(`/pw-api/articles/${pageId}/votes`)
 }
 
-export async function deleteArticleVotes(pageId: string): Promise<ModuleRateVotesResponse> {
-  return await wFetch<ModuleRateVotesResponse>(`/pw-api/articles/${pageId}/votes`, { method: 'DELETE' })
+export async function deleteArticleVotes(pageId: string): Promise<void> {
+  await wFetch<{ status: string }>(`/pw-api/articles/${pageId}/votes`, { method: 'DELETE' })
 }

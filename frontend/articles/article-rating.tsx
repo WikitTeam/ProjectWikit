@@ -136,17 +136,13 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     setError('')
     setDeleting(false)
     try {
-      const rating = await deleteArticleVotes(pageId)
-      setVotes(rating.votes)
-      setRating(rating.rating)
-      setPopularity(rating.popularity)
-      setMode(rating.mode)
-      setTrend(rating.trend ?? [])
+      await deleteArticleVotes(pageId)
     } catch (e) {
       setError(e.error || t('common.server-unreachable'))
-    } finally {
       setLoading(false)
+      return
     }
+    await loadRating()
   })
 
   const onAskClearRating = useConstCallback(() => {
