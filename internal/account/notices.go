@@ -46,28 +46,28 @@ func (d Deps) sendVerification(r *http.Request, loc *i18n.Localizer, user *db.Us
 	url := d.link(r, purposeVerify, user.ID, verifyValue(user.ID, state))
 	return d.Mail.Send(r.Context(), []string{state.Email},
 		loc.T("email.verify-subject", "site", d.siteTitle(r.Context())),
-		loc.T("email.verify-body", "name", user.DisplayLabel(), "link", url, "site", d.siteTitle(r.Context())))
+		loc.T("email.verify-body", "name", user.DisplayLabel(), "username", user.Username, "link", url, "site", d.siteTitle(r.Context())))
 }
 
 func (d Deps) sendApproval(r *http.Request, loc *i18n.Localizer, user *db.User, to, pending string) error {
 	url := d.link(r, purposeApprove, user.ID, token.Custom(purposeApprove, id(user.ID), lower(pending)))
 	return d.Mail.Send(r.Context(), []string{to},
 		loc.T("email.approve-subject", "site", d.siteTitle(r.Context())),
-		loc.T("email.approve-body", "name", user.DisplayLabel(), "email", pending, "link", url, "site", d.siteTitle(r.Context())))
+		loc.T("email.approve-body", "name", user.DisplayLabel(), "username", user.Username, "email", pending, "link", url, "site", d.siteTitle(r.Context())))
 }
 
 func (d Deps) sendActivation(r *http.Request, loc *i18n.Localizer, user *db.User, pending string) error {
 	url := d.link(r, purposeActivate, user.ID, token.Custom(purposeActivate, id(user.ID), lower(pending)))
 	return d.Mail.Send(r.Context(), []string{pending},
 		loc.T("email.activate-subject", "site", d.siteTitle(r.Context())),
-		loc.T("email.activate-body", "name", user.DisplayLabel(), "link", url, "site", d.siteTitle(r.Context())))
+		loc.T("email.activate-body", "name", user.DisplayLabel(), "username", user.Username, "link", url, "site", d.siteTitle(r.Context())))
 }
 
 func (d Deps) warnPrevious(r *http.Request, loc *i18n.Localizer, user *db.User, previous, now string) error {
 	url := d.link(r, purposeRevert, user.ID, token.Custom(purposeRevert, id(user.ID), lower(now), lower(previous)))
 	return d.Mail.Send(r.Context(), []string{previous},
 		loc.T("email.moved-subject", "site", d.siteTitle(r.Context())),
-		loc.T("email.moved-body", "name", user.DisplayLabel(), "email", masked(now), "link", url, "site", d.siteTitle(r.Context())))
+		loc.T("email.moved-body", "name", user.DisplayLabel(), "username", user.Username, "email", masked(now), "link", url, "site", d.siteTitle(r.Context())))
 }
 
 func (d Deps) warnPasswordChanged(r *http.Request, loc *i18n.Localizer, user *db.User, to string) error {
@@ -76,7 +76,7 @@ func (d Deps) warnPasswordChanged(r *http.Request, loc *i18n.Localizer, user *db
 	}
 	return d.Mail.Send(r.Context(), []string{to},
 		loc.T("email.password-subject", "site", d.siteTitle(r.Context())),
-		loc.T("email.password-body", "name", user.DisplayLabel(), "site", d.siteTitle(r.Context()), "link", d.home(r)+ResetPath))
+		loc.T("email.password-body", "name", user.DisplayLabel(), "username", user.Username, "site", d.siteTitle(r.Context()), "link", d.home(r)+ResetPath))
 }
 
 func (d Deps) home(r *http.Request) string {

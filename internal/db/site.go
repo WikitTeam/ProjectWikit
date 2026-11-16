@@ -61,13 +61,19 @@ ORDER BY id
 LIMIT 1`)
 
 func scanSite(row pgx.Row, s *Site) error {
-	return row.Scan(
+	err := row.Scan(
 		&s.ID, &s.Slug, &s.Title, &s.Headline, &s.Domain, &s.MediaDomain, &s.HomePage,
 		&s.Icon, &s.ThemeID, &s.SystemThemeID,
 		&s.AuthIcon, &s.FooterLicense, &s.SignupNotice, &s.PasswordHelp, &s.Welcome, &s.SignupOpen,
 		&s.MembershipPasswordEnabled, &s.MembershipPassword, &s.MembershipPasswordRoleID, &s.ApplicationRoleID,
 		&s.DefaultRoleID, &s.VerifiedRoleID, &s.EmailPolicy, &s.Language, &s.TimeZone, &s.LanguageFollowsVisitor,
 		&s.SelfVotesForbidden, &s.EditForbiddenHint, &s.DeletionNoticeEnabled, &s.DeletionNotice)
+	// Sites saved, or restored from a backup, before the sign-up policy folded
+	// into the required one still carry its old value.
+	if s.EmailPolicy != EmailOptional {
+		s.EmailPolicy = EmailRequired
+	}
+	return err
 }
 
 var qSiteBySlug = register("SiteBySlug", `
@@ -192,7 +198,6 @@ func (d *DB) SiteHostExists(ctx context.Context, host string) (bool, error) {
 }
 
 const (
-	EmailAtSignup = "at_signup"
 	EmailRequired = "required"
 	EmailOptional = "optional"
 )

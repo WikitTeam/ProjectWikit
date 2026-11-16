@@ -457,12 +457,16 @@ type Signup struct {
 }
 
 type Notice struct {
-	AuthIcon  string
-	SiteTitle string
-	Heading   string
-	Body      string
-	LinkURL   string
-	LinkText  string
+	AuthIcon   string
+	SiteTitle  string
+	Heading    string
+	Body       string
+	ActionURL  string
+	GoURL      string
+	ActionText string
+	CSRF       string
+	LinkURL    string
+	LinkText   string
 }
 
 type Reset struct {
@@ -470,6 +474,8 @@ type Reset struct {
 	AuthIcon  string
 	SiteTitle string
 	Help      string
+	Email     string
+	Finished  bool
 	CSRF      string
 	Error     string
 }

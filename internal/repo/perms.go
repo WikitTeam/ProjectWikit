@@ -155,7 +155,7 @@ func unverified(current *db.Site, u *db.User) bool {
 	if current == nil || u.EmailVerifiedAt != nil {
 		return false
 	}
-	return current.EmailPolicy == db.EmailRequired || current.EmailPolicy == db.EmailAtSignup
+	return current.EmailPolicy == db.EmailRequired
 }
 
 // Article is the object side for a page that exists. Its category is the only

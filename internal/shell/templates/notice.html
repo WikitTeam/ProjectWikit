@@ -9,6 +9,14 @@
         <h1 class="h1">{{esc .Heading}}</h1>
       </div>
       <p class="meta">{{esc .Body}}</p>
+      {{if .ActionURL}}
+      <form method="POST" action="{{esc .ActionURL}}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{esc .CSRF}}">
+        <button class="btn-primary" type="submit">{{esc .ActionText}}</button>
+      </form>
+      {{else if .GoURL}}
+      <a class="btn-primary" href="{{esc .GoURL}}">{{esc .ActionText}}</a>
+      {{end}}
       {{if .LinkURL}}
       <div class="action-row">
         <a class="link-muted" href="{{esc .LinkURL}}">{{esc .LinkText}}</a>

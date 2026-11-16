@@ -21,7 +21,7 @@ var (
 
 	categoryRatingModes = append([]string{followSite}, ratingModes...)
 	categoryTagModes    = append([]string{followSite}, tagModes...)
-	emailPolicy         = []string{db.EmailOptional, db.EmailRequired, db.EmailAtSignup}
+	emailPolicy         = []string{db.EmailOptional, db.EmailRequired}
 )
 
 func init() {

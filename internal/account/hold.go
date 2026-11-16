@@ -88,7 +88,7 @@ func (d Deps) HoldEmail(r *http.Request, loc *i18n.Localizer, target *db.User, e
 	url := d.link(r, purposeHold, target.ID, token.Custom(purposeHold, id(target.ID), wanted))
 	if err := d.Mail.Send(ctx, []string{wanted},
 		loc.T("email.hold-subject", "site", current.Title),
-		loc.T("email.hold-body", "name", target.DisplayLabel(), "link", url, "site", current.Title, "days", holdDays())); err != nil {
+		loc.T("email.hold-body", "name", target.DisplayLabel(), "username", target.Username, "link", url, "site", current.Title, "days", holdDays())); err != nil {
 		return err
 	}
 	d.noteHold(ctx, &current.ID, by, HoldRequested, target.ID, target.Username, state.Email, wanted)
@@ -175,7 +175,7 @@ func (d Deps) warnHold(r *http.Request, user *db.User, state db.AccountEmail, un
 	when := d.When(ctx, user.ID, until)
 	return d.Mail.Send(ctx, []string{state.Email},
 		loc.T("email.hold-warn-subject", "site", d.siteTitle(ctx)),
-		loc.T("email.hold-warn-body", "name", user.DisplayLabel(), "email", masked(state.Held),
+		loc.T("email.hold-warn-body", "name", user.DisplayLabel(), "username", user.Username, "email", masked(state.Held),
 			"when", when, "link", url, "site", d.siteTitle(ctx)))
 }
 

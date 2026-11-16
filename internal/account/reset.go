@@ -32,6 +32,11 @@ const (
 )
 
 const (
+	resetCookie = "pwikit_reset"
+	purposeWait = "reset-wait"
+)
+
+const (
 	stageAsk  = "ask"
 	stageSent = "sent"
 	stageSet  = "set"
@@ -82,16 +87,29 @@ func (h *ResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if !h.checkToken(w, r, current) {
 				return
 			}
-			if err := h.request(r, loc, current); err != nil {
+			hash, err := h.request(r, loc, current)
+			if err != nil {
 				h.deps.logger().Error("request password reset", "err", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
+			}
+			if email := lower(r.PostFormValue("email")); email != "" {
+				value := h.deps.Tokens.Make(token.Custom(purposeWait, email, hash), time.Now())
+				h.deps.setCookie(w, r, resetCookie, base64.RawURLEncoding.EncodeToString([]byte(email))+"/"+value, token.DefaultTimeout)
 			}
 			redirect(w, ResetDonePath, http.StatusFound)
 			return
 		}
 	case r.URL.Path == ResetDonePath:
 		form.Stage, title = stageSent, loc.T("reset.sent-title")
+		if err := h.waiting(r, &form); err != nil {
+			h.deps.logger().Error("read password reset", "err", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		if form.Finished {
+			title = loc.T("reset.done-title")
+		}
 	case r.URL.Path == ResetCompletePath:
 		form.Stage, title = stageDone, loc.T("reset.done-title")
 	case strings.HasPrefix(r.URL.Path, ResetConfirmPath):
@@ -167,26 +185,59 @@ func (h *ResetHandler) checkToken(w http.ResponseWriter, r *http.Request, curren
 	return true
 }
 
-func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db.Site) error {
-	ctx := r.Context()
-	email := strings.TrimSpace(r.PostFormValue("email"))
-	if email == "" {
+// A refresh can tell the password has changed, but never signs in, since
+// asking for a reset only takes knowing the address.
+func (h *ResetHandler) waiting(r *http.Request, form *shell.Reset) error {
+	cookie, err := r.Cookie(resetCookie)
+	if err != nil {
 		return nil
 	}
-	h.deps.SettleHolds(ctx)
-	user, err := h.deps.DB.UserByVerifiedEmail(ctx, email)
+	encoded, secret, _ := strings.Cut(cookie.Value, "/")
+	raw, err := base64.RawURLEncoding.DecodeString(encoded)
+	if err != nil {
+		return nil
+	}
+	form.Email = string(raw)
+	ctx := r.Context()
+	user, err := h.deps.DB.UserByVerifiedEmail(ctx, form.Email)
 	if errors.Is(err, db.ErrNotFound) {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
+	hash, _, _, err := h.deps.DB.ResetFields(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+	form.Finished = !h.deps.Tokens.Check(secret, token.Custom(purposeWait, form.Email, hash), time.Now())
+	return nil
+}
+
+func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db.Site) (string, error) {
+	ctx := r.Context()
+	email := strings.TrimSpace(r.PostFormValue("email"))
+	if email == "" {
+		return "", nil
+	}
+	h.deps.SettleHolds(ctx)
+	user, err := h.deps.DB.UserByVerifiedEmail(ctx, email)
+	if errors.Is(err, db.ErrNotFound) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
 	if !user.ActiveAt(time.Now()) {
-		return nil
+		return "", nil
+	}
+	hash, _, _, err := h.deps.DB.ResetFields(ctx, user.ID)
+	if err != nil {
+		return "", err
 	}
 	value, err := h.resetValue(ctx, user)
 	if err != nil {
-		return err
+		return "", err
 	}
 	minted := h.deps.Tokens.Make(value, time.Now())
 	uid := base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(user.ID, 10)))
@@ -194,8 +245,8 @@ func (h *ResetHandler) request(r *http.Request, loc *i18n.Localizer, current *db
 	link := home + ResetConfirmPath + uid + "/" + minted
 
 	subject := loc.T("reset.mail-subject", "site", current.Title)
-	body := loc.T("reset.mail-body", "link", link, "home", home, "site", current.Title)
-	return h.deps.Mail.Send(ctx, []string{email}, subject, body)
+	body := loc.T("reset.mail-body", "username", user.Username, "link", link, "home", home, "site", current.Title)
+	return hash, h.deps.Mail.Send(ctx, []string{email}, subject, body)
 }
 
 func (h *ResetHandler) confirm(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer,
@@ -239,6 +290,9 @@ func (h *ResetHandler) confirm(w http.ResponseWriter, r *http.Request, loc *i18n
 		return false, err
 	}
 	if err := h.deps.DB.SetPassword(ctx, user.ID, hash); err != nil {
+		return false, err
+	}
+	if _, err := h.deps.carryOn(w, r, user); err != nil {
 		return false, err
 	}
 	redirect(w, ResetCompletePath, http.StatusFound)

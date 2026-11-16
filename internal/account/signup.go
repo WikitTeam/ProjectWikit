@@ -34,6 +34,10 @@ var _ http.Handler = (*SignupHandler)(nil)
 func NewSignup(d Deps) *SignupHandler { return &SignupHandler{deps: d} }
 
 func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == SignupPendingPath {
+		h.pending(w, r)
+		return
+	}
 	if current := site.FromContext(r.Context()); current != nil && !current.SignupOpen {
 		h.closed(w, r, current)
 		return
@@ -89,6 +93,10 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if done {
 			redirect(w, homePath, http.StatusFound)
+			return
+		}
+		if form.Sent {
+			redirect(w, SignupPendingPath, http.StatusSeeOther)
 			return
 		}
 	}
@@ -236,14 +244,21 @@ func (h *SignupHandler) register(w http.ResponseWriter, r *http.Request, loc *i1
 	if err != nil {
 		return false, err
 	}
+	return h.finish(w, r, loc, current, form, user)
+}
+
+func (h *SignupHandler) finish(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer,
+	current *db.Site, form *shell.Signup, user *db.User) (bool, error) {
+
 	if err := h.deps.sendVerification(r, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
 		return false, err
 	}
-	if current.EmailPolicy == db.EmailAtSignup {
+	if current.EmailPolicy == db.EmailRequired {
+		h.deps.awaitVerification(w, r, user.ID, form.Email)
 		form.Sent = true
 		return false, nil
 	}
-	return true, h.deps.signIn(ctx, w, r, user)
+	return true, h.deps.signIn(r.Context(), w, r, user)
 }
 
 func (h *SignupHandler) claim(w http.ResponseWriter, r *http.Request, loc *i18n.Localizer,
@@ -280,14 +295,7 @@ func (h *SignupHandler) claim(w http.ResponseWriter, r *http.Request, loc *i18n.
 	if err != nil {
 		return false, err
 	}
-	if err := h.deps.sendVerification(r, loc, user, db.AccountEmail{Email: form.Email}); err != nil {
-		return false, err
-	}
-	if current.EmailPolicy == db.EmailAtSignup {
-		form.Sent = true
-		return false, nil
-	}
-	return true, h.deps.signIn(ctx, w, r, user)
+	return h.finish(w, r, loc, current, form, user)
 }
 
 func (h *SignupHandler) grant(ctx context.Context, configured *int64, userID int64) error {

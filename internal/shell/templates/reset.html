@@ -71,11 +71,18 @@
         {{if .AuthIcon}}<img src="{{esc .AuthIcon}}" alt="{{esc .SiteTitle}}">{{else}}<img src="{{.Asset "images/wikitHana.png"}}" alt="{{esc .SiteTitle}}">{{end}}
       </div>
 
-      {{if eq .Stage "sent"}}
+      {{if and (eq .Stage "sent") .Finished}}
+      <div class="auth-heading">
+        <h1 class="h1">{{.T "reset.done-title"}}</h1>
+      </div>
+      <p class="meta">{{.T "reset.done"}}</p>
+      <a class="btn-primary" href="/-/login">{{.T "account.continue"}}</a>
+
+      {{else if eq .Stage "sent"}}
       <div class="auth-heading">
         <h1 class="h1">{{.T "reset.sent-title"}}</h1>
       </div>
-      <p class="meta">{{.T "reset.sent"}}<br>{{.T "reset.sent-check"}}</p>
+      <p class="meta">{{if .Email}}{{.T "reset.sent-to" "email" .Email}}{{else}}{{.T "reset.sent"}}{{end}}<br>{{.T "reset.sent-check"}}</p>
       <div class="action-row">
         <a class="link-muted" href="/-/password_reset/help">{{.T "reset.help-toggle"}}</a>
         <a class="link-muted" href="/-/login">{{.T "reset.back-login"}}</a>
@@ -106,7 +113,7 @@
         <h1 class="h1">{{.T "reset.done-title"}}</h1>
       </div>
       <p class="meta">{{.T "reset.done"}}</p>
-      <button class="btn-primary" type="button" onclick="location.href='/-/login'">{{.T "reset.login"}}</button>
+      <a class="btn-primary" href="/">{{.T "account.continue"}}</a>
       {{end}}
     </div>
     {{end}}
