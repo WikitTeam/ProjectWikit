@@ -52,6 +52,7 @@ var registry = map[string]Info{
 	"search":               {Name: "search"},
 	"sitechanges":          {Name: "sitechanges"},
 	"tagcloud":             {Name: "tagcloud"},
+	"themepreviewer":       {Name: "themepreviewer"},
 	"time":                 {Name: "time", HasContent: true, ItemBody: true},
 	"wantedpages":          {Name: "wantedpages"},
 }
