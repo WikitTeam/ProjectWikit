@@ -56,10 +56,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	full, mimeType, size, ok := h.locate(r.Context(), rest)
+	full, mimeType, size, named, ok := h.locate(r.Context(), rest)
 	if !ok {
 		notFound(w)
 		return
+	}
+	// A file reached by its stored name never changes, since a new upload gets
+	// a new name. One reached by page and file name can be replaced.
+	if named {
+		w.Header().Set("Cache-Control", namedCache)
+	} else {
+		w.Header().Set("Cache-Control", storedCache)
 	}
 
 	f, err := paths.In(h.root).Open(full)
@@ -139,7 +146,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // locate turns the URL tail into a path on disk; a type and size come back
 // only from the attachment table.
-func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType string, size int64, ok bool) {
+const (
+	storedCache = "public, max-age=31536000, immutable"
+	namedCache  = "public, max-age=600"
+)
+
+func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType string, size int64, named, ok bool) {
 	segments := strings.Split(rest, "/")
 	root := h.root
 
@@ -150,9 +162,9 @@ func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType strin
 		if len(segments) == 2 && !exists(filepath.Join(root, rest)) {
 			if f, err := h.files.ArticleFile(ctx, siteID(ctx), segments[0], segments[1]); err == nil {
 				segments = []string{f.ArticleMediaName, f.MediaName}
-				mimeType, size = f.MimeType, f.Size
+				mimeType, size, named = f.MimeType, f.Size, true
 			} else if !errors.Is(err, db.ErrNotFound) {
-				return "", "", 0, false
+				return "", "", 0, false, false
 			}
 		}
 	}
@@ -162,9 +174,9 @@ func (h *Handler) locate(ctx context.Context, rest string) (full, mimeType strin
 	}
 	full, err := paths.Resolve(root, filepath.Join(segments...))
 	if err != nil {
-		return "", "", 0, false
+		return "", "", 0, false, false
 	}
-	return full, mimeType, size, true
+	return full, mimeType, size, named, true
 }
 
 // Not urlencoding. Widening this set would put new uploads in directories where

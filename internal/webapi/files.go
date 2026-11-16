@@ -17,6 +17,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/imagemeta"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
@@ -235,6 +236,10 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 	if over {
 		return field("error", loc.T("api-upload-too-large")), http.StatusRequestEntityTooLarge, nil
 	}
+	if size, err = h.scrub(stored, size); err != nil {
+		_ = paths.In(h.deps.Files).Remove(stored)
+		return "", 0, err
+	}
 
 	var userID *int64
 	if user := auth.FromContext(ctx); user != nil {
@@ -311,6 +316,29 @@ func (h *Articles) store(r *http.Request, stored string) (size int64, over bool,
 			return 0, false, readErr
 		}
 	}
+}
+
+const scrubLimit = 64 << 20
+
+// Photos from phones carry the place they were taken, which a wiki should not
+// hand to every reader. Larger files are left as they came.
+func (h *Articles) scrub(stored string, size int64) (int64, error) {
+	if size > scrubLimit {
+		return size, nil
+	}
+	jail := paths.In(h.deps.Files)
+	data, err := jail.ReadFile(stored)
+	if err != nil {
+		return 0, err
+	}
+	clean, changed := imagemeta.Strip(data)
+	if !changed {
+		return size, nil
+	}
+	if err := jail.WriteFile(stored, clean, 0o644); err != nil {
+		return 0, err
+	}
+	return int64(len(clean)), nil
 }
 
 func randomName() (string, error) {

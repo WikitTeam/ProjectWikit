@@ -60,6 +60,7 @@ func (h *ResizedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", jpegMime)
+	w.Header().Set("Cache-Control", namedCache)
 	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 	w.Header().Set("Content-Disposition", "inline")
 	w.WriteHeader(http.StatusOK)
