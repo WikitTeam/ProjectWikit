@@ -3,7 +3,9 @@ package listpages
 
 import (
 	"errors"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,6 +49,9 @@ type Query struct {
 	FormConds   []FormCond
 	FormSort    string
 	FormSortAsc bool
+
+	Range  string
+	Around int64
 }
 
 // The value is compared as text, which is why a form meant to be ordered
@@ -59,6 +64,8 @@ type FormCond struct {
 
 const defaultPerPage = 20
 
+const FeedPath = "/pw-api/feed/listpages"
+
 type parser struct {
 	src     Source
 	article *db.Article
@@ -68,6 +75,7 @@ type parser struct {
 	path    page.PathParams
 	out     Query
 	err     error
+	clock   func() time.Time
 }
 
 func Parse(src Source, article *db.Article, viewer *db.User, zone *time.Location, params map[string]string, pathParams page.PathParams) (Query, error) {
@@ -133,10 +141,24 @@ func (p *parser) parseSinglePage() bool {
 }
 
 func (p *parser) parseRange() {
-	if p.get("range") == "others" && p.article != nil {
-		p.out.Filter.NotID = &p.article.ID
+	switch p.get("range") {
+	case "others":
+		if p.article != nil {
+			p.out.Filter.NotID = &p.article.ID
+		}
+	case RangeBefore, RangeAfter:
+		if p.article == nil {
+			p.invalid()
+			return
+		}
+		p.out.Range, p.out.Around = p.get("range"), p.article.ID
 	}
 }
+
+const (
+	RangeBefore = "before"
+	RangeAfter  = "after"
+)
 
 func (p *parser) parseType() {
 	pageType := p.get("pagetype")
@@ -284,7 +306,7 @@ func (p *parser) parseCategory() {
 		if token == "" {
 			continue
 		}
-		if token == "." {
+		if token == "." || token == "%%category%%" {
 			if p.article == nil {
 				continue
 			}
@@ -341,6 +363,18 @@ func (p *parser) articleParentID() *int64 {
 func (p *parser) parseCreatedBy() {
 	raw := p.get("created_by")
 	if raw == "" {
+		return
+	}
+	if raw == "=" || raw == "-=" {
+		if p.article == nil {
+			p.invalid()
+			return
+		}
+		if raw == "=" {
+			p.out.Filter.SameAuthorsAs = &p.article.ID
+		} else {
+			p.out.Filter.NotSameAuthorsAs = &p.article.ID
+		}
 		return
 	}
 	var (
@@ -412,6 +446,10 @@ func (p *parser) parseTime(key string, of func(*db.Article) time.Time, set func(
 		return
 	}
 
+	if filter, ok := relativeTime(raw, p.now()); ok {
+		set(filter)
+		return
+	}
 	op, rest := splitArgOperator(raw, []string{">=", "<=", "<>", ">", "<", "="}, "=")
 	start, end, ok := parseDateBounds(strings.TrimSpace(rest), p.zone)
 	if !ok {
@@ -419,6 +457,38 @@ func (p *parser) parseTime(key string, of func(*db.Article) time.Time, set func(
 		return
 	}
 	set(&db.TimeFilter{Op: timeOp(op), Start: start, End: end})
+}
+
+var relativePattern = regexp.MustCompile(`^(last|older\s+than)\s*(\d*)\s*(hours?|days?|weeks?|months?)$`)
+
+// The window runs back from the moment of the request, so "last 1 day" is the
+// past twenty-four hours rather than since midnight.
+func relativeTime(raw string, now time.Time) (*db.TimeFilter, bool) {
+	m := relativePattern.FindStringSubmatch(strings.ToLower(strings.Join(strings.Fields(raw), " ")))
+	if m == nil {
+		return nil, false
+	}
+	n := 1
+	if m[2] != "" {
+		if v, err := strconv.Atoi(m[2]); err == nil {
+			n = v
+		}
+	}
+	var from time.Time
+	switch strings.TrimSuffix(m[3], "s") {
+	case "hour":
+		from = now.Add(-time.Duration(n) * time.Hour)
+	case "day":
+		from = now.AddDate(0, 0, -n)
+	case "week":
+		from = now.AddDate(0, 0, -7*n)
+	default:
+		from = now.AddDate(0, -n, 0)
+	}
+	if m[1] == "last" {
+		return &db.TimeFilter{Op: db.TimeGTE, Start: from}, true
+	}
+	return &db.TimeFilter{Op: db.TimeLT, Start: from}, true
 }
 
 func timeOp(op string) string {
@@ -441,7 +511,7 @@ func timeOp(op string) string {
 // day covers all of its hours. Month and day are clamped rather than rejected,
 // so 2020-13-99 is the last day of 2020-12.
 func parseDateBounds(text string, zone *time.Location) (start, end time.Time, ok bool) {
-	parts := strings.Split(text, "-")
+	parts := strings.Split(strings.ReplaceAll(text, ".", "-"), "-")
 	year, err := wikinum.Int(parts[0])
 	if err != nil || year < 1 || year > 9999 {
 		return time.Time{}, time.Time{}, false
@@ -643,6 +713,7 @@ func (p *parser) parseSort() {
 	}
 	column := fields[0]
 	if field, ok := strings.CutPrefix(column, "_"); ok && field != "" {
+		field, _, _ = strings.Cut(field, "::")
 		p.out.FormSort, p.out.FormSortAsc = field, ascending
 		// No column answers this one, so the database keeps its default order
 		// and the rows are put in the asked-for one afterwards.
@@ -666,12 +737,25 @@ func (p *parser) parseWindow() {
 	if err != nil {
 		perPage = defaultPerPage
 	}
-	pageNum, err := wikinum.Int(p.pathOr("p", "1"))
+	pageNum, err := wikinum.Int(p.pathOr(PageKey(p.params), "1"))
 	if err != nil || pageNum < 1 {
 		pageNum = 1
 	}
 	p.out.Page = pageNum
 	p.out.PerPage = perPage
+}
+
+// Two paged listings on one page would read each other's page number, so
+// urlAttrPrefix gives each its own.
+func PageKey(params map[string]string) string {
+	return strings.TrimSpace(params["urlattrprefix"]) + "p"
+}
+
+func (p *parser) now() time.Time {
+	if p.clock != nil {
+		return p.clock()
+	}
+	return time.Now()
 }
 
 func (p *parser) getOr(key, def string) string {

@@ -17,6 +17,7 @@ import (
 func init() {
 	module.RegisterAPI("countpages", "get", countPagesGet)
 	module.RegisterWriteAPI("listpages", "get", listPagesGet)
+	module.RegisterAPI("listpages", "feed", listPagesFeed)
 	module.RegisterAPI("listusers", "get", listUsersGet)
 	module.RegisterWriteAPI("newpage", "check", newPageCheck)
 	module.RegisterAPI("tagcloud", "list_tags", tagCloudList)
@@ -64,6 +65,56 @@ func listPagesGet(env module.Env, params map[string]string) (wikijson.Object, er
 		names = append(names, pages[i].FullName())
 	}
 	return wikijson.Object{{Key: "pages", Value: names}}, nil
+}
+
+// A feed ignores the dates the listing on the page asks for, and stops at
+// rssLimit, or at the listing's own limit or page size.
+func listPagesFeed(env module.Env, params map[string]string) (wikijson.Object, error) {
+	retireLegacyParams(params)
+	delete(params, "created_at")
+	count := feedSize(params)
+	params["limit"] = strconv.Itoa(count)
+	pages, err := listedPages(env, params)
+	if err != nil {
+		return nil, err
+	}
+	items := make(wikijson.Array, 0, len(pages))
+	for i := range pages {
+		a := &pages[i]
+		summary, _ := page.NewVars(a, env.User, env.Vars, env.Loc).Lookup("preview")
+		title := a.Title
+		if title == "" {
+			title = a.FullName()
+		}
+		items = append(items, wikijson.Object{
+			{Key: "title", Value: title},
+			{Key: "name", Value: a.FullName()},
+			{Key: "at", Value: a.CreatedAt},
+			{Key: "summary", Value: summary},
+		})
+	}
+	return wikijson.Object{
+		{Key: "title", Value: params["rss"]},
+		{Key: "description", Value: params["rssdescription"]},
+		{Key: "home", Value: params["rsshome"]},
+		{Key: "items", Value: items},
+	}, nil
+}
+
+const feedDefault = 20
+
+func feedSize(params map[string]string) int {
+	if n, err := strconv.Atoi(strings.TrimSpace(params["rsslimit"])); err == nil && n > 0 {
+		return min(n, listpages.MaxPerPage)
+	}
+	size := feedDefault
+	if n, err := strconv.Atoi(strings.TrimSpace(params["perpage"])); err == nil && n > 0 {
+		size = n
+	}
+	if n, err := strconv.Atoi(strings.TrimSpace(params["limit"])); err == nil && n >= 0 {
+		size = min(size, n)
+	}
+	return min(size, listpages.MaxPerPage)
 }
 
 func listUsersGet(env module.Env, params map[string]string) (wikijson.Object, error) {

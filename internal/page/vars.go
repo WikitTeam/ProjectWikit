@@ -272,7 +272,15 @@ func (v *Vars) compute(name string) (string, bool) {
 			return "", false
 		}
 		return strconv.Itoa(len(authors)), true
-	// TODO preview, preview(n), summary, first_paragraph ???
+	case "preview", "summary", "first_paragraph":
+		source, ok := v.latestSource()
+		if !ok {
+			return "", false
+		}
+		if name == "preview" {
+			return preview(source, previewLength), true
+		}
+		return firstParagraph(source), true
 	case "tags":
 		return v.tagList(visibleTags)
 	case "alltags":
@@ -318,6 +326,13 @@ func (v *Vars) compute(name string) (string, bool) {
 	}
 	if n, ok := sectionIndex(name); ok {
 		return v.contentSection(n)
+	}
+	if n, ok := previewLengthOf(name); ok {
+		source, ok := v.latestSource()
+		if !ok {
+			return "", false
+		}
+		return preview(source, n), true
 	}
 	if kind, field, ok := form.ParseVar(name); ok {
 		return v.formVar(kind, field)

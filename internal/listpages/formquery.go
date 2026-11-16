@@ -3,6 +3,7 @@ package listpages
 import (
 	"cmp"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,6 +14,8 @@ import (
 
 func (q Query) hasFormWork() bool { return len(q.FormConds) > 0 || q.FormSort != "" }
 
+func (q Query) inMemory() bool { return q.hasFormWork() || q.Range != "" }
+
 // Form fields live in the page source rather than in a column, so the rows the
 // database can narrow are read one by one and the rest of the query is
 // answered here.
@@ -21,10 +24,13 @@ func runWithForm(src Source, q Query, filter db.ListFilter, paginate bool) (Resu
 	if err != nil {
 		return Result{}, err
 	}
-	kept, err := selectByForm(src, q, rows)
-	if err != nil {
-		return Result{}, err
+	kept := rows
+	if q.hasFormWork() {
+		if kept, err = selectByForm(src, q, rows); err != nil {
+			return Result{}, err
+		}
 	}
+	kept = cutAround(kept, q)
 
 	kept = kept[min(q.Offset, len(kept)):]
 	matched := len(kept)
@@ -49,6 +55,22 @@ func runWithForm(src Source, q Query, filter db.ListFilter, paginate bool) (Resu
 		Total:      total,
 		Matched:    matched,
 	}, nil
+}
+
+// Before and after are read in the listing's own order, so they follow the
+// sort rather than the dates.
+func cutAround(rows []db.Article, q Query) []db.Article {
+	if q.Range == "" {
+		return rows
+	}
+	at := slices.IndexFunc(rows, func(a db.Article) bool { return a.ID == q.Around })
+	if at < 0 {
+		return nil
+	}
+	if q.Range == RangeBefore {
+		return rows[:at]
+	}
+	return rows[at+1:]
 }
 
 func selectByForm(src Source, q Query, rows []db.Article) ([]db.Article, error) {

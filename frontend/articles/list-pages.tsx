@@ -17,6 +17,7 @@ export function makeListPages(node: HTMLElement) {
   const lpBaseParams = JSON.parse(node.dataset.listPagesParams!)
   const lpBaseContent = JSON.parse(node.dataset.listPagesContent!)
   const lpPageId = node.dataset.listPagesPageId
+  const lpPageKey = node.dataset.listPagesPageKey || 'p'
 
   // display loader when needed.
   const loaderInto = document.createElement('div')
@@ -46,7 +47,7 @@ export function makeListPages(node: HTMLElement) {
         module: 'listpages',
         pageId: lpPageId,
         method: 'render',
-        pathParams: Object.assign(lpBasePathParams, { p: page }),
+        pathParams: Object.assign(lpBasePathParams, { [lpPageKey]: page }),
         params: lpBaseParams,
         content: lpBaseContent,
       })

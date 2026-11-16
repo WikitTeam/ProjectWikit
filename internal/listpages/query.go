@@ -59,7 +59,7 @@ func Run(src Source, q Query, viewer *db.User, paginate bool) (Result, error) {
 	filter := q.Filter
 	filter.Hidden = hidden
 
-	if q.hasFormWork() {
+	if q.inMemory() {
 		return runWithForm(src, q, filter, paginate)
 	}
 

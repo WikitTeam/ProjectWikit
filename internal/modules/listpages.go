@@ -1,10 +1,12 @@
 package modules
 
 import (
+	"net/url"
 	"slices"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/escape"
 	"github.com/WikitTeam/ProjectWikit/internal/listpages"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
@@ -69,18 +71,41 @@ func renderListPages(env module.Env, params map[string]string, body string) (str
 		slices.Reverse(listed)
 	}
 
+	feed := feedLink(pc, params)
+	if feed != "" && module.BoolParam(params, "rssonly", false) {
+		return feed, nil
+	}
+
 	common := pc.CloneWith(pc.Article, pc.Article, pc.PathParams, pc.User)
 	out, err := renderListed(env, common, listed, body, prepend, appendix, result, separate, wrapper,
-		tagLinkPrefix(params["tagtarget"]))
+		tagLinkPrefix(params["tagtarget"]), params["limit"])
 	if err != nil {
 		return "", err
 	}
 	pc.Merge(common)
 
 	if !wrapper {
-		return out, nil
+		return feed + out, nil
 	}
-	return wrap(env, pc, out, result, params, body, nullParams)
+	wrapped, err := wrap(env, pc, out, result, params, body, nullParams)
+	return feed + wrapped, err
+}
+
+func feedLink(pc *page.Context, params map[string]string) string {
+	title := strings.TrimSpace(params["rss"])
+	if title == "" {
+		return ""
+	}
+	query := url.Values{}
+	for key, value := range params {
+		query.Set(key, value)
+	}
+	if pc.Article != nil {
+		query.Set("page", pc.Article.FullName())
+	}
+	href := listpages.FeedPath + "?" + query.Encode()
+	return `<div class="list-pages-feed"><a href="` + escape.HTML(href) + `" type="application/rss+xml">` +
+		`<i class="fas fa-rss"></i> ` + escape.HTML(title) + `</a></div>`
 }
 
 var legacyOrder = map[string]string{
@@ -102,6 +127,7 @@ func retireLegacyParams(params map[string]string) {
 	rename(params, "date", "created_at")
 	rename(params, "categories", "category")
 	rename(params, "tag", "tags")
+	rename(params, "rsstitle", "rss")
 
 	if _, taken := params["range"]; !taken {
 		if skip := module.BoolParam(params, "skipcurrent", false); skip {
@@ -134,14 +160,14 @@ func tagLinkPrefix(target string) string {
 
 func renderListed(env module.Env, common *page.Context, listed []db.Article,
 	body, prepend, appendix string, result listpages.Result, separate, wrapper bool,
-	tagPrefix string) (string, error) {
+	tagPrefix, limit string) (string, error) {
 
 	index := result.PageIndex
 	next := func(a *db.Article) string {
 		index++
 		vars := page.NewVars(a, env.User, env.Vars, env.Loc)
 		vars.SetTagPrefix(tagPrefix)
-		return page.PageVars(body, vars, index, result.Matched)
+		return page.ListingVars(body, vars, index, result.Matched, strings.TrimSpace(limit), result.Total)
 	}
 
 	if !separate {
@@ -192,9 +218,10 @@ func wrap(env module.Env, pc *page.Context, out string, result listpages.Result,
 
 	pageID := ""
 	basePath := "#"
+	pageKey := listpages.PageKey(params)
 	if pc.Article != nil {
 		pageID = pc.Article.FullName()
-		basePath = listpages.BasePath(pageID, pc.PathParams)
+		basePath = listpages.KeyedBasePath(pageID, pc.PathParams, pageKey)
 	}
 
 	pathJSON, err := wikijson.Marshal(pathParamsObject(pc.PathParams))
@@ -206,8 +233,8 @@ func wrap(env module.Env, pc *page.Context, out string, result listpages.Result,
 		return "", err
 	}
 
-	pagination := listpages.Pagination(env.Loc, basePath, result.Page, result.TotalPages)
-	return listpages.Wrap(out, pagination, pathJSON, paramsJSON, wikijson.String(body), pageID), nil
+	pagination := listpages.KeyedPagination(env.Loc, basePath, pageKey, result.Page, result.TotalPages)
+	return listpages.KeyedWrap(out, pagination, pathJSON, paramsJSON, wikijson.String(body), pageID, pageKey), nil
 }
 
 func pathParamsObject(params page.PathParams) wikijson.Object {

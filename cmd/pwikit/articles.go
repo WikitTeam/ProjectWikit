@@ -48,6 +48,7 @@ type pageStack struct {
 	theme         http.Handler
 	moduleAPI     http.Handler
 	preview       http.Handler
+	feed          http.Handler
 	profile       http.Handler
 	profileForm   http.Handler
 	reactivePages http.Handler
@@ -128,6 +129,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		theme:         localitem.NewTheme(items),
 		moduleAPI:     webapi.New(api, next),
 		preview:       webapi.NewPreview(api),
+		feed:          webapi.NewFeed(api),
 		articleAPI:    webapi.NewArticles(api, next),
 		allArticles:   webapi.NewAllArticles(api, next),
 		fileAPI:       webapi.NewFileItems(api, next),
@@ -212,6 +214,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	stack.theme = resolved(stack.theme)
 	stack.moduleAPI = resolved(stack.moduleAPI)
 	stack.preview = resolved(stack.preview)
+	stack.feed = resolved(stack.feed)
 	stack.profile = resolved(stack.profile)
 	stack.profileForm = resolved(stack.profileForm)
 	stack.reactivePages = resolved(stack.reactivePages)

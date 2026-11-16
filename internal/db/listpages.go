@@ -89,6 +89,9 @@ type ListFilter struct {
 
 	AuthorID *int64
 
+	SameAuthorsAs    *int64
+	NotSameAuthorsAs *int64
+
 	LinkTo    string
 	HasLinkTo bool
 
@@ -220,6 +223,16 @@ func (f ListFilter) build(b *listBuilder) string {
 	if f.AuthorID != nil {
 		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_article_authors au"+
 			" WHERE au.article_id = a.id AND au.user_id = "+b.arg(*f.AuthorID)+")")
+	}
+	if f.SameAuthorsAs != nil {
+		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_article_authors au"+
+			" JOIN web_article_authors same ON same.user_id = au.user_id"+
+			" WHERE au.article_id = a.id AND same.article_id = "+b.arg(*f.SameAuthorsAs)+")")
+	}
+	if f.NotSameAuthorsAs != nil {
+		b.where = append(b.where, "NOT EXISTS (SELECT 1 FROM web_article_authors au"+
+			" JOIN web_article_authors same ON same.user_id = au.user_id"+
+			" WHERE au.article_id = a.id AND same.article_id = "+b.arg(*f.NotSameAuthorsAs)+")")
 	}
 	if f.HasLinkTo {
 		b.where = append(b.where, "EXISTS (SELECT 1 FROM web_externallink l"+

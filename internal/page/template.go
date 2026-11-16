@@ -157,3 +157,43 @@ func PageVars(template string, vars *Vars, index, total int) string {
 		return vars.Lookup(name)
 	})
 }
+
+// Names Wikidot retired from listings but that old pages still write.
+var listingAliases = map[string]string{
+	"page_unix_name": "fullname",
+	"full_page_name": "fullname",
+	"page_name":      "name",
+	"author":         "created_by",
+	"author_edited":  "updated_by",
+	"user_edited":    "updated_by",
+	"date":           "created_at",
+	"date_edited":    "updated_at",
+	"description":    "summary",
+	"short":          "summary",
+	"text":           "content",
+	"long":           "content",
+	"body":           "content",
+}
+
+// Limit is empty when the module was given none, and shown is how many rows
+// the listing holds once the limit is applied.
+func ListingVars(template string, vars *Vars, index, total int, limit string, shown int) string {
+	return ApplyTemplate(template, func(name string) (string, bool) {
+		switch name {
+		case "index":
+			return strconv.Itoa(index), true
+		case "total":
+			return strconv.Itoa(total), true
+		case "limit":
+			return limit, true
+		case "total_or_limit":
+			return strconv.Itoa(shown), true
+		}
+		if canonical, ok := listingAliases[name]; ok {
+			name = canonical
+		} else if format, ok := strings.CutPrefix(name, "date|"); ok {
+			name = "created_at|" + format
+		}
+		return vars.Lookup(name)
+	})
+}

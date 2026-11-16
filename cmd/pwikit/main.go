@@ -175,7 +175,7 @@ Commands:
   backup      write, check, list or put back a backup
   seed        write the pages a new site starts with
   import      import an unpacked wikidot backup
-  reindex     put every page of a site back into the search index
+  reindex     put every page of a site back into the search index and record its links
   mirror      keep copies of pages included from other Wikidot wikis
   service     start pwikit whenever the machine boots
   path        make pwikit runnable by name from any directory
@@ -387,6 +387,7 @@ func serve(ctx context.Context, args []string) (err error) {
 	themeHandler := served(stack.theme)
 	moduleAPI := served(stack.moduleAPI)
 	preview := served(stack.preview)
+	feed := served(stack.feed)
 	profile := served(stack.profile)
 	profileForm := served(stack.profileForm)
 	reactivePages := served(stack.reactivePages)
@@ -425,6 +426,7 @@ func serve(ctx context.Context, args []string) (err error) {
 		localitem.ThemePrefix:           themeHandler,
 		webapi.ModulesPath:              moduleAPI,
 		webapi.PreviewPath:              preview,
+		webapi.FeedPath:                 feed,
 		userpage.Prefix:                 profile,
 		userpage.EditPrefix:             profileForm,
 		account.LoginPath:               login,

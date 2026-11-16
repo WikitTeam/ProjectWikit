@@ -46,12 +46,13 @@ const (
 
 func URLParams(params map[string]string, path page.PathParams) (values map[string]string, null map[string]bool) {
 	null = map[string]bool{}
+	prefix := strings.TrimSpace(params["urlattrprefix"])
 	for key, value := range params {
 		fallback, ok := urlDefault(value)
 		if !ok {
 			continue
 		}
-		if param, ok := lookupURLParam(path, key); ok {
+		if param, ok := lookupURLParam(path, prefix+key); ok {
 			params[key] = param.Value
 			if param.Bare {
 				null[key] = true
@@ -78,19 +79,23 @@ func lookupURLParam(path page.PathParams, key string) (page.PathParam, bool) {
 	if param, ok := path.Lookup(key); ok {
 		return param, true
 	}
-	if key == "tags" {
-		return path.Lookup("tag")
+	if base, ok := strings.CutSuffix(key, "tags"); ok {
+		return path.Lookup(base + "tag")
 	}
 	return page.PathParam{}, false
 }
 
 func BasePath(fullName string, path page.PathParams) string {
+	return KeyedBasePath(fullName, path, "p")
+}
+
+func KeyedBasePath(fullName string, path page.PathParams, pageKey string) string {
 	if fullName == "" {
 		return "#"
 	}
 	out := "/" + fullName
 	for _, param := range path {
-		if param.Key == "p" {
+		if param.Key == pageKey {
 			continue
 		}
 		out += "/" + quotePlus(param.Key) + "/" + quotePlus(pathValue(param))
@@ -117,7 +122,11 @@ const (
 )
 
 func Pagination(loc *i18n.Localizer, basePath string, current, total int) string {
-	return pagination(loc, func(p int) string { return pageHref(basePath, p) }, true, current, total)
+	return KeyedPagination(loc, basePath, "p", current, total)
+}
+
+func KeyedPagination(loc *i18n.Localizer, basePath, pageKey string, current, total int) string {
+	return pagination(loc, func(p int) string { return pageHref(basePath, pageKey, p) }, true, current, total)
 }
 
 // PaginationLinks pages a view reached by its own URL rather than swapped in
@@ -207,11 +216,11 @@ func hookAttr(hook bool, target int) string {
 	return `" data-pagination-target="` + strconv.Itoa(target) + `"`
 }
 
-func pageHref(basePath string, p int) string {
+func pageHref(basePath, pageKey string, p int) string {
 	if basePath == "" {
 		return "#"
 	}
-	return escape.HTML(basePath) + "/p/" + strconv.Itoa(p)
+	return escape.HTML(basePath) + "/" + escape.HTML(quotePlus(pageKey)) + "/" + strconv.Itoa(p)
 }
 
 func text(loc *i18n.Localizer, id string, args ...any) string {
@@ -222,7 +231,17 @@ func text(loc *i18n.Localizer, id string, args ...any) string {
 }
 
 func Wrap(content, pagination, pathParams, params, body, pageID string) string {
-	return `<div class="list-pages-box w-list-pages"` + "\n" +
+	return KeyedWrap(content, pagination, pathParams, params, body, pageID, "p")
+}
+
+// The page key is written out only when it is not the usual one, so a listing
+// without urlAttrPrefix comes out as it always has.
+func KeyedWrap(content, pagination, pathParams, params, body, pageID, pageKey string) string {
+	key := ""
+	if pageKey != "p" {
+		key = ind20 + ` data-list-pages-page-key="` + escape.HTML(pageKey) + `"` + "\n"
+	}
+	return `<div class="list-pages-box w-list-pages"` + "\n" + key +
 		ind20 + ` data-list-pages-path-params="` + escape.HTML(pathParams) + `"` + "\n" +
 		ind20 + ` data-list-pages-params="` + escape.HTML(params) + `"` + "\n" +
 		ind20 + ` data-list-pages-content="` + escape.HTML(body) + `"` + "\n" +
