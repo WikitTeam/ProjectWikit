@@ -1,18 +1,11 @@
 import { sprintf } from 'sprintf-js'
-import { t } from '~util/i18n'
-import { ModuleRateResponse, ratePage } from '../api/rate'
-import { showErrorModal } from '../util/wikidot-modal'
-import { noticeVote, starsVote } from './rate-notice'
+import { ModuleRateResponse } from '../api/rate'
+import { castVote, starsVote } from './rate-notice'
 
-async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
+function onClick(e: MouseEvent, pageId: string, vote: number | null, callback: (r: ModuleRateResponse) => void) {
   e.preventDefault()
   e.stopPropagation()
-  try {
-    return await ratePage({ pageId, value: vote })
-  } catch (e) {
-    showErrorModal(e.error || t('common.server-unreachable'))
-    throw e
-  }
+  castVote(pageId, vote, starsVote, callback)
 }
 
 function updateRating(number: HTMLElement, votes: HTMLElement, popularity: HTMLElement, control: HTMLElement, votesData: ModuleRateResponse) {
@@ -44,7 +37,6 @@ export function makeStarsRateModule(node: HTMLElement) {
     updateRating(number, votes, popularity, control, votesData)
     originalRateWidth = control.style.width
     window.postMessage({ type: 'rate_updated' })
-    noticeVote(votesData, starsVote)
   }
 
   rateWrapper.addEventListener('mousemove', e => {
@@ -60,6 +52,6 @@ export function makeStarsRateModule(node: HTMLElement) {
     control.style.width = originalRateWidth
   })
 
-  rateWrapper.addEventListener('click', e => onClick(e, pageId, rateWith).then(callback))
-  cancel.addEventListener('click', e => onClick(e, pageId, null).then(callback))
+  rateWrapper.addEventListener('click', e => onClick(e, pageId, rateWith, callback))
+  cancel.addEventListener('click', e => onClick(e, pageId, null, callback))
 }

@@ -27,6 +27,24 @@ func rateGetRating(env module.Env, _ map[string]string) (wikijson.Object, error)
 	if err != nil {
 		return nil, err
 	}
+	out, err := ratingObject(env, article)
+	if err != nil {
+		return nil, err
+	}
+	var own any
+	if env.User != nil {
+		rate, found, err := env.Data.VoteByUser(article.ID, &env.User.ID)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			own = rate
+		}
+	}
+	return append(out, wikijson.Field{Key: "vote", Value: own}), nil
+}
+
+func ratingObject(env module.Env, article *db.Article) (wikijson.Object, error) {
 	rating, err := articleRating(env, article)
 	if err != nil {
 		return nil, err
@@ -158,12 +176,10 @@ func rateVote(env module.Env, params map[string]string) (wikijson.Object, error)
 	if err := env.Data.SeenAddress(env.User); err != nil {
 		return nil, err
 	}
-	out, err := rateGetRating(env, params)
+	out, err := ratingObject(env, article)
 	if err != nil {
 		return nil, err
 	}
-	// The widget tells the reader what their click did, which it can only do
-	// knowing the vote that was there before.
 	var previous, current any
 	if old != nil {
 		previous = old.Rate
