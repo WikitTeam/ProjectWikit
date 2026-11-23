@@ -19,20 +19,21 @@ type memberData struct {
 	role     *roles.Role
 	roleErr  error
 	lastRole *int64
+	lastAll  bool
 	offset   int
 	limit    int
 }
 
-func (d *memberData) Members(roleID *int64, offset, limit int) ([]db.Member, error) {
-	d.lastRole, d.offset, d.limit = roleID, offset, limit
+func (d *memberData) Members(all bool, roleID *int64, offset, limit int) ([]db.Member, error) {
+	d.lastAll, d.lastRole, d.offset, d.limit = all, roleID, offset, limit
 	if offset >= len(d.all) {
 		return nil, nil
 	}
 	return d.all[offset:min(offset+limit, len(d.all))], nil
 }
 
-func (d *memberData) MemberCount(roleID *int64) (int, error) {
-	d.lastRole = roleID
+func (d *memberData) MemberCount(all bool, roleID *int64) (int, error) {
+	d.lastAll, d.lastRole = all, roleID
 	return len(d.all), nil
 }
 
@@ -215,5 +216,25 @@ func TestMembersHeaderAndFooter(t *testing.T) {
 	}
 	if want := "||~ Who||\n||user1||\n||user2||\n2 in all"; !strings.Contains(got, want) {
 		t.Errorf("renderMembers() = %q, want it to contain %q", got, want)
+	}
+}
+
+func TestMembersListsThisSiteByDefault(t *testing.T) {
+	data := &memberData{all: someMembers(3)}
+	if _, err := renderMembers(membersEnv(t, data), nil, "%%number%%"); err != nil {
+		t.Fatalf("renderMembers() err = %v, want nil", err)
+	}
+	if data.lastAll {
+		t.Errorf("Members() all = true, want false")
+	}
+}
+
+func TestMembersAllListsTheInstance(t *testing.T) {
+	data := &memberData{all: someMembers(3)}
+	if _, err := renderMembers(membersEnv(t, data), map[string]string{"all": "true"}, "%%number%%"); err != nil {
+		t.Fatalf("renderMembers() err = %v, want nil", err)
+	}
+	if !data.lastAll {
+		t.Errorf("Members() all = false, want true")
 	}
 }

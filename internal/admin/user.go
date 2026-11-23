@@ -28,7 +28,10 @@ const (
 
 var userTypes = []string{"normal", "wikidot", "bot", "system"}
 
-const stateBanned = "banned"
+const (
+	stateBanned = "banned"
+	stateSite   = "site"
+)
 
 func init() {
 	register(screen{slug: userSlug, label: "admin.users", need: perms.ManageUsers, serve: (*Handler).users})
@@ -114,11 +117,11 @@ func (h *Handler) userList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		}
 	}
 	state := r.URL.Query().Get("state")
-	if state != stateBanned {
+	if state != stateBanned && state != stateSite {
 		state = ""
 	}
 	sensitive := seesSensitive(ctx)
-	found, total, err := h.deps.DB.AdminUsers(ctx, siteID(ctx), query, kind, roleID, state == stateBanned, sensitive, perPage, (page-1)*perPage)
+	found, total, err := h.deps.DB.AdminUsers(ctx, siteID(ctx), query, kind, roleID, state == stateBanned, sensitive, state == stateSite, perPage, (page-1)*perPage)
 	if err != nil {
 		return err
 	}
@@ -128,6 +131,7 @@ func (h *Handler) userList(w http.ResponseWriter, r *http.Request, loc *i18n.Loc
 		"Kind":     kind,
 		"State":    state,
 		"Banned":   stateBanned,
+		"Here":     stateSite,
 		"Now":      time.Now(),
 		"Types":    userTypes,
 		"Roles":    roles,

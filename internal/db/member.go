@@ -15,25 +15,34 @@ type Member struct {
 	JoinedAt time.Time
 }
 
-// A null role means every account, so one statement covers both the filtered
-// and the unfiltered listing rather than two that can drift apart.
-const memberFilter = `
-WHERE $1::bigint IS NULL
-   OR EXISTS (SELECT 1 FROM web_user_roles ur WHERE ur.user_id = u.id AND ur.role_id = $1)`
+// A null role or site means no filter on it, so one statement covers every
+// listing rather than several that can drift apart.
+var memberFilter = `
+WHERE ($1::bigint IS NULL
+   OR EXISTS (SELECT 1 FROM web_user_roles ur WHERE ur.user_id = u.id AND ur.role_id = $1))
+  AND ($2::bigint IS NULL OR ` + siteMember("u.id", "$2") + `)`
+
+// Accounts are shared by every site of an instance, so a site's own people are
+// the ones holding one of its roles or its superuser grant.
+func siteMember(user, site string) string {
+	return `(EXISTS (SELECT 1 FROM web_user_roles ur JOIN web_role r ON r.id = ur.role_id
+		WHERE ur.user_id = ` + user + ` AND r.site_id = ` + site + ` AND r.slug NOT IN ('everyone', 'registered'))
+	OR EXISTS (SELECT 1 FROM pwikit_site_superuser ss WHERE ss.user_id = ` + user + ` AND ss.site_id = ` + site + `))`
+}
 
 var qMembers = register("Members", `
 SELECT `+prefixed("u", userColumns)+`, u.date_joined
 FROM web_user u`+memberFilter+`
 ORDER BY u.id
-OFFSET $2
-LIMIT $3`)
+OFFSET $3
+LIMIT $4`)
 
 var qMemberCount = register("MemberCount", `
 SELECT count(*)
 FROM web_user u`+memberFilter)
 
-func (d *DB) Members(ctx context.Context, roleID *int64, offset, limit int) ([]Member, error) {
-	rows, err := d.pool.Query(ctx, qMembers, roleID, offset, limit)
+func (d *DB) Members(ctx context.Context, siteID, roleID *int64, offset, limit int) ([]Member, error) {
+	rows, err := d.pool.Query(ctx, qMembers, roleID, siteID, offset, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list members: %w", err)
 	}
@@ -55,9 +64,9 @@ func (d *DB) Members(ctx context.Context, roleID *int64, offset, limit int) ([]M
 	return out, nil
 }
 
-func (d *DB) MemberCount(ctx context.Context, roleID *int64) (int, error) {
+func (d *DB) MemberCount(ctx context.Context, siteID, roleID *int64) (int, error) {
 	var total int
-	if err := d.pool.QueryRow(ctx, qMemberCount, roleID).Scan(&total); err != nil {
+	if err := d.pool.QueryRow(ctx, qMemberCount, roleID, siteID).Scan(&total); err != nil {
 		return 0, fmt.Errorf("count members: %w", err)
 	}
 	return total, nil

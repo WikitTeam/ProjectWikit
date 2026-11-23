@@ -10,7 +10,7 @@ import (
 func TestMembersAreOrderedByID(t *testing.T) {
 	d := newTestDB(t)
 
-	got, err := d.Members(context.Background(), nil, 0, 100)
+	got, err := d.Members(context.Background(), nil, nil, 0, 100)
 	if err != nil {
 		t.Fatalf("Members() err = %v, want nil", err)
 	}
@@ -31,11 +31,11 @@ func TestMemberCountMatchesTheUnfilteredListing(t *testing.T) {
 	d := newTestDB(t)
 	ctx := context.Background()
 
-	total, err := d.MemberCount(ctx, nil)
+	total, err := d.MemberCount(ctx, nil, nil)
 	if err != nil {
 		t.Fatalf("MemberCount() err = %v, want nil", err)
 	}
-	listed, err := d.Members(ctx, nil, 0, total+1)
+	listed, err := d.Members(ctx, nil, nil, 0, total+1)
 	if err != nil {
 		t.Fatalf("Members() err = %v, want nil", err)
 	}
@@ -48,14 +48,14 @@ func TestMembersOffsetSkipsRows(t *testing.T) {
 	d := newTestDB(t)
 	ctx := context.Background()
 
-	all, err := d.Members(ctx, nil, 0, 3)
+	all, err := d.Members(ctx, nil, nil, 0, 3)
 	if err != nil {
 		t.Fatalf("Members() err = %v, want nil", err)
 	}
 	if len(all) < 2 {
 		t.Skip("the database holds fewer than two users")
 	}
-	got, err := d.Members(ctx, nil, 1, 1)
+	got, err := d.Members(ctx, nil, nil, 1, 1)
 	if err != nil {
 		t.Fatalf("Members() err = %v, want nil", err)
 	}
@@ -75,11 +75,11 @@ func TestMembersFilteredByRole(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RoleByRef(\"everyone\") err = %v, want nil", err)
 	}
-	filtered, err := d.MemberCount(ctx, &role.ID)
+	filtered, err := d.MemberCount(ctx, nil, &role.ID)
 	if err != nil {
 		t.Fatalf("MemberCount() err = %v, want nil", err)
 	}
-	total, err := d.MemberCount(ctx, nil)
+	total, err := d.MemberCount(ctx, nil, nil)
 	if err != nil {
 		t.Fatalf("MemberCount() err = %v, want nil", err)
 	}
@@ -115,3 +115,28 @@ func TestRoleByRefUnknown(t *testing.T) {
 }
 
 func itoa(n int64) string { return strconv.FormatInt(n, 10) }
+
+func TestMembersFilteredBySite(t *testing.T) {
+	d := newTestDB(t)
+	ctx := context.Background()
+	site := seedSiteID(t, d)
+
+	here, err := d.MemberCount(ctx, &site, nil)
+	if err != nil {
+		t.Fatalf("MemberCount(site) err = %v, want nil", err)
+	}
+	listed, err := d.Members(ctx, &site, nil, 0, here+1)
+	if err != nil {
+		t.Fatalf("Members(site) err = %v, want nil", err)
+	}
+	if len(listed) != here {
+		t.Errorf("Members(site) = %d rows, want %d", len(listed), here)
+	}
+	total, err := d.MemberCount(ctx, nil, nil)
+	if err != nil {
+		t.Fatalf("MemberCount() err = %v, want nil", err)
+	}
+	if here > total {
+		t.Errorf("MemberCount(site) = %d, want at most %d", here, total)
+	}
+}

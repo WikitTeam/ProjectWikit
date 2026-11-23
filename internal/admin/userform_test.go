@@ -103,6 +103,7 @@ func TestUserListMarksBannedUsers(t *testing.T) {
 		"Users":  []db.AdminUserRow{{ID: 1, Username: "a", IsActive: true, Banned: true}},
 		"Now":    testTime,
 		"Banned": stateBanned,
+		"Here":   stateSite,
 		"State":  stateBanned,
 		"Action": "/-/admin/users/",
 		"Base":   "/-/admin/users/",

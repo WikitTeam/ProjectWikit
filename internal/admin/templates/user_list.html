@@ -22,10 +22,11 @@
 </form>
 <ul class="nav nav-pills">
   <li{{if not (or .Kind .State)}} class="active"{{end}}><a href="{{esc .Action}}?q={{urlq .Query}}{{if .Role}}&role={{.Role}}{{end}}">{{t "admin.all"}}</a></li>
+  <li{{if eq .State .Here}} class="active"{{end}}><a href="{{esc $.Action}}?state={{urlq $.Here}}{{if $.Query}}&q={{urlq $.Query}}{{end}}{{if $.Role}}&role={{$.Role}}{{end}}">{{t "admin.site-users"}}</a></li>
   {{range $.Types}}
   <li{{if eq . $.Kind}} class="active"{{end}}><a href="{{esc $.Action}}?type={{urlq .}}{{if $.Query}}&q={{urlq $.Query}}{{end}}{{if $.Role}}&role={{$.Role}}{{end}}">{{enum "admin.user-type-" .}}</a></li>
   {{end}}
-  <li{{if .State}} class="active"{{end}}><a href="{{esc $.Action}}?state={{urlq $.Banned}}{{if $.Query}}&q={{urlq $.Query}}{{end}}{{if $.Role}}&role={{$.Role}}{{end}}">{{t "admin.banned"}}</a></li>
+  <li{{if eq .State .Banned}} class="active"{{end}}><a href="{{esc $.Action}}?state={{urlq $.Banned}}{{if $.Query}}&q={{urlq $.Query}}{{end}}{{if $.Role}}&role={{$.Role}}{{end}}">{{t "admin.banned"}}</a></li>
 </ul>
 <p class="stamp">{{t "admin.count" "n" .Total}}</p>
 <table class="table table-hover">

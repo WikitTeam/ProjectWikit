@@ -36,15 +36,16 @@ func renderMembers(env module.Env, params map[string]string, body string) (strin
 		roleID = &role.ID
 	}
 
+	all := strings.EqualFold(strings.TrimSpace(params["all"]), "true")
 	perPage := membersPerPage(params)
-	total, err := env.Data.MemberCount(roleID)
+	total, err := env.Data.MemberCount(all, roleID)
 	if err != nil {
 		return "", err
 	}
 	totalPages := (total + perPage - 1) / perPage
 	current := membersPage(pc.PathParams, totalPages)
 
-	members, err := env.Data.Members(roleID, (current-1)*perPage, perPage)
+	members, err := env.Data.Members(all, roleID, (current-1)*perPage, perPage)
 	if err != nil {
 		return "", err
 	}

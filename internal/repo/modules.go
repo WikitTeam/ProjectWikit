@@ -406,12 +406,12 @@ func (m moduleData) UsersByIDs(ids []int64) ([]db.User, error) {
 	return m.repo.db.UsersByIDs(m.repo.ctx, ids)
 }
 
-func (m moduleData) Members(roleID *int64, offset, limit int) ([]db.Member, error) {
-	return m.repo.db.Members(m.repo.ctx, roleID, offset, limit)
+func (m moduleData) Members(all bool, roleID *int64, offset, limit int) ([]db.Member, error) {
+	return m.repo.db.Members(m.repo.ctx, m.memberSite(all), roleID, offset, limit)
 }
 
-func (m moduleData) MemberCount(roleID *int64) (int, error) {
-	return m.repo.db.MemberCount(m.repo.ctx, roleID)
+func (m moduleData) MemberCount(all bool, roleID *int64) (int, error) {
+	return m.repo.db.MemberCount(m.repo.ctx, m.memberSite(all), roleID)
 }
 
 func (m moduleData) RoleByRef(ref string) (*roles.Role, error) {
@@ -536,4 +536,12 @@ func (m moduleData) AuthorRank(f db.AuthorRankFilter, offset, limit int) ([]db.A
 
 func (m moduleData) AuthorRankOf(f db.AuthorRankFilter, userID int64) (*db.AuthorRankRow, error) {
 	return m.repo.db.AuthorRankOf(m.repo.ctx, m.repo.siteID(), f, userID)
+}
+
+func (m moduleData) memberSite(all bool) *int64 {
+	if all {
+		return nil
+	}
+	id := m.repo.siteID()
+	return &id
 }
