@@ -216,6 +216,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 12px 16px;
+  font-family: inherit;
   font-size: 16px;
   color: var(--s-ink);
   background: var(--s-bg);
@@ -245,6 +246,7 @@
   flex: 1 1 140px;
   min-width: 0;
   padding: 8px 10px;
+  font-family: inherit;
   font-size: 13px;
   color: var(--s-ink);
   background: var(--s-alt);
