@@ -84,7 +84,7 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount, unread, sig
           </>
         )}
         {' | '}
-        <a id="my-account" href={`/-/users/${user.urlName || user.username}`}>
+        <a id="my-account" href={`/-/profile/edit`}>
           {t('page-login-status.profile')}
         </a>
         {notificationCount > 0 && (

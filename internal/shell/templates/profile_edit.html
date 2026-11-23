@@ -9,8 +9,6 @@
       </a>
       <span class="divider"></span>
       <span class="path"><b>{{.T "profile.user"}}</b><span class="sep">/</span>{{esc .DisplayName}}</span>
-      <div class="spacer"></div>
-      <a class="go-home" href="/">{{.T "nav.back-to-site"}}</a>
     </header>
     {{with .Nav}}<nav class="app-nav">{{range .}}<a href="{{esc .URL}}"{{if .Active}} class="active"{{end}}>{{esc .Label}}</a>{{end}}</nav>{{end}}
 

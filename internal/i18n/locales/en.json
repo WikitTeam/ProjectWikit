@@ -937,7 +937,6 @@
   "module-unknown": "Module '{name}' doesn't exist",
   "module-wantedpages-missing": "Missing link",
   "module-wantedpages-source": "Linked from",
-  "nav.back-to-site": "Back to site",
   "nav.edit-profile": "Settings",
   "nav.favourites": "Favorites",
   "nav.liked-posts": "Likes",
