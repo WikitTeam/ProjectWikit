@@ -347,7 +347,7 @@ func writeRole(data, role string) error {
 // Never a pipe. PostgreSQL inherits it and the pipe never reaches end of file.
 func (s *Server) tool(ctx context.Context, name string, args ...string) error {
 	logName := filepath.Join(s.cfg.Logs, toolLogFile)
-	out, err := os.OpenFile(logName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	out, err := openLog(s.as, logName, os.O_APPEND)
 	if err != nil {
 		return err
 	}
@@ -364,6 +364,25 @@ func (s *Server) tool(ctx context.Context, name string, args ...string) error {
 		return fmt.Errorf("%s failed: %w\n%s", name, err, indent(tail))
 	}
 	return nil
+}
+
+// A root service writes these logs, and a later command run as the database's
+// account must still reopen them. The directory is that account's, so a log it
+// cannot open is replaced.
+func openLog(a *account, name string, flag int) (*os.File, error) {
+	flag |= os.O_CREATE | os.O_WRONLY
+	f, err := os.OpenFile(name, flag, 0o600)
+	if errors.Is(err, os.ErrPermission) && os.Remove(name) == nil {
+		f, err = os.OpenFile(name, flag, 0o600)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := own(a, name); err != nil {
+		f.Close()
+		return nil, err
+	}
+	return f, nil
 }
 
 func (s *Server) waitReady(ctx context.Context) error {

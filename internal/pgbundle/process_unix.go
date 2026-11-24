@@ -29,7 +29,7 @@ func (p *process) pid() int {
 }
 
 func (s *Server) launch(ctx context.Context) error {
-	out, err := os.OpenFile(filepath.Join(s.cfg.Logs, startLogFile), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	out, err := openLog(s.as, filepath.Join(s.cfg.Logs, startLogFile), os.O_TRUNC)
 	if err != nil {
 		return err
 	}

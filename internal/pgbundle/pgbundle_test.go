@@ -368,3 +368,32 @@ func TestHintSaysHowToUseTheOtherServer(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenLogTruncatesAndAppends(t *testing.T) {
+	name := filepath.Join(t.TempDir(), "postgresql-start.log")
+	if err := os.WriteFile(name, []byte("old\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := openLog(nil, name, os.O_TRUNC)
+	if err != nil {
+		t.Fatalf("openLog(O_TRUNC) err = %v, want nil", err)
+	}
+	f.WriteString("one\n")
+	f.Close()
+
+	f, err = openLog(nil, name, os.O_APPEND)
+	if err != nil {
+		t.Fatalf("openLog(O_APPEND) err = %v, want nil", err)
+	}
+	f.WriteString("two\n")
+	f.Close()
+
+	got, err := os.ReadFile(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "one\ntwo\n" {
+		t.Errorf("log = %q, want %q", got, "one\ntwo\n")
+	}
+}
