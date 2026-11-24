@@ -205,7 +205,7 @@ func (im *importer) addVotes(ctx context.Context, page Page, articleID int64) (i
 }
 
 func (im *importer) addFiles(ctx context.Context, page Page, article *db.Article) (int, error) {
-	if im.opts.Files == "" || len(page.Files) == 0 {
+	if im.opts.Files == nil || len(page.Files) == 0 {
 		return 0, nil
 	}
 	have, err := im.db.ArticleFileNames(ctx, article.ID)

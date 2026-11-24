@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,10 +21,11 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/imagemeta"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
-	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/quota"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
 
@@ -158,15 +161,53 @@ func (h *Articles) files(r *http.Request, _ *i18n.Localizer, name string) (strin
 	if err != nil {
 		return "", 0, err
 	}
+	limits, err := h.limits(ctx, site.FromContext(ctx))
+	if err != nil {
+		return "", 0, err
+	}
+	used, err := h.deps.DB.SiteFileUsage(ctx, siteID(ctx))
+	if err != nil {
+		return "", 0, err
+	}
+	policy := h.policy()
 	body, err := wikijson.Marshal(wikijson.Object{
 		{Key: "pageId", Value: article.FullName()},
 		{Key: "files", Value: rendered},
-		{Key: "softLimit", Value: h.deps.SoftLimit},
-		{Key: "hardLimit", Value: h.deps.HardLimit},
+		{Key: "softLimit", Value: policy.InstanceLive},
+		{Key: "hardLimit", Value: policy.InstanceTotal},
 		{Key: "softUsed", Value: live},
 		{Key: "hardUsed", Value: total},
+		{Key: "maxFile", Value: limits.MaxFile},
+		{Key: "siteQuota", Value: limits.SiteQuota},
+		{Key: "siteUsed", Value: used},
 	})
 	return body, http.StatusOK, err
+}
+
+func (h *Articles) policy() *quota.Policy {
+	if h.deps.Uploads == nil {
+		return &quota.Policy{}
+	}
+	return h.deps.Uploads
+}
+
+func (h *Articles) limits(ctx context.Context, current *db.Site) (quota.Limits, error) {
+	if current == nil {
+		return h.policy().For("", quota.Rule{}), nil
+	}
+	maxFile, siteQuota, err := h.deps.DB.SiteUploadLimit(ctx, current.ID)
+	if err != nil {
+		return quota.Limits{}, err
+	}
+	return h.policy().For(current.Slug, quota.Rule{MaxFile: maxFile, SiteQuota: siteQuota}), nil
+}
+
+func (h *Articles) backend(ctx context.Context) *storage.Backend {
+	slug := ""
+	if current := site.FromContext(ctx); current != nil {
+		slug = current.Slug
+	}
+	return h.deps.Storage.For(slug)
 }
 
 func (h *Articles) fileJSON(r *http.Request, file db.FileRecord) (wikijson.Object, error) {
@@ -227,17 +268,24 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 		return "", 0, err
 	}
 	mediaName := unique + filepath.Ext(fileName)
-	stored := filepath.Join(h.deps.Files, "media",
-		media.QuoteName(article.MediaName), media.QuoteName(mediaName))
-	size, over, err := h.store(r, stored)
+	stored := storage.Join("media", media.QuoteName(article.MediaName), media.QuoteName(mediaName))
+	limits, err := h.limits(ctx, current)
 	if err != nil {
 		return "", 0, err
 	}
-	if over {
-		return field("error", loc.T("api-upload-too-large")), http.StatusRequestEntityTooLarge, nil
+	temp, size, refusal, err := h.receive(r, loc, limits)
+	if err != nil {
+		return "", 0, err
 	}
-	if size, err = h.scrub(stored, size); err != nil {
-		_ = paths.In(h.deps.Files).Remove(stored)
+	if refusal != "" {
+		return field("error", refusal), http.StatusRequestEntityTooLarge, nil
+	}
+	defer os.Remove(temp)
+	if size, err = scrub(temp, size); err != nil {
+		return "", 0, err
+	}
+	store := h.backend(ctx).Store
+	if err := putFile(ctx, store, stored, temp, size); err != nil {
 		return "", 0, err
 	}
 
@@ -256,7 +304,7 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 		At:        at,
 	})
 	if err != nil {
-		_ = paths.In(h.deps.Files).Remove(stored)
+		_ = store.Remove(ctx, stored)
 		return "", 0, err
 	}
 	meta, err := json.Marshal(map[string]any{"name": fileName, "id": id})
@@ -275,59 +323,101 @@ func (h *Articles) upload(r *http.Request, loc *i18n.Localizer, name string) (st
 }
 
 // Reading the whole body first would hold an upload of any size in memory, so
-// the ceiling is checked as the bytes land and a refusal cleans up after itself.
-func (h *Articles) store(r *http.Request, stored string) (size int64, over bool, err error) {
-	live, total, err := h.deps.DB.FileSpaceUsage(r.Context())
+// the ceilings are checked as the bytes land, in a temporary file that only
+// reaches the store once the upload is whole.
+func (h *Articles) receive(r *http.Request, loc *i18n.Localizer, limits quota.Limits) (temp string, size int64, refusal string, err error) {
+	ctx := r.Context()
+	live, total, err := h.deps.DB.FileSpaceUsage(ctx)
 	if err != nil {
-		return 0, false, err
+		return "", 0, "", err
 	}
-	jail := paths.In(h.deps.Files)
-	if err := jail.MkdirAll(filepath.Dir(stored), 0o755); err != nil {
-		return 0, false, err
-	}
-	out, err := jail.Create(stored)
+	used, err := h.deps.DB.SiteFileUsage(ctx, siteID(ctx))
 	if err != nil {
-		return 0, false, err
+		return "", 0, "", err
 	}
-	defer out.Close()
+	policy := h.policy()
+	refuse := func(size int64) string {
+		switch {
+		case overLimit(limits.MaxFile, size):
+			return loc.T("api-upload-file-too-large", "limit", quota.Format(limits.MaxFile))
+		case overLimit(limits.SiteQuota, used+size):
+			return loc.T("api-upload-site-full", "limit", quota.Format(limits.SiteQuota))
+		case overLimit(policy.InstanceLive, live+size) || overLimit(policy.InstanceTotal, total+size):
+			return loc.T("api-upload-too-large")
+		}
+		return ""
+	}
+	if r.ContentLength > 0 {
+		if refusal := refuse(r.ContentLength); refusal != "" {
+			drain(r)
+			return "", 0, refusal, nil
+		}
+	}
 
+	out, err := os.CreateTemp("", "pwikit-upload-*")
+	if err != nil {
+		return "", 0, "", err
+	}
+	fail := func(refusal string, err error) (string, int64, string, error) {
+		out.Close()
+		os.Remove(out.Name())
+		if refusal != "" {
+			drain(r)
+		}
+		return "", 0, refusal, err
+	}
 	buf := make([]byte, uploadChunk)
 	for {
 		n, readErr := r.Body.Read(buf)
 		size += int64(n)
-		if overLimit(h.deps.SoftLimit, live+size) || overLimit(h.deps.HardLimit, total+size) {
-			out.Close()
-			_ = paths.In(h.deps.Files).Remove(stored)
-			return 0, true, nil
+		if refusal := refuse(size); refusal != "" {
+			return fail(refusal, nil)
 		}
 		if n > 0 {
 			if _, err := out.Write(buf[:n]); err != nil {
-				out.Close()
-				_ = paths.In(h.deps.Files).Remove(stored)
-				return 0, false, err
+				return fail("", err)
 			}
 		}
 		if readErr == io.EOF {
-			return size, false, nil
+			break
 		}
 		if readErr != nil {
-			out.Close()
-			_ = paths.In(h.deps.Files).Remove(stored)
-			return 0, false, readErr
+			return fail("", readErr)
 		}
 	}
+	if err := out.Close(); err != nil {
+		os.Remove(out.Name())
+		return "", 0, "", err
+	}
+	return out.Name(), size, "", nil
+}
+
+const drainLimit = 512 << 20
+
+// A browser still sending the body drops an early answer and reports a broken
+// connection, so the rest is read and thrown away, up to a point.
+func drain(r *http.Request) {
+	_, _ = io.CopyN(io.Discard, r.Body, drainLimit)
+}
+
+func putFile(ctx context.Context, store storage.Store, key, from string, size int64) error {
+	f, err := os.Open(from)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return store.Put(ctx, key, f, size)
 }
 
 const scrubLimit = 64 << 20
 
 // Photos from phones carry the place they were taken, which a wiki should not
 // hand to every reader. Larger files are left as they came.
-func (h *Articles) scrub(stored string, size int64) (int64, error) {
+func scrub(name string, size int64) (int64, error) {
 	if size > scrubLimit {
 		return size, nil
 	}
-	jail := paths.In(h.deps.Files)
-	data, err := jail.ReadFile(stored)
+	data, err := os.ReadFile(name)
 	if err != nil {
 		return 0, err
 	}
@@ -335,7 +425,7 @@ func (h *Articles) scrub(stored string, size int64) (int64, error) {
 	if !changed {
 		return size, nil
 	}
-	if err := jail.WriteFile(stored, clean, 0o644); err != nil {
+	if err := os.WriteFile(name, clean, 0o600); err != nil {
 		return 0, err
 	}
 	return int64(len(clean)), nil
@@ -394,7 +484,7 @@ func (h *Articles) removeFile(r *http.Request, loc *i18n.Localizer,
 		userID = &user.ID
 	}
 	at := time.Now().UTC()
-	if _, _, err := h.deps.DB.SoftDeleteFile(ctx, file.ID, at, userID); err != nil {
+	if _, _, err := h.deleteFile(ctx, file.ID, at, userID); err != nil {
 		return "", 0, err
 	}
 	meta, err := json.Marshal(map[string]any{"name": file.Name, "id": file.ID})

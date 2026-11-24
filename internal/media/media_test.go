@@ -21,6 +21,15 @@ func (f fakeFiles) ArticleFile(_ context.Context, _ int64, articleRef, fileName 
 	return nil, db.ErrNotFound
 }
 
+func (f fakeFiles) ArticleFileByMedia(_ context.Context, _ int64, articleMedia, fileMedia string) (*db.ArticleFile, error) {
+	for _, af := range f {
+		if af.ArticleMediaName == articleMedia && af.MediaName == fileMedia {
+			return af, nil
+		}
+	}
+	return nil, db.ErrNotFound
+}
+
 // probe is the same 300-byte body the Django oracle was recorded against.
 func probe() []byte {
 	b := make([]byte, 300)
@@ -52,7 +61,7 @@ func newTestHandler(t *testing.T, files Attachments) (*Handler, string) {
 	if files == nil {
 		files = fakeFiles{}
 	}
-	return New(root, files), root
+	return New(localSet(root), files), root
 }
 
 func get(t *testing.T, h *Handler, path string, headers map[string]string) *httptest.ResponseRecorder {

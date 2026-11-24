@@ -1,14 +1,18 @@
 package media
 
 import (
-	"context"
+	"bytes"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/mediaurl"
+	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/thumb"
 )
 
@@ -19,14 +23,36 @@ const (
 )
 
 type ResizedHandler struct {
-	root  string
-	files Attachments
+	set    *storage.Set
+	files  Attachments
+	signer mediaurl.Signer
+	public mediaurl.Public
 }
 
 var _ http.Handler = (*ResizedHandler)(nil)
 
-func NewResized(root string, files Attachments) *ResizedHandler {
-	return &ResizedHandler{root: root, files: files}
+func NewResized(set *storage.Set, files Attachments) *ResizedHandler {
+	return &ResizedHandler{set: set, files: files}
+}
+
+func (h *ResizedHandler) WithAccess(signer mediaurl.Signer, public mediaurl.Public) *ResizedHandler {
+	h.signer, h.public = signer, public
+	return h
+}
+
+// A scaled copy shows what the original shows, so on a direct backend it asks
+// the same question the original would.
+func (h *ResizedHandler) allowed(r *http.Request, file *db.ArticleFile) bool {
+	ctx := r.Context()
+	current := site.FromContext(ctx)
+	if current == nil || h.set.For(current.Slug).Mode != storage.ModeDirect {
+		return true
+	}
+	if h.public != nil && h.public(ctx, current, file.ArticleName) {
+		return true
+	}
+	key := mediaurl.MediaKey(file.ArticleMediaName, file.MediaName)
+	return h.signer.Valid(current.ID, key, r.URL.Query().Get(mediaurl.TokenParam), time.Now())
 }
 
 func (h *ResizedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +79,7 @@ func (h *ResizedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := h.image(r.Context(), segments[0], segments[1], size)
+	body, err := h.image(r, segments[0], segments[1], size)
 	if err != nil {
 		notFound(w)
 		return
@@ -69,30 +95,27 @@ func (h *ResizedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string, size thumb.Size) ([]byte, error) {
+func (h *ResizedHandler) image(r *http.Request, articleRef, fileName string, size thumb.Size) ([]byte, error) {
+	ctx := r.Context()
 	file, err := h.files.ArticleFile(ctx, siteID(ctx), articleRef, fileName)
 	if err != nil {
 		return nil, err
+	}
+	if !h.allowed(r, file) {
+		return nil, os.ErrNotExist
 	}
 	if !strings.HasPrefix(file.MimeType, "image/") {
 		return nil, os.ErrNotExist
 	}
 
-	stored := filepath.Join(QuoteName(file.ArticleMediaName), QuoteName(file.MediaName))
-	cache, err := paths.Resolve(filepath.Join(h.root, resizedDir), filepath.Join(stored, size.Name+".jpg"))
-	if err != nil {
-		return nil, err
-	}
-	jail := paths.In(h.root)
-	if body, err := jail.ReadFile(cache); err == nil {
+	store := h.set.For(siteSlug(ctx)).Store
+	stored := storage.Join(QuoteName(file.ArticleMediaName), QuoteName(file.MediaName))
+	cache := storage.Join(resizedDir, stored, size.Name+".jpg")
+	if body, err := storage.ReadAll(ctx, store, cache); err == nil {
 		return body, nil
 	}
 
-	original, err := paths.Resolve(filepath.Join(h.root, "media"), stored)
-	if err != nil {
-		return nil, err
-	}
-	src, err := jail.Open(original)
+	src, err := store.Open(ctx, storage.Join("media", stored))
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +128,6 @@ func (h *ResizedHandler) image(ctx context.Context, articleRef, fileName string,
 
 	// A cache that cannot be written still answers the request, because the
 	// scaled copy is derived and losing it costs only the work to redo it.
-	if err := jail.MkdirAll(filepath.Dir(cache), 0o755); err == nil {
-		_ = jail.WriteFile(cache, body, 0o644)
-	}
+	_ = store.Put(ctx, cache, bytes.NewReader(body), int64(len(body)))
 	return body, nil
 }

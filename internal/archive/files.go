@@ -3,17 +3,17 @@ package archive
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 func (im *importer) importFiles(ctx context.Context, page Page, articleID int64, articleMedia string) (int, error) {
-	if im.opts.Files == "" || len(page.Files) == 0 {
+	if im.opts.Files == nil || len(page.Files) == 0 {
 		return 0, nil
 	}
 	written := 0
@@ -27,9 +27,8 @@ func (im *importer) importFiles(ctx context.Context, page Page, articleID int64,
 		if err != nil {
 			return written, err
 		}
-		to := filepath.Join(im.opts.Files, "media",
-			media.QuoteName(articleMedia), media.QuoteName(stored))
-		if err := copyFile(from, to); err != nil {
+		to := storage.Join("media", media.QuoteName(articleMedia), media.QuoteName(stored))
+		if err := copyFile(ctx, im.opts.Files, from, to); err != nil {
 			return written, err
 		}
 		_, err = im.db.AddArticleFile(ctx, db.FileWrite{
@@ -59,23 +58,15 @@ func storedName(name string) (string, error) {
 	return unique + filepath.Ext(name), nil
 }
 
-func copyFile(from, to string) error {
-	if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil {
-		return err
-	}
+func copyFile(ctx context.Context, store storage.Store, from, to string) error {
 	in, err := os.Open(from)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
-
-	out, err := os.Create(to)
+	info, err := in.Stat()
 	if err != nil {
 		return err
 	}
-	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
-		return err
-	}
-	return out.Close()
+	return store.Put(ctx, to, in, info.Size())
 }

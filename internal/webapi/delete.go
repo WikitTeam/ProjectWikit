@@ -1,19 +1,20 @@
 package webapi
 
 import (
+	"context"
 	"errors"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/auth"
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
-	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 func (h *Articles) remove(r *http.Request, loc *i18n.Localizer, name string) (string, int, error) {
@@ -60,18 +61,42 @@ func (h *Articles) remove(r *http.Request, loc *i18n.Localizer, name string) (st
 	if err := h.seen(r, user); err != nil {
 		return "", 0, err
 	}
-	h.dropMedia(article.MediaName)
+	h.dropMedia(ctx, article.MediaName)
 	return field("status", "ok"), http.StatusOK, nil
 }
 
-// The rows are already gone, so a directory that will not go is logged and left
+// The rows are already gone, so files that will not go are logged and left
 // rather than failing a delete the reader has been told succeeded.
-func (h *Articles) dropMedia(mediaName string) {
-	if h.deps.Files == "" || mediaName == "" {
+func (h *Articles) dropMedia(ctx context.Context, mediaName string) {
+	if h.deps.Storage == nil || mediaName == "" || h.policy().KeepDeleted {
 		return
 	}
-	dir := filepath.Join(h.deps.Files, "media", mediaName)
-	if err := paths.In(h.deps.Files).RemoveAll(dir); err != nil {
-		h.deps.log().Error("remove article media", "dir", dir, "err", err)
+	store := h.backend(ctx).Store
+	for _, dir := range []string{"media", "resized"} {
+		prefix := storage.Join(dir, media.QuoteName(mediaName))
+		if err := store.RemoveAll(ctx, prefix); err != nil {
+			h.deps.log().Error("remove article media", "prefix", prefix, "err", err)
+		}
 	}
+}
+
+// Unless the instance keeps deleted files, a deleted attachment leaves the
+// store and the table together, so its space comes back at once.
+func (h *Articles) deleteFile(ctx context.Context, fileID int64, at time.Time, userID *int64) (string, bool, error) {
+	if h.policy().KeepDeleted || h.deps.Storage == nil {
+		return h.deps.DB.SoftDeleteFile(ctx, fileID, at, userID)
+	}
+	dropped, ok, err := h.deps.DB.DropFile(ctx, siteID(ctx), fileID)
+	if err != nil || !ok {
+		return "", ok, err
+	}
+	store := h.backend(ctx).Store
+	stored := storage.Join(media.QuoteName(dropped.ArticleMediaName), media.QuoteName(dropped.MediaName))
+	if err := store.Remove(ctx, storage.Join("media", stored)); err != nil {
+		h.deps.log().Error("remove file", "key", stored, "err", err)
+	}
+	if err := store.RemoveAll(ctx, storage.Join("resized", stored)); err != nil {
+		h.deps.log().Error("remove resized copies", "key", stored, "err", err)
+	}
+	return dropped.Name, true, nil
 }

@@ -5,12 +5,11 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
-	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 // A site with no usable theme loads nothing, so the base stylesheet stays the
@@ -48,13 +47,12 @@ const (
 	themeNotFound = "theme not found"
 )
 
-type ThemeFiles struct{ dir string }
+type ThemeFiles struct{ set *storage.Set }
 
 var _ http.Handler = (*ThemeFiles)(nil)
 
-// NewThemeFiles serves out of the theme directory under root, which is files/.
-func NewThemeFiles(root string) *ThemeFiles {
-	return &ThemeFiles{dir: filepath.Join(root, "theme")}
+func NewThemeFiles(set *storage.Set) *ThemeFiles {
+	return &ThemeFiles{set: set}
 }
 
 func (h *ThemeFiles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,12 +80,8 @@ func (h *ThemeFiles) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// One slug can name a theme on every site, so the site owns a directory
 	// rather than the themes sharing one.
-	full, err := paths.Resolve(h.dir, current.Slug+"/"+slug+themeSuffix)
-	if err != nil {
-		themeMissing(w)
-		return
-	}
-	body, err := paths.In(h.dir).ReadFile(full)
+	key := "theme/" + current.Slug + "/" + slug + themeSuffix
+	body, err := storage.ReadAll(r.Context(), h.set.For(current.Slug).Store, key)
 	if err != nil {
 		themeMissing(w)
 		return

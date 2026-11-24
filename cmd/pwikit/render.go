@@ -18,7 +18,6 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
-	"github.com/WikitTeam/ProjectWikit/internal/roles"
 )
 
 const envSidecar = "PWIKIT_FTML_SIDECAR"
@@ -83,7 +82,7 @@ func render(args []string) error {
 		if err != nil {
 			return err
 		}
-		users := printuser.New(bundle.Localizer(i18n.InstanceLanguage), roles.FileIcons(p.Files()))
+		users := printuser.New(bundle.Localizer(i18n.InstanceLanguage), sharedIcons(p))
 		store.data = repo.New(ctx, conn, users, repo.Options{Loc: bundle.Localizer(i18n.InstanceLanguage)})
 		current, err := resolveSite(ctx, conn, *siteSlug)
 		if err != nil {

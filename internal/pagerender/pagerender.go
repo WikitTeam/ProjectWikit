@@ -12,6 +12,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/callbacks"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/mediaurl"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
@@ -53,8 +54,16 @@ func (e *Env) SetClient(r *http.Request) {
 	}
 }
 
+// Every page is rendered through HTML, so this is the one place file addresses
+// can be turned toward a bucket served straight to readers.
+var Links *mediaurl.Linker
+
 func (e *Env) HTML(source string, info renderer.PageInfo, cb *callbacks.Callbacks, mode renderer.Mode) (renderer.Result, error) {
-	return e.deps.Engine.RenderHTML(e.ctx, source, info, cb, mode)
+	result, err := e.deps.Engine.RenderHTML(e.ctx, source, info, cb, mode)
+	if err == nil && Links != nil {
+		result.Body = Links.Rewrite(e.ctx, e.site, result.Body)
+	}
+	return result, err
 }
 
 func (e *Env) Text(source string, info renderer.PageInfo, cb *callbacks.Callbacks, mode renderer.Mode) (renderer.Result, error) {

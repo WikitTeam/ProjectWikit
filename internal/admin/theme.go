@@ -1,9 +1,9 @@
 package admin
 
 import (
+	"context"
 	"errors"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,9 +11,9 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
-	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 const themeSlug = "themes"
@@ -124,7 +124,7 @@ func (h *Handler) saveThemeForm(w http.ResponseWriter, r *http.Request, loc *i18
 		return err
 	}
 	row.ID = id
-	if err := h.writeThemeCSS(site.FromContext(r.Context()).Slug, row); err != nil {
+	if err := h.writeThemeCSS(r.Context(), site.FromContext(r.Context()).Slug, row); err != nil {
 		return err
 	}
 	h.noteID(r, did, themeSlug, row.ID, row.Name)
@@ -146,21 +146,12 @@ func (h *Handler) checkTheme(loc *i18n.Localizer, row db.ThemeRow) string {
 	return ""
 }
 
-func (h *Handler) writeThemeCSS(siteSlug string, row db.ThemeRow) error {
+func (h *Handler) writeThemeCSS(ctx context.Context, siteSlug string, row db.ThemeRow) error {
 	if row.Mode != db.ThemeInline || row.Slug == "" {
 		return nil
 	}
-	jail := paths.In(h.deps.Files)
-	dir := filepath.Join(h.deps.Files, "theme", siteSlug)
-	if err := jail.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-	target := filepath.Join(dir, row.Slug+".css")
-	tmp := target + ".tmp"
-	if err := jail.WriteFile(tmp, []byte(row.CSS), 0o644); err != nil {
-		return err
-	}
-	return jail.Rename(tmp, target)
+	key := storage.Join("theme", siteSlug, row.Slug+".css")
+	return h.deps.Storage.For(siteSlug).Store.Put(ctx, key, strings.NewReader(row.CSS), int64(len(row.CSS)))
 }
 
 func notFound(w http.ResponseWriter) {

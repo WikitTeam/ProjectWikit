@@ -18,6 +18,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 const envDSN = "PWIKIT_TEST_WRITE_DSN"
@@ -114,13 +115,13 @@ VALUES ('!', false, '', '', '', now(), 'probe-backup', 'normal', '', true, true,
 	}
 
 	files = t.TempDir()
-	if err := os.MkdirAll(filepath.Join(files, "media", "deep"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(files, "-", "deep"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	for name, body := range map[string]string{
-		"one.txt":              "first",
-		"media/deep/two.bin":   "\x00\x01\x02binary",
-		"media/deep/three.txt": strings.Repeat("x", 5000),
+		"-/one.txt":        "first",
+		"-/deep/two.bin":   "\x00\x01\x02binary",
+		"-/deep/three.txt": strings.Repeat("x", 5000),
 	} {
 		if err := os.WriteFile(filepath.Join(files, filepath.FromSlash(name)), []byte(body), 0o644); err != nil {
 			t.Fatal(err)
@@ -132,7 +133,7 @@ VALUES ('!', false, '', '', '', now(), 'probe-backup', 'normal', '', true, true,
 func create(t *testing.T, dsn, files string) (string, Manifest) {
 	t.Helper()
 	out := filepath.Join(t.TempDir(), "probe"+Extension)
-	result, err := Create(context.Background(), CreateOptions{DSN: dsn, Files: files, Output: out})
+	result, err := Create(context.Background(), CreateOptions{DSN: dsn, Storage: localSet(files), Output: out})
 	if err != nil {
 		t.Fatalf("Create() err = %v, want nil", err)
 	}
@@ -163,7 +164,7 @@ func TestCreateThenVerifyThenRestore(t *testing.T) {
 
 	target := scratch(t)
 	into := filepath.Join(t.TempDir(), "files")
-	result, err := Restore(context.Background(), name, RestoreOptions{DSN: target, Files: into})
+	result, err := Restore(context.Background(), name, RestoreOptions{DSN: target, Storage: localSet(into)})
 	if err != nil {
 		t.Fatalf("Restore() err = %v, want nil", err)
 	}
@@ -182,7 +183,7 @@ func TestCreateThenVerifyThenRestore(t *testing.T) {
 	if slug != "probe" {
 		t.Errorf("restored site slug = %q, want %q", slug, "probe")
 	}
-	body, err := os.ReadFile(filepath.Join(into, "media", "deep", "two.bin"))
+	body, err := os.ReadFile(filepath.Join(into, "-", "deep", "two.bin"))
 	if err != nil {
 		t.Fatalf("read the restored file err = %v, want nil", err)
 	}
@@ -912,4 +913,8 @@ func TestRestoreIntoAMigratedDatabaseWithoutForce(t *testing.T) {
 	if slug != "probe" {
 		t.Errorf("restored site slug = %q, want %q", slug, "probe")
 	}
+}
+
+func localSet(root string) *storage.Set {
+	return storage.Single(&storage.Backend{Store: storage.NewLocal(root), Mode: storage.ModeLocal})
 }

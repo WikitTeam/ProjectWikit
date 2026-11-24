@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -19,13 +18,15 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/version"
 )
 
 type CreateOptions struct {
-	DSN    string
-	Files  string
-	Output string
+	DSN string
+	// Nil leaves the uploaded files out.
+	Storage *storage.Set
+	Output  string
 	// Site narrows the backup to one site, leaving the rest of the instance
 	// behind. Empty takes everything.
 	Site          string
@@ -49,7 +50,7 @@ func Create(ctx context.Context, opts CreateOptions) (CreateResult, error) {
 	}
 	defer conn.Close(ctx)
 
-	staged, m, err := stage(ctx, conn, opts)
+	staged, m, files, err := stage(ctx, conn, opts)
 	defer staged.remove()
 	if err != nil {
 		return CreateResult{}, err
@@ -68,7 +69,7 @@ func Create(ctx context.Context, opts CreateOptions) (CreateResult, error) {
 	defer temp.Close()
 
 	report(opts.Report, "writing "+filepath.Base(opts.Output))
-	if err := writeArchive(temp, m, staged, opts.Files); err != nil {
+	if err := writeArchive(ctx, temp, m, staged, files); err != nil {
 		return CreateResult{}, err
 	}
 	size, err := temp.Seek(0, io.SeekCurrent)
@@ -99,7 +100,25 @@ func (s staging) remove() {
 	}
 }
 
-func stage(ctx context.Context, conn *pgx.Conn, opts CreateOptions) (staging, Manifest, error) {
+func stage(ctx context.Context, conn *pgx.Conn, opts CreateOptions) (staging, Manifest, fileSet, error) {
+	staged, m, err := stageTables(ctx, conn, opts)
+	if err != nil || opts.Storage == nil {
+		return staged, m, nil, err
+	}
+	// The files are read after the rows, so one deleted while this ran is still
+	// in the archive rather than missing from it.
+	report(opts.Report, "reading files")
+	files, err := collectFiles(ctx, conn, opts.Storage, opts.Site, opts)
+	if err != nil {
+		return staged, m, nil, err
+	}
+	if err := hashFiles(ctx, files, &m, opts.Report); err != nil {
+		return staged, m, nil, err
+	}
+	return staged, m, files, nil
+}
+
+func stageTables(ctx context.Context, conn *pgx.Conn, opts CreateOptions) (staging, Manifest, error) {
 	staged := staging{paths: map[string]string{}}
 	m := Manifest{
 		Format:    Format,
@@ -171,14 +190,6 @@ func stage(ctx context.Context, conn *pgx.Conn, opts CreateOptions) (staging, Ma
 		return staged, m, err
 	}
 
-	// The files are read after the rows, so one deleted while this ran is still
-	// in the archive rather than missing from it.
-	if opts.Files != "" {
-		report(opts.Report, "reading files")
-		if err := hashFiles(opts.Files, &m); err != nil {
-			return staged, m, err
-		}
-	}
 	return staged, m, nil
 }
 
@@ -209,41 +220,7 @@ func copyTable(ctx context.Context, tx pgx.Tx, name, query string) (Table, strin
 	}, scratch.Name(), nil
 }
 
-func hashFiles(root string, m *Manifest) error {
-	m.Files.Included = true
-	return filepath.WalkDir(root, func(name string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if entry.IsDir() || !entry.Type().IsRegular() {
-			return nil
-		}
-		rel, err := filepath.Rel(root, name)
-		if err != nil {
-			return err
-		}
-		info, err := entry.Info()
-		if err != nil {
-			return err
-		}
-		file, err := os.Open(name)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		sum := sha256.New()
-		if _, err := io.Copy(sum, file); err != nil {
-			return err
-		}
-		m.Files.Entries[filepath.ToSlash(rel)] = hex.EncodeToString(sum.Sum(nil))
-		m.Files.Count++
-		m.Files.Bytes += info.Size()
-		return nil
-	})
-}
-
-func writeArchive(w io.Writer, m Manifest, staged staging, filesRoot string) error {
+func writeArchive(ctx context.Context, w io.Writer, m Manifest, staged staging, files fileSet) error {
 	zip := gzip.NewWriter(w)
 	tw := tar.NewWriter(zip)
 
@@ -268,8 +245,7 @@ func writeArchive(w io.Writer, m Manifest, staged staging, filesRoot string) err
 		}
 		sort.Strings(rels)
 		for _, rel := range rels {
-			from := filepath.Join(filesRoot, filepath.FromSlash(rel))
-			if err := writeFileEntry(tw, path.Join(filesDir, rel), from); err != nil {
+			if err := writeStoredEntry(ctx, tw, path.Join(filesDir, rel), files[rel], rel); err != nil {
 				return err
 			}
 		}
@@ -278,6 +254,19 @@ func writeArchive(w io.Writer, m Manifest, staged staging, filesRoot string) err
 		return err
 	}
 	return zip.Close()
+}
+
+func writeStoredEntry(ctx context.Context, tw *tar.Writer, as string, store storage.Store, key string) error {
+	f, err := store.Open(ctx, key)
+	if err != nil {
+		return fmt.Errorf("read %s: %w", key, err)
+	}
+	defer f.Close()
+	if err := tw.WriteHeader(&tar.Header{Name: as, Mode: 0o600, Size: f.Info().Size}); err != nil {
+		return err
+	}
+	_, err = io.Copy(tw, f)
+	return err
 }
 
 func writeFileEntry(tw *tar.Writer, as, from string) error {

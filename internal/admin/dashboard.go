@@ -13,6 +13,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
+	"github.com/WikitTeam/ProjectWikit/internal/quota"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 )
 
@@ -63,7 +64,13 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		return err
 	}
 
+	usage, err := h.fileUsage(ctx, current)
+	if err != nil {
+		return err
+	}
+
 	data := map[string]any{
+		"Files":       usage,
 		"Site":        current,
 		"Settings":    settings,
 		"Queue":       queue,
@@ -87,6 +94,51 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request, loc *i18n.Locali
 		data["Checked"] = h.checkResult(r, loc)
 	}
 	return h.page(w, r, loc, loc.T("admin.dashboard"), "dashboard.html", data)
+}
+
+type fileUsage struct {
+	Count    int
+	Size     string
+	Used     string
+	Quota    string
+	MaxFile  string
+	Percent  int
+	Limited  bool
+	Nearly   bool
+	FilesURL string
+}
+
+// A site with no ceiling still shows the bar, empty, so the box keeps its shape
+// whether or not a limit is set.
+func (h *Handler) fileUsage(ctx context.Context, current *db.Site) (fileUsage, error) {
+	count, size, err := h.deps.DB.SiteFileStats(ctx, current.ID)
+	if err != nil {
+		return fileUsage{}, err
+	}
+	used, err := h.deps.DB.SiteFileUsage(ctx, current.ID)
+	if err != nil {
+		return fileUsage{}, err
+	}
+	maxFile, siteQuota, err := h.deps.DB.SiteUploadLimit(ctx, current.ID)
+	if err != nil {
+		return fileUsage{}, err
+	}
+	policy := h.deps.Uploads
+	if policy == nil {
+		policy = &quota.Policy{}
+	}
+	limits := policy.For(current.Slug, quota.Rule{MaxFile: maxFile, SiteQuota: siteQuota})
+	out := fileUsage{Count: count, Size: quota.Format(size), Used: quota.Format(used)}
+	if limits.MaxFile > 0 {
+		out.MaxFile = quota.Format(limits.MaxFile)
+	}
+	if limits.SiteQuota > 0 {
+		out.Limited = true
+		out.Quota = quota.Format(limits.SiteQuota)
+		out.Percent = int(min(100, used*100/limits.SiteQuota))
+		out.Nearly = out.Percent >= 90
+	}
+	return out, nil
 }
 
 func (h *Handler) queue(ctx context.Context, loc *i18n.Localizer, granted perms.Set) ([]queueItem, error) {

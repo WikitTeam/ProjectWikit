@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 )
 
@@ -22,7 +23,7 @@ type Options struct {
 
 	// Files is the state directory attachments are copied into. Empty leaves
 	// them behind.
-	Files string
+	Files storage.Store
 
 	// Report is called with a line worth showing while a long import runs.
 	Report func(string)

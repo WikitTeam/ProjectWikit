@@ -161,7 +161,7 @@ func (rev *reverter) files() error {
 		if !drop {
 			continue
 		}
-		name, ok, err := rev.handler.deps.DB.SoftDeleteFile(ctx, id, rev.at, rev.userID)
+		name, ok, err := rev.handler.deleteFile(ctx, id, rev.at, rev.userID)
 		if err != nil {
 			return err
 		}

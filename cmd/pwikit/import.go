@@ -15,6 +15,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 func importCommand(args []string) error {
@@ -98,12 +99,16 @@ Options:
 	}
 	loc := bundle.Localizer(current.Language)
 
-	files := ""
+	var files storage.Store
 	if !*noFiles {
 		if err := p.EnsureBase(); err != nil {
 			return err
 		}
-		files = p.Files()
+		set, err := instanceStorage(p)
+		if err != nil {
+			return err
+		}
+		files = set.For(current.Slug).Store
 	}
 	return importArchive(ctx, conn, current, found, *from, importSteps{backfill: *backfill, update: *update, yes: *yes}, archive.Options{
 		Tags:            !*noTags,

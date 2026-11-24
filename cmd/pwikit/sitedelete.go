@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 var errDeleteCancelled = errors.New("nothing was deleted")
@@ -64,6 +64,10 @@ func deleteSite(ctx context.Context, conn *db.DB, dsn, dataDir, slug string) err
 		return err
 	}
 
+	files, err := instanceStorage(p)
+	if err != nil {
+		return err
+	}
 	ask := asker{in: bufio.NewReader(os.Stdin), out: os.Stdout}
 	fmt.Printf("Site     %s (%s)\n", target.Slug, target.Title)
 	fmt.Printf("Domain   %s\n", target.Domain)
@@ -75,7 +79,7 @@ func deleteSite(ctx context.Context, conn *db.DB, dsn, dataDir, slug string) err
 
 	backedUp := false
 	if ask.yes("A backup is the only way to get this site back. Back up the whole instance now? [Y/n] ", true) {
-		if err := createBackup(dsn, p.Files(), "", p.Backups(), "", false); err != nil {
+		if err := createBackup(dsn, files, "", p.Backups(), "", false); err != nil {
 			return fmt.Errorf("backup failed, %w: %w", errDeleteCancelled, err)
 		}
 		backedUp = true
@@ -100,20 +104,24 @@ func deleteSite(ctx context.Context, conn *db.DB, dsn, dataDir, slug string) err
 	if err != nil {
 		return err
 	}
-	root := filepath.Join(p.Files(), "media")
+	store := files.For(target.Slug).Store
 	left := 0
 	for _, name := range dirs {
-		full, err := paths.Resolve(root, media.QuoteName(name))
-		if err != nil || name == "" {
+		if name == "" {
 			continue
 		}
-		if err := os.RemoveAll(full); err != nil {
-			left++
+		for _, dir := range []string{"media", "resized"} {
+			if err := store.RemoveAll(ctx, storage.Join(dir, media.QuoteName(name))); err != nil {
+				left++
+			}
 		}
+	}
+	if err := store.RemoveAll(ctx, storage.Join("theme", target.Slug)); err != nil {
+		left++
 	}
 	fmt.Printf("deleted %s\n", target.Slug)
 	if left > 0 {
-		fmt.Printf("%d page directories under %s could not be removed\n", left, root)
+		fmt.Printf("%d page directories could not be removed\n", left)
 	}
 	fmt.Printf("restart pwikit serve if it is running, so it stops answering for %s\n", target.Domain)
 	return nil

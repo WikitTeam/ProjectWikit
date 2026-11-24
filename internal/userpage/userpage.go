@@ -30,6 +30,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/social"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/wikidot"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
@@ -37,13 +38,13 @@ import (
 const Prefix = "/-/users/"
 
 type Deps struct {
-	DB     *db.DB
-	Engine renderer.Renderer
-	Bundle *i18n.Bundle
-	Icons  roles.IconLoader
-	Assets *static.Assets
-	Files  string
-	Log    *slog.Logger
+	DB      *db.DB
+	Engine  renderer.Renderer
+	Bundle  *i18n.Bundle
+	Icons   roles.IconLoader
+	Assets  *static.Assets
+	Storage *storage.Set
+	Log     *slog.Logger
 }
 
 func (d Deps) logger() *slog.Logger {

@@ -29,6 +29,7 @@ type serveOptions struct {
 	noMigrate     *bool
 	uploadLimit   *string
 	storageLimit  *string
+	maxFile       *string
 	tlsMode       *string
 	tlsListen     *string
 	tlsCert       *string
@@ -63,6 +64,7 @@ func newServeOptions() *serveOptions {
 		noMigrate:     fs.Bool("no-migrate", false, "start without applying pending schema migrations"),
 		uploadLimit:   fs.String("upload-limit", "0", "size the files still attached to pages may reach, such as 4GB; 0 for no ceiling"),
 		storageLimit:  fs.String("storage-limit", "0", "size every file on disk may reach, deleted ones counted; 0 for no ceiling"),
+		maxFile:       fs.String("max-file", "", "largest file one upload may carry on every site, such as 35MB; 0 for no ceiling"),
 		tlsMode:       fs.String("tls", string(entry.Off), "off to serve plain HTTP behind a proxy, file to use a supplied certificate, auto to obtain one over ACME; left unset, auto once a site is bound to a public domain"),
 		tlsListen:     fs.String("tls-listen", defaultTLSAddr, "listen address for HTTPS"),
 		tlsCert:       fs.String("tls-cert", "", "certificate chain in PEM form, for -tls=file"),
@@ -136,6 +138,7 @@ func (o *serveOptions) resolve(cfg config.File) (entry.Mode, error) {
 	*o.trusted = pick("trusted-proxies", "", strings.Join(cfg.Server.TrustedProxies, ","))
 	*o.uploadLimit = pick("upload-limit", envUploadLimit, cfg.Server.UploadLimit)
 	*o.storageLimit = pick("storage-limit", envStorageLimit, cfg.Server.StorageLimit)
+	*o.maxFile = pick("max-file", "", cfg.Uploads.MaxFile)
 	*o.tlsMode = pick("tls", envTLS, cfg.TLS.Mode)
 	*o.tlsListen = pick("tls-listen", envTLSListen, cfg.TLS.Listen)
 	*o.tlsCert = pick("tls-cert", envTLSCert, cfg.TLS.Cert)
@@ -180,6 +183,7 @@ func (o *serveOptions) resolveDev(cfg config.File) (entry.Mode, error) {
 	*o.sidecar = setting(o.fs, "sidecar", envSidecar, "", "")
 	*o.uploadLimit = setting(o.fs, "upload-limit", envUploadLimit, cfg.Server.UploadLimit, "0")
 	*o.storageLimit = setting(o.fs, "storage-limit", envStorageLimit, cfg.Server.StorageLimit, "0")
+	*o.maxFile = setting(o.fs, "max-file", "", cfg.Uploads.MaxFile, "")
 	return entry.Off, nil
 }
 

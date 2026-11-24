@@ -13,6 +13,7 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/backup"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 func backupCommand(args []string) error {
@@ -21,14 +22,15 @@ func backupCommand(args []string) error {
 		sub = args[0]
 	}
 	switch sub {
-	case "create", "list", "verify", "restore":
+	case "create", "list", "verify", "restore", "import":
 	default:
-		fmt.Fprint(os.Stderr, `Usage: pwikit backup <create|list|verify|restore> [options]
+		fmt.Fprint(os.Stderr, `Usage: pwikit backup <create|list|verify|restore|import> [options]
 
   create   write a backup of the database and the uploaded files
   list     show the backups in the backup directory
   verify   read a backup through and report whether it is sound
   restore  put a backup back, replacing what is there now
+  import   add the sites in a backup beside the ones already here
 
 Options:
   -output          where create writes; defaults to a timestamped name in backups/
@@ -37,7 +39,12 @@ Options:
   -keep-passwords  carry the sign-in passwords into a single site backup
   -dir             directory list reads; defaults to backups/
   -force           let restore replace a database that already holds data
-  -no-safety-backup  let restore skip the backup it takes of the current state
+  -no-safety-backup  let restore or import skip the backup it takes of the current state
+  -sites           import only these sites, by their slug in the backup, separated by commas
+  -slug            the slug an imported site gets here, when one site is imported
+  -domain          the domain an imported site gets here, when one site is imported
+  -media-domain    the files domain an imported site gets here, when one site is imported
+  -staging         an empty database to unpack the backup into while importing
 `)
 		return errors.New("unknown backup subcommand")
 	}
@@ -50,6 +57,11 @@ Options:
 	dir := fs.String("dir", "", "directory list reads")
 	force := fs.Bool("force", false, "let restore replace a database that already holds data")
 	noSafety := fs.Bool("no-safety-backup", false, "skip the backup restore takes of the current state")
+	sites := fs.String("sites", "", "import only these sites, separated by commas")
+	newSlug := fs.String("slug", "", "the slug an imported site gets here")
+	newDomain := fs.String("domain", "", "the domain an imported site gets here")
+	newMedia := fs.String("media-domain", "", "the files domain an imported site gets here")
+	staging := fs.String("staging", "", "an empty database to unpack the backup into while importing")
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	loose, err := parseMixed(fs, args[1:])
@@ -83,15 +95,28 @@ Options:
 	}
 	defer release()
 
-	files := p.Files()
-	if *noFiles {
-		files = ""
+	var files *storage.Set
+	if !*noFiles {
+		if files, err = instanceStorage(p); err != nil {
+			return err
+		}
 	}
 	if sub == "create" {
 		return createBackup(dsn, files, *output, p.Backups(), *site, *keepPasswords)
 	}
 	if len(loose) != 1 {
-		return errors.New("restore needs one backup file")
+		return errors.New(sub + " needs one backup file")
+	}
+	if sub == "import" {
+		var only []string
+		for _, s := range strings.Split(*sites, ",") {
+			if s = strings.TrimSpace(s); s != "" {
+				only = append(only, s)
+			}
+		}
+		return importBackup(loose[0], dsn, files, p.Backups(), *noSafety, backup.ImportOptions{
+			Staging: *staging, Sites: only, Slug: *newSlug, Domain: *newDomain, MediaDomain: *newMedia,
+		})
 	}
 	return restoreBackup(loose[0], dsn, files, p.Backups(), *force, *noSafety)
 }
@@ -112,12 +137,12 @@ func parseMixed(fs *flag.FlagSet, args []string) ([]string, error) {
 	}
 }
 
-func createBackup(dsn, files, output, backups, site string, keepPasswords bool) error {
+func createBackup(dsn string, files *storage.Set, output, backups, site string, keepPasswords bool) error {
 	if output == "" {
 		output = filepath.Join(backups, backup.DefaultName(time.Now(), site))
 	}
 	result, err := backup.Create(context.Background(), backup.CreateOptions{
-		DSN: dsn, Files: files, Output: output, Site: site,
+		DSN: dsn, Storage: files, Output: output, Site: site,
 		KeepPasswords: keepPasswords, Report: progress,
 	})
 	if err != nil {
@@ -159,7 +184,7 @@ func printReport(name string, report backup.Report) {
 	}
 }
 
-func restoreBackup(name, dsn, files, backups string, force, noSafety bool) error {
+func restoreBackup(name, dsn string, files *storage.Set, backups string, force, noSafety bool) error {
 	holdsData, err := backup.Ready(context.Background(), dsn, force)
 	if err != nil {
 		return err
@@ -171,7 +196,7 @@ func restoreBackup(name, dsn, files, backups string, force, noSafety bool) error
 		safety := filepath.Join(backups, "before-restore-"+backup.DefaultName(time.Now(), ""))
 		fmt.Println("backing up the current state first")
 		result, err := backup.Create(context.Background(), backup.CreateOptions{
-			DSN: dsn, Files: files, Output: safety, Report: progress,
+			DSN: dsn, Storage: files, Output: safety, Report: progress,
 		})
 		if err != nil {
 			return fmt.Errorf("could not back up the current state, so nothing was changed: %w", err)
@@ -180,7 +205,7 @@ func restoreBackup(name, dsn, files, backups string, force, noSafety bool) error
 	}
 
 	result, err := backup.Restore(context.Background(), name, backup.RestoreOptions{
-		DSN: dsn, Files: files, Force: force, Report: progress,
+		DSN: dsn, Storage: files, Force: force, Report: progress,
 	})
 	if err != nil {
 		return err
@@ -256,4 +281,29 @@ func size(n int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(n)/float64(div), "KMGT"[exp])
+}
+
+func importBackup(name, dsn string, files *storage.Set, backups string, noSafety bool, opts backup.ImportOptions) error {
+	if !noSafety {
+		safety := filepath.Join(backups, "before-import-"+backup.DefaultName(time.Now(), ""))
+		fmt.Println("backing up the current state first")
+		result, err := backup.Create(context.Background(), backup.CreateOptions{
+			DSN: dsn, Storage: files, Output: safety, Report: progress,
+		})
+		if err != nil {
+			return fmt.Errorf("could not back up the current state, so nothing was changed: %w", err)
+		}
+		fmt.Printf("the state before this import is in %s\n", result.Path)
+	}
+	opts.DSN, opts.Storage, opts.Report = dsn, files, progress
+	result, err := backup.Import(context.Background(), name, opts)
+	for _, s := range result.Sites {
+		fmt.Printf("imported %s as %s: %d rows, %d new accounts, %d joined to accounts already here, %d files\n",
+			s.From, s.Slug, s.Rows, s.NewAccounts, s.SameAccounts, s.Files)
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Println("run pwikit reindex -all, then start pwikit")
+	return nil
 }

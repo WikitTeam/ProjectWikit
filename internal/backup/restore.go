@@ -16,13 +16,15 @@ import (
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 type RestoreOptions struct {
-	DSN    string
-	Files  string
-	Force  bool
-	Report func(string)
+	DSN string
+	// Nil leaves the files where they are.
+	Storage *storage.Set
+	Force   bool
+	Report  func(string)
 }
 
 type RestoreResult struct {
@@ -129,9 +131,13 @@ func Restore(ctx context.Context, name string, opts RestoreOptions) (RestoreResu
 		return out, err
 	}
 
-	if m.Files.Included && opts.Files != "" {
+	if m.Files.Included && opts.Storage != nil {
 		report(opts.Report, "putting the files back")
-		if err := restoreFiles(name, opts.Files, m, &out); err != nil {
+		route, err := NewRouter(ctx, conn, opts.Storage)
+		if err != nil {
+			return out, err
+		}
+		if err := restoreFiles(ctx, name, route, &out); err != nil {
 			return out, err
 		}
 	}
@@ -238,24 +244,10 @@ func catchUp(ctx context.Context, dsn string, m Manifest) ([]string, error) {
 	return result.Applied, nil
 }
 
-// The files land beside the real directory and only swap in once every one of
-// them is written, so an interrupted restore leaves the old tree alone.
-func restoreFiles(archive, root string, m Manifest, out *RestoreResult) error {
-	side := filepath.Dir(root)
-	inPlace := !canCreateIn(side)
-	if inPlace {
-		side = filepath.Join(side, "backups")
-		if !canCreateIn(side) {
-			return fmt.Errorf("neither %s nor %s can take the restored files", filepath.Dir(root), side)
-		}
-	}
-	staging := filepath.Join(side, filepath.Base(root)+".restoring")
-	if err := os.RemoveAll(staging); err != nil {
-		return err
-	}
-	if err := os.MkdirAll(staging, 0o755); err != nil {
-		return err
-	}
+// Local files swap in only once all are written, so an interrupted restore
+// leaves the old tree alone. A bucket has no such swap and is written in place.
+func restoreFiles(ctx context.Context, archive string, route *Router, out *RestoreResult) error {
+	swaps := map[string]*localSwap{}
 	file, err := os.Open(archive)
 	if err != nil {
 		return err
@@ -284,27 +276,83 @@ func restoreFiles(archive, root string, m Manifest, out *RestoreResult) error {
 			continue
 		}
 		rel := strings.TrimPrefix(head.Name, filesDir+"/")
-		to, err := safeJoin(staging, rel)
-		if err != nil {
-			return err
+		if err := storage.CheckKey(rel); err != nil {
+			return fmt.Errorf("the archive names %q, which points outside the files directory", rel)
 		}
-		if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil {
-			return err
+		store := route.Backend(rel).Store
+		local, ok := store.(*storage.Local)
+		if !ok {
+			if err := store.Put(ctx, rel, tr, head.Size); err != nil {
+				return fmt.Errorf("put %s back: %w", rel, err)
+			}
+			out.FilesPut++
+			continue
 		}
-		written, err := os.Create(to)
-		if err != nil {
-			return err
+		swap, ok := swaps[local.Root()]
+		if !ok {
+			if swap, err = newLocalSwap(local.Root()); err != nil {
+				return err
+			}
+			swaps[local.Root()] = swap
 		}
-		if _, err := io.Copy(written, tr); err != nil {
-			written.Close()
-			return err
-		}
-		if err := written.Close(); err != nil {
+		if err := swap.write(rel, tr); err != nil {
 			return err
 		}
 		out.FilesPut++
 	}
+	for _, swap := range swaps {
+		if err := swap.finish(out); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
+type localSwap struct {
+	root, side, staging string
+	inPlace             bool
+}
+
+func newLocalSwap(root string) (*localSwap, error) {
+	side := filepath.Dir(root)
+	inPlace := !canCreateIn(side)
+	if inPlace {
+		side = filepath.Join(side, "backups")
+		if !canCreateIn(side) {
+			return nil, fmt.Errorf("neither %s nor %s can take the restored files", filepath.Dir(root), side)
+		}
+	}
+	staging := filepath.Join(side, filepath.Base(root)+".restoring")
+	if err := os.RemoveAll(staging); err != nil {
+		return nil, err
+	}
+	if err := os.MkdirAll(staging, 0o755); err != nil {
+		return nil, err
+	}
+	return &localSwap{root: root, side: side, staging: staging, inPlace: inPlace}, nil
+}
+
+func (s *localSwap) write(rel string, r io.Reader) error {
+	to, err := safeJoin(s.staging, rel)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil {
+		return err
+	}
+	written, err := os.Create(to)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(written, r); err != nil {
+		written.Close()
+		return err
+	}
+	return written.Close()
+}
+
+func (s *localSwap) finish(out *RestoreResult) error {
+	root, side, staging, inPlace := s.root, s.side, s.staging, s.inPlace
 	retired := filepath.Join(side, filepath.Base(root)+".replaced")
 	if err := os.RemoveAll(retired); err != nil {
 		return err

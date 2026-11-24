@@ -144,6 +144,7 @@ var rules = map[string]rule{
 	"pwikit_vote_event":              {owned, `article_id IN (SELECT id FROM art)`, ""},
 	"pwikit_plugin_site":             {owned, `site_id = (SELECT id FROM s)`, ""},
 	"pwikit_plugin_kv":               {owned, `site_id = (SELECT id FROM s)`, ""},
+	"pwikit_site_upload_limit":       {owned, `site_id = (SELECT id FROM s)`, ""},
 
 	// A subscription can hang off an article or off a forum thread, and the
 	// thread need not belong to an article.
@@ -285,4 +286,11 @@ func SiteScopeRuled() []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// A shared table holds the same rows on every instance, so an import leaves
+// the copy already here alone.
+func SiteScopeShared(table string) bool {
+	r, ok := rules[table]
+	return ok && r.how == shared
 }

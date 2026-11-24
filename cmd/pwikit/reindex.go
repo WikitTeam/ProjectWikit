@@ -17,7 +17,6 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/printuser"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
-	"github.com/WikitTeam/ProjectWikit/internal/roles"
 )
 
 func reindex(args []string) error {
@@ -66,7 +65,7 @@ func reindex(args []string) error {
 
 	for _, current := range sites {
 		loc := bundle.Localizer(current.Language)
-		store := cliRepository{data: repo.New(ctx, conn, printuser.New(loc, roles.FileIcons(p.Files())), repo.Options{Loc: loc})}
+		store := cliRepository{data: repo.New(ctx, conn, printuser.New(loc, sharedIcons(p)), repo.Options{Loc: loc})}
 		written, err := reindexSite(ctx, conn, engine, store, loc, current)
 		if err != nil {
 			return err

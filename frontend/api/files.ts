@@ -17,6 +17,9 @@ export interface ArticleFiles {
   hardLimit: number
   softUsed: number
   hardUsed: number
+  maxFile: number
+  siteQuota: number
+  siteUsed: number
 }
 
 export async function fetchArticleFiles(pageId: string): Promise<ArticleFiles> {

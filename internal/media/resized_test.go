@@ -42,7 +42,7 @@ func newResizedHandler(t *testing.T, mime string) (*ResizedHandler, string) {
 		MimeType:         mime,
 		Size:             int64(buf.Len()),
 	}}
-	return NewResized(root, files), root
+	return NewResized(localSet(root), files), root
 }
 
 func getResized(t *testing.T, h *ResizedHandler, path string) *httptest.ResponseRecorder {

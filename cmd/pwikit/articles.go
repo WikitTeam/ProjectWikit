@@ -28,11 +28,13 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/plugin"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
+	"github.com/WikitTeam/ProjectWikit/internal/quota"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/session"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
 	"github.com/WikitTeam/ProjectWikit/internal/update"
 	"github.com/WikitTeam/ProjectWikit/internal/userpage"
@@ -77,12 +79,7 @@ type pageStack struct {
 	close         func()
 }
 
-type limits struct {
-	soft int64
-	hard int64
-}
-
-func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, size limits, sidecar, secret string, cfg config.File, board *update.Board, log *slog.Logger) (*pageStack, error) {
+func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, trust *proxyheader.Trust, files *storage.Set, uploads *quota.Policy, sidecar, secret string, cfg config.File, board *update.Board, log *slog.Logger) (*pageStack, error) {
 	engine, closeEngine, err := newRenderer(sidecar)
 	if err != nil {
 		return nil, err
@@ -92,7 +89,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		closeEngine()
 		return nil, err
 	}
-	icons := roles.FileIcons(p.Files())
+	icons := roles.FileIcons(files.Shared.Store)
 	board.Bundle = bundle
 	plugins, err := plugin.Load(context.Background(), p.Plugins(), conn, log, module.Builtin)
 	if err != nil {
@@ -114,12 +111,12 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
 	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons,
-		Tokens: token.Generator{Secret: secret},
-		Files:  p.Files(), SoftLimit: size.soft, HardLimit: size.hard, Log: log}
+		Tokens:  token.Generator{Secret: secret},
+		Storage: files, Uploads: uploads, Log: log}
 
 	profiles := userpage.Deps{
 		DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
-		Assets: static.NewAssets(assets), Files: p.Files(), Log: log,
+		Assets: static.NewAssets(assets), Storage: files, Log: log,
 	}
 
 	stack := &pageStack{
@@ -180,11 +177,11 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 	stack.settings = account.NewSettings(accounts)
 
 	adminPages, err := admin.New(admin.Deps{
-		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Files: p.Files(),
+		DB: conn, Bundle: bundle, Assets: static.NewAssets(assets), Storage: files,
 		Tokens: token.Generator{Secret: secret}, Articles: stack.articleAPI,
 		Mail: mail.New(mailConfig(cfg.Mail)), Trust: trust, Updates: board, Log: log,
 		Mirrors: mirror.NewRunner(conn, wikidotsrc.New(mirrorPerSite, mirrorTotal)),
-		Engine:  engine, Icons: icons, Plugins: plugins,
+		Engine:  engine, Icons: icons, Plugins: plugins, Uploads: uploads,
 	}, next)
 	if err != nil {
 		return nil, err

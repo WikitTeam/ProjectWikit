@@ -25,6 +25,35 @@ type File struct {
 	Update    Update    `toml:"update"`
 	Wikidot   Wikidot   `toml:"wikidot"`
 	Mounts    []Mount   `toml:"mount"`
+	Storage   Storage   `toml:"storage"`
+	Uploads   Uploads   `toml:"uploads"`
+}
+
+type StorageBackend struct {
+	Mode        string `toml:"mode"`
+	Endpoint    string `toml:"endpoint"`
+	Region      string `toml:"region"`
+	Bucket      string `toml:"bucket"`
+	Prefix      string `toml:"prefix"`
+	PathStyle   bool   `toml:"path_style"`
+	PublicURL   string `toml:"public_url"`
+	Credentials string `toml:"credentials"`
+}
+
+type Storage struct {
+	StorageBackend
+	Sites map[string]StorageBackend `toml:"sites"`
+}
+
+type UploadLimits struct {
+	MaxFile   string `toml:"max_file"`
+	SiteQuota string `toml:"site_quota"`
+}
+
+type Uploads struct {
+	UploadLimits
+	KeepDeleted bool                    `toml:"keep_deleted"`
+	Sites       map[string]UploadLimits `toml:"sites"`
 }
 
 type Mount struct {
@@ -143,10 +172,77 @@ func checked(f File, meta toml.MetaData, path string) (File, error) {
 			return File{}, fmt.Errorf("%s sets mount secret_file %q; it takes a file name in the secrets folder", path, m.SecretFile)
 		}
 	}
+	for _, name := range append([]string{""}, sortedKeys(f.Storage.Sites)...) {
+		b := f.Storage.StorageBackend
+		where := "[storage]"
+		if name != "" {
+			b, where = f.Storage.Site(name), "[storage.sites."+name+"]"
+		}
+		if err := b.check(); err != nil {
+			return File{}, fmt.Errorf("%s %s %w", path, where, err)
+		}
+	}
 	if e := f.Mail.Engine; e != "" && e != EngineSMTP && e != EngineConsole {
 		return File{}, fmt.Errorf("%s sets mail.engine to %q; it takes %q or %q", path, e, EngineSMTP, EngineConsole)
 	}
 	return f, nil
+}
+
+func sortedKeys[T any](m map[string]T) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// A site's backend names only what differs, so the endpoint, region and keys
+// carry over from [storage] unless the site sets its own.
+func (s Storage) Site(name string) StorageBackend {
+	b, ok := s.Sites[name]
+	if !ok {
+		return s.StorageBackend
+	}
+	if b.Mode == "" {
+		b.Mode = s.Mode
+	}
+	if b.Endpoint == "" {
+		b.Endpoint, b.PathStyle = s.Endpoint, s.PathStyle
+	}
+	if b.Region == "" {
+		b.Region = s.Region
+	}
+	if b.Bucket == "" {
+		b.Bucket = s.Bucket
+	}
+	if b.Credentials == "" {
+		b.Credentials = s.Credentials
+	}
+	if b.PublicURL == "" && b.Bucket == s.Bucket && b.Prefix == s.Prefix {
+		b.PublicURL = s.PublicURL
+	}
+	return b
+}
+
+func (b StorageBackend) check() error {
+	switch strings.ToLower(b.Mode) {
+	case "", "local":
+		return nil
+	case "proxy", "direct":
+	default:
+		return fmt.Errorf("sets mode to %q; it takes local, proxy or direct", b.Mode)
+	}
+	if b.Endpoint == "" || b.Bucket == "" {
+		return errors.New("needs endpoint and bucket when mode is proxy or direct")
+	}
+	if strings.EqualFold(b.Mode, "direct") && b.PublicURL == "" {
+		return errors.New("needs public_url when mode is direct")
+	}
+	if strings.ContainsAny(b.Credentials, `/\.`) {
+		return fmt.Errorf("sets credentials to %q; it takes a plain name", b.Credentials)
+	}
+	return nil
 }
 
 func WriteTemplate(path string) (bool, error) {
@@ -185,6 +281,33 @@ const Template = `# Settings for pwikit. A line starting with # is an example an
 # trusted_proxies = ["127.0.0.1"]
 # upload_limit = "4GB"
 # storage_limit = "0"
+
+[uploads]
+# max_file = "35MB"
+# site_quota = "0"
+# keep_deleted = false
+
+# One site can have its own limits.
+# [uploads.sites.main]
+# max_file = "100MB"
+# site_quota = "10GB"
+
+[storage]
+# Left unset, uploads stay in the files folder. proxy keeps them in an S3
+# bucket and still serves them through pwikit; direct links readers to
+# public_url. The keys go in the secrets folder, see the documentation.
+# mode = "proxy"
+# endpoint = "https://s3.example.com"
+# region = "auto"
+# bucket = "pwikit"
+# public_url = "https://files.example.org"
+
+# One site can keep its files somewhere else.
+# [storage.sites.main]
+# mode = "direct"
+# bucket = "main-files"
+# public_url = "https://main-files.example.org"
+# credentials = "main"
 
 [tls]
 # Left unset, pwikit serves HTTPS on ports 80 and 443 with certificates from

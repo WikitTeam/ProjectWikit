@@ -13,7 +13,7 @@ func (a *Archive) usedUsers(slug string, pages []Page, opts Options) (map[int64]
 				used[vote.UserID] = true
 			}
 		}
-		if opts.Files != "" {
+		if opts.Files != nil {
 			for _, file := range page.Files {
 				used[file.Author] = true
 			}

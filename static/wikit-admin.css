@@ -106,6 +106,9 @@ body.admin { padding-top: 66px; }
 .admin-shell .widget-title .link { color: var(--muted); text-decoration: none; }
 .admin-shell .widget-title .link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .admin-shell .widget-content { padding-top: 2px; }
+.admin-shell .usage-bar { height: 8px; margin: 10px 0 14px; border: 1px solid var(--rule); background: var(--well); }
+.admin-shell .usage-bar > span { display: block; height: 100%; background: var(--ink); }
+.admin-shell .usage-bar.nearly > span { background: var(--signal); }
 .admin-shell .widget-content .table a { text-decoration: none; }
 .admin-shell .widget-content .table a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .admin-shell .table-spec td:first-child { color: var(--muted); width: 40%; }

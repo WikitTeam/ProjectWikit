@@ -6,6 +6,8 @@ import (
 	"slices"
 	"sort"
 	"testing"
+
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 func writeFile(t *testing.T, path, body string) {
@@ -58,7 +60,7 @@ func usedIDs(t *testing.T, a *Archive, opts Options) []int64 {
 }
 
 func TestUsedUsersCountsEveryReference(t *testing.T) {
-	got := usedIDs(t, usedFixture(t), Options{Votes: true, Files: "files"})
+	got := usedIDs(t, usedFixture(t), Options{Votes: true, Files: storage.NewLocal("files")})
 	want := []int64{10, 11, 12, 13, 14, 15, 16, 17}
 	if !slices.Equal(got, want) {
 		t.Errorf("usedUsers() = %v, want %v", got, want)

@@ -3,6 +3,7 @@ package backup
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -51,7 +52,7 @@ func TestRestoreFilesWhenTheDataDirectoryIsClosed(t *testing.T) {
 	t.Cleanup(func() { os.Chmod(top, 0o755) })
 
 	var out RestoreResult
-	if err := restoreFiles(filesArchive(t, map[string]string{"main/new/b.txt": "new"}), root, Manifest{}, &out); err != nil {
+	if err := restoreFiles(context.Background(), filesArchive(t, map[string]string{"main/new/b.txt": "new"}), &Router{set: localSet(root)}, &out); err != nil {
 		t.Fatalf("restoreFiles() err = %v, want nil", err)
 	}
 	if got, err := os.ReadFile(filepath.Join(root, "main", "new", "b.txt")); err != nil || string(got) != "new" {

@@ -9,6 +9,7 @@ import (
 )
 
 type ArticleFile struct {
+	ArticleName      string
 	ArticleMediaName string
 	MediaName        string
 	MimeType         string
@@ -18,19 +19,42 @@ type ArticleFile struct {
 // f.name is a plain text column, so this comparison is case-sensitive; only
 // complete_full_name is citext.
 var qArticleFile = register("ArticleFile", `
-SELECT a.media_name, f.media_name, f.mime_type, f.size
+SELECT a.complete_full_name, a.media_name, f.media_name, f.mime_type, f.size
 FROM web_file f
 JOIN web_article a ON a.id = f.article_id
 WHERE a.site_id = $1 AND a.complete_full_name = $2 AND f.name = $3 AND f.deleted_at IS NULL
 ORDER BY f.id
 LIMIT 1`)
 
+var qArticleFileByMedia = register("ArticleFileByMedia", `
+SELECT a.complete_full_name, a.media_name, f.media_name, f.mime_type, f.size
+FROM web_file f
+JOIN web_article a ON a.id = f.article_id
+WHERE a.site_id = $1 AND a.media_name = $2 AND f.media_name = $3
+ORDER BY f.id
+LIMIT 1`)
+
+// The stored names are what a reader holding an old link asks for, and the page
+// they belong to decides who may read them.
+func (d *DB) ArticleFileByMedia(ctx context.Context, siteID int64, articleMedia, fileMedia string) (*ArticleFile, error) {
+	var f ArticleFile
+	err := d.pool.QueryRow(ctx, qArticleFileByMedia, siteID, articleMedia, fileMedia).Scan(
+		&f.ArticleName, &f.ArticleMediaName, &f.MediaName, &f.MimeType, &f.Size)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("lookup stored file %s/%s: %w", articleMedia, fileMedia, err)
+	}
+	return &f, nil
+}
+
 // ArticleFile resolves an attachment's on-disk names. ORDER BY id only makes
 // an already-unique row deterministic.
 func (d *DB) ArticleFile(ctx context.Context, siteID int64, articleRef, fileName string) (*ArticleFile, error) {
 	var f ArticleFile
 	err := d.pool.QueryRow(ctx, qArticleFile, siteID, dumbName(articleRef), fileName).Scan(
-		&f.ArticleMediaName, &f.MediaName, &f.MimeType, &f.Size)
+		&f.ArticleName, &f.ArticleMediaName, &f.MediaName, &f.MimeType, &f.Size)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}

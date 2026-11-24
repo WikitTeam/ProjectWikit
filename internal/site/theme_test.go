@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/WikitTeam/ProjectWikit/internal/db"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 func TestThemeURLWithoutTheme(t *testing.T) {
@@ -45,7 +46,7 @@ func themeRequest(t *testing.T, dir, target string) *httptest.ResponseRecorder {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, target, nil)
 	req = req.WithContext(WithSite(req.Context(), &db.Site{Slug: "wikit"}))
-	NewThemeFiles(dir).ServeHTTP(rec, req)
+	NewThemeFiles(storage.Single(&storage.Backend{Store: storage.NewLocal(dir)})).ServeHTTP(rec, req)
 	return rec
 }
 
@@ -121,7 +122,7 @@ func TestThemeFilesKeepsSitesApart(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/-/theme/night.css", nil)
 	req = req.WithContext(WithSite(req.Context(), &db.Site{Slug: "other"}))
-	NewThemeFiles(root).ServeHTTP(rec, req)
+	NewThemeFiles(storage.Single(&storage.Backend{Store: storage.NewLocal(root)})).ServeHTTP(rec, req)
 
 	if got := rec.Body.String(); got != "body{color:#000}" {
 		t.Errorf("GET night.css on other = %q, want %q", got, "body{color:#000}")

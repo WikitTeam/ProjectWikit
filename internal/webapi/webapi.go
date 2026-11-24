@@ -21,9 +21,11 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
+	"github.com/WikitTeam/ProjectWikit/internal/quota"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
 	"github.com/WikitTeam/ProjectWikit/internal/wikijson"
 )
@@ -47,12 +49,10 @@ type Deps struct {
 	Engine renderer.Renderer
 	Bundle *i18n.Bundle
 	Icons  roles.IconLoader
-	Files  string
 	Log    *slog.Logger
 
-	// Zero means no ceiling at all, which is what an unconfigured site gets.
-	SoftLimit int64
-	HardLimit int64
+	Storage *storage.Set
+	Uploads *quota.Policy
 }
 
 type Handler struct {

@@ -14,7 +14,6 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
-	"strconv"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -30,9 +29,11 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
 	"github.com/WikitTeam/ProjectWikit/internal/media"
+	"github.com/WikitTeam/ProjectWikit/internal/mediaurl"
 	"github.com/WikitTeam/ProjectWikit/internal/migrate"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/mount"
+	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
 	"github.com/WikitTeam/ProjectWikit/internal/pgbundle"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
@@ -130,6 +131,8 @@ func run(args []string) error {
 		return createSite(args[1:])
 	case "site":
 		return siteCommand(args[1:])
+	case "storage":
+		return storageCommand(args[1:])
 	case "admin":
 		return adminCommand(args[1:])
 	case "user":
@@ -169,7 +172,8 @@ func usage() {
 Commands:
   serve       start the HTTP server
   createsite  create the site this database serves
-  site        list, rebind or delete the sites in this database
+  site        list, rebind or delete the sites, or set their upload limits
+  storage     copy the uploaded files between the files folder and a bucket
   admin       create an administrator or give an account every right
   user        merge two accounts, or delete imported accounts no site uses
   backup      write, check, list or put back a backup
@@ -347,17 +351,19 @@ func serve(ctx context.Context, args []string) (err error) {
 	}
 
 	notFound := http.NotFoundHandler()
-	mediaHandler := site.NewHostRules(conn, listenPort(*o.listen), media.New(p.Files(), conn), notFound)
-	resizedHandler := site.NewHostRules(conn, listenPort(*o.listen), media.NewResized(p.Files(), conn), notFound)
-
-	soft, err := parseSize(*o.uploadLimit)
+	files, err := openStorage(p, cfg)
 	if err != nil {
-		return fmt.Errorf("parse -upload-limit: %w", err)
+		return err
 	}
-	hard, err := parseSize(*o.storageLimit)
+	uploads, err := uploadPolicy(cfg, *o.uploadLimit, *o.storageLimit, *o.maxFile)
 	if err != nil {
-		return fmt.Errorf("parse -storage-limit: %w", err)
+		return err
 	}
+	signer := mediaurl.Signer{Secret: []byte(*o.secret)}
+	public := anonymousCanView(conn)
+	pagerender.Links = &mediaurl.Linker{Set: files, Signer: signer, Files: conn, Public: public}
+	mediaHandler := site.NewHostRules(conn, listenPort(*o.listen), media.New(files, conn).WithAccess(signer, public), notFound)
+	resizedHandler := site.NewHostRules(conn, listenPort(*o.listen), media.NewResized(files, conn).WithAccess(signer, public), notFound)
 
 	board := &update.Board{
 		DB: conn, Settings: updates, Current: version.String(),
@@ -370,7 +376,7 @@ func serve(ctx context.Context, args []string) (err error) {
 			}
 		},
 	}
-	stack, err := newPageStack(conn, p, assets, notFound, trust, limits{soft: soft, hard: hard},
+	stack, err := newPageStack(conn, p, assets, notFound, trust, files, uploads,
 		*o.sidecar, *o.secret, cfg, board, log)
 	if err != nil {
 		return err
@@ -418,7 +424,7 @@ func serve(ctx context.Context, args []string) (err error) {
 		"/-/":                           served(stack.systemMissing),
 		"/pw-api/":                      notFound,
 		static.Prefix:                   static.New(assets, notFound),
-		site.ThemePrefix:                respheader.VaryCookie(site.NewHostRules(conn, listenPort(*o.listen), site.NewThemeFiles(p.Files()), notFound)),
+		site.ThemePrefix:                respheader.VaryCookie(site.NewHostRules(conn, listenPort(*o.listen), site.NewThemeFiles(files), notFound)),
 		media.Prefix:                    respheader.VaryCookie(mediaHandler),
 		media.ResizedPrefix:             respheader.VaryCookie(resizedHandler),
 		localitem.CodePrefix:            codeHandler,
@@ -573,25 +579,6 @@ func assetFS(dir string) (iofs.FS, error) {
 		return nil, fmt.Errorf("static-dir %q is not a directory", dir)
 	}
 	return os.DirFS(dir), nil
-}
-
-var sizeUnits = map[string]int64{"B": 1, "KB": 1 << 10, "MB": 1 << 20, "GB": 1 << 30, "TB": 1 << 40}
-
-func parseSize(spec string) (int64, error) {
-	digits := strings.TrimLeft(spec, "0123456789")
-	number, err := strconv.ParseInt(spec[:len(spec)-len(digits)], 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("no leading number in %q", spec)
-	}
-	unit := strings.ToUpper(strings.TrimSpace(digits))
-	if unit == "" {
-		return number, nil
-	}
-	scale, ok := sizeUnits[unit]
-	if !ok {
-		return 0, fmt.Errorf("unknown size unit %q", unit)
-	}
-	return number * scale, nil
 }
 
 func envOr(key, fallback string) string {
@@ -854,12 +841,13 @@ func siteCommand(args []string) error {
 	if len(args) > 0 {
 		sub = args[0]
 	}
-	if sub != "list" && sub != "rebind" && sub != "delete" {
-		fmt.Fprint(os.Stderr, `Usage: pwikit site <list|rebind|delete> [options]
+	if sub != "list" && sub != "rebind" && sub != "delete" && sub != "limits" {
+		fmt.Fprint(os.Stderr, `Usage: pwikit site <list|rebind|delete|limits> [options]
 
   list    print the slug and the two domains of every site
   rebind  point a site at another domain, for when the stored one cannot be reached
   delete  delete a site and everything on it, after offering a backup
+  limits  print or set how large an upload may be and how much a site may hold
 
 Options for rebind:
   -slug          site to rebind
@@ -868,6 +856,12 @@ Options for rebind:
 
 Options for delete:
   -slug          site to delete
+
+Options for limits:
+  -slug          site to show or change; left out, every site is shown
+  -max-file      largest file one upload may carry, such as 100MB; 0 for no ceiling
+  -quota         how much the site's files may take together, such as 10GB; 0 for no ceiling
+  -clear         forget what was set here, so pwikit.toml decides again
 `)
 		return errors.New("unknown site subcommand")
 	}
@@ -875,6 +869,9 @@ Options for delete:
 	slug := fs.String("slug", "", "site to rebind or delete")
 	domain := fs.String("domain", "", "domain the pages are served on")
 	mediaDomain := fs.String("media-domain", "", "domain the uploaded files are served on; defaults to -domain")
+	maxFile := fs.String("max-file", "", "largest file one upload may carry; 0 for no ceiling")
+	siteQuota := fs.String("quota", "", "how much the site's files may take together; 0 for no ceiling")
+	clearLimits := fs.Bool("clear", false, "forget the limits set from the command line")
 	database := fs.String("database", os.Getenv(envDatabase), "PostgreSQL connection string")
 	dataDir := fs.String("data-dir", "", "state directory; defaults to the directory holding the executable")
 	if err := fs.Parse(args[1:]); err != nil {
@@ -901,6 +898,9 @@ Options for delete:
 	}
 	if sub == "delete" {
 		return deleteSite(ctx, conn, dsn, *dataDir, *slug)
+	}
+	if sub == "limits" {
+		return siteLimits(ctx, conn, *dataDir, *slug, limitChange{maxFile: *maxFile, siteQuota: *siteQuota, clear: *clearLimits})
 	}
 	return rebindSite(ctx, conn, *slug, *domain, *mediaDomain)
 }
@@ -958,7 +958,7 @@ func announceHTTPS(domain string) {
 
 var instanceCommands = map[string]bool{
 	"migrate": true, "createsite": true, "site": true, "admin": true, "user": true,
-	"backup": true, "seed": true, "import": true, "reindex": true,
+	"backup": true, "seed": true, "import": true, "reindex": true, "storage": true,
 }
 
 func dataDirArg(args []string) string {

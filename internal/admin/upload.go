@@ -1,18 +1,18 @@
 package admin
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
-	"github.com/WikitTeam/ProjectWikit/internal/paths"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 )
 
 const uploadRoot = "-"
@@ -81,43 +81,35 @@ func (h *Handler) store(r *http.Request, field string, rule uploadRule) (string,
 		return "", err
 	}
 
-	name, full, err := h.freeName(rule.dir, cleanName(header.Filename, ext))
+	ctx := r.Context()
+	key, err := h.freeName(ctx, rule.dir, cleanName(header.Filename, ext))
 	if err != nil {
 		return "", err
 	}
-	jail := paths.In(h.deps.Files)
-	if err := jail.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+	if err := h.deps.Storage.Shared.Store.Put(ctx, key, io.LimitReader(src, maxIconBytes), -1); err != nil {
 		return "", err
 	}
-	dst, err := jail.OpenFile(full, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
-	if _, err := io.Copy(dst, io.LimitReader(src, maxIconBytes)); err != nil {
-		return "", err
-	}
-	return path.Join(uploadRoot, rule.dir, name), nil
+	return key, nil
 }
 
-func (h *Handler) freeName(dir, name string) (string, string, error) {
+func (h *Handler) freeName(ctx context.Context, dir, name string) (string, error) {
 	base := strings.TrimSuffix(name, filepath.Ext(name))
 	ext := filepath.Ext(name)
 	for i := 0; i < 8; i++ {
-		full, err := paths.Resolve(h.deps.Files, filepath.Join(uploadRoot, dir, name))
-		if err != nil {
-			return "", "", err
+		key := path.Join(uploadRoot, dir, name)
+		if err := storage.CheckKey(key); err != nil {
+			return "", err
 		}
-		if _, err := os.Stat(full); errors.Is(err, os.ErrNotExist) {
-			return name, full, nil
+		if _, err := h.deps.Storage.Shared.Store.Stat(ctx, key); errors.Is(err, storage.ErrNotExist) {
+			return key, nil
 		}
 		var suffix [3]byte
 		if _, err := rand.Read(suffix[:]); err != nil {
-			return "", "", err
+			return "", err
 		}
 		name = base + "-" + hex.EncodeToString(suffix[:]) + ext
 	}
-	return "", "", errors.New("admin: no free name for the upload")
+	return "", errors.New("admin: no free name for the upload")
 }
 
 func cleanName(name, ext string) string {

@@ -24,12 +24,14 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/perms"
 	"github.com/WikitTeam/ProjectWikit/internal/plugin"
 	"github.com/WikitTeam/ProjectWikit/internal/proxyheader"
+	"github.com/WikitTeam/ProjectWikit/internal/quota"
 	"github.com/WikitTeam/ProjectWikit/internal/renderer"
 	"github.com/WikitTeam/ProjectWikit/internal/repo"
 	"github.com/WikitTeam/ProjectWikit/internal/roles"
 	"github.com/WikitTeam/ProjectWikit/internal/shell"
 	"github.com/WikitTeam/ProjectWikit/internal/site"
 	"github.com/WikitTeam/ProjectWikit/internal/static"
+	"github.com/WikitTeam/ProjectWikit/internal/storage"
 	"github.com/WikitTeam/ProjectWikit/internal/token"
 	"github.com/WikitTeam/ProjectWikit/internal/update"
 )
@@ -43,11 +45,11 @@ const (
 var files embed.FS
 
 type Deps struct {
-	DB     *db.DB
-	Bundle *i18n.Bundle
-	Assets *static.Assets
-	Files  string
-	Tokens token.Generator
+	DB      *db.DB
+	Bundle  *i18n.Bundle
+	Assets  *static.Assets
+	Storage *storage.Set
+	Tokens  token.Generator
 
 	Articles http.Handler
 	Mail     mail.Sender
@@ -57,6 +59,7 @@ type Deps struct {
 	Engine   renderer.Renderer
 	Plugins  *plugin.Host
 	Icons    roles.IconLoader
+	Uploads  *quota.Policy
 
 	Log *slog.Logger
 }

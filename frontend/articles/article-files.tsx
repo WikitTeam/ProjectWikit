@@ -4,7 +4,7 @@ import { Component } from 'react'
 import styled from 'styled-components'
 import { ArticleFile, deleteFile, fetchArticleFiles, renameFile, uploadFile } from '../api/files'
 import Loader from '../util/loader'
-import WikidotModal from '../util/wikidot-modal'
+import WikidotModal, { showErrorModal } from '../util/wikidot-modal'
 
 interface Props {
   pageId: string
@@ -27,8 +27,12 @@ interface State {
   hardLimit?: number
   softUsed?: number
   hardUsed?: number
+  maxFile?: number
+  siteQuota?: number
+  siteUsed?: number
   error?: string
   uploadFiles: Array<UploadFileRecord>
+  dragging?: boolean
   optionsIndex: number | null
   renameIndex: number | null
   renameName: string | null
@@ -61,13 +65,33 @@ const Styles = styled.div<{ loading?: boolean }>`
 
     .w-upload-control {
       position: relative;
-      border: 2px dashed white;
-      border-radius: 8px;
-      padding: 8px;
-      background: #ddd;
-      box-shadow: 0 0 0 3px #ddd;
-      font-weight: bold;
+      border: 1px dashed #aab2bd;
+      border-radius: 4px;
+      padding: 20px 12px;
+      background: #f7f8fa;
+      color: #444;
       text-align: center;
+      transition:
+        border-color 0.15s,
+        background-color 0.15s;
+
+      &:hover,
+      &.is-dragging {
+        border-color: #3a6fd8;
+        background: #eef3fd;
+      }
+
+      .w-upload-hint {
+        display: block;
+        font-size: 1.05em;
+      }
+
+      .w-upload-limit {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.9em;
+        color: #777;
+      }
 
       input[type='file'] {
         opacity: 0;
@@ -112,6 +136,12 @@ const Styles = styled.div<{ loading?: boolean }>`
             flex-basis: 40%;
             font-weight: bold;
             padding: 0 4px;
+          }
+          input.w-upload-name {
+            box-sizing: border-box;
+            min-width: 0;
+            margin: 0 4px;
+            font-weight: normal;
           }
           .w-upload-size,
           .w-upload-type {
@@ -169,8 +199,21 @@ class ArticleFiles extends Component<Props, State> {
     const { pageId } = this.props
     this.setState({ loading: true, error: undefined })
     try {
-      const { files, softLimit, hardLimit, softUsed, hardUsed } = await fetchArticleFiles(pageId)
-      this.setState({ loading: false, error: undefined, files, softLimit, hardLimit, softUsed, hardUsed, optionsIndex: null, renameIndex: null })
+      const { files, softLimit, hardLimit, softUsed, hardUsed, maxFile, siteQuota, siteUsed } = await fetchArticleFiles(pageId)
+      this.setState({
+        loading: false,
+        error: undefined,
+        files,
+        softLimit,
+        hardLimit,
+        softUsed,
+        hardUsed,
+        maxFile,
+        siteQuota,
+        siteUsed,
+        optionsIndex: null,
+        renameIndex: null,
+      })
     } catch (e) {
       this.setState({ loading: false, error: e.error || t('common.server-unreachable') })
     }
@@ -243,7 +286,9 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ uploadFiles })
       this.loadFiles()
     } catch (e) {
-      this.updateFile(file, { error: e.error || t('articles.files.upload-failed'), uploading: false })
+      const error = e.error || t('articles.files.upload-failed')
+      this.updateFile(file, { error, uploading: false })
+      showErrorModal(error)
     }
   }
 
@@ -253,6 +298,19 @@ class ArticleFiles extends Component<Props, State> {
       e.stopPropagation()
     }
     if (file.uploading) {
+      return
+    }
+    if (!file.name.trim()) {
+      const error = t('articles.files.upload-name-empty')
+      this.updateFile(file, { error })
+      showErrorModal(error)
+      return
+    }
+    const { maxFile = 0 } = this.state
+    if (maxFile > 0 && file.file.size > maxFile) {
+      const error = t('articles.files.too-large', { limit: this.formatSize(maxFile) })
+      this.updateFile(file, { error })
+      showErrorModal(error)
       return
     }
     this.updateFile(file, { uploading: true, error: null })
@@ -270,13 +328,23 @@ class ArticleFiles extends Component<Props, State> {
   }
 
   renderUpload() {
-    const { uploadFiles } = this.state
+    const { uploadFiles, dragging, maxFile = 0 } = this.state
     return (
       <>
         <div className="w-upload-files">
-          <div className="w-upload-control">
-            <span>{t('articles.files.drop-hint')}</span>
-            <input type="file" onChange={this.onFileChange} multiple />
+          <div className={`w-upload-control${dragging ? ' is-dragging' : ''}`}>
+            <span className="w-upload-hint">{t('articles.files.drop-hint')}</span>
+            {maxFile > 0 && <span className="w-upload-limit">{t('articles.files.drop-limit', { limit: this.formatSize(maxFile) })}</span>}
+            <input
+              type="file"
+              onChange={e => {
+                this.setState({ dragging: false })
+                this.onFileChange(e)
+              }}
+              onDragEnter={() => this.setState({ dragging: true })}
+              onDragLeave={() => this.setState({ dragging: false })}
+              multiple
+            />
           </div>
           {uploadFiles.length ? (
             <div className="w-upload-rows">
@@ -284,7 +352,18 @@ class ArticleFiles extends Component<Props, State> {
                 return (
                   <div key={i} className="w-upload-row">
                     <div className="w-upload-info">
-                      <span className="w-upload-name">{file.name}</span>
+                      {file.uploading ? (
+                        <span className="w-upload-name">{file.name}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          className="w-upload-name"
+                          value={file.name}
+                          title={t('articles.files.upload-name')}
+                          aria-label={t('articles.files.upload-name')}
+                          onChange={e => this.updateFile(file, { name: e.target.value })}
+                        />
+                      )}
                       <span className="w-upload-type">{file.file.type}</span>
                       <span className="w-upload-size">{this.formatSize(file.file.size)}</span>
                       {!file.uploading ? (
@@ -377,7 +456,21 @@ class ArticleFiles extends Component<Props, State> {
 
   render() {
     const { editable, pageId } = this.props
-    const { error, loading, files, optionsIndex, hardLimit = 0, hardUsed = 0, softLimit = 0, softUsed = 0, renameIndex, renameName } = this.state
+    const {
+      error,
+      loading,
+      files,
+      optionsIndex,
+      hardLimit = 0,
+      hardUsed = 0,
+      softLimit = 0,
+      softUsed = 0,
+      maxFile = 0,
+      siteQuota = 0,
+      siteUsed = 0,
+      renameIndex,
+      renameName,
+    } = this.state
     return (
       <Styles>
         {error && (
@@ -442,6 +535,18 @@ class ArticleFiles extends Component<Props, State> {
                         {`${softLimit > 0 ? ')' : ''}`}
                       </>
                     )}
+                  </>
+                )}
+                {siteQuota > 0 && (
+                  <>
+                    <br />
+                    {t('articles.files.site-quota-label')} {this.formatSize(siteUsed)} / {this.formatSize(siteQuota)}
+                  </>
+                )}
+                {maxFile > 0 && (
+                  <>
+                    <br />
+                    {t('articles.files.max-file-label')} {this.formatSize(maxFile)}
                   </>
                 )}
               </p>
