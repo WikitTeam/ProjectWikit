@@ -19,8 +19,8 @@ export const Brand = styled.a`
 `
 
 export const BrandLogo = styled.img`
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
 `
 
 export const Wordmark = styled.span`

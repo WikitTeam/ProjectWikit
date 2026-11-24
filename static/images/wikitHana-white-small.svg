@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-403.71 -435.02 807.42 807.42" width="807" height="807">
+  <title>Wikit</title>
+  <defs>
+    <g id="petal"><path d="M0 -22C50 -60 106 -130 106 -205C106 -268 56 -316 0 -345C-56 -316 -106 -268 -106 -205C-106 -130 -50 -60 0 -22Z"/><path d="M23.05 -331.71L23.05 -273.14L84.82 -273.14"/></g>
+  </defs>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke-width="22">
+      <use href="#petal"/>
+      <use href="#petal" transform="rotate(72)"/>
+      <use href="#petal" transform="rotate(144)"/>
+      <use href="#petal" transform="rotate(216)"/>
+      <use href="#petal" transform="rotate(288)"/>
+    </g>
+    <g stroke-width="16">
+      <path d="M-50 -206H50M-50 -176H50M-50 -146H18"/>
+      <path d="M117.39 -84.39H217.39M117.39 -54.39H217.39M117.39 -24.39H185.39"/>
+      <path d="M53.45 112.39H153.45M53.45 142.39H153.45M53.45 172.39H121.45"/>
+      <path d="M-153.45 112.39H-53.45M-153.45 142.39H-53.45M-153.45 172.39H-85.45"/>
+      <path d="M-217.39 -84.39H-117.39M-217.39 -54.39H-117.39M-217.39 -24.39H-149.39"/>
+    </g>
+  </g>
+</svg>

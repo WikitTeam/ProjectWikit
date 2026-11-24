@@ -13,7 +13,7 @@ const Header: React.FC<Props> = ({ crumb }) => {
   return (
     <Styled.Container>
       <Styled.Brand href="/">
-        <Styled.BrandLogo src={site?.systemIcon || '/-/static/images/wikitHana.png'} alt={siteTitle} />
+        <Styled.BrandLogo src={site?.systemIcon || '/-/static/images/wikitHana-white-small.svg'} alt={siteTitle} />
         <Styled.Wordmark>{siteTitle}</Styled.Wordmark>
       </Styled.Brand>
       <Styled.Divider />
