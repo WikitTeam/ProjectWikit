@@ -50,3 +50,18 @@ func TestInstanceCheck(t *testing.T) {
 		t.Errorf("Stat(pwikit.toml) err = %v, want not exist", err)
 	}
 }
+
+func TestOwnExecutableSkipsRootsCopy(t *testing.T) {
+	root := t.TempDir()
+	own := filepath.Join(root, "pwikit")
+	if err := os.WriteFile(own, []byte("x"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	private := filepath.Join(privateBase(), "abc", PrivateBin, "pwikit")
+	if got := ownExecutable(root, private); got != own {
+		t.Errorf("ownExecutable(root, %q) = %q, want %q", private, got, own)
+	}
+	if got := ownExecutable(root, "/opt/other/pwikit"); got != "/opt/other/pwikit" {
+		t.Errorf("ownExecutable(root, /opt/other/pwikit) = %q, want it unchanged", got)
+	}
+}

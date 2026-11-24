@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"runtime"
 	"syscall"
 
 	"github.com/WikitTeam/ProjectWikit/internal/paths"
@@ -29,6 +29,7 @@ func dirIdentity(root string) (uint64, uint64, error) {
 }
 
 func RecordInstance(private, root, exe string) error {
+	exe = ownExecutable(root, exe)
 	dev, ino, err := dirIdentity(root)
 	if err != nil {
 		return err
@@ -89,8 +90,24 @@ func RecordedExecutable(running string) string {
 		return running
 	}
 	in, ok := ReadInstance(filepath.Dir(filepath.Dir(running)))
-	if !ok || in.Executable == "" || strings.HasPrefix(in.Executable, privateBase()) {
+	if !ok {
 		return running
 	}
-	return in.Executable
+	if exe := ownExecutable(in.Root, in.Executable); exe != "" && !IsPrivate(exe) {
+		return exe
+	}
+	return running
+}
+
+// Updates replace the program the record names. Naming root's own copy there
+// would leave the one in the data directory on whatever release it came with.
+func ownExecutable(root, exe string) string {
+	if exe != "" && !IsPrivate(exe) {
+		return exe
+	}
+	own := filepath.Join(root, ExecutableName(runtime.GOOS))
+	if info, err := os.Stat(own); err == nil && info.Mode().IsRegular() {
+		return own
+	}
+	return exe
 }
