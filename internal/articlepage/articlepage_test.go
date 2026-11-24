@@ -103,7 +103,7 @@ func TestRequestWithoutASiteFails(t *testing.T) {
 }
 
 func TestNotFoundNamesAskTheCategoryFirst(t *testing.T) {
-	got := notFoundNames("scp:9999")
+	got := standInNames("scp:9999", notFoundName)
 	want := []string{"scp:_404", "_404"}
 	if len(got) != len(want) {
 		t.Fatalf("notFoundNames(%q) = %v, want %v", "scp:9999", got, want)
@@ -116,14 +116,14 @@ func TestNotFoundNamesAskTheCategoryFirst(t *testing.T) {
 }
 
 func TestNotFoundNamesOfTheDefaultCategory(t *testing.T) {
-	got := notFoundNames("no-such-page")
+	got := standInNames("no-such-page", notFoundName)
 	if len(got) != 1 || got[0] != "_404" {
 		t.Errorf("notFoundNames(%q) = %v, want [_404]", "no-such-page", got)
 	}
 }
 
 func TestNotFoundNamesOfAnExplicitDefaultCategory(t *testing.T) {
-	got := notFoundNames("_default:no-such-page")
+	got := standInNames("_default:no-such-page", notFoundName)
 	if len(got) != 1 || got[0] != "_404" {
 		t.Errorf("notFoundNames(%q) = %v, want [_404]", "_default:no-such-page", got)
 	}
@@ -159,5 +159,13 @@ func TestDocumentTitle(t *testing.T) {
 		if got := documentTitle(c.title, c.site); got != c.want {
 			t.Errorf("documentTitle(%q, %q) = %q, want %q", c.title, c.site, got, c.want)
 		}
+	}
+}
+
+func TestStandInNamesPublic(t *testing.T) {
+	got := standInNames("staff:plans", publicName)
+	want := []string{"staff:_public", "_public"}
+	if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
+		t.Errorf("standInNames(staff:plans, _public) = %v, want %v", got, want)
 	}
 }

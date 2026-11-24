@@ -31,6 +31,7 @@ import (
 const (
 	templateName = "_template"
 	notFoundName = "_404"
+	publicName   = "_public"
 	excerptLimit = 384
 )
 
@@ -109,6 +110,10 @@ func (h *Handler) render(req *request) (*result, error) {
 func (h *Handler) body(req *request, canonical string) (body, error) {
 	switch {
 	case req.forbidden:
+		written, err := h.standInPage(req, publicName, http.StatusForbidden)
+		if err != nil || written != nil {
+			return derefBody(written), err
+		}
 		html, err := h.shell(req.loc).Forbidden(req.name)
 		return body{html: html, status: http.StatusForbidden}, err
 	case req.article != nil:
@@ -246,7 +251,7 @@ func (h *Handler) missingBody(req *request) (body, error) {
 	}
 	allow := wikidot.NameAllowed(req.name) && perms.Resolve(subject, object).Has(perms.CreateArticles)
 
-	written, err := h.notFoundPage(req)
+	written, err := h.standInPage(req, notFoundName, http.StatusNotFound)
 	if err != nil {
 		return body{}, err
 	}
@@ -263,14 +268,23 @@ func (h *Handler) missingBody(req *request) (body, error) {
 	return body{html: html, status: http.StatusNotFound}, err
 }
 
-func (h *Handler) notFoundPage(req *request) (*body, error) {
+func derefBody(b *body) body {
+	if b == nil {
+		return body{}
+	}
+	return *b
+}
+
+// A site can write the page shown in place of one that is missing or that the
+// reader may not see, per category, the way _template works.
+func (h *Handler) standInPage(req *request, base string, status int) (*body, error) {
 	perm := repo.NewPerms(req.ctx, h.deps.DB)
 	subject, err := h.subject(req)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, name := range notFoundNames(req.name) {
+	for _, name := range standInNames(req.name, base) {
 		found, err := h.deps.DB.ArticleByName(req.ctx, req.site.ID, name)
 		if errors.Is(err, db.ErrNotFound) {
 			continue
@@ -278,14 +292,16 @@ func (h *Handler) notFoundPage(req *request) (*body, error) {
 		if err != nil {
 			return nil, err
 		}
-		// A template the reader may not read is not a template for them, and
-		// showing it anyway would hand out a page they were refused.
-		object, err := perm.Article(found, req.user)
-		if err != nil {
-			return nil, err
-		}
-		if !perms.Resolve(subject, object).Has(perms.ViewArticles) {
-			continue
+		// A template the reader may not read would hand out a page they were
+		// refused. The _public notice is written for exactly those readers.
+		if base != publicName {
+			object, err := perm.Article(found, req.user)
+			if err != nil {
+				return nil, err
+			}
+			if !perms.Resolve(subject, object).Has(perms.ViewArticles) {
+				continue
+			}
 		}
 		source, err := h.deps.DB.LatestSource(req.ctx, found.ID)
 		if errors.Is(err, db.ErrNotFound) {
@@ -294,7 +310,7 @@ func (h *Handler) notFoundPage(req *request) (*body, error) {
 		if err != nil {
 			return nil, err
 		}
-		out, err := h.renderNotFound(req, found, source)
+		out, err := h.renderStandIn(req, found, source, status)
 		return &out, err
 	}
 	return nil, nil
@@ -302,17 +318,17 @@ func (h *Handler) notFoundPage(req *request) (*body, error) {
 
 // The category's own page comes first so a category can answer differently. A
 // page in the default category would ask for the same row twice.
-func notFoundNames(fullName string) []string {
+func standInNames(fullName, base string) []string {
 	category, _ := wikidot.Split(fullName)
 	if category == wikidot.DefaultCategory {
-		return []string{notFoundName}
+		return []string{base}
 	}
-	return []string{category + ":" + notFoundName, notFoundName}
+	return []string{category + ":" + base, base}
 }
 
-// The page the reader asked for has no row, so it is stood up from the name
-// alone. What the template names has to be that page, not the template.
-func (h *Handler) renderNotFound(req *request, template *db.Article, source string) (body, error) {
+// The reader gets nothing of the page they asked for, so it is stood up from
+// the name alone. What the template names has to be that page, not the template.
+func (h *Handler) renderStandIn(req *request, template *db.Article, source string, status int) (body, error) {
 	category, name := wikidot.Split(req.name)
 	asked := &db.Article{Category: category, Name: name}
 
@@ -335,7 +351,6 @@ func (h *Handler) renderNotFound(req *request, template *db.Article, source stri
 	}
 	req.params = pc.PathParams
 
-	status := http.StatusNotFound
 	if pc.Status != 0 && pc.Status != http.StatusOK {
 		status = pc.Status
 	}
