@@ -387,7 +387,19 @@ func unpackPostgres(args []string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := pgbundle.Unpack(p.Postgres()); err != nil {
+	return unpackAsRoot(p)
+}
+
+// The account that owns the data cannot write the root-owned directory the
+// bundled PostgreSQL is unpacked into, so root does it before handing over.
+func unpackAsRoot(p *paths.Paths) error {
+	if os.Geteuid() != 0 {
+		return nil
+	}
+	if err := pgbundle.UnpackIdle(p.Root(), p.Postgres()); err != nil {
+		return err
+	}
+	if err := update.ChownTree(filepath.Join(p.Root(), "postgres.lock"), p.PGData()); err != nil {
 		return err
 	}
 	return update.ChownTree(p.Postgres(), p.PGData())

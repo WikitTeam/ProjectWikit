@@ -35,6 +35,22 @@ func Unpack(dir string) (bool, error) {
 	return unpack(archive, strings.TrimSpace(archiveSum), dir)
 }
 
+// Unpacking beside a running PostgreSQL would pull its programs out from under
+// it, so a held lock leaves the directory as it is.
+func UnpackIdle(root, dir string) error {
+	lock, err := TryLock(filepath.Join(root, lockFile), OwnerCommand)
+	var held *HeldError
+	if errors.As(err, &held) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer lock.Release()
+	_, err = Unpack(dir)
+	return err
+}
+
 func unpack(data []byte, sum, dir string) (bool, error) {
 	marker := sum + " " + unpackRevision + "\n"
 	if have, err := os.ReadFile(filepath.Join(dir, markerFile)); err == nil && string(have) == marker {

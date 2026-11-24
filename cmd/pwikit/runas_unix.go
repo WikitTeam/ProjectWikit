@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"syscall"
 
@@ -57,10 +58,22 @@ func runOwner(ctx context.Context, root, exe string, args ...string) ([]byte, er
 	cmd.Dir = root
 	cmd.SysProcAttr, cmd.Env = ownerCredential(root)
 	if cmd.SysProcAttr != nil {
+		// Only the release being run can unpack the PostgreSQL it carries. An
+		// error here repeats below, where it is worth reading.
+		if bundledIn(root) {
+			unpack := exec.CommandContext(ctx, exe, "unpack-postgres", "-data-dir", root)
+			unpack.Dir = root
+			unpack.Run()
+		}
 		done := handConfig(cmd, root)
 		defer done()
 	}
 	return cmd.CombinedOutput()
+}
+
+func bundledIn(root string) bool {
+	info, err := os.Stat(filepath.Join(root, "pgdata"))
+	return err == nil && info.IsDir()
 }
 
 func handConfig(cmd *exec.Cmd, root string) func() {
@@ -105,6 +118,15 @@ func asOwner(root string) (bool, error) {
 	attr, env := ownerCredential(root)
 	if attr == nil {
 		return false, nil
+	}
+	if bundledIn(root) {
+		p, err := paths.New(root)
+		if err != nil {
+			return true, err
+		}
+		if err := unpackAsRoot(p); err != nil {
+			return true, err
+		}
 	}
 	exe, err := runningExecutable()
 	if err != nil {
