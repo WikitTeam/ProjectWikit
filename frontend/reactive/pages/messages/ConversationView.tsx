@@ -1,4 +1,5 @@
 import { t } from '~util/i18n'
+import { watchMessages } from '~util/message-stream'
 import * as React from 'react'
 import Trans from '~util/trans'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -24,8 +25,6 @@ interface Props {
   partnerId: number
   onMessageSent: () => void
 }
-
-const POLL_INTERVAL_MS = 3000
 
 const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
   const config = useConfigContext()
@@ -130,13 +129,13 @@ const ConversationView: React.FC<Props> = ({ partnerId, onMessageSent }) => {
     }
 
     poll()
-    const interval = setInterval(poll, POLL_INTERVAL_MS)
+    const unwatch = watchMessages(poll)
     const onVisibility = () => {
       if (document.visibilityState === 'visible') poll()
     }
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      clearInterval(interval)
+      unwatch()
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [partnerId])

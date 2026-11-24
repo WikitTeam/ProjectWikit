@@ -51,6 +51,8 @@ func (h *Messages) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	head, tail, _ := strings.Cut(rest, "/")
 	switch {
+	case head == "stream" && tail == "" && r.Method == http.MethodGet && h.deps.Inbox != nil:
+		h.stream(w, r, loc, user)
 	case head == "conversations" && tail == "" && r.Method == http.MethodGet:
 		h.guard(w, r, loc, user, false, func() (string, int, error) { return h.conversations(r, user) })
 	case head == "with" && r.Method == http.MethodGet:
@@ -178,8 +180,12 @@ func (h *Messages) conversation(r *http.Request, user *db.User, raw string) (str
 	}
 
 	if query.Get("mark_read") == "true" || query.Get("mark_read") == "1" {
-		if _, err := h.deps.DB.MarkConversationRead(ctx, user.ID, partner.ID); err != nil {
+		marked, err := h.deps.DB.MarkConversationRead(ctx, user.ID, partner.ID)
+		if err != nil {
 			return "", 0, err
+		}
+		if marked > 0 {
+			h.notify(user.ID)
 		}
 	}
 
@@ -282,6 +288,7 @@ func (h *Messages) clear(r *http.Request, loc *i18n.Localizer, user *db.User) (s
 	if err != nil {
 		return "", 0, err
 	}
+	h.notify(user.ID)
 	ids := make(wikijson.Array, 0, len(cleared))
 	for _, id := range cleared {
 		ids = append(ids, id)
@@ -331,6 +338,7 @@ func (h *Messages) send(r *http.Request, loc *i18n.Localizer, user *db.User) (st
 	if err != nil {
 		return "", 0, err
 	}
+	h.notify(user.ID, recipient.ID)
 	out, err := wikijson.Marshal(messageJSON(sent))
 	return out, http.StatusOK, err
 }

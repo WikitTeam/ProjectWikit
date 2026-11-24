@@ -362,3 +362,42 @@ func fetch(t *testing.T, client *http.Client, target string) (string, int) {
 	}
 	return string(body), resp.StatusCode
 }
+
+func TestServeOnShutdownEndsOpenRequests(t *testing.T) {
+	plain := freeAddr(t)
+	release := make(chan struct{})
+	started := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- Serve(ctx, Config{
+			Mode:       Off,
+			Plain:      plain,
+			Logger:     slog.New(slog.NewTextHandler(io.Discard, nil)),
+			OnShutdown: func() { close(release) },
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+				http.NewResponseController(w).Flush()
+				close(started)
+				<-release
+			}),
+		})
+	}()
+	waitFor(t, plain)
+
+	go http.Get("http://" + plain + "/")
+	<-started
+	begun := time.Now()
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Errorf("Serve() = %v, want nil", err)
+		}
+		if took := time.Since(begun); took > 5*time.Second {
+			t.Errorf("Serve() returned after %v, want under 5s", took)
+		}
+	case <-time.After(20 * time.Second):
+		t.Error("Serve() did not return after the context was cancelled")
+	}
+}

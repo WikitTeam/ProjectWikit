@@ -65,6 +65,8 @@ type Config struct {
 	Hosts     Hosts
 	Handler   http.Handler
 	Logger    *slog.Logger
+
+	OnShutdown func()
 }
 
 func (c Config) check() error {
@@ -154,6 +156,11 @@ func Serve(ctx context.Context, cfg Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	if cfg.OnShutdown != nil {
+		for _, s := range running {
+			s.RegisterOnShutdown(cfg.OnShutdown)
+		}
+	}
 	errs := make(chan error, len(running))
 	for i, s := range running {
 		go func() { errs <- s.Serve(listeners[i]) }()

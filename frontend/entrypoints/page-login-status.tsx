@@ -2,6 +2,7 @@ import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Paths } from '~reactive/paths'
 import { t } from '~util/i18n'
+import { onUnreadMessages } from '~util/message-stream'
 import { UnreadCounts } from '../api/notifications'
 import { UserData } from '../api/user'
 import useConstCallback from '../util/const-callback'
@@ -18,6 +19,9 @@ interface Props {
 const PageLoginStatus: React.FC<Props> = ({ user, notificationCount, unread, signupClosed }: Props) => {
   const withCount = (label: string, count?: number) => (count ? t('page-login-status.with-count', { label, count }) : label)
   const [isOpen, setIsOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(unread?.messages)
+
+  useEffect(() => onUnreadMessages(setUnreadMessages), [])
   const menuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -108,7 +112,7 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount, unread, sig
                 <a href={`/-/notifications/comments`}>{withCount(t('page-login-status.comments'), unread?.comments)}</a>
               </li>
               <li>
-                <a href={`/-/messages`}>{withCount(t('page-login-status.messages'), unread?.messages)}</a>
+                <a href={`/-/messages`}>{withCount(t('page-login-status.messages'), unreadMessages)}</a>
               </li>
               <li>
                 <a href={`/-/favourites`}>{t('page-login-status.favourites')}</a>

@@ -17,6 +17,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/csrf"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/inbox"
 	"github.com/WikitTeam/ProjectWikit/internal/module"
 	"github.com/WikitTeam/ProjectWikit/internal/page"
 	"github.com/WikitTeam/ProjectWikit/internal/pagerender"
@@ -53,6 +54,7 @@ type Deps struct {
 
 	Storage *storage.Set
 	Uploads *quota.Policy
+	Inbox   *inbox.Hub
 }
 
 type Handler struct {

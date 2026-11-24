@@ -19,6 +19,7 @@ import (
 	"github.com/WikitTeam/ProjectWikit/internal/config"
 	"github.com/WikitTeam/ProjectWikit/internal/db"
 	"github.com/WikitTeam/ProjectWikit/internal/i18n"
+	"github.com/WikitTeam/ProjectWikit/internal/inbox"
 	"github.com/WikitTeam/ProjectWikit/internal/ipban"
 	"github.com/WikitTeam/ProjectWikit/internal/lang"
 	"github.com/WikitTeam/ProjectWikit/internal/localitem"
@@ -76,6 +77,7 @@ type pageStack struct {
 	systemMissing http.Handler
 	unresolved    http.Handler
 	resolve       func(http.Handler) http.Handler
+	inbox         *inbox.Hub
 	close         func()
 }
 
@@ -110,9 +112,10 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		Log:         log,
 	})
 	items := localitem.Deps{DB: conn, Engine: engine, Bundle: bundle, Icons: icons, Log: log}
+	hub := inbox.New()
 	api := webapi.Deps{DB: conn, Trust: trust, Engine: engine, Bundle: bundle, Icons: icons,
 		Tokens:  token.Generator{Secret: secret},
-		Storage: files, Uploads: uploads, Log: log}
+		Storage: files, Uploads: uploads, Inbox: hub, Log: log}
 
 	profiles := userpage.Deps{
 		DB: conn, Engine: engine, Bundle: bundle, Icons: icons,
@@ -136,6 +139,7 @@ func newPageStack(conn *db.DB, p *paths.Paths, assets fs.FS, next http.Handler, 
 		notifyAPI:     webapi.NewNotifications(api, next),
 		subscribeAPI:  webapi.NewSubscriptions(api, next),
 		messageAPI:    webapi.NewMessages(api, next),
+		inbox:         hub,
 		userAPI:       webapi.NewUsers(api, next),
 		adminAPI:      webapi.NewAdmin(api, next),
 		login:         next,

@@ -5,10 +5,9 @@ import { clearConversations, ConversationSummary, getConversations } from '~api/
 import { Paths } from '~reactive/paths'
 import formatDate from '~util/date-format'
 import { t } from '~util/i18n'
+import { watchMessages } from '~util/message-stream'
 import { showConfirmModal, showErrorModal } from '~util/wikidot-modal'
 import * as Styled from './Messages.styles'
-
-const POLL_INTERVAL_MS = 3000
 
 interface Props {
   selectedPartnerId: number | null
@@ -61,13 +60,13 @@ const ConversationList: React.FC<Props> = ({ selectedPartnerId, refreshToken }) 
       } catch {}
     }
 
-    const interval = setInterval(poll, POLL_INTERVAL_MS)
+    const unwatch = watchMessages(poll)
     const onVisibility = () => {
       if (document.visibilityState === 'visible') poll()
     }
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      clearInterval(interval)
+      unwatch()
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [])
